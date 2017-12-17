@@ -857,76 +857,117 @@ getMNNforP2pairCustom <- function(r1, r2, var.scale =T , k = 30, log.scale=T,
 }
 
 
-
-## #' Devel version of getJointClustering
-## #' @export getJointClustering2
-## getJointClustering2<- function(r.n, k=30,
-##                                      community.detection.method = walktrap.community,
-##                                      min.group.size = 10,ncomps=100,
-##                                      include.sample.internal.edges=TRUE,
-##                                      mnn.edge.weight = 1, internal.edge.weight =1,
-##                                      extra.info = F, mnnPairFunction =  NULL) {
-##       if (is.null(mnnPairFunction)) { error('No mnnPairFunction provided') }
+#' @export quickJNMF_nb
+quickJNMF_nb <- function(r.n, k = 30, ncomps =100, n.odgenes=NULL, var.scale=T, verbose =T, cgsf=NULL, maxiter=1000, epsilon = 0.001) {
+    require(Matrix)
+    require('Rjnmf')
     
-##       require('gtools')
-##       require('pbapply')
-##       require('igraph')
+    if(length(r.n)!=2) stop('quickJNMF only supports pair alignment')
 
-##       ## Get all non-redundant pair of apps
-##       nms <- names(r.n)
-##       combs <- combinations(n = length(nms), r = 2, v = nms, repeats.allowed =F)
+    ## select a common set of genes
+    if(is.null(cgsf)) {
+        if(is.null(n.odgenes)) {
+            odgenes <- table(unlist(lapply(r.n,function(x) x$misc$odgenes)))
+        } else {
+            odgenes <- table(unlist(lapply(r.n,function(x) rownames(x$misc$varinfo)[(order(x$misc$varinfo$lp,decreasing=F)[1:min(ncol(x$counts),n.odgenes)])])))
+        }
+        odgenes <- odgenes[names(odgenes) %in% Reduce(intersect,lapply(r.n,function(x) colnames(x$counts)))]
+        odgenes <- names(odgenes)[1:min(length(odgenes),n.odgenes)]
+    } else {
+        odgenes <- names(cgsf)
+    }
+    ## common variance scaling
+    if (var.scale) {
+        if(is.null(cgsf)) {
+            cgsf <- do.call(cbind,lapply(r.n,function(x) x$misc$varinfo[odgenes,]$gsf))
+            cgsf <- exp(rowMeans(log(cgsf)))
+        }
+    }
 
-##       ## Convert to list for lapply
-##       combsl <- split(t(combs), rep(1:nrow(combs), each=ncol(combs)))
+    cproj <- lapply(r.n,function(r) {
+        x <- r$counts[,odgenes];
+        as.matrix(x)
+    })
 
+                                        # Make sure all values are > 0
+    cproj <- lapply(cproj, function(x) {
+        x <- x - min(x) + 1e-6
+    })
     
-##       ## get MNN pairs from all possible app pairs
-##       cat('Calculating MNN for application pairs ...\n')
-##       mnnres <- pblapply(combsl, function(x) {
-##           mnnPairFunction(r.n[[x[1]]], r.n[[x[2]]], k = k, verbose =F, ncomps = ncomps);
-##       });
+    z <- Rjnmf(t(cproj[[1]]),t(cproj[[2]]),k=ncomps, alpha=0.5,lambda=0.5, maxiter=maxiter, verbose=T, seed=12345, epsilon = epsilon)
 
-##       ## Merge the results into a edge table
-##       mnnres.all <- do.call(rbind, mnnres)[,c('mA.lab','mB.lab')]
-##       summary(mnnres.all)
-##       mnnres.all$weight <- c(mnn.edge.weight)
+    rot1 <- cproj[[1]] %*% z$W
+    rot2 <- cproj[[2]] %*% z$W
 
-##       ## Optionally use the sample internal edges as an extra source of information
-##       if (include.sample.internal.edges) {
-##               withinappedges <- lapply(r.n, function(x) {
-##                         as_edgelist(x$graphs$PCA)
-##                             })
-##                   withinappedges <- as.data.frame(do.call(rbind, withinappedges),stringsAsFactors=F)
-##                   colnames(withinappedges) <- c('mA.lab','mB.lab')
-##                   withinappedges$weight <- c(internal.edge.weight)
-##                   # Append internal edges to the mnn edges
-##                   mnnres.all <- rbind(withinappedges, mnnres.all)
-##                 }
+    list(rot1=rot1, rot2=rot2)
 
-##       ## Make a graph with the MNNs
-##       el <- matrix(c(mnnres.all$mA.lab, mnnres.all$mB.lab), ncol=2)
-##       g  <- graph_from_edgelist(el, directed =FALSE)
+}
 
-##       # Add weights
-##       E(g)$weight <- as.numeric(mnnres.all$weight)
+#' @export jnmfJCp_nb
+jnmfJCp_nb <- function(r.n, k=30, k.self=0, k.self.weight=1,community.detection.method = multilevel.community, var.scale =TRUE, min.group.size = 10,ncomps=100, n.odgenes=1000, n.cores=30, return.details=F,xl=NULL,neighborhood.average=FALSE,neighborhood.average.k=10,verbose=TRUE, maxiter = 1000, epsilon = 0.001, ...) {
+    require(parallel)
+    require(Matrix)
+    require(igraph)
+    require(pagoda2)
 
-##       ## Do community detection on this graph
-##       cat('Detecting clusters ...');
-##       cls <- community.detection.method(g)
-##       cat('done\n')
-##       ## Extract groups from this graph
-##       cls.mem <- membership(cls)
-##       cls.groups <- as.character(cls.mem)
-##       names(cls.groups) <- names(cls.mem)
-
-##       ## Filter groups
-##       lvls.keep <- names(which(table(cls.groups)  > min.group.size))
-##       cls.groups[! as.character(cls.groups) %in% as.character(lvls.keep)] <- NA
-##       cls.groups <- as.factor(cls.groups)
-
-##       ret <- cls.groups;
-##       if (extra.info) {
-##           ret <- list(cls.groups = cls.groups, el = el);
-##       }
-##       ret;
-## }
+    cis <- combn(names(r.n),2)
+    cat('pairwise JNMF ')
+    xl <- pagoda2:::papply(1:ncol(cis), function(i) {
+        xcp <- quickJNMF_nb(r.n[cis[,i]],k=k,ncomps=ncomps,n.odgenes=n.odgenes,verbose=ifelse(n.cores==1,verbose,FALSE),var.scale=var.scale, maxiter=maxiter,epsilon=epsilon)
+        cat('.')
+        xcp
+    },n.cores=n.cores);
+    names(xl) <- apply(cis,2,paste,collapse='.vs.');
+    cat(" done\n")
+    
+    ## run mNN separatly as it can't deal with multithreading
+    cat('mNN ')
+    mnnres <- lapply(1:ncol(cis), function(i) {
+        cat(".")
+        mnnres <- pagoda2:::interNN(xl[[i]]$rot1, xl[[i]]$rot2, k, k, 2, verbose=F,neighbourhoodAverage=neighborhood.average,neighbourAvgKA=neighborhood.average.k,neighbourAvgKB=neighborhood.average.k,TRUE)
+        mnnres$mA.lab <- rownames(xl[[i]]$rot1)[mnnres$mA.id]
+        mnnres$mB.lab <- rownames(xl[[i]]$rot2)[mnnres$mB.id]
+        mnnres
+    })
+    cat("done\n")
+    ## Merge the results into a edge table
+    el <- do.call(rbind, mnnres)[,c('mA.lab','mB.lab')]
+    el$w <- 1
+    
+    ## append some local edges
+    if(k.self>0) {
+        cat('kNN pairs ')
+        x <- data.frame(do.call(rbind,lapply(r.n,function(x) {
+            xk <- pagoda2:::hnswKnn2(x$reductions$PCA,k.self,n.cores,verbose=F)
+            xk <- xk[xk$s!=xk$e,]
+            cat(".")
+            cbind("mA.lab"=rownames(x$reductions$PCA)[xk$s+1],"mB.lab"=rownames(x$reductions$PCA)[xk$e+1])
+        })),stringsAsFactors = F)
+        x$w <- k.self.weight
+        cat(' done\n')
+        el <- rbind(el,x)
+    }
+    
+    g  <- graph_from_edgelist(as.matrix(el[,c(1,2)]), directed =FALSE)
+    E(g)$weight <- el[,3]
+    
+    ## Do community detection on this graph
+    cat('detecting clusters ...');
+    cls <- community.detection.method(g, ...)
+    cat('done\n')
+    ## Extract groups from this graph
+    cls.mem <- membership(cls)
+    cls.groups <- as.character(cls.mem)
+    names(cls.groups) <- names(cls.mem)
+    
+    ## Filter groups
+    lvls.keep <- names(which(table(cls.groups)  > min.group.size))
+    cls.groups[! as.character(cls.groups) %in% as.character(lvls.keep)] <- NA
+    cls.groups <- as.factor(cls.groups)
+    
+    if(return.details) {
+        return(list(groups=cls.groups,xl=xl,cls=cls,g=g))
+    } else {
+        cls.groups
+    }
+}
