@@ -348,17 +348,17 @@ assessStabilityShiftClusterComposition <- function(p2.objects, clusteringFunctio
 ## RUN
 ###################################################
 
-library('nbHelpers')
-library('pagoda2')
-library('Rjnmf')
+## library('nbHelpers')
+## library('pagoda2')
+## library('Rjnmf')
 
-## Load a dataset
-bm.sampleset1 <- readRDS('bm.sampleset1.rds')
+## ## Load a dataset
+## bm.sampleset1 <- readRDS('bm.sampleset1.rds')
 
-## Wrapper for clustering function, set maxiter to 20 for speed
-testWrapper <- function(p2.objects, ...) {
-    jnmfJCp(r.n = p2.objects, maxiter = 20, ...);
-}
+## ## Wrapper for clustering function, set maxiter to 20 for speed
+## testWrapper <- function(p2.objects, ...) {
+##     jnmfJCp(r.n = p2.objects, maxiter = 20, ...);
+## }
 
 ## ## Run the tests here
 ## t0 <- Sys.time()
