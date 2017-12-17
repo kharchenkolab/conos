@@ -360,15 +360,15 @@ testWrapper <- function(p2.objects, ...) {
     jnmfJCp(r.n = p2.objects, maxiter = 20, ...);
 }
 
-## Run the tests here
-t0 <- Sys.time()
-test1 <- assessDropOneStability(p2.objects = bm.sampleset1[1:3], clusteringFunction = testWrapper)
-test2 <- assessStabilityRemoveClusters(p2.objects = bm.sampleset1[1:3], clusteringFunction = testWrapper)
-test3 <- assessStabilityShiftClusterComposition(bm.sampleset1[1:3], testWrapper,N=1)
-t1 <- Sys.time()
+## ## Run the tests here
+## t0 <- Sys.time()
+## test1 <- assessDropOneStability(p2.objects = bm.sampleset1[1:3], clusteringFunction = testWrapper)
+## test2 <- assessStabilityRemoveClusters(p2.objects = bm.sampleset1[1:3], clusteringFunction = testWrapper)
+## test3 <- assessStabilityShiftClusterComposition(bm.sampleset1[1:3], testWrapper,N=1)
+## t1 <- Sys.time()
 
-test1
-test2
-test3
+## test1
+## test2
+## test3
 
-t1 - t0
+## t1 - t0
