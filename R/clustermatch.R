@@ -14,6 +14,8 @@
 #' @param center perform centering
 #' @param verbose print progress messages
 #' @param extra.info return extra information from the run, this is currently the gsvd decomposition object
+#' @import plyr
+#' @import geigen
 #' @export identifyCellsGSVDMNN
 identifyCellsGSVDMNN <- function(referenceP2, r2, referenceP2labels,
                                  var.scale = T, k = 30, log.scale = T,
@@ -135,6 +137,7 @@ identifyCellsGSVDMNN <- function(referenceP2, r2, referenceP2labels,
 #' @param annotset p2 dataset to be annotated
 #' @param clustersOrigin a names factor with cluster assignments for referenceset cells
 #' @return a named factor with labells for annotset
+#' @import dplyr
 #' @export identifyCellsGSVDMNNmulti
 identifyCellsGSVDMNNmulti <- function(referencesets, annotset, clustersOrig) {
     require(dplyr)
@@ -175,6 +178,9 @@ identifyCellsGSVDMNNmulti <- function(referencesets, annotset, clustersOrig) {
 #' @param neighbourhood.k number of nearest neighbours to average over
 #' @param mutualOnly logical if true (defalt) only interapp links that are mutual are used, otherwise the links don'e need to be mutual (experimental) 
 #' @return a named (by cell name) factor of groups if extra.info is false, otherwise a list the factor and the extra information
+#' @import gtools
+#' @import pbapply
+#' @import igraph
 #' @export getJointClustering
 getJointClustering <- function(r.n,
                                k=30,
@@ -290,6 +296,8 @@ getJointClustering <- function(r.n,
 #' @param r.n the named list of the pagoda2 jointly called clusters
 #' @param cl the clusters factor as returned by getJointClustering()
 #' @return NULL
+#' @import scales
+#' @import RColorBrewer
 #' @export plotJointClustering
 plotJointClustering <- function(r.n, cl, alpha =0.3, main=NULL) {
     require('RColorBrewer')
@@ -356,6 +364,8 @@ getJointClusterMarkerGenes <- function(applist, jc) {
 #' @param center center the data
 #' @param verbose verbosity level
 #' @param ncomps number of components form the gsvd to use
+#' @import plyr
+#' @import geigen
 #' @return a data frame with all the pairs of the mutual neighbours
 #' @export getNNforP2pair
 getNNforP2pair <- function(r1, r2, var.scale =T , k = 30, log.scale=T,
@@ -491,6 +501,7 @@ getNNforP2pair <- function(r1, r2, var.scale =T , k = 30, log.scale=T,
 #' @param clustersOrigin a names factor with cluster assignments for referenceset cells
 #' @param n.trees number of trees to use per app in total
 #' @param n.cores number of cores to use for the random forests
+#' @import dplyr
 #' @return a named factor with labells for annotset
 #' @export identifyCellsGSVDMNNmulti
 identifyGSVDRFMulti <- function(referencesets, annotset, clustersOrig,
@@ -528,6 +539,10 @@ identifyGSVDRFMulti <- function(referencesets, annotset, clustersOrig,
 #' @param extra.info return extra information from the run
 #' @param n.cores number of cores to use
 #' @param n.trees number of trees to use in total
+#' @import plyr
+#' @import geigen
+#' @import randomForest
+#' @import doMC
 #' @export identifyCellsGSVDMNN
 identifyCellsGSVDRF <- function (referenceP2, r2, referenceP2labels,
                                  var.scale =T, log.scale =T , center =T,
@@ -652,8 +667,6 @@ cleanupGraph <- function(g, min.neigh.con = 1, show.progress = TRUE) {
     # so using an env here for speed
     res.counter <- 0
     res <- new.env()
-
-
     
     for (ei in 1:edgeCount) {
         if (show.progress) setTxtProgressBar(pb, ei);
@@ -722,6 +735,8 @@ cleanupGraph <- function(g, min.neigh.con = 1, show.progress = TRUE) {
 
 
 #' A replacement function of getMNNforP2pairCustom
+#' @import plyr
+#' @import geigen
 #' @export getMNNforP2pairCustom
 getMNNforP2pairCustom <- function(r1, r2, var.scale =T , k = 30, log.scale=T,
                             center=T, verbose =T, ncomps = 100, plot.projection = F) {
@@ -857,9 +872,10 @@ getMNNforP2pairCustom <- function(r1, r2, var.scale =T , k = 30, log.scale=T,
 }
 
 
+#' @require Matrix
 #' @export quickJNMF_nb
 quickJNMF_nb <- function(r.n, k = 30, ncomps =100, n.odgenes=NULL, var.scale=T, verbose =T, cgsf=NULL, maxiter=1000, epsilon = 0.001) {
-    require(Matrix)
+    require('Matrix')
     require('Rjnmf')
     
     if(length(r.n)!=2) stop('quickJNMF only supports pair alignment')
@@ -902,6 +918,8 @@ quickJNMF_nb <- function(r.n, k = 30, ncomps =100, n.odgenes=NULL, var.scale=T, 
     list(rot1=rot1, rot2=rot2)
 
 }
+
+
 
 #' @export jnmfJCp_nb
 jnmfJCp_nb <- function(r.n, k=30, k.self=0, k.self.weight=1,community.detection.method = multilevel.community, var.scale =TRUE, min.group.size = 10,ncomps=100, n.odgenes=1000, n.cores=30, return.details=F,xl=NULL,neighborhood.average=FALSE,neighborhood.average.k=10,verbose=TRUE, maxiter = 1000, epsilon = 0.001, ...) {
@@ -971,3 +989,4 @@ jnmfJCp_nb <- function(r.n, k=30, k.self=0, k.self.weight=1,community.detection.
         cls.groups
     }
 }
+

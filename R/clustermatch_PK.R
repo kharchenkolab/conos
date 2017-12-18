@@ -1,4 +1,8 @@
-
+#' @import parallel
+#' @import cpca
+#' @import Matrix
+#' @import abind
+#' @import igraph
 #' @export cpcaJC
 cpcaJC <- function(r.n, k=30, k.self=0, k.self.weight=1,community.detection.method = multilevel.community, var.scale =TRUE, min.group.size = 10,ncomps=100, n.odgenes=1000,n.cores=30,return.details=F,verbose=T,neighborhood.average=FALSE,neighborhood.average.k=10,xcp=NULL, ...) {
   require(parallel)
@@ -95,6 +99,9 @@ cpcaJC <- function(r.n, k=30, k.self=0, k.self.weight=1,community.detection.meth
   
 }
 
+#' Perform CCA on two samples
+#' @import Matrix
+#' @import RGCCA
 #' @export quickCCA
 quickCCA <- function(r.n,k=30,ncomps=100,n.odgenes=NULL,var.scale=T,verbose=T,cgsf=NULL) {
   require(RGCCA)
@@ -149,6 +156,10 @@ quickCCA <- function(r.n,k=30,ncomps=100,n.odgenes=NULL,var.scale=T,verbose=T,cg
   return(z);
 }
 
+#' Perform pairwise CCA based joint clustering
+#' @import parallel
+#' @import Matrix
+#' @import igraph
 #' @export ccaJCp
 ccaJCp <- function(r.n, k=30, k.self=0, k.self.weight=1,community.detection.method = multilevel.community, var.scale =TRUE, min.group.size = 10,ncomps=100, n.odgenes=1000, n.cores=30, return.details=F,xl=NULL,neighborhood.average=FALSE,neighborhood.average.k=10,verbose=TRUE, ...) {
   require(parallel)
@@ -238,6 +249,9 @@ ccaJCp <- function(r.n, k=30, k.self=0, k.self.weight=1,community.detection.meth
   
 }
 
+#' Perform JNMF on two samples
+#' @import Matrix
+#' @import Rjnmf
 #' @export quickJNMF
 quickJNMF <- function(r.n, k = 30, ncomps =100, n.odgenes=NULL, var.scale=T, verbose =T, cgsf=NULL, maxiter=1000) {
     require(Matrix)
@@ -310,6 +324,10 @@ quickJNMF <- function(r.n, k = 30, ncomps =100, n.odgenes=NULL, var.scale=T, ver
 
 }
 
+#' Perform cpca on two samples
+#' @import parallel
+#' @import cpca
+#' @import Matrix
 #' @export quickCPCA
 quickCPCA <- function(r.n,k=30,ncomps=100,n.odgenes=NULL,var.scale=T,verbose=T,cgsf=NULL,neighborhood.average=FALSE,n.cores=30) {
   require(parallel)
@@ -371,6 +389,11 @@ quickCPCA <- function(r.n,k=30,ncomps=100,n.odgenes=NULL,var.scale=T,verbose=T,c
   return(xcp);
 }
 
+#' Perform pairwise cpca based clustering
+#' @import cpca
+#' @import Matrix
+#' @import abind
+#' @import igraph
 #' @export cpcaJCp
 cpcaJCp <- function(r.n, k=30, k.self=0, k.self.weight=1,community.detection.method = multilevel.community, reduction.method='CPCA', var.scale =TRUE, min.group.size = 10,ncomps=100, n.odgenes=1000, n.cores=30, return.details=F,xl=NULL,neighborhood.average=FALSE,neighborhood.average.k=10,groups=NULL, ...) {
   require(parallel)
@@ -526,6 +549,12 @@ cpcaJCp <- function(r.n, k=30, k.self=0, k.self.weight=1,community.detection.met
   
 }
 
+#' Development version of cpcaJCp
+#' @import parallel
+#' @import cpca
+#' @import Matrix
+#' @import abind
+#' @import igraph
 #' @export cpcaJCp2
 cpcaJCp2 <- function(r.n, k=30, k.self=0, k.self.weight=1,community.detection.method = multilevel.community, reduction.method='CPCA', var.scale =TRUE, min.group.size = 10,ncomps=100, n.odgenes=1000, n.cores=30, return.details=F,xl=NULL,neighborhood.average=FALSE,neighborhood.average.k=5,groups=NULL, ...) {
   require(parallel)
