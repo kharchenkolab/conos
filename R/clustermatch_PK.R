@@ -49,7 +49,7 @@ cpcaJC <- function(r.n, k=30, k.self=0, k.self.weight=1,community.detection.meth
   mnnres <- lapply(1:ncol(comb),function(i) {
     n1 <- comb[1,i]; n2 <- comb[2,i]
     cat(".")
-    mnnres <- pagoda2:::interNN(cpproj[[n1]], cpproj[[n2]], k1, k2, 2, verbose=F,neighbourhoodAverage=neighborhood.average,neighbourAvgKA=neighborhood.average.k,neighbourAvgKB=neighborhood.average.k,TRUE)
+    mnnres <- clusterMatch:::interNN(cpproj[[n1]], cpproj[[n2]], k1, k2, 2, verbose=F,neighbourhoodAverage=neighborhood.average,neighbourAvgKA=neighborhood.average.k,neighbourAvgKB=neighborhood.average.k,TRUE)
     mnnres$mA.lab <- rownames(cpproj[[n1]])[mnnres$mA.id]
     mnnres$mB.lab <- rownames(cpproj[[n2]])[mnnres$mB.id]
     mnnres
@@ -199,8 +199,8 @@ ccaJCp <- function(r.n, k=30, k.self=0, k.self.weight=1,community.detection.meth
   cat('mNN ')
   mnnres <- lapply(1:ncol(cis), function(i) {
     cat(".")
-    mnnres <- pagoda2:::interNN(xl[[i]]$a[[1]],xl[[i]]$a[[2]], k, k, 2, verbose=F,neighbourhoodAverage=neighborhood.average,neighbourAvgKA=neighborhood.average.k,neighbourAvgKB=neighborhood.average.k,TRUE)
-    #mnnres <- pagoda2:::interNN(cpproj[[n1]], cpproj[[n2]], k1, k2, 2, verbose=F,neighborhood.average,neighborhood.average.k,neighborhood.average.k,TRUE)
+    mnnres <- clusterMatch:::interNN(xl[[i]]$a[[1]],xl[[i]]$a[[2]], k, k, 2, verbose=F,neighbourhoodAverage=neighborhood.average,neighbourAvgKA=neighborhood.average.k,neighbourAvgKB=neighborhood.average.k,TRUE)
+    #mnnres <- clusterMatch:::interNN(cpproj[[n1]], cpproj[[n2]], k1, k2, 2, verbose=F,neighborhood.average,neighborhood.average.k,neighborhood.average.k,TRUE)
     mnnres$mA.lab <- rownames(xl[[i]]$a[[1]])[mnnres$mA.id]
     mnnres$mB.lab <- rownames(xl[[i]]$a[[2]])[mnnres$mB.id]
     mnnres
@@ -459,7 +459,7 @@ cpcaJCp <- function(r.n, k=30, k.self=0, k.self.weight=1,community.detection.met
     if(!is.null(xl[[i]]$rot1)) {
       # JNMF
       #system.time(yn <- pagoda2:::crossNN(x,x,k,2,2.0,verbose,n.cores))
-      mnnres <- interNN(xl[[i]]$rot1, xl[[i]]$rot2, k, k, 2, verbose=F,neighbourhoodAverage=neighborhood.average,neighbourAvgKA=neighborhood.average.k,neighbourAvgKB=neighborhood.average.k,TRUE)
+      mnnres <- clusterMatch:::interNN(xl[[i]]$rot1, xl[[i]]$rot2, k, k, 2, verbose=F,neighbourhoodAverage=neighborhood.average,neighbourAvgKA=neighborhood.average.k,neighbourAvgKB=neighborhood.average.k,TRUE)
       mnnres$mA.lab <- rownames(xl[[i]]$rot1)[mnnres$mA.id]
       mnnres$mB.lab <- rownames(xl[[i]]$rot2)[mnnres$mB.id]
     } else {
@@ -494,8 +494,8 @@ cpcaJCp <- function(r.n, k=30, k.self=0, k.self.weight=1,community.detection.met
       })
       n1 <- cis[1,i]; n2 <- cis[2,i]
       cat(".")
-      mnnres <- pagoda2:::interNN(cpproj[[n1]], cpproj[[n2]], k, k, 2, verbose=F,neighbourhoodAverage=neighborhood.average,neighbourAvgKA=neighborhood.average.k,neighbourAvgKB=neighborhood.average.k,TRUE)
-      #mnnres <- pagoda2:::interNN(cpproj[[n1]], cpproj[[n2]], k1, k2, 2, verbose=F,neighborhood.average,neighborhood.average.k,neighborhood.average.k,TRUE)
+      mnnres <- clusterMatch:::interNN(cpproj[[n1]], cpproj[[n2]], k, k, 2, verbose=F,neighbourhoodAverage=neighborhood.average,neighbourAvgKA=neighborhood.average.k,neighbourAvgKB=neighborhood.average.k,TRUE)
+      #mnnres <- clusterMatch:::interNN(cpproj[[n1]], cpproj[[n2]], k1, k2, 2, verbose=F,neighborhood.average,neighborhood.average.k,neighborhood.average.k,TRUE)
       mnnres$mA.lab <- rownames(cpproj[[n1]])[mnnres$mA.id]
       mnnres$mB.lab <- rownames(cpproj[[n2]])[mnnres$mB.id]
     }
@@ -635,7 +635,7 @@ cpcaJCp2 <- function(r.n, k=30, k.self=0, k.self.weight=1,community.detection.me
     if(!is.null(xl[[i]]$rot1)) {
       # JNMF
       
-      #mnnres <- pagoda2:::interNN(xl[[i]]$rot1, xl[[i]]$rot2, k, k, 2, verbose=F,neighbourhoodAverage=neighborhood.average,neighbourAvgKA=neighborhood.average.k,neighbourAvgKB=neighborhood.average.k,TRUE)
+      #mnnres <- clusterMatch:::interNN(xl[[i]]$rot1, xl[[i]]$rot2, k, k, 2, verbose=F,neighbourhoodAverage=neighborhood.average,neighbourAvgKA=neighborhood.average.k,neighbourAvgKB=neighborhood.average.k,TRUE)
       #mnnres$mA.lab <- rownames(xl[[i]]$rot1)[mnnres$mA.id]
       #mnnres$mB.lab <- rownames(xl[[i]]$rot2)[mnnres$mB.id]
 
@@ -681,8 +681,8 @@ cpcaJCp2 <- function(r.n, k=30, k.self=0, k.self.weight=1,community.detection.me
       n1 <- cis[1,i]; n2 <- cis[2,i]
       cat(".")
 
-      #mnnres <- pagoda2:::interNN(cpproj[[n1]], cpproj[[n2]], k, k, 2, verbose=F,neighbourhoodAverage=neighborhood.average,neighbourAvgKA=neighborhood.average.k,neighbourAvgKB=neighborhood.average.k,TRUE)
-      #mnnres <- pagoda2:::interNN(cpproj[[n1]], cpproj[[n2]], k1, k2, 2, verbose=F,neighborhood.average,neighborhood.average.k,neighborhood.average.k,TRUE)
+      #mnnres <- clusterMatch:::interNN(cpproj[[n1]], cpproj[[n2]], k, k, 2, verbose=F,neighbourhoodAverage=neighborhood.average,neighbourAvgKA=neighborhood.average.k,neighbourAvgKB=neighborhood.average.k,TRUE)
+      #mnnres <- clusterMatch:::interNN(cpproj[[n1]], cpproj[[n2]], k1, k2, 2, verbose=F,neighborhood.average,neighborhood.average.k,neighborhood.average.k,TRUE)
       #mnnres$mA.lab <- rownames(cpproj[[n1]])[mnnres$mA.id]
       #mnnres$mB.lab <- rownames(cpproj[[n2]])[mnnres$mB.id]
       

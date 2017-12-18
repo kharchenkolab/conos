@@ -97,7 +97,7 @@ identifyCellsGSVDMNN <- function(referenceP2, r2, referenceP2labels,
 
     ## In this space assign cells by mutual NNs
     if (verbose) {cat('Finding MNNs... ');}
-    mnnres <- pagoda2:::interNN(x1.rot, x2.rot, k1, k2, 2, verbose=F)
+    mnnres <- clusterMatch:::interNN(x1.rot, x2.rot, k1, k2, 2, verbose=F)
     if (verbose) cat('done\n');
 
     if (verbose) cat('Summarising... ');
@@ -481,7 +481,7 @@ getNNforP2pair <- function(r1, r2, var.scale =T , k = 30, log.scale=T,
 
     ## In this space assign cells by mutual NNs
     if (verbose) {cat('Finding MNNs... ');}
-    mnnres <- pagoda2:::interNN(x1.rot,x2.rot,k1,k2,2,verbose= verbose, 
+    mnnres <- clusterMatch:::interNN(x1.rot,x2.rot,k1,k2,2,verbose= verbose, 
                                  neighbourhoodAverage = neighbourhood.average,
                                  mutualOnly = mutualOnly)
     if (verbose) cat('done\n');
@@ -942,7 +942,7 @@ jnmfJCp_nb <- function(r.n, k=30, k.self=0, k.self.weight=1,community.detection.
     cat('mNN ')
     mnnres <- lapply(1:ncol(cis), function(i) {
         cat(".")
-        mnnres <- pagoda2:::interNN(xl[[i]]$rot1, xl[[i]]$rot2, k, k, 2, verbose=F,neighbourhoodAverage=neighborhood.average,neighbourAvgKA=neighborhood.average.k,neighbourAvgKB=neighborhood.average.k,TRUE)
+        mnnres <- clusterMatch:::interNN(xl[[i]]$rot1, xl[[i]]$rot2, k, k, 2, verbose=F,neighbourhoodAverage=neighborhood.average,neighbourAvgKA=neighborhood.average.k,neighbourAvgKB=neighborhood.average.k,TRUE)
         mnnres$mA.lab <- rownames(xl[[i]]$rot1)[mnnres$mA.id]
         mnnres$mB.lab <- rownames(xl[[i]]$rot2)[mnnres$mB.id]
         mnnres
@@ -1091,7 +1091,7 @@ nullJCp <- function(r.n, k=30, k.self=0, k.self.weight=1,community.detection.met
   cat('mNN ')
   mnnres <- lapply(1:ncol(cis), function(i) {
     cat(".")
-    mnnres <- pagoda2:::interNN(xl[[i]]$a[[1]],xl[[i]]$a[[2]], k, k, 2, verbose=F,neighbourhoodAverage=neighborhood.average,neighbourAvgKA=neighborhood.average.k,neighbourAvgKB=neighborhood.average.k,TRUE)
+    mnnres <- clusterMatch:::interNN(xl[[i]]$a[[1]],xl[[i]]$a[[2]], k, k, 2, verbose=F,neighbourhoodAverage=neighborhood.average,neighbourAvgKA=neighborhood.average.k,neighbourAvgKB=neighborhood.average.k,TRUE)
 
     mnnres$mA.lab <- rownames(xl[[i]]$a[[1]])[mnnres$mA.id]
     mnnres$mB.lab <- rownames(xl[[i]]$a[[2]])[mnnres$mB.id]
