@@ -76,6 +76,61 @@ struct queryResultCompareNodes {
   }
 };
 
+
+arma::sp_mat queryIndexMat(Index<float> *index,ObjectVector &dataset1, ObjectVector &dataset2, VectorSpace<float> *space,VectorSpace<float> *space2, int k, bool verbose ) {
+  
+  std::chrono::time_point<std::chrono::high_resolution_clock> t1, t2;
+  
+  int nqueries = dataset1.size(); // ObjectVector is just a std::vector
+  int nanswers=nqueries*k;
+  arma::vec ansdist(nanswers);
+  arma::umat ansloc(2,nanswers,arma::fill::zeros);
+  
+  if (verbose) {
+    cout << "running queries with k=" << k << " ..." << flush;
+    t1 = high_resolution_clock::now();
+  }
+  
+  unique_ptr<boost::progress_display> query_bar(verbose ? new boost::progress_display(nqueries) : NULL);
+  
+#pragma omp parallel for
+  for (int i = 0; i < nqueries; i++) {
+    const Object *queryObj = dataset1[i];
+    
+    KNNQuery<float> knnQ(*space, queryObj, k);
+    index->Search(&knnQ);
+    
+    KNNQueue<float> *res = knnQ.Result()->Clone();
+    
+    int j=0;
+    while (j<k && !res->Empty()) {
+      int l=i*k+j;
+      ansloc(0,l)=res->TopObject()->id(); //row
+      ansloc(1,l)=i; // column 
+      ansdist(l)= space2->IndexTimeDistance(dataset2[ansloc(0,l)],dataset1[i]);
+      res->Pop();
+      j++;
+    }
+    
+    if(query_bar) { ++(*query_bar); }
+  }
+  
+  if (verbose) {
+    t2 = high_resolution_clock::now();
+    auto elapsed_time = duration_cast<duration<double>>(t2 - t1).count();
+    cout << endl << "done (" << elapsed_time << "s)" << endl;
+  }
+  arma::sp_mat r(ansloc,ansdist,dataset2.size(),dataset1.size(),true);
+  return(r);
+  
+};
+
+
+
+
+
+
+
 // Given two lists of query results find mutual MNNs
 forward_list<queryResult>* findNN(forward_list<queryResult>* qrA, forward_list<queryResult>* qrB, bool verbose = true, bool mutualOnly = true) {
   std::chrono::time_point<std::chrono::high_resolution_clock> t1, t2;
