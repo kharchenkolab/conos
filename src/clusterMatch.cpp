@@ -1,3 +1,19 @@
+// [[Rcpp::plugins(cpp10)]]
+
+
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+// [[Rcpp::plugins(openmp)]]
+
+
+// [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::plugins(openmp)]]
+// [[Rcpp::plugins(cpp11)]]
+// [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::depends(RcppProgress)]]
+
+
 #include "clusterMatch.h"
 
 using namespace similarity;

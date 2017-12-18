@@ -1,5 +1,5 @@
-#ifndef __PAGODA2__
-#define __PAGODA2__
+#ifndef __CLUSTERMATCH__
+#define __CLUSTERMATCH__
 
 #include <RcppArmadillo.h>
 #include <queue>

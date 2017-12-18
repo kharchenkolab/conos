@@ -1,4 +1,6 @@
-#### Cluster Matching Functions ####
+#' @useDynLib clusterMatch
+#' @import plyr
+NULL
 
 #' Classify cells in a pagoda2 application given an annotated pagoda2 object
 #' @description Given a reference pagoda2 application an a set of labels for each
