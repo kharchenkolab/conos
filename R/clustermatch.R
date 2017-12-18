@@ -21,8 +21,8 @@ identifyCellsGSVDMNN <- function(referenceP2, r2, referenceP2labels,
                                  var.scale = T, k = 30, log.scale = T,
                                  center =T, verbose = T,
                                  extra.info = F, var.scale.joint = F) {
-    require('plyr')
-    require('geigen')
+    #require('plyr')
+    #require('geigen')
 
     ## Check referenceP2 and r2 objects
     if( !(class(referenceP2) == 'Pagoda2' & class(r2) == 'Pagoda2')) {
@@ -140,7 +140,7 @@ identifyCellsGSVDMNN <- function(referenceP2, r2, referenceP2labels,
 #' @import dplyr
 #' @export identifyCellsGSVDMNNmulti
 identifyCellsGSVDMNNmulti <- function(referencesets, annotset, clustersOrig) {
-    require(dplyr)
+    #require(dplyr)
     d1 <- lapply(seq_along(referencesets), function(i) {
         cat(paste0('Processing reference set ', names(referencesets)[i]), '\n')
         curset <- referencesets[[i]]
@@ -201,9 +201,9 @@ getJointClustering <- function(r.n,
                                stop.return.graph = FALSE,
                                networkPairFunction = NULL) {
   
-  require('gtools')
-  require('pbapply')
-  require('igraph')
+  #require('gtools')
+  #require('pbapply')
+  #require('igraph')
 
   if (is.null(networkPairFunction)) {
       networkPairFunction <- getNNforP2pair;
@@ -300,8 +300,8 @@ getJointClustering <- function(r.n,
 #' @import RColorBrewer
 #' @export plotJointClustering
 plotJointClustering <- function(r.n, cl, alpha =0.3, main=NULL) {
-    require('RColorBrewer')
-    require('scales')
+    #require('RColorBrewer')
+    #require('scales')
 
     l <- length(r.n)
     if (l < 4) {
@@ -371,8 +371,8 @@ getJointClusterMarkerGenes <- function(applist, jc) {
 getNNforP2pair <- function(r1, r2, var.scale =T , k = 30, log.scale=T,
                             center=T, verbose =T, ncomps = 100, plot.projection = F,
                             neighbourhood.average = TRUE, mutualOnly = TRUE, var.scale.joint = FALSE) {
-    require('plyr')
-    require('geigen')
+    #require('plyr')
+    #require('geigen')
 
     ## Check r1 and r2 objects
     if( !(class(r1) == 'Pagoda2' & class(r2) == 'Pagoda2')) {
@@ -506,7 +506,7 @@ getNNforP2pair <- function(r1, r2, var.scale =T , k = 30, log.scale=T,
 #' @export identifyCellsGSVDMNNmulti
 identifyGSVDRFMulti <- function(referencesets, annotset, clustersOrig,
                                 n.trees = 100, n.cores = 1) {
-  require(dplyr)
+  #require(dplyr)
   d1 <- lapply(seq_along(referencesets), function(i) {
     cat(paste0('Processing reference set ', names(referencesets)[i]), '\n')
     curset <- referencesets[[i]]
@@ -548,10 +548,10 @@ identifyCellsGSVDRF <- function (referenceP2, r2, referenceP2labels,
                                  var.scale =T, log.scale =T , center =T,
                                  verbose = T, extra.info = F, n.cores = 1, n.trees = 1000) {
 
-  require('plyr')
-  require('geigen')
-  require('randomForest')
-  require('doMC')
+  #require('plyr')
+  #require('geigen')
+  #require('randomForest')
+  #require('doMC')
 
   ## Check referenceP2 and r2 objects
   if( !(class(referenceP2) == 'Pagoda2' & class(r2) == 'Pagoda2')) {
@@ -741,8 +741,8 @@ cleanupGraph <- function(g, min.neigh.con = 1, show.progress = TRUE) {
 getMNNforP2pairCustom <- function(r1, r2, var.scale =T , k = 30, log.scale=T,
                             center=T, verbose =T, ncomps = 100, plot.projection = F) {
 
-    require('plyr')
-    require('geigen')
+    #require('plyr')
+    #require('geigen')
 
     ## Check r1 and r2 objects
     if( !(class(r1) == 'Pagoda2' & class(r2) == 'Pagoda2')) {
@@ -872,11 +872,11 @@ getMNNforP2pairCustom <- function(r1, r2, var.scale =T , k = 30, log.scale=T,
 }
 
 
-#' @require Matrix
+#' @import Matrix
 #' @export quickJNMF_nb
 quickJNMF_nb <- function(r.n, k = 30, ncomps =100, n.odgenes=NULL, var.scale=T, verbose =T, cgsf=NULL, maxiter=1000, epsilon = 0.001) {
-    require('Matrix')
-    require('Rjnmf')
+    #require('Matrix')
+    #require('Rjnmf')
     
     if(length(r.n)!=2) stop('quickJNMF only supports pair alignment')
 
@@ -923,10 +923,10 @@ quickJNMF_nb <- function(r.n, k = 30, ncomps =100, n.odgenes=NULL, var.scale=T, 
 
 #' @export jnmfJCp_nb
 jnmfJCp_nb <- function(r.n, k=30, k.self=0, k.self.weight=1,community.detection.method = multilevel.community, var.scale =TRUE, min.group.size = 10,ncomps=100, n.odgenes=1000, n.cores=30, return.details=F,xl=NULL,neighborhood.average=FALSE,neighborhood.average.k=10,verbose=TRUE, maxiter = 1000, epsilon = 0.001, ...) {
-    require(parallel)
-    require(Matrix)
-    require(igraph)
-    require(pagoda2)
+    #require(parallel)
+    #require(Matrix)
+    #require(igraph)
+    #require(pagoda2)
 
     cis <- combn(names(r.n),2)
     cat('pairwise JNMF ')
@@ -990,3 +990,153 @@ jnmfJCp_nb <- function(r.n, k=30, k.self=0, k.self.weight=1,community.detection.
     }
 }
 
+
+
+
+#' Perform scaling and centering on two samples
+#' used as baseline tranformation for comparisons
+#' @import Matrix
+#' @import RGCCA
+#' @export quickCCA
+quickNullMatch <- function(r.n,k=30,ncomps=100,n.odgenes=NULL,var.scale=T,verbose=T,cgsf=NULL) {
+  #require(RGCCA)
+  #require(Matrix)
+  
+  if(length(r.n)!=2) stop("quickNullMatch supports only pair alignment")
+  
+  # select a common set of genes
+  if(is.null(cgsf)) {
+    if(is.null(n.odgenes)) {
+      odgenes <- table(unlist(lapply(r.n,function(x) x$misc$odgenes)))
+    } else {
+      odgenes <- table(unlist(lapply(r.n,function(x) rownames(x$misc$varinfo)[(order(x$misc$varinfo$lp,decreasing=F)[1:min(ncol(x$counts),n.odgenes)])])))
+    }
+    odgenes <- odgenes[names(odgenes) %in% Reduce(intersect,lapply(r.n,function(x) colnames(x$counts)))]
+    odgenes <- names(odgenes)[1:min(length(odgenes),n.odgenes)]
+  } else {
+    odgenes <- names(cgsf)
+  }
+  
+  # common variance scaling
+  if (var.scale) {
+    if(is.null(cgsf)) {
+      cgsf <- do.call(cbind,lapply(r.n,function(x) x$misc$varinfo[odgenes,]$gsf))
+      cgsf <- exp(rowMeans(log(cgsf)))
+    }
+  }
+
+  # determine common centering
+  cproj <- lapply(r.n,function(r) {
+    x <- r$counts[,odgenes];
+    if(var.scale) {
+      x@x <- x@x*rep(cgsf,diff(x@p))
+    }
+    x
+  })
+  ncells <- unlist(lapply(cproj,nrow));
+  centering <- colSums(do.call(rbind,lapply(cproj,colMeans))*ncells)/sum(ncells)
+
+  cproj <- lapply(cproj,function(x) {
+    x <- t(as.matrix(t(x))-centering)
+  })
+    
+  z <- list(a=list(cproj[[1]],cproj[[2]]))
+  
+  return(z);
+}
+
+
+
+
+#' Perform joint clustering without matching the sample spaces
+#' @import parallel
+#' @import Matrix
+#' @import igraph
+#' @export nullJCp
+nullJCp <- function(r.n, k=30, k.self=0, k.self.weight=1,community.detection.method = multilevel.community, var.scale =TRUE, min.group.size = 10,ncomps=100, n.odgenes=1000, n.cores=30, return.details=F,xl=NULL,neighborhood.average=FALSE,neighborhood.average.k=10,verbose=TRUE, ...) {
+  #require(parallel)
+  #require(Matrix)
+  #require(igraph)
+
+  cis <- combn(names(r.n),2)
+  if(is.null(xl)) {
+    cat('pairwise CCA ')
+    xl <- pagoda2:::papply(1:ncol(cis), function(i) {
+      xcp <- quickNullMatch(r.n[cis[,i]],k=k,ncomps=ncomps,n.odgenes=n.odgenes,verbose=ifelse(n.cores==1,verbose,FALSE),var.scale=var.scale)
+      cat('.')
+      xcp
+    },n.cores=n.cores);
+    names(xl) <- apply(cis,2,paste,collapse='.vs.');
+    cat(" done\n")
+  } else {
+    # match for all the pairs
+    mi <- rep(NA,ncol(cis));
+    cat('matched ',sum(!is.na(mi)),' out of ',length(mi),' CCA results ... ')
+    mi[which(!is.na(match(apply(cis,2,paste,collapse='.vs.'),names(xl))))] <- T;
+    mi[which(!is.na(match(apply(cis[c(2,1),],2,paste,collapse='.vs.'),names(xl))))] <- T;
+    if(any(is.na(mi))) {
+      cat('running ',sum(is.na(mi)),' additional CCAs ')
+    }
+    xl2 <- pagoda2:::papply(which(is.na(mi)), function(i) {
+      xcp <- quickNullMatch(r.n[cis[,i]],k=k,ncomps=ncomps,n.odgenes=n.odgenes,verbose=ifelse(n.cores==1,verbose,FALSE),var.scale=var.scale)
+      cat('.')
+      xcp
+    },n.cores=n.cores);
+    names(xl2) <- apply(cis[,which(is.na(mi)),drop=F],2,paste,collapse='.vs.');
+    xl <- c(xl,xl2);
+    cat(" done\n");
+  }
+  
+  # run mNN separatly as it can't deal with multithreading
+  cat('mNN ')
+  mnnres <- lapply(1:ncol(cis), function(i) {
+    cat(".")
+    mnnres <- pagoda2:::interNN(xl[[i]]$a[[1]],xl[[i]]$a[[2]], k, k, 2, verbose=F,neighbourhoodAverage=neighborhood.average,neighbourAvgKA=neighborhood.average.k,neighbourAvgKB=neighborhood.average.k,TRUE)
+
+    mnnres$mA.lab <- rownames(xl[[i]]$a[[1]])[mnnres$mA.id]
+    mnnres$mB.lab <- rownames(xl[[i]]$a[[2]])[mnnres$mB.id]
+    mnnres
+  })
+  cat("done\n")
+  ## Merge the results into a edge table
+  el <- do.call(rbind, mnnres)[,c('mA.lab','mB.lab','dist')]
+  colnames(el) <- c("mA.lab","mB.lab","w")
+  
+  # append some local edges
+  if(k.self>0) {
+    cat('kNN pairs ')
+    x <- data.frame(do.call(rbind,lapply(r.n,function(x) {
+      xk <- pagoda2:::hnswKnn2(x$reductions$PCA,k.self,n.cores,verbose=F)
+      xk <- xk[xk$s!=xk$e,]
+      cat(".")
+      cbind("mA.lab"=rownames(x$reductions$PCA)[xk$s+1],"mB.lab"=rownames(x$reductions$PCA)[xk$e+1])
+    })),stringsAsFactors = F)
+    x$w <- k.self.weight
+    cat(' done\n')
+    el <- rbind(el,x)
+  }
+  
+  g  <- graph_from_edgelist(as.matrix(el[,c(1,2)]), directed =FALSE)
+  E(g)$weight <- el[,3]
+  
+  ## Do community detection on this graph
+  cat('detecting clusters ...');
+  cls <- community.detection.method(g, ...)
+  cat('done\n')
+  ## Extract groups from this graph
+  cls.mem <- membership(cls)
+  cls.groups <- as.character(cls.mem)
+  names(cls.groups) <- names(cls.mem)
+  
+  ## Filter groups
+  lvls.keep <- names(which(table(cls.groups)  > min.group.size))
+  cls.groups[! as.character(cls.groups) %in% as.character(lvls.keep)] <- NA
+  cls.groups <- as.factor(cls.groups)
+  
+  if(return.details) {
+    return(list(groups=cls.groups,xl=xl,cls=cls,g=g))
+  } else {
+    cls.groups
+  }
+  
+}

@@ -5,11 +5,11 @@
 #' @import igraph
 #' @export cpcaJC
 cpcaJC <- function(r.n, k=30, k.self=0, k.self.weight=1,community.detection.method = multilevel.community, var.scale =TRUE, min.group.size = 10,ncomps=100, n.odgenes=1000,n.cores=30,return.details=F,verbose=T,neighborhood.average=FALSE,neighborhood.average.k=10,xcp=NULL, ...) {
-  require(parallel)
-  require(cpca)
-  require(Matrix)
-  require(abind)
-  require(igraph)
+  #require(parallel)
+  #require(cpca)
+  #require(Matrix)
+  #require(abind)
+  #require(igraph)
   
   k1 <- k2 <- k
   
@@ -104,8 +104,8 @@ cpcaJC <- function(r.n, k=30, k.self=0, k.self.weight=1,community.detection.meth
 #' @import RGCCA
 #' @export quickCCA
 quickCCA <- function(r.n,k=30,ncomps=100,n.odgenes=NULL,var.scale=T,verbose=T,cgsf=NULL) {
-  require(RGCCA)
-  require(Matrix)
+  #require(RGCCA)
+  #require(Matrix)
   
   if(length(r.n)!=2) stop("quickCCA supports only pair alignment")
   
@@ -162,9 +162,9 @@ quickCCA <- function(r.n,k=30,ncomps=100,n.odgenes=NULL,var.scale=T,verbose=T,cg
 #' @import igraph
 #' @export ccaJCp
 ccaJCp <- function(r.n, k=30, k.self=0, k.self.weight=1,community.detection.method = multilevel.community, var.scale =TRUE, min.group.size = 10,ncomps=100, n.odgenes=1000, n.cores=30, return.details=F,xl=NULL,neighborhood.average=FALSE,neighborhood.average.k=10,verbose=TRUE, ...) {
-  require(parallel)
-  require(Matrix)
-  require(igraph)
+  #require(parallel)
+  #require(Matrix)
+  #require(igraph)
 
   cis <- combn(names(r.n),2)
   if(is.null(xl)) {
@@ -246,16 +246,16 @@ ccaJCp <- function(r.n, k=30, k.self=0, k.self.weight=1,community.detection.meth
   } else {
     cls.groups
   }
-  
 }
+
 
 #' Perform JNMF on two samples
 #' @import Matrix
 #' @import Rjnmf
 #' @export quickJNMF
 quickJNMF <- function(r.n, k = 30, ncomps =100, n.odgenes=NULL, var.scale=T, verbose =T, cgsf=NULL, maxiter=1000) {
-    require(Matrix)
-    require(Rjnmf)
+    #require(Matrix)
+    #require(Rjnmf)
     if(length(r.n)!=2) stop('quickJNMF only supports pair alignment')
     
     ## select a common set of genes
@@ -330,9 +330,9 @@ quickJNMF <- function(r.n, k = 30, ncomps =100, n.odgenes=NULL, var.scale=T, ver
 #' @import Matrix
 #' @export quickCPCA
 quickCPCA <- function(r.n,k=30,ncomps=100,n.odgenes=NULL,var.scale=T,verbose=T,cgsf=NULL,neighborhood.average=FALSE,n.cores=30) {
-  require(parallel)
-  require(cpca)
-  require(Matrix)
+  #require(parallel)
+  #require(cpca)
+  #require(Matrix)
   
   # select a common set of genes
   if(is.null(cgsf)) {
@@ -396,11 +396,11 @@ quickCPCA <- function(r.n,k=30,ncomps=100,n.odgenes=NULL,var.scale=T,verbose=T,c
 #' @import igraph
 #' @export cpcaJCp
 cpcaJCp <- function(r.n, k=30, k.self=0, k.self.weight=1,community.detection.method = multilevel.community, reduction.method='CPCA', var.scale =TRUE, min.group.size = 10,ncomps=100, n.odgenes=1000, n.cores=30, return.details=F,xl=NULL,neighborhood.average=FALSE,neighborhood.average.k=10,groups=NULL, ...) {
-  require(parallel)
-  require(cpca)
-  require(Matrix)
-  require(abind)
-  require(igraph)
+  #require(parallel)
+  #require(cpca)
+  #require(Matrix)
+  #require(abind)
+  #require(igraph)
   k1 <- k2 <- k;
 
   
@@ -459,7 +459,7 @@ cpcaJCp <- function(r.n, k=30, k.self=0, k.self.weight=1,community.detection.met
     if(!is.null(xl[[i]]$rot1)) {
       # JNMF
       #system.time(yn <- pagoda2:::crossNN(x,x,k,2,2.0,verbose,n.cores))
-      mnnres <- pagoda2:::interNN(xl[[i]]$rot1, xl[[i]]$rot2, k, k, 2, verbose=F,neighbourhoodAverage=neighborhood.average,neighbourAvgKA=neighborhood.average.k,neighbourAvgKB=neighborhood.average.k,TRUE)
+      mnnres <- interNN(xl[[i]]$rot1, xl[[i]]$rot2, k, k, 2, verbose=F,neighbourhoodAverage=neighborhood.average,neighbourAvgKA=neighborhood.average.k,neighbourAvgKB=neighborhood.average.k,TRUE)
       mnnres$mA.lab <- rownames(xl[[i]]$rot1)[mnnres$mA.id]
       mnnres$mB.lab <- rownames(xl[[i]]$rot2)[mnnres$mB.id]
     } else {
@@ -557,11 +557,11 @@ cpcaJCp <- function(r.n, k=30, k.self=0, k.self.weight=1,community.detection.met
 #' @import igraph
 #' @export cpcaJCp2
 cpcaJCp2 <- function(r.n, k=30, k.self=0, k.self.weight=1,community.detection.method = multilevel.community, reduction.method='CPCA', var.scale =TRUE, min.group.size = 10,ncomps=100, n.odgenes=1000, n.cores=30, return.details=F,xl=NULL,neighborhood.average=FALSE,neighborhood.average.k=5,groups=NULL, ...) {
-  require(parallel)
-  require(cpca)
-  require(Matrix)
-  require(abind)
-  require(igraph)
+  #require(parallel)
+  #require(cpca)
+  #require(Matrix)
+  #require(abind)
+  #require(igraph)
   k1 <- k2 <- k;
 
   if(neighborhood.average) {
