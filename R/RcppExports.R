@@ -13,3 +13,7 @@ neighbourhoodAverageMatrix2 <- function(mA, verbose = TRUE, lpSpaceP = 2.0, spac
     .Call('_clusterMatch_neighbourhoodAverageMatrix2', PACKAGE = 'clusterMatch', mA, verbose, lpSpaceP, spaceType, nThreads, k)
 }
 
+crossNN <- function(mA, mB, k, spaceType = 2L, lpSpaceP = 2.0, verbose = FALSE, nThreads = 30L) {
+    .Call('_clusterMatch_crossNN', PACKAGE = 'clusterMatch', mA, mB, k, spaceType, lpSpaceP, verbose, nThreads)
+}
+

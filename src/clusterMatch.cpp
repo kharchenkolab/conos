@@ -459,3 +459,44 @@ NumericMatrix neighbourhoodAverageMatrix2(NumericMatrix mA, bool verbose = true,
 
   return mAnew;
 };
+
+
+/** 
+ * Find nearest neighbors of A in B
+ */
+// [[Rcpp::export]]
+arma::sp_mat crossNN(NumericMatrix mA, NumericMatrix mB,int k,int spaceType = 2, float lpSpaceP = 2.0,bool verbose = false,int nThreads=30) {
+  
+  initLibrary(LIB_LOGNONE, NULL);
+
+#ifdef _OPENMP
+  omp_set_num_threads(nThreads);
+#endif
+
+  AnyParams empty;
+  VectorSpace<float> *space = makeSpace(spaceType, lpSpaceP);
+  VectorSpace<float> *space2 = makeSpace(spaceType, lpSpaceP);
+
+  // Converting format for A
+  if (verbose) cout << "reading points from mA..." << flush;
+  ObjectVector datasetA;
+  readNumericMatrixIntoObjectVector(mA, datasetA, space);
+  if (verbose) cout << "done (" << datasetA.size() << " points)" << endl;
+
+  // Converting format for B
+  if (verbose) cout << "reading points from mB ..." << flush;
+  ObjectVector datasetB;
+  readNumericMatrixIntoObjectVector(mB, datasetB, space);
+  if (verbose) cout << "done (" << datasetB.size() << " points)" << endl;
+
+  // Make the index for B
+  Index<float> *indexB;
+  indexB = makeIndex(space, datasetB, verbose, nThreads, spaceType);
+
+  // query the index of B with objects from A
+  forward_list<queryResult>* qrA;
+  return(queryIndexMat(indexB, datasetA, datasetB,space, space2, k, verbose));
+  
+}
+
+

@@ -60,11 +60,29 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// crossNN
+arma::sp_mat crossNN(NumericMatrix mA, NumericMatrix mB, int k, int spaceType, float lpSpaceP, bool verbose, int nThreads);
+RcppExport SEXP _clusterMatch_crossNN(SEXP mASEXP, SEXP mBSEXP, SEXP kSEXP, SEXP spaceTypeSEXP, SEXP lpSpacePSEXP, SEXP verboseSEXP, SEXP nThreadsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type mA(mASEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type mB(mBSEXP);
+    Rcpp::traits::input_parameter< int >::type k(kSEXP);
+    Rcpp::traits::input_parameter< int >::type spaceType(spaceTypeSEXP);
+    Rcpp::traits::input_parameter< float >::type lpSpaceP(lpSpacePSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    Rcpp::traits::input_parameter< int >::type nThreads(nThreadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(crossNN(mA, mB, k, spaceType, lpSpaceP, verbose, nThreads));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_clusterMatch_interNN", (DL_FUNC) &_clusterMatch_interNN, 11},
     {"_clusterMatch_neighbourhoodAverageMatrix", (DL_FUNC) &_clusterMatch_neighbourhoodAverageMatrix, 6},
     {"_clusterMatch_neighbourhoodAverageMatrix2", (DL_FUNC) &_clusterMatch_neighbourhoodAverageMatrix2, 6},
+    {"_clusterMatch_crossNN", (DL_FUNC) &_clusterMatch_crossNN, 7},
     {NULL, NULL, 0}
 };
 
