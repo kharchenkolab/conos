@@ -458,7 +458,7 @@ cpcaJCp <- function(r.n, k=30, k.self=0, k.self.weight=1,community.detection.met
     r.ns <- r.n[cis[,i]]
     if(!is.null(xl[[i]]$rot1)) {
       # JNMF
-      #system.time(yn <- pagoda2:::crossNN(x,x,k,2,2.0,verbose,n.cores))
+      #system.time(yn <- clusterMatch:::crossNN(x,x,k,2,2.0,verbose,n.cores))
       mnnres <- clusterMatch:::interNN(xl[[i]]$rot1, xl[[i]]$rot2, k, k, 2, verbose=F,neighbourhoodAverage=neighborhood.average,neighbourAvgKA=neighborhood.average.k,neighbourAvgKB=neighborhood.average.k,TRUE)
       mnnres$mA.lab <- rownames(xl[[i]]$rot1)[mnnres$mA.id]
       mnnres$mB.lab <- rownames(xl[[i]]$rot2)[mnnres$mB.id]
@@ -567,7 +567,7 @@ cpcaJCp2 <- function(r.n, k=30, k.self=0, k.self.weight=1,community.detection.me
   if(neighborhood.average) {
     cat("neighborhood averaging ")
     r.n <- lapply(r.n,function(r) {
-      xk <- pagoda2:::crossNN(r$reductions$PCA,r$reductions$PCA,neighborhood.average.k,2,2.0,FALSE,n.cores)
+      xk <- clusterMatch:::crossNN(r$reductions$PCA,r$reductions$PCA,neighborhood.average.k,2,2.0,FALSE,n.cores)
       xk@x <- pmax(1-xk@x,0);
       diag(xk) <- 1;
       xk <- t(t(xk)/colSums(xk))
@@ -639,8 +639,8 @@ cpcaJCp2 <- function(r.n, k=30, k.self=0, k.self.weight=1,community.detection.me
       #mnnres$mA.lab <- rownames(xl[[i]]$rot1)[mnnres$mA.id]
       #mnnres$mB.lab <- rownames(xl[[i]]$rot2)[mnnres$mB.id]
 
-      n12 <- pagoda2:::crossNN(xl[[i]]$rot1,xl[[i]]$rot2,k,2,2.0,FALSE,n.cores)
-      n21 <- pagoda2:::crossNN(xl[[i]]$rot2,xl[[i]]$rot1,k,2,2.0,FALSE,n.cores)
+      n12 <- clusterMatch:::crossNN(xl[[i]]$rot1,xl[[i]]$rot2,k,2,2.0,FALSE,n.cores)
+      n21 <- clusterMatch:::crossNN(xl[[i]]$rot2,xl[[i]]$rot1,k,2,2.0,FALSE,n.cores)
       mnn <- drop0(n21*t(n12))
       mnn <- as(n21*t(n12),'dgTMatrix')
       return(data.frame('mA.lab'=rownames(cpproj[[n1]])[mnn@i+1],'mB.lab'=rownames(cpproj[[n2]])[mnn@j+1],'w'=pmax(1-mnn@x,0),stringsAsFactors=F))
@@ -686,8 +686,8 @@ cpcaJCp2 <- function(r.n, k=30, k.self=0, k.self.weight=1,community.detection.me
       #mnnres$mA.lab <- rownames(cpproj[[n1]])[mnnres$mA.id]
       #mnnres$mB.lab <- rownames(cpproj[[n2]])[mnnres$mB.id]
       
-      n12 <- pagoda2:::crossNN(cpproj[[n1]],cpproj[[n2]],k,2,2.0,FALSE,n.cores)
-      n21 <- pagoda2:::crossNN(cpproj[[n2]],cpproj[[n1]],k,2,2.0,FALSE,n.cores)
+      n12 <- clusterMatch:::crossNN(cpproj[[n1]],cpproj[[n2]],k,2,2.0,FALSE,n.cores)
+      n21 <- clusterMatch:::crossNN(cpproj[[n2]],cpproj[[n1]],k,2,2.0,FALSE,n.cores)
       #colnames(n12) <- rownames(n21) <- rownames(cpproj[[n1]])
       #colnames(n21) <- rownames(n12) <- rownames(cpproj[[n2]])
       mnn <- drop0(n21*t(n12))
@@ -710,7 +710,7 @@ cpcaJCp2 <- function(r.n, k=30, k.self=0, k.self.weight=1,community.detection.me
   if(k.self>0) {
     cat('kNN pairs ')
     x <- data.frame(do.call(rbind,lapply(r.n,function(x) {
-      xk <- pagoda2:::crossNN(x$reductions$PCA,x$reductions$PCA,k.self,2,2.0,FALSE,n.cores)
+      xk <- clusterMatch:::crossNN(x$reductions$PCA,x$reductions$PCA,k.self,2,2.0,FALSE,n.cores)
       diag(xk) <- 0;
       xk <- as(xk,'dgTMatrix')
       cat(".")
