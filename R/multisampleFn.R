@@ -374,28 +374,6 @@ removeNullapps <- function(os) {
     os[!unlist(lapply(os,FUN=is.null))]
 }
 
-subsetAllappsToClusters3 <- function(r.n, cl, cl.keep) {
-    cells.keep <- names(cl)[cl %in% cl.keep]
-    cat(length(cells.keep),'\n')
-    lapply(r.n, function(o) {
-        tryCatch({
-            rn <- rownames(o$misc$rawCounts)
-            app.cells.keep <- rn %in% cells.keep
-            if (length(app.cells.keep) < 100) { NULL  }
-            p2 <- Pagoda2$new(t(o$misc$rawCounts[app.cells.keep,]), n.cores=20)
-            p2$adjustVariance(plot=F,gam.k=20)
-            p2$calculatePcaReduction(nPcs=100,n.odgenes=1000,maxit=3000)
-            p2$getEmbedding(type='PCA',embeddingType='tSNE',perplexity=50,verbose=T);
-            p2$makeKnnGraph(k=30, type='PCA', center=T, weight.type='none', n.cores=20, distance='cosine')
-            p2$getKnnClusters(method = infomap.community, type = 'PCA' ,name = 'infomap')
-            p2
-        }, warning = function(w) {
-            NULL
-        }, error = function(e) {
-            NULL
-        })
-    })
-}
 
 gsea.on.p2.table <- function(tbl, mc.cores =32) {
     require('liger')
@@ -471,49 +449,10 @@ getClusterProportionPlots2 <- function(p2o, cl, main = '', order.levels.numeric=
 
 getProportionPlots2 <- function(r.n, cl, order.levels.numeric=FALSE) {
     require(cowplot)
-    clus.prop.plots <- lapply(names(r.n), function(n) {
+   clus.prop.plots <- lapply(names(r.n), function(n) {
         o <- r.n[[n]]
         getClusterProportionPlots2(o, cl, n, order.levels.numeric)
     })
-}
-
-subsetAllappsToClusters2 <- function(r.n, cl, cl.keep) {
-    require(parallel)
-    cells.keep <- names(cl)[cl %in% cl.keep]
-    cat(length(cells.keep),'\n')
-    mclapply(r.n, function(o) {
-        tryCatch({
-            rn <- rownames(o$misc$rawCounts)
-            app.cells.keep <- rn %in% cells.keep
-            if (length(app.cells.keep) < 100) { NULL  }
-            p2 <- Pagoda2$new(t(o$misc$rawCounts[app.cells.keep,]), n.cores=1)
-            p2$adjustVariance(plot=F,gam.k=20)
-            p2$calculatePcaReduction(nPcs=100,n.odgenes=1000,maxit=3000)
-            p2$getEmbedding(type='PCA',embeddingType='tSNE',perplexity=50,verbose=T);
-            p2$makeKnnGraph(k=30, type='PCA', center=T, weight.type='none', n.cores=1, distance='cosine')
-            p2$getKnnClusters(method = infomap.community, type = 'PCA' ,name = 'infomap')
-            p2
-        }, warning = function(w) {
-            NULL
-        }, error = function(e) {
-            NULL
-        })
-    }, mc.cores=32)
-}
-
-subsetAllappsToClusters <- function(r.n, cl, cl.keep) {
-    require(parallel)
-    cells.keep <- names(cl)[cl %in% cl.keep]
-    cat(length(cells.keep),'\n')
-    mclapply(r.n, function(o) {
-        rn <- rownames(o$misc$rawCounts)
-        app.cells.keep <- rn %in% cells.keep
-        if (length(app.cells.keep) < 200) { return(NULL) }
-        p2 <- Pagoda2$new(t(o$misc$rawCounts[app.cells.keep,]), n.cores=1)
-        p2$adjustVariance(plot=F,gam.k=20)
-        p2$calculatePcaReduction(nPcs=100,n.odgenes=1000,maxit=1000)
-        p2
-    }, mc.cores=50)
 }
 
 plotAllWithDepth <- function(p2.objs, filename=NULL,panel.size = 600,mark.cluster.cex=0.8) {
@@ -634,4 +573,184 @@ plotAllWithAnnotationQuick <- function(r.n, wannot, removeEmbSel = FALSE, ...) {
     wannot <- removeSelectionOverlaps(wannot)
     wannot <- factorFromP2Selection(wannot)
     plotAllWithGroups(r.n, wannot, ...)
+}
+
+#' Get the genes that the apps have in common
+#' @param r.n a list of pagoda2 apps
+#' @return a character vector of common genes
+getCommonGenes <- function(r.n) {
+    Reduce(intersect, lapply(r.n, function(o) { colnames(o$counts) }))
+}
+
+#' Plot all apps with the aggregate of a panel of genes
+#' @param p2.objs list of pagoda2 objects
+#' @param signature character vector of genes
+#' @param filename optional file to save to
+#' @param panel.size the size of the panel to save to
+#' @param mark.cluster.cex mark.cluster.cex for the plotting function
+plotAllWithSignature <- function(p2.objs, signature, filename=NULL,panel.size = 600,mark.cluster.cex=0.8) {
+    require(Cairo)
+    n <- ceiling(sqrt(length(p2.objs)))
+    if (!is.null(filename)) {
+        CairoPNG(file=filename,height=n*panel.size,width=n*panel.size)
+    }
+    par(mfrow=c(n,n), mar = c(0.5,0.5,0.5,0.5), mgp = c(2,0.65,0), cex = 0.85);
+    common.genes <- getCommonGenes(combinedApps)
+    genes <- signature[signature %in% common.genes];
+    cat(length(genes), 'of the ',length(signature),'genes were found\n')
+    invisible(lapply(names(p2.objs),function(dn) {
+        d <- p2.objs[[dn]];
+        colors <- Matrix::rowSums(d$counts[,genes])
+        d$plotEmbedding(type='PCA',embeddingType='tSNE',colors=colors,alpha=0.2,do.par=F);
+        legend(x='topleft',bty='n',legend=dn)
+    }))
+    if(!is.null(filename)) {
+        dev.off()
+    }
+}
+
+subsetAllappsToClusters <- function(r.n, cl, cl.keep, remove.null.apps = TRUE) {
+    cells.keep <- names(cl)[cl %in% cl.keep]
+    ret.apps <- lapply(r.n, function(o) {
+        tryCatch({
+            ret <- NULL
+            rn <- rownames(o$misc$rawCounts)
+            app.cells.keep <- rn[rn %in% cells.keep]
+            if (length(app.cells.keep) > 100) {
+                p2 <- Pagoda2$new(t(o$misc$rawCounts[app.cells.keep,]), n.cores=32)
+                p2$adjustVariance(plot=F,gam.k=20)
+                p2$calculatePcaReduction(nPcs=100,n.odgenes=1000,maxit=3000)
+                p2$getEmbedding(type='PCA',embeddingType='tSNE',perplexity=50,verbose=T);
+                p2$makeKnnGraph(k=30, type='PCA', center=T, weight.type='none', n.cores=32, distance='cosine')
+                p2$getKnnClusters(method = infomap.community, type = 'PCA' ,name = 'infomap')
+                ret <- p2
+            }
+            ret
+        }, warning = function(w) {
+            NULL
+        }, error = function(e) {
+            NULL
+        })
+    })
+    if(remove.null.apps) ret.apps <- removeNullapps(ret.apps)
+}
+
+
+    p2PlotAllMultiGeneSets <- function(apps, markers,groups=NULL) {
+        nrow=length(apps);
+        if(is.null(groups)) {
+            ncol=length(markers)
+        } else {
+            ncol = length(markers) + 1;
+        }
+        par(mfrow=c(nrow,ncol))
+        lapply(apps, function(o) {
+            p2PlotEmbeddingMultiGeneSets(o, markers,do.par=F)
+            if(!is.null(groups)) o$plotEmbedding(type='PCA',embeddingType='tSNE',groups=groups,mark.clusters=T, mark.cluster.cex=0.8)
+        })
+    }
+
+#' Get differential expression markers from a pagoda2 differntial expression result
+#' @description return the cluster-specific upregulated genes per cluster
+#' @param de.res pagoda2 differential expression result
+#' @result a list of markers
+#' @export getMarkersFromDE
+getMarkersFromDE <- function(de.res) {
+    lapply(de.res, function(x) {
+        (rownames(subset(x,highest==TRUE,Z>0)))
+    })
+}
+
+
+#' Plot an embedding of the specified pagoda2 application
+#' colored by a set of genes aggregated into a single scale
+#' @description This function will merged the expression patters of
+#' the specified genes, by scalling them individually and summing them
+#' @param app a pagoda2 app
+#' @param genes a character vector of genes to display
+#' @param type type parameter for plotEmbedding()
+#' @param embeddingType embeddingType parameter for plotEmbedding()
+#' @param main a title to display
+#' @param show.gene.count logical, append the ratio of found genes
+#' @return NULL
+#' @export p2PlotEmbeddingMultiGenes
+p2PlotEmbeddingMultiGenes <- function(app, genes, type='PCA', embeddingType='tSNE', main='', show.gene.count=TRUE) {
+    gns <- intersect(genes, colnames(app$counts))
+    if (show.gene.count) { main <- paste0(main,' ',length(gns),'/',length(genes)) }
+    colors <- rowSums(scale(app$counts[,gns]))
+    app$plotEmbedding(type=type,embeddingType=embeddingType,colors=colors,do.par=F)
+    legend(x='topleft',bty='n',legend=main)
+    NULL
+}
+
+
+#' Plot a panel of multiple gene sets using p2PlotEmbeddingMultiGenes for one app
+#' @param app a pagoda2 application
+#' @param markers a list of character vectors specifying marker genes to plot
+#' @param show.gene.count logical, append the ratio of found genes
+#' @param do.par logical, call par() to set the layout
+#' @return NULL
+#' @export p2PlotEmbeddingMultiGeneSets
+p2PlotEmbeddingMultiGeneSets <- function(app, markers, show.gene.count=TRUE,do.par=TRUE) {
+    if(do.par) {
+        n <- ceiling(sqrt(length(markers)))
+        par(mfrow=c(n,n))
+    }
+    lapply(names(markers), function(n) {
+        m <- markers[[n]]
+        p2PlotEmbeddingMultiGenes(app,m,main=n)
+    })
+    NULL
+}
+
+#' Plot a grid of pagoda2 app embedding and lists of markers
+#' @description Plot a grid of embeddings where the rows are different pagoda2 apps
+#' and the columns are different sets of genes folded into a single color scale
+#' @param apps a list of pagoda2 apps
+#' @param markers a list of character vectors denoting the list of gnees
+#' @param groups an optional factor denoting cell sets to be shown a the right most column
+#' @param show.builtin.cl logical show the built in PCA->tSNE embedding (default: FALSE)
+#' @return NULL
+#' @export p2PlotAllMultiGeneSets
+p2PlotAllMultiGeneSets <- function(apps, markers,groups=NULL,show.builtin.cl=FALSE) {
+    nrow=length(apps);
+    ncol=length(markers);
+    if(!is.null(groups))  ncol = ncol + 1;
+    if(show.builtin.cl) ncol = ncol + 1;
+    par(mfrow=c(nrow,ncol), mar=rep(0.5,4), mgp = c(2,0.65,0), cex = 0.85)
+    lapply(apps, function(o) {
+        p2PlotEmbeddingMultiGeneSets(o, markers,do.par=F)
+        if(!is.null(groups)) o$plotEmbedding(type='PCA',embeddingType='tSNE',groups=groups,mark.clusters=T, mark.cluster.cex=0.8,do.par=F)
+        if(show.builtin.cl) o$plotEmbedding(type='PCA',embeddingType='tSNE',do.par=F)
+    })
+    NULL
+}
+
+
+#' Subset a list of pagoda2 application down to specified genes
+#' @param r.n list of pagoda2 applications
+#' @param genes list of genes
+#' @param remove.null.apps logical, remove apps that end up with no cells?
+#' @return a list of apps
+#' @export subsetAllappsToGenes
+subsetAllappsToGenes <- function(r.n, genes, remove.null.apps = TRUE) {
+    ret.apps <- lapply(r.n, function(o) {
+        tryCatch({
+            ret <- NULL
+            app.genes.keep <- genes[genes %in% colnames(o$misc$rawCounts)]
+            if (length(app.genes.keep) > 10) {
+                p2 <- Pagoda2$new(t(o$misc$rawCounts[,app.genes.keep]), n.cores=32)
+                p2$adjustVariance(plot=F,gam.k=20)
+                p2$calculatePcaReduction(nPcs=100,n.odgenes=2000,maxit=3000)
+                p2$getEmbedding(type='PCA',embeddingType='tSNE',perplexity=50,verbose=T);
+                p2$makeKnnGraph(k=30, type='PCA', center=T, weight.type='none', n.cores=32, distance='cosine')
+                p2$getKnnClusters(method = infomap.community, type = 'PCA' ,name = 'infomap')
+                ret <- p2
+            }
+            ret
+        }, error = function(e) {
+            NULL
+        })
+    })
+    if(remove.null.apps) ret.apps <- removeNullapps(ret.apps)
 }
