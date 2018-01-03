@@ -1,30 +1,12 @@
 ### Functions for working with multiple pagoda2 objects
 
-#' Hierarchy of clusters across multiple samples
-#' @param r.n list of pagoda2 object
-#' @clusters factor with the cluster annotations
-multiSampleClusterHierarchy <- function(r.n, clusters) {
-    cms <- lapply(r.n, function(o) { o$counts })
-    common.genes <- Reduce(intersect, lapply(r.n, function(o) { colnames(o$counts) }))
-                                        # genes are rows now
-    bcm <- do.call(rbind, lapply(cms, function(o) {(o[,common.genes])}))
-    clusters <- clusters[rownames(bcm)]
-    clsums <- pagoda2:::colSumByFac(bcm, clusters)
-    ## Set the gene names
-    colnames(clsums) <- colnames(bcm)
-    ## Remove NA sum
-    clsums <- clsums[-1,]
-    rownames(clsums) <- levels(clusters)
-    ## Get numbers of cells in each cluster
-    cl.counts <- table(clusters)[levels(clusters)]
-    ## Get normalised cluster centers
-    clsums.norm <- sweep(clsums, 1, cl.counts, FUN='/')
-    ## Get correlation distance dendrogram
-    hc <- hclust(as.dist(1-cor(t(clsums))))
-    hc 
-}
-
-
+#' Plot multiple pagoda2 apps with a specific genes
+#' @param p2.objs list of pagoda2 object
+#' @param gene the gene to plot
+#' @param filename the name of the file to save to
+#' @param panel size for saving to file
+#' @param mark.cluster.cex cex for cluster names
+#' @export plotAllWithGene
 plotAllWithGene <- function(p2.objs, gene, filename=NULL,panel.size = 600,mark.cluster.cex=0.8) {
     require(Cairo)
     n <- ceiling(sqrt(length(p2.objs)))
@@ -49,7 +31,11 @@ plotAllWithGene <- function(p2.objs, gene, filename=NULL,panel.size = 600,mark.c
     }
 }
 
-
+#' Save a generated list of differential expression comparison as a tree folder structure
+#' @param comparisons comparisons object
+#' @param prefix prefix to use on all files
+#' @return NULL
+#' @export save.comparisons
 save.comparisons <- function(comparisons, prefix) {
     not.saved.count <- 0;
     total.count <- 0;
@@ -75,7 +61,11 @@ save.comparisons <- function(comparisons, prefix) {
     invisible(NULL)
 }
 
-## Run all comparisons for all clusters
+#' Generate comparisons with Wilcoxon text
+#' @param r.n list of pagoda2 objects
+#' @param groups groups to compare
+#' @param comparisons comparisons to perform
+#' @export runAllcomparisonsWilcox
 runAllcomparisonsWilcox <- function(r.n, groups, comparisons) {
     ## For each cluster 
     library('parallel')
@@ -105,6 +95,7 @@ runAllcomparisonsWilcox <- function(r.n, groups, comparisons) {
 
 #' Compare cells in the cluster.to.compare between samples in
 #' samples.1 and samples.2
+#' @export multisampleDE.Wilcox
 multisampleDE.Wilcox <- function(r.n, cl, cluster.to.compare, samples.1, samples.2) {
                                         # requires
     require('Matrix')
@@ -166,7 +157,8 @@ multisampleDE.Wilcox <- function(r.n, cl, cluster.to.compare, samples.1, samples
     de.set
 }
 
-## Run all comparisons for all clusters
+#' Run all comparisons for all clusters
+#' @export runAllcomparisonsKS
 runAllcomparisonsKS <- function(r.n, groups, comparisons) {
     ## For each cluster 
     library('parallel')
@@ -193,11 +185,9 @@ runAllcomparisonsKS <- function(r.n, groups, comparisons) {
     all.de.ks.results
 }
 
-
 #' Compare cells in the cluster.to.compare between samples in
 #' samples.1 and samples.2
 multisampleDE.KS <- function(r.n, cl, cluster.to.compare, samples.1, samples.2) {
-                                        # requires
     require('Matrix')
     require(stats)
     require('pbapply')
@@ -259,7 +249,8 @@ multisampleDE.KS <- function(r.n, cl, cluster.to.compare, samples.1, samples.2) 
     res2
 }
 
-
+#' Plot proportion plots
+#' @export plotProportionPlots
 plotProportionPlots <- function(r.n, cl, order.levels.numeric=FALSE) {
     require(cowplot)
     clus.prop.plots <- lapply(names(r.n), function(n) {
@@ -270,6 +261,8 @@ plotProportionPlots <- function(r.n, cl, order.levels.numeric=FALSE) {
     do.call(plot_grid, pls)      
 }
 
+#' Plot count plots
+#' @export plotCountPlots
 plotCountPlots <- function(r.n, cl, order.levels.numeric=FALSE) {
     require(cowplot)
     clus.prop.plots <- lapply(names(r.n), function(n) {
@@ -280,6 +273,8 @@ plotCountPlots <- function(r.n, cl, order.levels.numeric=FALSE) {
     do.call(plot_grid, pls)      
 }
 
+#' Get cluster proportion plots
+#' @export getClusterProportionsPlots
 getClusterProportionsPlots <- function(p2o, cl, main = '', order.levels.numeric=FALSE) {
     require(ggplot2)
     this.app.cells <- rownames(p2o$counts)
@@ -307,6 +302,7 @@ getClusterProportionsPlots <- function(p2o, cl, main = '', order.levels.numeric=
 }
 
 #' Plots all the objects after doing a quick cleanup of the annotation
+#' @export plotAllWithAnnotationQuick
 plotAllWithAnnotationQuick <- function(r.n, wannot, removeEmbSel = FALSE, ...) {
     ## Remove embedding selection
     if (removeEmbSel) {
@@ -318,7 +314,8 @@ plotAllWithAnnotationQuick <- function(r.n, wannot, removeEmbSel = FALSE, ...) {
     plotAllWithGroups(r.n, wannot, ...)
 }
 
-## Fix a pagoda2 selection object prefixes
+#' Fix a pagoda2 selection object prefixed
+#' @export fixSelectionPrefix
 fixSelectionPrefix <- function(p2selection, map) {
     nsel <- lapply(p2selection, function(cs) {
         spid <- strsplit(cs$cells,'_')
@@ -335,6 +332,13 @@ fixSelectionPrefix <- function(p2selection, map) {
     nsel
 }
 
+#' Plot multiple pagoda2 application with the specified groups
+#' @param p2.objs list of  pagoda2 objects
+#' @param groups names factor of groups
+#' @param filename filename to save to as PNG
+#' @param panel.size panel size for saving to disk
+#' @param mark.cluster.cex cex for cluster names
+#' @export plotAllWithGroups
 plotAllWithGroups <- function(p2.objs, groups, filename=NULL,panel.size = 600,mark.cluster.cex=0.8) {
     require(Cairo)
     n <- ceiling(sqrt(length(p2.objs)))
@@ -361,6 +365,11 @@ plotAllWithGroups <- function(p2.objs, groups, filename=NULL,panel.size = 600,ma
     }
 }
 
+#' View clusters in multiple pagoda2 apps one after the other
+#' @param apps list of pagoda2 objects
+#' @param groups named factor of clusters
+#' @param new.window open a new X11() window?
+#' @export viewClustersInteractively
 viewClustersInteractively <- function(apps,groups, new.window=T) {
     if (new.window) X11()
     lapply(levels(groups), function(g) {
@@ -370,11 +379,18 @@ viewClustersInteractively <- function(apps,groups, new.window=T) {
     invisible(0);
 }
 
+#' From a list of pagoda2 application remove any that are NULL
+#' @param os list of pagoda2 applications
+#' @return list of pagoda2 application filtered for NULLs
+#' @export removeNullapps
 removeNullapps <- function(os) {
     os[!unlist(lapply(os,FUN=is.null))]
 }
 
-
+#' Perform gsea on a pagoda2 table of results
+#' @param tbl pagoda2 table of results
+#' @param mc.cores number of CPUs to use
+#' @export gsea.on.p2.table
 gsea.on.p2.table <- function(tbl, mc.cores =32) {
     require('liger')
     zsrs <- tbl$Z
@@ -402,6 +418,8 @@ gsea.on.p2.table <- function(tbl, mc.cores =32) {
     r.gsea[order(r.gsea$q.val,decreasing=F),]
 }
 
+#' Get number of differential genes at specified cutoff
+#' @export getDEcountAtCutoff
 getDEcountAtCutoff <- function(de.res, z.cutoff=6, M.cutoff=2) {
     de.c <- lapply(cl.merged.clean.renamed_wilcox, function(cl.list) {
         lapply(cl.list, function(x) {
@@ -419,6 +437,14 @@ getDEcountAtCutoff <- function(de.res, z.cutoff=6, M.cutoff=2) {
     de.counts
 }
 
+#' Get cluster proportion plots version 2
+#' @param p2o a pagoda2 application
+#' @param cl clusters to summarise to
+#' @param main plot title
+#' @param order.levels.numeric order levels as it they were numbers
+#' @param colors a named list of colors to use
+#' @return ggplot2 barplot
+#' @export getClusterProportionPlots2
 getClusterProportionPlots2 <- function(p2o, cl, main = '', order.levels.numeric=FALSE, colors = NULL) {
     require(ggplot2)
     this.app.cells <- rownames(p2o$counts)
@@ -442,20 +468,29 @@ getClusterProportionPlots2 <- function(p2o, cl, main = '', order.levels.numeric=
     dftmp$pc <- dftmp$Freq/sum(dftmp$Freq)
     freq.plot <- ggplot(dftmp, aes(x=this.sample.annot, y= pc, fill=this.sample.annot)) + geom_bar(stat='identity')  + theme_bw() +
         theme(axis.text.x = element_text(angle = 33, hjust = 1)) + scale_x_discrete(name='') +
-        scale_y_continuous(name='') + theme(plot.margin = margin(0,0,0,0,"cm")) + ggtitle(main) + 
+        scale_y_continuous(name='') +  ggtitle(main) + 
         scale_fill_manual(values=colors) + guides(fill=FALSE) + theme(plot.title = element_text(size = 10, face = "bold"))
     freq.plot
 }
 
+#' Get proportion plots for a list of pagoda2 objects
+#' @param r.n list of pagoda2 objects
+#' @param cl clusters
+#' @param order.levels.numeric order leves as if they are numbers
+#' @return a list of ggplot2 objects, plot with do.call(plot_grid, [result])
+#' @export getProportionPlots2
 getProportionPlots2 <- function(r.n, cl, order.levels.numeric=FALSE) {
     require(cowplot)
-   clus.prop.plots <- lapply(names(r.n), function(n) {
+    clus.prop.plots <- lapply(names(r.n), function(n) {
         o <- r.n[[n]]
         getClusterProportionPlots2(o, cl, n, order.levels.numeric)
     })
 }
 
+#' Plot multiple pagoda application with depth
+#' @export plotAllWithDepth
 plotAllWithDepth <- function(p2.objs, filename=NULL,panel.size = 600,mark.cluster.cex=0.8) {
+    warning('deprecated')
     require(Cairo)
     n <- ceiling(sqrt(length(p2.objs)))
     if (!is.null(filename)) {
@@ -473,6 +508,10 @@ plotAllWithDepth <- function(p2.objs, filename=NULL,panel.size = 600,mark.cluste
     }
 }
 
+#' Get hierarchy of cell groups across multiple apps
+#' @param r.n list of pagoda2 objects
+#' @param clusters factor of clusters/cell grousp to summarise to
+#' @export multiSampleClusterHierarchy
 multiSampleClusterHierarchy <- function(r.n, clusters) {
     cms <- lapply(r.n, function(o) { o$counts })
     common.genes <- Reduce(intersect, lapply(r.n, function(o) { colnames(o$counts) }))
@@ -492,87 +531,6 @@ multiSampleClusterHierarchy <- function(r.n, clusters) {
     ## Get correlation distance dendrogram
     hc <- hclust(as.dist(1-cor(t(clsums))))
     hc 
-}
-
-plotAllWithGene <- function(p2.objs, gene, filename=NULL,panel.size = 600,mark.cluster.cex=0.8) {
-    require(Cairo)
-    n <- ceiling(sqrt(length(p2.objs)))
-    if (!is.null(filename)) {
-        CairoPNG(file=filename,height=n*panel.size,width=n*panel.size)
-    }
-    par(mfrow=c(n,n), mar = c(0.5,0.5,0.5,0.5), mgp = c(2,0.65,0), cex = 0.85);
-    invisible(lapply(names(p2.objs),function(dn) {
-        d <- p2.objs[[dn]];
-        gene.names <- colnames(d$counts)
-        if(!gene %in% gene.names) {
-            colors <- rep('grey70', length(gene.names))
-        } else {
-            colors <- d$counts[,gene]
-        }
-        ## If no cells present fix
-        d$plotEmbedding(type='PCA',embeddingType='tSNE',colors=colors,alpha=0.2,do.par=F);
-        legend(x='topleft',bty='n',legend=dn)
-    }))
-    if(!is.null(filename)) {
-        dev.off()
-    }
-}
-
-getClusterProportionsPlots <- function(p2o, cl, main = '', order.levels.numeric=FALSE) {
-    require(ggplot2)
-    this.app.cells <- rownames(p2o$counts)
-    this.sample.annot <- rep('NA', length(this.app.cells))
-    names(this.sample.annot) <- this.app.cells
-    ## Cells from this app that are annotated
-    this.app.cells.annot <- intersect(this.app.cells, names(cl))
-    this.sample.annot[this.app.cells.annot] <- as.character(cl[this.app.cells.annot])
-    this.sample.annot <- factor(this.sample.annot, levels=levels(cl))
-    dftmp <- data.frame(table(this.sample.annot))
-    ## sort levels
-    if (order.levels.numeric) {
-        lvls <- levels(dftmp$this.sample.annot)
-        lvls <- lvls[order(as.numeric(as.character(lvls)))]
-        dftmp$this.sample.annot <- factor(as.character(dftmp$this.sample.annot), levels=lvls)
-    }
-    count.plot <- ggplot(dftmp, aes(x=this.sample.annot, y= Freq)) + geom_bar(stat='identity')  + theme_bw() +
-        theme(axis.text.x = element_text(angle = 33, hjust = 1)) + scale_x_discrete(name='Cell type') +
-        scale_y_continuous(name='Count') + theme(plot.margin = margin(0,0,0,0,"cm")) + ggtitle(main)
-    dftmp$pc <- dftmp$Freq/sum(dftmp$Freq)
-    freq.plot <- ggplot(dftmp, aes(x=this.sample.annot, y= pc)) + geom_bar(stat='identity')  + theme_bw() +
-        theme(axis.text.x = element_text(angle = 33, hjust = 1)) + scale_x_discrete(name='') +
-        scale_y_continuous(name='') + theme(plot.margin = margin(0,0,0,0,"cm")) + ggtitle(main)
-    list(count.plot=count.plot, freq.plot=freq.plot) 
-}
-
-plotProportionPlots <- function(r.n, cl, order.levels.numeric=FALSE) {
-    require(cowplot)
-    clus.prop.plots <- lapply(names(r.n), function(n) {
-        o <- r.n[[n]]
-        getClusterProportionsPlots(o, cl, n, order.levels.numeric)
-    })
-    pls <- lapply(clus.prop.plots, function(x) {x$freq.plot})
-    do.call(plot_grid, pls)      
-}
-
-plotCountPlots <- function(r.n, cl, order.levels.numeric=FALSE) {
-    require(cowplot)
-    clus.prop.plots <- lapply(names(r.n), function(n) {
-        o <- r.n[[n]]
-        getClusterProportionsPlots(o, cl, n, order.levels.numeric)
-    })
-    pls <- lapply(clus.prop.plots, function(x) {x$count.plot})
-    do.call(plot_grid, pls)      
-}
-
-plotAllWithAnnotationQuick <- function(r.n, wannot, removeEmbSel = FALSE, ...) {
-    ## Remove embedding selection
-    if (removeEmbSel) {
-        wannot$`Embedding.Selection` <- NULL
-    }
-    ## Force remove multiclassified
-    wannot <- removeSelectionOverlaps(wannot)
-    wannot <- factorFromP2Selection(wannot)
-    plotAllWithGroups(r.n, wannot, ...)
 }
 
 #' Get the genes that the apps have in common
@@ -609,7 +567,13 @@ plotAllWithSignature <- function(p2.objs, signature, filename=NULL,panel.size = 
     }
 }
 
+#' Subset all apps to the specified clusters
+#' @param r.n list of pagoda2 apps to subset
+#' @param cl factor of clusters
+#' @param cl.keep names of factor levels the cells of which to keep
+#' @param remove.null.apps logical, remove any apps that don't pass filters
 subsetAllappsToClusters <- function(r.n, cl, cl.keep, remove.null.apps = TRUE) {
+    warning('deprecated')
     cells.keep <- names(cl)[cl %in% cl.keep]
     ret.apps <- lapply(r.n, function(o) {
         tryCatch({
@@ -636,24 +600,10 @@ subsetAllappsToClusters <- function(r.n, cl, cl.keep, remove.null.apps = TRUE) {
 }
 
 
-    p2PlotAllMultiGeneSets <- function(apps, markers,groups=NULL) {
-        nrow=length(apps);
-        if(is.null(groups)) {
-            ncol=length(markers)
-        } else {
-            ncol = length(markers) + 1;
-        }
-        par(mfrow=c(nrow,ncol))
-        lapply(apps, function(o) {
-            p2PlotEmbeddingMultiGeneSets(o, markers,do.par=F)
-            if(!is.null(groups)) o$plotEmbedding(type='PCA',embeddingType='tSNE',groups=groups,mark.clusters=T, mark.cluster.cex=0.8)
-        })
-    }
-
 #' Get differential expression markers from a pagoda2 differntial expression result
 #' @description return the cluster-specific upregulated genes per cluster
 #' @param de.res pagoda2 differential expression result
-#' @result a list of markers
+#' @return a list of markers
 #' @export getMarkersFromDE
 getMarkersFromDE <- function(de.res) {
     lapply(de.res, function(x) {
@@ -753,4 +703,324 @@ subsetAllappsToGenes <- function(r.n, genes, remove.null.apps = TRUE) {
         })
     })
     if(remove.null.apps) ret.apps <- removeNullapps(ret.apps)
+}
+
+
+
+#' Calculate zlim from a vector of numeric values
+#' @param vs numeric values
+#' @return zlim range
+calcZlim <- function(vs, gradient.range.quantile = 0.95) {
+    zlim <- as.numeric(quantile(vs,p=c(1-gradient.range.quantile,gradient.range.quantile)))
+    if(diff(zlim)==0) {
+        zlim <- as.numeric(range(vs))
+    }
+    zlim
+}
+
+
+#' Plot multiple pagoda2 application with a specific genes and common zlim
+#' @param p2.objs list of pagoda2 applications
+#' @param gene name of genes to plot
+#' @param filename if not NULL save to file
+#' @param panel.size panel size for saving to file
+#' @param mark.cluster.cex cex for marking clusters
+#' @return NULL
+#' @export plotAllWithDepth2
+plotAllWithDepth2 <- function(p2.objs, filename=NULL,panel.size = 600,mark.cluster.cex=0.8) {
+    require(Cairo)
+    n <- ceiling(sqrt(length(p2.objs)))
+    if (!is.null(filename)) {
+        CairoPNG(file=filename,height=n*panel.size,width=n*panel.size)
+    }
+    ## Get all depth values
+    depthvalues <- unlist(lapply(p2.objs, function(o) {o$depth}))
+    zlim <- calcZlim(depthvalues)
+    ## Do the plotting
+    par(mfrow=c(n,n), mar = c(0.5,0.5,0.5,0.5), mgp = c(2,0.65,0), cex = 0.85);
+    invisible(lapply(names(p2.objs),function(dn) {
+        d <- p2.objs[[dn]];
+        ## If no cells present fix
+        d$plotEmbedding(type='PCA',embeddingType='tSNE',colors=d$depth,alpha=0.2,do.par=F, zlim=zlim);
+        legend(x='topleft',bty='n',legend=dn)
+    }))
+    if(!is.null(filename)) {
+        dev.off()
+    }
+}
+
+#' Plot multiple pagoda2 application with a specific genes and common zlim
+#' @param p2.objs list of pagoda2 applications
+#' @param gene name of genes to plot
+#' @param filename if not NULL save to file
+#' @param panel.size panel size for saving to file
+#' @param mark.cluster.cex cex for marking clusters
+#' @return NULL
+#' @export plotAllWithGene2
+plotAllWithGene2 <- function(p2.objs, gene, filename=NULL,panel.size = 600,mark.cluster.cex=0.8) {
+    require(Cairo)
+    n <- ceiling(sqrt(length(p2.objs)))
+    if (!is.null(filename)) {
+        CairoPNG(file=filename,height=n*panel.size,width=n*panel.size)
+    }
+    expr.vals <- unlist(lapply(p2.objs, function(o) {
+        ret <- NA
+        if (gene %in% colnames(o$counts)) {
+            ret <- o$counts[,gene]
+        }
+        ret
+    }))
+    expr.vals <-expr.vals[!is.na(expr.vals)]
+    zlim <- calcZlim(expr.vals)
+    par(mfrow=c(n,n), mar = c(0.5,0.5,0.5,0.5), mgp = c(2,0.65,0), cex = 0.85);
+    invisible(lapply(names(p2.objs),function(dn) {
+        d <- p2.objs[[dn]];
+        gene.names <- colnames(d$counts)
+        if(!gene %in% gene.names) {
+            colors <- rep('grey70', length(gene.names))
+        } else {
+            colors <- d$counts[,gene]
+        }
+        ## If no cells present fix
+        d$plotEmbedding(type='PCA',embeddingType='tSNE',colors=colors,alpha=0.2,do.par=F,zlim=zlim);
+        legend(x='topleft',bty='n',legend=dn)
+    }))
+    if(!is.null(filename)) {
+        dev.off()
+    }
+    NULL
+}
+
+#' Show head and tail of a table
+#' @export headtail
+headtail <- function(x,n=6) {
+    rbind(head(x,n),tail(x,n))
+}
+
+#' Plot marker for apps
+#' @export plotMarkerForApps
+plotMarkerForApps <- function(r.n, clusters, marker, only.clusters= NULL, hide.outliers=TRUE) {
+    ## Optionally look only at specific clusters
+    if (!is.null(only.clusters)) {
+        clusters <- factor2Char(clusters)
+        clusters <- clusters[clusters %in% only.clusters]
+        clusters <- as.factor(clusters)
+    }
+    if(hide.outliers) {
+        outlier.alpha=0;
+    } else  {
+        outlier.alpha=1
+    }
+    ## Get one big matrix
+    common.genes <- Reduce(intersect,lapply(r.n, function(o) {colnames(o$counts)}))
+    bigM <- do.call(rbind,lapply(r.n,function(o) {o$counts[,common.genes]}))
+    ## subset clusters and matrix to common cells
+    common.cells <- intersect(rownames(bigM), names(clusters))
+    bigM <- bigM[common.cells,]
+    clusters <- clusters[common.cells]
+    ## Cell counts in different apps
+    cc <- unlist(lapply(r.n, function(o) { dim(o$counts)[1] }))
+    ## Names factor with cell designation in each sample/app
+    sample <- unlist(lapply(names(cc), function(ccn) {
+        r <- rep(ccn,cc[ccn])
+        names(r) <- rownames(r.n[[ccn]]$counts)
+        r
+    }))[common.cells]
+    ## Put in one df for plotting
+    df.tmp <- data.frame(expr=bigM[,marker],sample,clusters)
+    ggplot(df.tmp, aes(y=expr, x=clusters, fill=sample)) + geom_boxplot(outlier.alpha=0)  + theme(axis.text.x = element_text(angle=90, hjust=1)) + ggtitle(marker)
+}
+
+
+#' Get proportion plots
+#' @export getClusterProportionPlots3
+getClusterProportionPlots3 <- function(p2o, cl, main = '', order.levels.numeric=FALSE, colors = NULL, only.clusters = NULL) {
+    if (!is.null(only.clusters)) {
+        cl <- factor2Char(cl)
+        cl <- cl[cl %in% only.clusters]
+        cl <- as.factor(cl)
+    }
+    require(ggplot2)
+    this.app.cells <- rownames(p2o$counts)
+    this.sample.annot <- rep('NA', length(this.app.cells))
+    names(this.sample.annot) <- this.app.cells
+    ## Cells from this app that are annotated
+    this.app.cells.annot <- intersect(this.app.cells, names(cl))
+    this.sample.annot[this.app.cells.annot] <- as.character(cl[this.app.cells.annot])
+    this.sample.annot <- factor(this.sample.annot, levels=levels(cl))
+    dftmp <- data.frame(table(this.sample.annot))
+    ## sort levels
+    if (order.levels.numeric) {
+        lvls <- levels(dftmp$this.sample.annot)
+        lvls <- lvls[order(as.numeric(as.character(lvls)))]
+        dftmp$this.sample.annot <- factor(as.character(dftmp$this.sample.annot), levels=lvls)
+    }
+    if (is.null(colors)) {
+        colors <- rainbow(nlevels(cl), s=1,v=0.8)
+        names(colors) <- levels(cl)
+    }
+    dftmp$pc <- dftmp$Freq/sum(dftmp$Freq)
+    freq.plot <- ggplot(dftmp, aes(x=this.sample.annot, y= pc, fill=this.sample.annot)) + geom_bar(stat='identity')  + theme_bw() +
+        theme(axis.text.x = element_text(angle = 33, hjust = 1)) + scale_x_discrete(name='') +
+        scale_y_continuous(name='') + theme(plot.margin = margin(0,0,0,0,"cm")) + ggtitle(main) + 
+        scale_fill_manual(values=colors) + guides(fill=FALSE) + theme(plot.title = element_text(size = 10, face = "bold"))
+    freq.plot
+}
+
+#' Get proportion plots
+#' @export getProportionPlots3
+getProportionPlots3 <- function(r.n, cl, order.levels.numeric=FALSE, only.clusters = NULL) {
+    require(cowplot)
+    clus.prop.plots <- lapply(names(r.n), function(n) {
+        o <- r.n[[n]]
+        getClusterProportionPlots3(o, cl, n, order.levels.numeric, only.clusters = only.clusters)
+    })
+}
+
+#' View two annotations side by side
+#' @export viewAnnotationsSideBySide
+viewAnnotationsSideBySide <- function(p2.objs, annotation1, annotation2, filename=NULL, panel.size=600, mark.cluster.cex=0.8) {
+    require(Cairo)
+    n <- length(p2.objs)
+    if (!is.null(filename)) {
+        CairoPNG(file=filename,height=n*panel.size,width=2*panel.size)
+    }
+    par(mfrow=c(n,2), mar = c(0.5,0.5,0.5,0.5), mgp = c(2,0.65,0), cex = 0.85);
+    invisible(lapply(names(p2.objs),function(dn) {
+        d <- p2.objs[[dn]];
+        ## If no cells present fix
+        d$plotEmbedding(type='PCA',embeddingType='tSNE',groups=annotation1,alpha=0.2,do.par=F,mark.clusters=T,mark.cluster.cex=mark.cluster.cex);
+        legend(x='topleft',bty='n',legend=paste0(dn,'_annot1'))
+        d$plotEmbedding(type='PCA',embeddingType='tSNE',groups=annotation2,alpha=0.2,do.par=F,mark.clusters=T,mark.cluster.cex=mark.cluster.cex);
+        legend(x='topleft',bty='n',legend=paste0(dn,'_annot2'))
+    }))
+    if(!is.null(filename)) {
+        dev.off()
+    }
+}
+
+#' Convert factor to character preserving names
+#' @param f a factor
+#' @return a character vector
+#' @export factor2Char
+factor2Char <- function(f) {
+    r <- as.character(f);
+    names(r) <- names(f);
+    r
+}
+
+#' Replace the factors levels of one factor with those of another
+#' @param originalFactor originalFactor to replace, not modified
+#' @param newFactor specifiying what to replace with
+#' @param newPrefix prefix for newFactor names
+#' @return a new factor that merged newFactor into originalFactor
+#' @export replaceClusterFactors
+replaceClusterFactors <- function(originalFactor, newFactor, newPrefix=NULL) {
+    if(is.null(newPrefix)) stop('newPrefix is null');
+    wf <- factor2Char(originalFactor);
+    nwf <- factor2Char(newFactor);
+    if(any(!names(nwf) %in% names(wf))) stop('newFactor is not a subset of originalFactor');
+    wf[names(nwf)] <- paste0(c(newPrefix), nwf);
+    wf <- as.factor(wf);
+    wf
+}
+
+#' Subset all apps to clusters
+#' @export subsetAllappsToClusters3
+subsetAllappsToClusters3 <- function(r.n, cl, cl.keep) {
+    cells.keep <- names(cl)[cl %in% cl.keep]
+    cat(length(cells.keep),'\n')
+    lapply(r.n, function(o) {
+        tryCatch({
+            rn <- rownames(o$misc$rawCounts)
+            app.cells.keep <- rn %in% cells.keep
+            if (length(app.cells.keep) < 100) { NULL  }
+            p2 <- Pagoda2$new(t(o$misc$rawCounts[app.cells.keep,]), n.cores=20)
+            p2$adjustVariance(plot=F,gam.k=20)
+            p2$calculatePcaReduction(nPcs=100,n.odgenes=1000,maxit=3000)
+            p2$getEmbedding(type='PCA',embeddingType='tSNE',perplexity=50,verbose=T);
+            p2$makeKnnGraph(k=30, type='PCA', center=T, weight.type='none', n.cores=20, distance='cosine')
+            p2$getKnnClusters(method = infomap.community, type = 'PCA' ,name = 'infomap')
+            p2
+        }, warning = function(w) {
+            NULL
+        }, error = function(e) {
+            NULL
+        })
+    })
+}
+
+#' Plot an embedding with multiple gene sets
+#' @param app pagoda2 app to plot
+#' @param markers character vector of genes to lot
+#' @param show.gene.count show how many genes were found
+#' @param do.par run par()
+#' @return NULL
+#' @export p2PlotEmbeddingMultiGeneSets
+p2PlotEmbeddingMultiGeneSets <- function(app, markers, show.gene.count=TRUE,do.par=TRUE) {
+    if(do.par) {
+        n <- ceiling(sqrt(length(markers)))
+        par(mfrow=c(n,n))
+    }
+    lapply(names(markers), function(n) {
+        m <- markers[[n]]
+        p2PlotEmbeddingMultiGenes(app,m,main=n)
+    })
+    NULL
+}
+
+#' Get cluster specific markers from a pagoda2 differential expression results
+#' @param de.res pagoda2 differential expression result
+#' @return list of character vectors of marker genes
+#' @export getMarkersFromDE
+getMarkersFromDE <- function(de.res) {
+    lapply(de.res, function(x) {
+        (rownames(subset(x,highest==TRUE,Z>0)))
+    })
+}
+
+#' Plot the embedding of a pagoda2 app colors by the trend of expression
+#' of multiple genes
+#' @param app the pagoda2 app to plot
+#' @param genes a list of genes to merge and plot
+#' @param type specifies the embedding
+#' @param embeddingType specified the embedding
+#' @param main title of plot
+#' @param show.gene.count show how many genes were found
+#' @export p2PlotEmbeddingMultiGenes
+p2PlotEmbeddingMultiGenes <- function(app, genes, type='PCA', embeddingType='tSNE', main='',
+                                      show.gene.count=TRUE) {
+    gns <- intersect(genes, colnames(app$counts))
+    if (show.gene.count) {
+        main <- paste0(main,' ',length(gns),'/',length(genes))
+    }
+    colors <- rowSums(scale(app$counts[,gns]))
+    app$plotEmbedding(type=type,embeddingType=embeddingType,colors=colors,main=main)
+}
+
+#' Get raw count matrices
+#' @export getCountMatricesRaw
+getCountMatricesRaw <- function(r.n, common.genes) {
+    ccm.raw <- mclapply(r.n,function(r) {
+        om <- as(r$misc$rawCounts,'dgTMatrix')
+        om <- om[,colnames(om) %in% common.genes]
+        mi <- match(colnames(om),common.genes)
+        x <- new("dgTMatrix",i = om@i,j = as.integer(mi[om@j+1]-1),x=om@x,Dim=c(nrow(om),length(common.genes)))
+        rownames(x) <- rownames(om); colnames(x) <- common.genes
+        as(x,'dgCMatrix')
+    },mc.cores=30)
+    ccm.raw
+}
+
+#' Get common genes between multiple pagoda apps
+#' @param r.n list of pagoda2 apps
+#' @param cutoff minimum number of apps that must have genes
+#' @return character vector of common genes
+#' @export getCommonGenesCutoff
+getCommonGenesCutoff <- function(r.n, cutoff = 3) {
+    gl <- lapply(r.n, function(r) colnames(r$counts))
+    all.genes <- unique(unlist(gl))
+    gc <- do.call(rbind, lapply(gl, function(x) all.genes %in% x))
+    common.genes <- all.genes[apply(gc,2,sum) > cutoff]
+    common.genes
 }
