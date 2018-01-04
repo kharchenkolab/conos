@@ -487,6 +487,23 @@ getProportionPlots2 <- function(r.n, cl, order.levels.numeric=FALSE) {
     })
 }
 
+#' Get proportion plots for a list of pagoda2 objects
+#' @param r.n list of pagoda2 objects
+#' @param cl clusters
+#' @param order.levels.numeric order leves as if they are numbers
+#' @param only.clusters only include specified clusters
+#' @export getProportionPlots3
+getProportionPlots3 <- function(r.n, cl, order.levels.numeric=FALSE, only.clusters = NULL,ymax=NULL) {
+    require(cowplot)
+    nms <- names(r.n)
+    names(nms) <- nms
+    clus.prop.plots <- lapply(nms, function(n) {
+        o <- r.n[[n]]
+        getClusterProportionPlots3(o, cl, n, order.levels.numeric, only.clusters = only.clusters,ymax=ymax)
+    })
+}
+
+
 #' Plot multiple pagoda application with depth
 #' @export plotAllWithDepth
 plotAllWithDepth <- function(p2.objs, filename=NULL,panel.size = 600,mark.cluster.cex=0.8) {
@@ -512,25 +529,28 @@ plotAllWithDepth <- function(p2.objs, filename=NULL,panel.size = 600,mark.cluste
 #' @param r.n list of pagoda2 objects
 #' @param clusters factor of clusters/cell grousp to summarise to
 #' @export multiSampleClusterHierarchy
-multiSampleClusterHierarchy <- function(r.n, clusters) {
+multiSampleClusterHierarchy <- function(r.n, cls) {
     cms <- lapply(r.n, function(o) { o$counts })
     common.genes <- Reduce(intersect, lapply(r.n, function(o) { colnames(o$counts) }))
-                                        # genes are rows now
+    ## genes are rows now
     bcm <- do.call(rbind, lapply(cms, function(o) {(o[,common.genes])}))
-    clusters <- clusters[rownames(bcm)]
-    clsums <- pagoda2:::colSumByFac(bcm, clusters)
+    cls <- cls[rownames(bcm)]
+    clsums <- pagoda2:::colSumByFac(bcm, cls)
     ## Set the gene names
     colnames(clsums) <- colnames(bcm)
     ## Remove NA sum
     clsums <- clsums[-1,]
-    rownames(clsums) <- levels(clusters)
+    rownames(clsums) <- levels(cls)
     ## Get numbers of cells in each cluster
-    cl.counts <- table(clusters)[levels(clusters)]
+    cl.counts <- table(cls)[levels(cls)]
     ## Get normalised cluster centers
     clsums.norm <- sweep(clsums, 1, cl.counts, FUN='/')
     ## Get correlation distance dendrogram
-    hc <- hclust(as.dist(1-cor(t(clsums))))
-    hc 
+    hc.cor.euclidean <- hclust(dist(clsums.norm))
+    hc.cor.pearson <- hclust(as.dist(1-cor(t(clsums.norm),method='pearson')))
+    hc.cor.spearman <- hclust(as.dist(1-cor(t(clsums.norm),method='spearman')))
+    hc <- list(hc.cor.euclidean=hc.cor.euclidean,hc.cor.pearson=hc.cor.pearson,hc.cor.spearman=hc.cor.spearman)
+    hc
 }
 
 #' Get the genes that the apps have in common
@@ -641,14 +661,15 @@ p2PlotEmbeddingMultiGenes <- function(app, genes, type='PCA', embeddingType='tSN
 #' @param do.par logical, call par() to set the layout
 #' @return NULL
 #' @export p2PlotEmbeddingMultiGeneSets
-p2PlotEmbeddingMultiGeneSets <- function(app, markers, show.gene.count=TRUE,do.par=TRUE) {
+p2PlotEmbeddingMultiGeneSets <- function(app, markers, show.gene.count=TRUE,do.par=TRUE,main='') {
     if(do.par) {
         n <- ceiling(sqrt(length(markers)))
         par(mfrow=c(n,n))
     }
     lapply(names(markers), function(n) {
         m <- markers[[n]]
-        p2PlotEmbeddingMultiGenes(app,m,main=n)
+        main <- paste0(main,n)
+        p2PlotEmbeddingMultiGenes(app,m,main=main)
     })
     NULL
 }
@@ -668,8 +689,9 @@ p2PlotAllMultiGeneSets <- function(apps, markers,groups=NULL,show.builtin.cl=FAL
     if(!is.null(groups))  ncol = ncol + 1;
     if(show.builtin.cl) ncol = ncol + 1;
     par(mfrow=c(nrow,ncol), mar=rep(0.5,4), mgp = c(2,0.65,0), cex = 0.85)
-    lapply(apps, function(o) {
-        p2PlotEmbeddingMultiGeneSets(o, markers,do.par=F)
+    lapply(names(apps), function(n) {
+        o <- apps[[n]]
+        p2PlotEmbeddingMultiGeneSets(o, markers,do.par=F,main=paste0(n, ' '))
         if(!is.null(groups)) o$plotEmbedding(type='PCA',embeddingType='tSNE',groups=groups,mark.clusters=T, mark.cluster.cex=0.8,do.par=F)
         if(show.builtin.cl) o$plotEmbedding(type='PCA',embeddingType='tSNE',do.par=F)
     })
@@ -834,7 +856,8 @@ plotMarkerForApps <- function(r.n, clusters, marker, only.clusters= NULL, hide.o
 
 #' Get proportion plots
 #' @export getClusterProportionPlots3
-getClusterProportionPlots3 <- function(p2o, cl, main = '', order.levels.numeric=FALSE, colors = NULL, only.clusters = NULL) {
+getClusterProportionPlots3 <- function(p2o, cl, main = '', order.levels.numeric=FALSE, colors = NULL,
+                                       only.clusters = NULL,ymax=NULL) {
     if (!is.null(only.clusters)) {
         cl <- factor2Char(cl)
         cl <- cl[cl %in% only.clusters]
@@ -860,21 +883,14 @@ getClusterProportionPlots3 <- function(p2o, cl, main = '', order.levels.numeric=
         names(colors) <- levels(cl)
     }
     dftmp$pc <- dftmp$Freq/sum(dftmp$Freq)
-    freq.plot <- ggplot(dftmp, aes(x=this.sample.annot, y= pc, fill=this.sample.annot)) + geom_bar(stat='identity')  + theme_bw() +
+    if(is.null(ymax)) { limits <- NULL } else { limits <- c(0,ymax) }
+    freq.plot <- ggplot(dftmp, aes(x=this.sample.annot, y= pc, fill=this.sample.annot)) +
+        geom_bar(stat='identity')  + theme_bw() +
         theme(axis.text.x = element_text(angle = 33, hjust = 1)) + scale_x_discrete(name='') +
-        scale_y_continuous(name='') + theme(plot.margin = margin(0,0,0,0,"cm")) + ggtitle(main) + 
-        scale_fill_manual(values=colors) + guides(fill=FALSE) + theme(plot.title = element_text(size = 10, face = "bold"))
+        scale_y_continuous(name='', limits=limits) + ggtitle(main) + 
+        scale_fill_manual(values=colors) + guides(fill=FALSE) +
+        theme(plot.title = element_text(size = 10, face = "bold")) 
     freq.plot
-}
-
-#' Get proportion plots
-#' @export getProportionPlots3
-getProportionPlots3 <- function(r.n, cl, order.levels.numeric=FALSE, only.clusters = NULL) {
-    require(cowplot)
-    clus.prop.plots <- lapply(names(r.n), function(n) {
-        o <- r.n[[n]]
-        getClusterProportionPlots3(o, cl, n, order.levels.numeric, only.clusters = only.clusters)
-    })
 }
 
 #' View two annotations side by side
@@ -1024,3 +1040,21 @@ getCommonGenesCutoff <- function(r.n, cutoff = 3) {
     common.genes <- all.genes[apply(gc,2,sum) > cutoff]
     common.genes
 }
+
+#' Break down a factor returning the names of the elements
+#' in each level as character vectors in a list
+#' @param f a factor to breakdown
+#' @return a list of factor levels with the names of elemements in them
+#' @export factorBreakdown
+factorBreakdown <- function(f) {
+    if(!is.factor(f)) stop('not a factor!')
+    lvls <- levels(f);
+    names(lvls) <- lvls;
+    lapply(lvls, function(l) {
+        r <- names(f)[f == l]
+        names(r) <- r
+        r
+    })
+}
+
+
