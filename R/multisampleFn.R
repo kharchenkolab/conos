@@ -779,7 +779,7 @@ plotAllWithDepth2 <- function(p2.objs, filename=NULL,panel.size = 600,mark.clust
 #' @param mark.cluster.cex cex for marking clusters
 #' @return NULL
 #' @export plotAllWithGene2
-plotAllWithGene2 <- function(p2.objs, gene, filename=NULL,panel.size = 600,mark.cluster.cex=0.8) {
+plotAllWithGene2 <- function(p2.objs, gene, filename=NULL,panel.size = 600,mark.cluster.cex=0.8,name.prefix='') {
     require(Cairo)
     n <- ceiling(sqrt(length(p2.objs)))
     if (!is.null(filename)) {
@@ -805,7 +805,7 @@ plotAllWithGene2 <- function(p2.objs, gene, filename=NULL,panel.size = 600,mark.
         }
         ## If no cells present fix
         d$plotEmbedding(type='PCA',embeddingType='tSNE',colors=colors,alpha=0.2,do.par=F,zlim=zlim);
-        legend(x='topleft',bty='n',legend=dn)
+        legend(x='topleft',bty='n',legend=paste0(name.prefix,dn))
     }))
     if(!is.null(filename)) {
         dev.off()
@@ -915,32 +915,6 @@ viewAnnotationsSideBySide <- function(p2.objs, annotation1, annotation2, filenam
     }
 }
 
-#' Convert factor to character preserving names
-#' @param f a factor
-#' @return a character vector
-#' @export factor2Char
-factor2Char <- function(f) {
-    r <- as.character(f);
-    names(r) <- names(f);
-    r
-}
-
-#' Replace the factors levels of one factor with those of another
-#' @param originalFactor originalFactor to replace, not modified
-#' @param newFactor specifiying what to replace with
-#' @param newPrefix prefix for newFactor names
-#' @return a new factor that merged newFactor into originalFactor
-#' @export replaceClusterFactors
-replaceClusterFactors <- function(originalFactor, newFactor, newPrefix=NULL) {
-    if(is.null(newPrefix)) stop('newPrefix is null');
-    wf <- factor2Char(originalFactor);
-    nwf <- factor2Char(newFactor);
-    if(any(!names(nwf) %in% names(wf))) stop('newFactor is not a subset of originalFactor');
-    wf[names(nwf)] <- paste0(c(newPrefix), nwf);
-    wf <- as.factor(wf);
-    wf
-}
-
 #' Subset all apps to clusters
 #' @export subsetAllappsToClusters3
 subsetAllappsToClusters3 <- function(r.n, cl, cl.keep) {
@@ -1010,8 +984,34 @@ p2PlotEmbeddingMultiGenes <- function(app, genes, type='PCA', embeddingType='tSN
     if (show.gene.count) {
         main <- paste0(main,' ',length(gns),'/',length(genes))
     }
-    colors <- rowSums(scale(app$counts[,gns]))
+    if(length(gns) > 1) {
+        cns <- app$counts[,gns]
+        cns <- apply(cns, 2, function(x) {
+            pcntiles <- quantile(x,probs=seq(0,1,0.02))[c(1,99)]
+            x[x < pcntiles[1]] <-  pcntiles[1]
+            x[x > pcntiles[2]] <-  pcntiles[2]
+            x
+        })
+        colors <- rowSums(scale(cns))
+    } else if (length(gns) == 1) {
+        colors <- cns[,gns]
+    } else {
+        colors <- c('grey30')
+    }
     app$plotEmbedding(type=type,embeddingType=embeddingType,colors=colors,main=main)
+}
+
+#' Plot a series of pagoda2 objects with a panel of genes
+#' @export p2PlotAllMultiGenes
+p2PlotAllMultiGenes <- function(apps, genes, type='PCA', embeddingType='tSNE',main='',show.gene.count=TRUE) {
+    n <- ceiling(sqrt(length(apps)))
+    par(mfrow=c(n,n))
+    lapply(names(apps), function(n) {
+        o <- apps[[n]];
+        p2PlotEmbeddingMultiGenes(o,genes,type=type,embeddingType=embeddingType,
+                                  main=paste0(main,' ',n),show.gene.count=show.gene.count)
+    })
+    invisible(NULL)
 }
 
 #' Get raw count matrices
@@ -1039,22 +1039,6 @@ getCommonGenesCutoff <- function(r.n, cutoff = 3) {
     gc <- do.call(rbind, lapply(gl, function(x) all.genes %in% x))
     common.genes <- all.genes[apply(gc,2,sum) > cutoff]
     common.genes
-}
-
-#' Break down a factor returning the names of the elements
-#' in each level as character vectors in a list
-#' @param f a factor to breakdown
-#' @return a list of factor levels with the names of elemements in them
-#' @export factorBreakdown
-factorBreakdown <- function(f) {
-    if(!is.factor(f)) stop('not a factor!')
-    lvls <- levels(f);
-    names(lvls) <- lvls;
-    lapply(lvls, function(l) {
-        r <- names(f)[f == l]
-        names(r) <- r
-        r
-    })
 }
 
 
