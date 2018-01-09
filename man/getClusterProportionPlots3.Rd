@@ -5,7 +5,7 @@
 \title{Get proportion plots}
 \usage{
 getClusterProportionPlots3(p2o, cl, main = "", order.levels.numeric = FALSE,
-  colors = NULL, only.clusters = NULL)
+  colors = NULL, only.clusters = NULL, ymax = NULL)
 }
 \description{
 Get proportion plots

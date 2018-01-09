@@ -1040,5 +1040,3 @@ getCommonGenesCutoff <- function(r.n, cutoff = 3) {
     common.genes <- all.genes[apply(gc,2,sum) > cutoff]
     common.genes
 }
-
-
