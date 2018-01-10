@@ -188,7 +188,7 @@ removeNullComparisons <- function(comparisons) {
 #' @param n2 names of group2
 #' @param min.cells minimum number of cells in a samples to keep it
 #' @return a DESseq2 result data.frame
-#' @export t.two.exp.comp
+#' @export t.two.exp.comp.2
 t.two.exp.comp.2  <- function(rl1,rl2,cells,n1='test',n2='control',min.cells=20,pval.threshold=1e-2) {
   ##require(DESeq2)
   require(Matrix)
