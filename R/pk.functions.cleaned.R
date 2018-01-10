@@ -3,6 +3,7 @@
 #' and proportion comparisons from pagoda2 apps
 #' @param apps a list of pagoda2 apps
 #' @return a list of dgCMatrices
+#' @export extractCountMatrices
 extractCountMatrices <- function(apps) {
     require('parallel')
     ## Get common genes
@@ -35,6 +36,7 @@ extractCountMatrices <- function(apps) {
 #'     t.two.prop.comp(rl1,rl2,names(nfac)[nfac==n1],'normal',n2='tumor',prel.cells=all.t.cells)
 #' })
 #' do.call(rbind,lapply(ttestres,function(x) x$qres))
+#' @export t.two.prop.comp
 t.two.prop.comp <- function(rl1, rl2, cells, n1='test', n2='control', prel.cells=NULL) {
     if(is.null(prel.cells)) {
         prel.cells <- c(unlist(lapply(rl1,rownames)),unlist(lapply(rl2,rownames)))
@@ -61,7 +63,7 @@ t.two.prop.comp <- function(rl1, rl2, cells, n1='test', n2='control', prel.cells
 }
 
 
-
+# also in barkasn/nbHelpers on github
 splitFactor <- function(f) {
     lvls <- levels(f);
     names(lvls) <- lvls;
@@ -70,6 +72,7 @@ splitFactor <- function(f) {
     })
 }
 
+#' export compareTwo
 compareTwo <- function(appnames1, appnames2, groupsFactor) {
     fs <- splitFactor(groupsFactor)
     nfs <- names(fs);
@@ -131,6 +134,7 @@ t.two.exp.comp <- function(rl1,rl2,cells,n1='test',n2='control',min.cells=20) {
 #' @param clusters the clusters to to use (comparisons are only performed within clusters)
 #' @param mc.cores number of cores to use
 #' @return list of list of differential expression tables from DESeq2
+#' @export runAllComparisons
 runAllComparisons <- function(ccm, app.types, contrasts, clusters, mc.cores=16) {
     clusters <- clusters[!is.na(clusters)] 
     clusters.split <- factorBreakdown(clusters)
@@ -152,6 +156,7 @@ runAllComparisons <- function(ccm, app.types, contrasts, clusters, mc.cores=16) 
 #' @param comparisons a comparison, result of runAllComparisons
 #' @param cutoff cutoff for qvalues (default 0.05)
 #' @return a new comparison list
+#' @export filterComparisons
 filterComparisons <- function(comparisons, cutoff = 0.05) {
     lapply(comparisons, function(cc) {
         cc <- cc[!unlist(lapply(cc,is.null))]
@@ -163,7 +168,11 @@ filterComparisons <- function(comparisons, cutoff = 0.05) {
     })
 }
 
-removeNullComparisons <- function(comparisons, cutoff = 0.05) {
+#' Remove the NULL comparisons
+#' @param comparisons the comparisons form runAllComparisons
+#' @retunr a new comparison list
+#' @export removeNullComparisons
+removeNullComparisons <- function(comparisons) {
     lapply(comparisons, function(cc) {
         cc <- cc[!unlist(lapply(cc,is.null))]
     })
@@ -267,16 +276,17 @@ t.two.exp.comp.2  <- function(rl1,rl2,cells,n1='test',n2='control',min.cells=20,
   res <- res[res$pvalue<=pval.threshold,]
   res <- res[order(res$pvalue),]
   res$Z <- qnorm(res$pvalue)*sign(res$log2FoldChange)
-  res$Za <- qnorm(res$padj)*sign(res$log2FoldChange)
+  ## res$Z <- pmin(res$Z,0.5)
+  res$Za <- qnorm(pmin(res$padj,c(0.5)))*sign(res$log2FoldChange)
   res <- cbind(gene=rownames(res),res)
   if(nrow(res)>0) { # calculate mean expression values for the plots
     cts <- t(t(cts[as.character(res$gene),])/colSums(cts)*1e6)
     ilev <- tapply(1:ncol(cts),coldata$type,function(ii) {
       cts[,ii,drop=F]
     })
-    #mdf <- do.call(cbind,lapply(x$ilev,rowMeans));
-    #colnames(mdf) <- paste(colnames(mdf),'mean',sep='_')
-    #res <- cbind(res,mdf)
+    mdf <- do.call(cbind,lapply(ilev,rowMeans));
+    colnames(mdf) <- paste(colnames(mdf),'mean',sep='_')
+    res <- cbind(res,mdf)
   } else {
     ilev <- NULL;
   }
@@ -292,6 +302,7 @@ t.two.exp.comp.2  <- function(rl1,rl2,cells,n1='test',n2='control',min.cells=20,
 #' @param clusters the clusters to to use (comparisons are only performed within clusters)
 #' @param mc.cores number of cores to use
 #' @return list of list of differential expression tables from DESeq2
+#' @export runAllComparisons.2
 runAllComparisons.2 <- function(ccm, app.types, contrasts, clusters, mc.cores=16) {
     require('nbHelpers')
     clusters <- clusters[!is.na(clusters)] 
@@ -324,3 +335,42 @@ de2json <- function(xe, filename=NULL) {
     invisible(y)
 }
 
+#' Save comparisons generated with runAllComparisons.2() to disk
+#' @param comps comparisons
+#' @param prefix prefix of files to save
+#' @param link.prefix prefix of html links
+#' @export saveComparisonsAsJSON
+saveComparisonsAsJSON <- function(comps, prefix='',link.prefix='') {
+    ret <- lapply(namedNames(comps), function(ncc) {
+        cc <- comps[[ncc]]
+        lapply(namedNames(cc), function(nccc) {
+            ccc <- cc[[nccc]]
+            file<-paste0(prefix,make.names(ncc),'_',make.names(nccc),'.json')
+            j <- de2json(ccc,file)
+            link.href <- paste0(link.prefix, file)
+            link.label <- paste0(ncc, ' for: ', nccc)
+            link <- paste0("<a href='",link.href,"'>",link.label,"</a>");
+            list(json=j, file=file, contrast=ncc, cluster=nccc,link=link)
+        });
+    });
+    invisible(ret)
+}
+
+#' Get an html snipset that links to the de generated with
+#' saveComparisonsAsJSON()
+#' @param g obj returned from saveComparisonsAsJSON()
+#' @export getLinkHtml
+getLinkHtml <- function(g) {
+    paste(unlist(lapply(g, function(g1) {
+        lapply(g1, function(g2) {
+            g2$link
+        })
+    })),collapse='<br/>')
+}
+
+#' From barkasn/nbHelpers
+namedNames <- function(g) {
+    n <- names(g);
+    names(n) <- n;
+    n
+}
