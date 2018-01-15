@@ -205,7 +205,10 @@ t.two.exp.comp.2  <- function(rl1,rl2,cells,n1='test',n2='control',min.cells=20,
   }
   cts <- do.call(cbind,lapply(c(rl1,rl2),Matrix::colSums))
   ## Make metadata
-  coldata <- data.frame(type=rep(c(n1,n2),c(length(rl1),length(rl2))));
+  type.factor <- rep(c(n1,n2),c(length(rl1),length(rl2)));
+  #  explicitly specify levels so that control is always base
+  type.factor <- factor(type.factor, levels=c(n2,n1)); 
+  coldata <- data.frame(type=type.factor);
   rownames(coldata) <- c(names(rl1),names(rl2))
   ## Make DESeq2 object
   dds <- DESeq2::DESeqDataSetFromMatrix(countData = cts,colData = coldata,design = ~ type)
@@ -312,7 +315,9 @@ runAllComparisons.2 <- function(ccm, app.types, contrasts, clusters, mc.cores=16
         grp2 <- names(app.types)[app.types == cc[2]]
         mclapply(clusters.split, function(cells.compare) {
             tryCatch({
-                t.two.exp.comp.2(ccm[grp1],ccm[grp2],cells.compare)
+                res = t.two.exp.comp.2(ccm[grp1],ccm[grp2],cells.compare)
+                ## Keep info to easily re-create comparison
+                list(res = res, grp1 = grp1, grp2 = grp2, cells.compare = cell.compare)
             }, error =
                    function(e) { NULL }
             )
