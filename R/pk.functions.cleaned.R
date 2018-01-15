@@ -184,7 +184,7 @@ t.two.exp.comp.2  <- function(rl1,rl2,cells,n1='test',n2='control',min.cells=20,
 #' @param pval.threshold p-value threshold
 #' @return a DESseq2 result data.frame
 #' @export t.two.exp.comp.2
-t.two.exp.comp.2  <- function(rl1,rl2,cells,n1='test',n2='control',min.cells=20,pval.threshold=1e-2) {
+t.two.exp.comp.2  <- function(rl1,rl2,cells,n1='test',n2='control',min.cells=20,pval.threshold=1e-2,n1.cols='test',n2.cols='control') {
   ##require(DESeq2)
   require(Matrix)
   ## Subset apps to cells
@@ -229,7 +229,7 @@ t.two.exp.comp.2  <- function(rl1,rl2,cells,n1='test',n2='control',min.cells=20,
     ilev <- NULL;
   }
   #res <- subset(res, pvalue < 0.05)
-  return(list(res=res,genes=allgenes,ilev=ilev,snames=c(n1,n2)))
+  return(list(res=res,genes=allgenes,ilev=ilev,snames=c(n1.cols,n2.cols)))
 }
 
 
