@@ -127,30 +127,6 @@ t.two.exp.comp <- function(rl1,rl2,cells,n1='test',n2='control',min.cells=20) {
 }
 
 
-#' Run comparisons within clusters spaning pagoda2 object boundaries
-#' @param ccm named list of raw count matrices obtained with extractCountMatrices()
-#' @param app.types a named factor of the ccm matrices with type for each
-#' @param contrasts pairs of app.types to compares
-#' @param clusters the clusters to to use (comparisons are only performed within clusters)
-#' @param mc.cores number of cores to use
-#' @return list of list of differential expression tables from DESeq2
-#' @export runAllComparisons
-runAllComparisons <- function(ccm, app.types, contrasts, clusters, mc.cores=16) {
-    clusters <- clusters[!is.na(clusters)] 
-    clusters.split <- factorBreakdown(clusters)
-    lapply(contrasts, function(cc) {
-        grp1 <- names(app.types)[app.types == cc[1]]
-        grp2 <- names(app.types)[app.types == cc[2]]
-        mclapply(clusters.split, function(cells.compare) {
-            tryCatch({
-                t.two.exp.comp(ccm[grp1],ccm[grp2],cells.compare)
-            }, error =
-                   function(e) { NULL }
-            )
-        },mc.cores =mc.cores)
-    })
-}
-
 #' Filter a comparison list returned by runAll comparisons to
 #' remove NULL objects and non-significant hits
 #' @param comparisons a comparison, result of runAllComparisons
@@ -303,8 +279,8 @@ t.two.exp.comp.2  <- function(rl1,rl2,cells,n1='test',n2='control',min.cells=20,
 #' @param clusters the clusters to to use (comparisons are only performed within clusters)
 #' @param mc.cores number of cores to use
 #' @return list of list of differential expression tables from DESeq2
-#' @export runAllComparisons.2
-runAllComparisons.2 <- function(ccm, app.types, contrasts, clusters, mc.cores=16) {
+#' @export runAllComparisons
+runAllComparisons <- function(ccm, app.types, contrasts, clusters, mc.cores=16) {
     require('nbHelpers')
     clusters <- clusters[!is.na(clusters)] 
     clusters.split <- factorBreakdown(clusters)
