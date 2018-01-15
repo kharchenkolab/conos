@@ -86,46 +86,6 @@ compareTwo <- function(appnames1, appnames2, groupsFactor) {
 }
 
 
-#' Compare the cells in a cluster that spans multiple samples
-#' @param rl1 list of raw matrices 1
-#' @param rl2 list of raw matrices 2
-#' @param character vector listing the cells to compares
-#' @param n1 name of group1
-#' @param n2 names of group2
-#' @param min.cells minimum number of cells in a samples to keep it
-#' @return a DESseq2 result data.frame
-#' @export t.two.exp.comp
-t.two.exp.comp <- function(rl1,rl2,cells,n1='test',n2='control',min.cells=20) {
-    tryCatch({
-        require(DESeq2)
-        require(Matrix)
-        ## Subset apps to cells
-        rl1 <- lapply(rl1,function(x) x[rownames(x) %in% cells,,drop=F])
-        rl2 <- lapply(rl2,function(x) x[rownames(x) %in% cells,,drop=F])
-        ## Check for empty samples
-        ## Remove apps with < min.cells
-        rl1 <- rl1[unlist(lapply(rl1,nrow))>min.cells]
-        rl2 <- rl2[unlist(lapply(rl2,nrow))>min.cells]
-        ## Don't run if there are not samples in one condition after filtering
-        if (length(rl1)  == 0 | length(rl2) == 0) {
-            return(NULL)
-        }
-        cts <- do.call(cbind,lapply(c(rl1,rl2),Matrix::colSums))
-        ## Make metadata
-        coldata <- data.frame(type=rep(c(n1,n2),c(length(rl1),length(rl2))));
-        rownames(coldata) <- c(names(rl1),names(rl2))
-        ## Make DESeq2 object
-        dds <- DESeq2::DESeqDataSetFromMatrix(countData = cts,
-                                              colData = coldata,design = ~ type)
-        ## Do diff expression and get results
-        dds <- DESeq(dds)
-        res <- results(dds)
-        res <- res[order(res$pvalue),]
-        res <- subset(res, pvalue < 0.05)
-        return(as.data.frame(res))
-    }, error = function(e) {NULL})
-}
-
 
 #' Filter a comparison list returned by runAll comparisons to
 #' remove NULL objects and non-significant hits
@@ -223,7 +183,7 @@ t.two.exp.comp.2  <- function(rl1,rl2,cells,n1='test',n2='control',min.cells=20,
 #' @param min.cells minimum number of cells in a samples to keep it
 #' @param pval.threshold p-value threshold
 #' @return a DESseq2 result data.frame
-#' @export t.two.exp.comp
+#' @export t.two.exp.comp.2
 t.two.exp.comp.2  <- function(rl1,rl2,cells,n1='test',n2='control',min.cells=20,pval.threshold=1e-2) {
   ##require(DESeq2)
   require(Matrix)
@@ -240,7 +200,8 @@ t.two.exp.comp.2  <- function(rl1,rl2,cells,n1='test',n2='control',min.cells=20,
   }
   cts <- do.call(cbind,lapply(c(rl1,rl2),Matrix::colSums))
   ## Make metadata
-  coldata <- data.frame(type=rep(c(n1,n2),c(length(rl1),length(rl2))));
+  typefactor <- factor(rep(c(n1,n2),c(length(rl1),length(rl2))), levels=c(n2,n1))
+  coldata <- data.frame(type=typefactor);
   rownames(coldata) <- c(names(rl1),names(rl2))
   ## Make DESeq2 object
   dds <- DESeq2::DESeqDataSetFromMatrix(countData = cts,colData = coldata,design = ~ type)
@@ -291,7 +252,7 @@ runAllComparisons <- function(ccm, app.types, contrasts, clusters, mc.cores=16) 
             tryCatch({
                 res = t.two.exp.comp.2(ccm[grp1],ccm[grp2],cells.compare)
                 ## Keep info to easily re-create comparison
-                list(res = res, grp1 = grp1, grp2 = grp2, cells.compare = cell.compare)
+                list(res = res, grp1 = grp1, grp2 = grp2, cells.compare = cells.compare)
             }, error =
                    function(e) { NULL }
             )
