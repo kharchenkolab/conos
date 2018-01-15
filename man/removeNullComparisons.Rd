@@ -9,6 +9,9 @@ removeNullComparisons(comparisons)
 \arguments{
 \item{comparisons}{the comparisons form runAllComparisons}
 }
+\value{
+a new comparison list
+}
 \description{
 Remove the NULL comparisons
 }

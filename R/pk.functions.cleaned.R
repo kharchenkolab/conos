@@ -170,15 +170,13 @@ filterComparisons <- function(comparisons, cutoff = 0.05) {
 
 #' Remove the NULL comparisons
 #' @param comparisons the comparisons form runAllComparisons
-#' @retunr a new comparison list
+#' @return a new comparison list
 #' @export removeNullComparisons
 removeNullComparisons <- function(comparisons) {
     lapply(comparisons, function(cc) {
         cc <- cc[!unlist(lapply(cc,is.null))]
     })
 }
-
-
 
 #' Compare the cells in a cluster that spans multiple samples
 #' @param rl1 list of raw matrices 1
