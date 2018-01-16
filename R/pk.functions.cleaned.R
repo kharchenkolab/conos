@@ -241,22 +241,22 @@ t.two.exp.comp.2  <- function(rl1,rl2,cells,n1='test',n2='control',min.cells=20,
 #' @param mc.cores number of cores to use
 #' @return list of list of differential expression tables from DESeq2
 #' @export runAllComparisons
-runAllComparisons <- function(ccm, app.types, contrasts, clusters, mc.cores=16) {
-    require('nbHelpers')
-    clusters <- clusters[!is.na(clusters)] 
+runAllComparisons <- function (ccm, app.types, contrasts, clusters, mc.cores = 16) 
+{
+    require("nbHelpers")
+    clusters <- clusters[!is.na(clusters)]
     clusters.split <- factorBreakdown(clusters)
     lapply(contrasts, function(cc) {
         grp1 <- names(app.types)[app.types == cc[1]]
         grp2 <- names(app.types)[app.types == cc[2]]
         mclapply(clusters.split, function(cells.compare) {
             tryCatch({
-                res = t.two.exp.comp.2(ccm[grp1],ccm[grp2],cells.compare)
-                ## Keep info to easily re-create comparison
-                list(res = res, grp1 = grp1, grp2 = grp2, cells.compare = cells.compare)
-            }, error =
-                   function(e) { NULL }
-            )
-        },mc.cores =mc.cores)
+                res = t.two.exp.comp.2(ccm[grp1], ccm[grp2], cells.compare, n1.cols=cc[1], n2.cols=cc[2])
+                res
+            }, error = function(e) {
+                NULL
+            })
+        }, mc.cores = mc.cores)
     })
 }
 
@@ -280,21 +280,27 @@ de2json <- function(xe, filename=NULL) {
 #' @param prefix prefix of files to save
 #' @param link.prefix prefix of html links
 #' @export saveComparisonsAsJSON
-saveComparisonsAsJSON <- function(comps, prefix='',link.prefix='') {
+saveComparisonsAsJSON <- function (comps, prefix = "", link.prefix = "") 
+{
     ret <- lapply(namedNames(comps), function(ncc) {
         cc <- comps[[ncc]]
         lapply(namedNames(cc), function(nccc) {
             ccc <- cc[[nccc]]
-            file<-paste0(prefix,make.names(ncc),'_',make.names(nccc),'.json')
-            j <- de2json(ccc,file)
-            link.href <- paste0(link.prefix, file)
-            link.label <- paste0(ncc, ' for: ', nccc)
-            link <- paste0("<a href='",link.href,"'>",link.label,"</a>");
-            list(json=j, file=file, contrast=ncc, cluster=nccc,link=link)
-        });
-    });
+            if (!is.null(ccc$res)) {
+                ## Make the filename
+                file <- paste0(prefix, make.names(ncc), "_", make.names(nccc), ".json")
+                ## Save the result as JSON
+                j <- de2json(ccc, file)
+                ## Return information for making the links
+                list(file = file, contrast = ncc, cluster = nccc)
+            } else {
+                NULL
+            }
+        })
+    })
     invisible(ret)
 }
+
 
 #' Get an html snipset that links to the de generated with
 #' saveComparisonsAsJSON()
