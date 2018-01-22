@@ -5,7 +5,8 @@
 \title{Perform JNMF on two samples}
 \usage{
 quickJNMF(r.n, k = 30, ncomps = 100, n.odgenes = NULL, var.scale = T,
-  verbose = T, cgsf = NULL, maxiter = 1000)
+  verbose = T, neighborhood.average = FALSE, cgsf = NULL,
+  maxiter = 1000)
 }
 \description{
 Perform JNMF on two samples

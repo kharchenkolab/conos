@@ -5,7 +5,7 @@
 \title{Plot multiple pagoda2 application with a specific genes and common zlim}
 \usage{
 plotAllWithGene2(p2.objs, gene, filename = NULL, panel.size = 600,
-  mark.cluster.cex = 0.8)
+  mark.cluster.cex = 0.8, name.prefix = "")
 }
 \arguments{
 \item{p2.objs}{list of pagoda2 applications}

@@ -4,7 +4,7 @@
 \alias{multiSampleClusterHierarchy}
 \title{Get hierarchy of cell groups across multiple apps}
 \usage{
-multiSampleClusterHierarchy(r.n, clusters)
+multiSampleClusterHierarchy(r.n, cls)
 }
 \arguments{
 \item{r.n}{list of pagoda2 objects}
