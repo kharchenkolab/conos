@@ -3,7 +3,9 @@
 #' and proportion comparisons from pagoda2 apps
 #' @param apps a list of pagoda2 apps
 #' @return a list of dgCMatrices
+#' @export extractCountMatrices
 extractCountMatrices <- function(apps) {
+    require('parallel')
     ## Get common genes
     gl <- lapply(apps, function(r) colnames(r$counts))
     all.genes <- unique(unlist(gl))
@@ -34,6 +36,7 @@ extractCountMatrices <- function(apps) {
 #'     t.two.prop.comp(rl1,rl2,names(nfac)[nfac==n1],'normal',n2='tumor',prel.cells=all.t.cells)
 #' })
 #' do.call(rbind,lapply(ttestres,function(x) x$qres))
+#' @export t.two.prop.comp
 t.two.prop.comp <- function(rl1, rl2, cells, n1='test', n2='control', prel.cells=NULL) {
     if(is.null(prel.cells)) {
         prel.cells <- c(unlist(lapply(rl1,rownames)),unlist(lapply(rl2,rownames)))
@@ -60,7 +63,7 @@ t.two.prop.comp <- function(rl1, rl2, cells, n1='test', n2='control', prel.cells
 }
 
 
-
+# also in barkasn/nbHelpers on github
 splitFactor <- function(f) {
     lvls <- levels(f);
     names(lvls) <- lvls;
@@ -69,6 +72,7 @@ splitFactor <- function(f) {
     })
 }
 
+#' export compareTwo
 compareTwo <- function(appnames1, appnames2, groupsFactor) {
     fs <- splitFactor(groupsFactor)
     nfs <- names(fs);
@@ -82,6 +86,34 @@ compareTwo <- function(appnames1, appnames2, groupsFactor) {
 }
 
 
+
+#' Filter a comparison list returned by runAll comparisons to
+#' remove NULL objects and non-significant hits
+#' @param comparisons a comparison, result of runAllComparisons
+#' @param cutoff cutoff for qvalues (default 0.05)
+#' @return a new comparison list
+#' @export filterComparisons
+filterComparisons <- function(comparisons, cutoff = 0.05) {
+    lapply(comparisons, function(cc) {
+        cc <- cc[!unlist(lapply(cc,is.null))]
+        lapply(cc, function(ccc) {
+            ccc <- ccc[!is.na(ccc$padj),]
+            ccc <- ccc[ccc$padj < cutoff,]
+            ccc
+        })
+    })
+}
+
+#' Remove the NULL comparisons
+#' @param comparisons the comparisons form runAllComparisons
+#' @return a new comparison list
+#' @export removeNullComparisons
+removeNullComparisons <- function(comparisons) {
+    lapply(comparisons, function(cc) {
+        cc <- cc[!unlist(lapply(cc,is.null))]
+    })
+}
+
 #' Compare the cells in a cluster that spans multiple samples
 #' @param rl1 list of raw matrices 1
 #' @param rl2 list of raw matrices 2
@@ -90,8 +122,8 @@ compareTwo <- function(appnames1, appnames2, groupsFactor) {
 #' @param n2 names of group2
 #' @param min.cells minimum number of cells in a samples to keep it
 #' @return a DESseq2 result data.frame
-#' @export t.two.exp.comp
-t.two.exp.comp <- function(rl1,rl2,cells,n1='test',n2='control',min.cells=20,pval.threshold=1e-2) {
+#' @export t.two.exp.comp.2
+t.two.exp.comp.2  <- function(rl1,rl2,cells,n1='test',n2='control',min.cells=20,pval.threshold=1e-2) {
   ##require(DESeq2)
   require(Matrix)
   ## Subset apps to cells
@@ -107,7 +139,10 @@ t.two.exp.comp <- function(rl1,rl2,cells,n1='test',n2='control',min.cells=20,pva
   }
   cts <- do.call(cbind,lapply(c(rl1,rl2),Matrix::colSums))
   ## Make metadata
-  coldata <- data.frame(type=rep(c(n1,n2),c(length(rl1),length(rl2))));
+  type.factor <- rep(c(n1,n2),c(length(rl1),length(rl2)));
+  #  explicitly specify levels so that control is always base
+  type.factor <- factor(type.factor, levels=c(n2,n1)); 
+  coldata <- data.frame(type=type.factor);
   rownames(coldata) <- c(names(rl1),names(rl2))
   ## Make DESeq2 object
   dds <- DESeq2::DESeqDataSetFromMatrix(countData = cts,colData = coldata,design = ~ type)
@@ -135,4 +170,153 @@ t.two.exp.comp <- function(rl1,rl2,cells,n1='test',n2='control',min.cells=20,pva
   }
   #res <- subset(res, pvalue < 0.05)
   return(list(res=res,genes=allgenes,ilev=ilev,snames=c(n1,n2)))
+}
+
+
+
+#' Compare the cells in a cluster that spans multiple samples
+#' @param rl1 list of raw matrices 1
+#' @param rl2 list of raw matrices 2
+#' @param character vector listing the cells to compares
+#' @param n1 name of group1
+#' @param n2 names of group2
+#' @param min.cells minimum number of cells in a samples to keep it
+#' @param pval.threshold p-value threshold
+#' @return a DESseq2 result data.frame
+#' @export t.two.exp.comp.2
+t.two.exp.comp.2  <- function(rl1,rl2,cells,n1='test',n2='control',min.cells=20,pval.threshold=1e-2,n1.cols='test',n2.cols='control') {
+  ##require(DESeq2)
+  require(Matrix)
+  ## Subset apps to cells
+  rl1 <- lapply(rl1,function(x) x[rownames(x) %in% cells,,drop=F])
+  rl2 <- lapply(rl2,function(x) x[rownames(x) %in% cells,,drop=F])
+  ## Check for empty samples
+  ## Remove apps with < min.cells
+  rl1 <- rl1[unlist(lapply(rl1,nrow))>min.cells]
+  rl2 <- rl2[unlist(lapply(rl2,nrow))>min.cells]
+  ## Don't run if there are not samples in one condition after filtering
+  if (length(rl1)  == 0 | length(rl2) == 0) {
+    return(NULL)
+  }
+  cts <- do.call(cbind,lapply(c(rl1,rl2),Matrix::colSums))
+  ## Make metadata
+  typefactor <- factor(rep(c(n1,n2),c(length(rl1),length(rl2))), levels=c(n2,n1))
+  coldata <- data.frame(type=typefactor);
+  rownames(coldata) <- c(names(rl1),names(rl2))
+  ## Make DESeq2 object
+  dds <- DESeq2::DESeqDataSetFromMatrix(countData = cts,colData = coldata,design = ~ type)
+  ## Do diff expression and get results
+  dds <- DESeq2::DESeq(dds)
+  res <- DESeq2::results(dds)
+  allgenes <- rownames(res);
+  res <- as.data.frame(res);
+  res <- res[!is.na(res$pvalue),]
+  res <- res[res$pvalue<=pval.threshold,]
+  res <- res[order(res$pvalue),]
+  res$Z <- qnorm(res$pvalue)*sign(res$log2FoldChange)
+  ## res$Z <- pmin(res$Z,0.5)
+  res$Za <- qnorm(pmin(res$padj,c(0.5)))*sign(res$log2FoldChange)
+  res <- cbind(gene=rownames(res),res)
+  if(nrow(res)>0) { # calculate mean expression values for the plots
+    cts <- t(t(cts[as.character(res$gene),])/colSums(cts)*1e6)
+    ilev <- tapply(1:ncol(cts),coldata$type,function(ii) {
+      cts[,ii,drop=F]
+    })
+    mdf <- do.call(cbind,lapply(ilev,rowMeans));
+    colnames(mdf) <- paste(colnames(mdf),'mean',sep='_')
+    res <- cbind(res,mdf)
+  } else {
+    ilev <- NULL;
+  }
+  #res <- subset(res, pvalue < 0.05)
+  return(list(res=res,genes=allgenes,ilev=ilev,snames=c(n1.cols,n2.cols)))
+}
+
+
+#' Run comparisons within clusters spaning pagoda2 object boundaries
+#' @param ccm named list of raw count matrices obtained with extractCountMatrices()
+#' @param app.types a named factor of the ccm matrices with type for each
+#' @param contrasts pairs of app.types to compares
+#' @param clusters the clusters to to use (comparisons are only performed within clusters)
+#' @param mc.cores number of cores to use
+#' @return list of list of differential expression tables from DESeq2
+#' @export runAllComparisons
+runAllComparisons <- function (ccm, app.types, contrasts, clusters, mc.cores = 16) 
+{
+    require("nbHelpers")
+    clusters <- clusters[!is.na(clusters)]
+    clusters.split <- factorBreakdown(clusters)
+    lapply(contrasts, function(cc) {
+        grp1 <- names(app.types)[app.types == cc[1]]
+        grp2 <- names(app.types)[app.types == cc[2]]
+        mclapply(clusters.split, function(cells.compare) {
+            tryCatch({
+                res = t.two.exp.comp.2(ccm[grp1], ccm[grp2], cells.compare, n1.cols=cc[1], n2.cols=cc[2])
+                res
+            }, error = function(e) {
+                NULL
+            })
+        }, mc.cores = mc.cores)
+    })
+}
+
+
+#' Convert de result to json and optionally save it as a file
+#' @param xe differential expression result from t.two.exp.comp.2
+#' @param filename optional file name to save to
+#' @return json test string (invisible)
+#' @export de2json
+de2json <- function(xe, filename=NULL) {
+    xe$res <- unname(split(xe$res,1:nrow(xe$res)))
+    y <- rjson::toJSON(xe)
+    if (!is.null(filename)) {
+        write(y,file=filename)
+    }
+    invisible(y)
+}
+
+#' Save comparisons generated with runAllComparisons.2() to disk
+#' @param comps comparisons
+#' @param prefix prefix of files to save
+#' @param link.prefix prefix of html links
+#' @export saveComparisonsAsJSON
+saveComparisonsAsJSON <- function (comps, prefix = "", link.prefix = "") 
+{
+    ret <- lapply(namedNames(comps), function(ncc) {
+        cc <- comps[[ncc]]
+        lapply(namedNames(cc), function(nccc) {
+            ccc <- cc[[nccc]]
+            if (!is.null(ccc$res)) {
+                ## Make the filename
+                file <- paste0(prefix, make.names(ncc), "_", make.names(nccc), ".json")
+                ## Save the result as JSON
+                j <- de2json(ccc, file)
+                ## Return information for making the links
+                list(file = file, contrast = ncc, cluster = nccc)
+            } else {
+                NULL
+            }
+        })
+    })
+    invisible(ret)
+}
+
+
+#' Get an html snipset that links to the de generated with
+#' saveComparisonsAsJSON()
+#' @param g obj returned from saveComparisonsAsJSON()
+#' @export getLinkHtml
+getLinkHtml <- function(g) {
+    paste(unlist(lapply(g, function(g1) {
+        lapply(g1, function(g2) {
+            g2$link
+        })
+    })),collapse='<br/>')
+}
+
+#' From barkasn/nbHelpers
+namedNames <- function(g) {
+    n <- names(g);
+    names(n) <- n;
+    n
 }
