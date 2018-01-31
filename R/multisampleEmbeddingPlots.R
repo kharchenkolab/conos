@@ -129,11 +129,13 @@ plotAllWithGroups <- function(p2.objs, groups, filename=NULL,panel.size = 600,ma
     ## If no cells present fix
     if (!any(names(g1) %in% rownames(d$counts))) {
       g1 <- NULL
-      cell.names <- rownames(r.n[[1]]$counts)
+      cell.names <- rownames(d$counts)
       colors <- rep('grey70',length(cell.names))
       names(colors) <- cell.names
     }
-    d$plotEmbedding(type='PCA',embeddingType='tSNE',groups=g1,alpha=0.2,min.group.size=0,mark.clusters = TRUE, mark.cluster.cex=mark.cluster.cex,do.par=F,colors=colors);
+    d$plotEmbedding(type='PCA',embeddingType='tSNE',groups=g1,alpha=0.2,
+                    min.group.size=0,mark.clusters = TRUE,
+                    mark.cluster.cex=mark.cluster.cex,do.par=F,colors=colors);
     legend(x='topleft',bty='n',legend=dn)
   }))
   if(!is.null(filename)) {
