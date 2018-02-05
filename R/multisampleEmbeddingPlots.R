@@ -329,6 +329,29 @@ viewAnnotationsSideBySide <- function(p2.objs, annotation1, annotation2, filenam
   }
 }
 
+#' Highlight a specific cluster
+#' @param app list of p2 objects
+#' @param groups a factor of groups
+#' @param hightlight.group the group to show
+#' @param ... parameters for plotAllWithGroups
+#' @return NULL
+#' @export plotAllHighlightGroup
+plotAllHighlightGroup <- function(apps, groups, highlight.group,...) {
+    ## Input checks
+    if (!is.factor(groups)) stop('groups is not a factor');
+    if (!is.character(highlight.group)) stop('highlight.group is not a character');
+    if (length(highlight.group) == 0) stop('highlight.group is empty');
+    if (length(highlight.group) > 1) {
+        highlight.group <- highlight.group[1];
+        warning('highlight group is of length greater than 1, using first element only');                                      }
+    g <- as.character(groups)
+    names(g) <- names(groups)
+    g <- ifelse( g == highlight.group, highlight.group, 'other')
+    g <- as.factor(g)
+    plotAllWithGroups(apps, g, ...)
+    invisible(NULL)                                                                                                        }  
+
+
 #' View clusters in multiple pagoda2 apps one after the other
 #' @param apps list of pagoda2 objects
 #' @param groups named factor of clusters
