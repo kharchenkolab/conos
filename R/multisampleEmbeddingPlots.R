@@ -189,7 +189,7 @@ plotAllWithSignature <- function(p2.objs, signature, filename=NULL,panel.size = 
     CairoPNG(file=filename,height=n*panel.size,width=n*panel.size)
   }
   par(mfrow=c(n,n), mar = c(0.5,0.5,0.5,0.5), mgp = c(2,0.65,0), cex = 0.85);
-  common.genes <- getCommonGenes(combinedApps)
+  common.genes <- getCommonGenes(p2.objs)
   genes <- signature[signature %in% common.genes];
   cat(length(genes), 'of the ',length(signature),'genes were found\n')
   invisible(lapply(names(p2.objs),function(dn) {
