@@ -114,64 +114,6 @@ removeNullComparisons <- function(comparisons) {
     })
 }
 
-#' Compare the cells in a cluster that spans multiple samples
-#' @param rl1 list of raw matrices 1
-#' @param rl2 list of raw matrices 2
-#' @param character vector listing the cells to compares
-#' @param n1 name of group1
-#' @param n2 names of group2
-#' @param min.cells minimum number of cells in a samples to keep it
-#' @return a DESseq2 result data.frame
-#' @export t.two.exp.comp.2
-t.two.exp.comp.2  <- function(rl1,rl2,cells,n1='test',n2='control',min.cells=20,pval.threshold=1e-2) {
-  ##require(DESeq2)
-  require(Matrix)
-  ## Subset apps to cells
-  rl1 <- lapply(rl1,function(x) x[rownames(x) %in% cells,,drop=F])
-  rl2 <- lapply(rl2,function(x) x[rownames(x) %in% cells,,drop=F])
-  ## Check for empty samples
-  ## Remove apps with < min.cells
-  rl1 <- rl1[unlist(lapply(rl1,nrow))>min.cells]
-  rl2 <- rl2[unlist(lapply(rl2,nrow))>min.cells]
-  ## Don't run if there are not samples in one condition after filtering
-  if (length(rl1)  == 0 | length(rl2) == 0) {
-    return(NULL)
-  }
-  cts <- do.call(cbind,lapply(c(rl1,rl2),Matrix::colSums))
-  ## Make metadata
-  type.factor <- rep(c(n1,n2),c(length(rl1),length(rl2)));
-  #  explicitly specify levels so that control is always base
-  type.factor <- factor(type.factor, levels=c(n2,n1)); 
-  coldata <- data.frame(type=type.factor);
-  rownames(coldata) <- c(names(rl1),names(rl2))
-  ## Make DESeq2 object
-  dds <- DESeq2::DESeqDataSetFromMatrix(countData = cts,colData = coldata,design = ~ type)
-  ## Do diff expression and get results
-  dds <- DESeq2::DESeq(dds)
-  res <- DESeq2::results(dds)
-  allgenes <- rownames(res);
-  res <- as.data.frame(res);
-  res <- res[!is.na(res$pvalue),]
-  res <- res[res$pvalue<=pval.threshold,]
-  res <- res[order(res$pvalue),]
-  res$Z <- qnorm(res$pvalue)*sign(res$log2FoldChange)
-  res$Za <- qnorm(res$padj)*sign(res$log2FoldChange)
-  res <- cbind(gene=rownames(res),res)
-  if(nrow(res)>0) { # calculate mean expression values for the plots
-    cts <- t(t(cts[as.character(res$gene),])/colSums(cts)*1e6)
-    ilev <- tapply(1:ncol(cts),coldata$type,function(ii) {
-      cts[,ii,drop=F]
-    })
-    #mdf <- do.call(cbind,lapply(x$ilev,rowMeans));
-    #colnames(mdf) <- paste(colnames(mdf),'mean',sep='_')
-    #res <- cbind(res,mdf)
-  } else {
-    ilev <- NULL;
-  }
-  #res <- subset(res, pvalue < 0.05)
-  return(list(res=res,genes=allgenes,ilev=ilev,snames=c(n1,n2)))
-}
-
 
 
 #' Compare the cells in a cluster that spans multiple samples
@@ -244,6 +186,7 @@ t.two.exp.comp.2  <- function(rl1,rl2,cells,n1='test',n2='control',min.cells=20,
 runAllComparisons <- function (ccm, app.types, contrasts, clusters, mc.cores = 16) 
 {
     require("nbHelpers")
+    requier('parallel')
     clusters <- clusters[!is.na(clusters)]
     clusters.split <- factorBreakdown(clusters)
     lapply(contrasts, function(cc) {
