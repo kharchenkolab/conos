@@ -182,6 +182,7 @@ plotAllWithDepth <- function(p2.objs, filename=NULL,panel.size = 600,mark.cluste
 #' @param filename optional file to save to
 #' @param panel.size the size of the panel to save to
 #' @param mark.cluster.cex mark.cluster.cex for the plotting function
+#' @export plotAllWithSignature
 plotAllWithSignature <- function(p2.objs, signature, filename=NULL,panel.size = 600,mark.cluster.cex=0.8) {
   require(Cairo)
   n <- ceiling(sqrt(length(p2.objs)))
