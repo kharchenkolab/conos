@@ -26,17 +26,22 @@ subsetAllappsToGenes <- function(r.n, genes, remove.null.apps = TRUE) {
   if(remove.null.apps) ret.apps <- removeNullapps(ret.apps)
 }
 
-#' Subset all apps to clusters
+#' Given a list of pagoda2 apps, a clustering and names of
+#' clusters to keep, subset the pagoda apps to only the selected clusters
+#' @param p2applist list of pagoda2 apps to subset
+#' @param cl clustering for cells accross pagoda2 apps in the form of a named factor
+#' @param cl.keep character vector of cluster (from the levels of cl) to keep
+#' @param keep.genes keep.genes parameter for Pagoda2$new
 #' @export subsetAllappsToClusters
-subsetAllappsToClusters <- function(r.n, cl, cl.keep) {
+subsetAllappsToClusters <- function(p2applist, cl, cl.keep, keep.genes = NULL) {
   cells.keep <- names(cl)[cl %in% cl.keep]
   cat(length(cells.keep),'\n')
-  lapply(r.n, function(o) {
+  lapply(p2applist, function(o) {
     tryCatch({
       rn <- rownames(o$misc$rawCounts)
       app.cells.keep <- rn %in% cells.keep
       if (length(app.cells.keep) < 100) { NULL  }
-      p2 <- Pagoda2$new(t(o$misc$rawCounts[app.cells.keep,]), n.cores=20)
+      p2 <- Pagoda2$new(t(o$misc$rawCounts[app.cells.keep,]), n.cores=20, keep.genes = keep.genes)
       p2$adjustVariance(plot=F,gam.k=20)
       p2$calculatePcaReduction(nPcs=100,n.odgenes=1000,maxit=3000)
       p2$getEmbedding(type='PCA',embeddingType='tSNE',perplexity=50,verbose=T);

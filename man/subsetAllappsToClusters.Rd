@@ -2,10 +2,21 @@
 % Please edit documentation in R/multisampleOperations.R
 \name{subsetAllappsToClusters}
 \alias{subsetAllappsToClusters}
-\title{Subset all apps to clusters}
+\title{Given a list of pagoda2 apps, a clustering and names of
+clusters to keep, subset the pagoda apps to only the selected clusters}
 \usage{
-subsetAllappsToClusters(r.n, cl, cl.keep)
+subsetAllappsToClusters(p2applist, cl, cl.keep, keep.genes = NULL)
+}
+\arguments{
+\item{p2applist}{list of pagoda2 apps to subset}
+
+\item{cl}{clustering for cells accross pagoda2 apps in the form of a named factor}
+
+\item{cl.keep}{character vector of cluster (from the levels of cl) to keep}
+
+\item{keep.genes}{keep.genes parameter for Pagoda2$new}
 }
 \description{
-Subset all apps to clusters
+Given a list of pagoda2 apps, a clustering and names of
+clusters to keep, subset the pagoda apps to only the selected clusters
 }
