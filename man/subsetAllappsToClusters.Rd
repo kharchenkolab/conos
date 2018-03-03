@@ -5,7 +5,8 @@
 \title{Given a list of pagoda2 apps, a clustering and names of
 clusters to keep, subset the pagoda apps to only the selected clusters}
 \usage{
-subsetAllappsToClusters(p2applist, cl, cl.keep, keep.genes = NULL)
+subsetAllappsToClusters(p2applist, cl, cl.keep, keep.genes = NULL,
+  min.cells = 100, nPcs = nPcs, perplexity = 50, make.embedding = TRUE)
 }
 \arguments{
 \item{p2applist}{list of pagoda2 apps to subset}

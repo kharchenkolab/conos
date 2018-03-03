@@ -1,4 +1,89 @@
 
+#' Get common set of genes from apps
+#' @param p2objs list of pagoda2 objects
+#' @export getCommonGenes
+getCommonGenes <- function (p2objs) 
+{
+    app.genes <- lapply(p2objs, function(o) { colnames(o$counts) })
+    Reduce(intersect, app.genes)
+}
+
+#' Return TRUE if the parameter is an error object
+#' @param x the object to test
+#' @export is.error
+is.error <- function(x) {
+    inherits(x, c("try-error", "error"))
+}
+
+#' Plot a set of apps with the distribution plot for a signature
+#' @param p2.objs pagoda2 objects
+#' @param signature set of genes
+#' @param filename optional filename to save the signature in
+#' @export plotAllWithSignatureDistribution
+plotAllWithSignatureDistribution <- function (p2.objs, signature, filename = NULL, panel.size = 600, mark.cluster.cex = 0.8, verbose = F, breaks = 10, score.method='sum') 
+{
+    require(Cairo)
+    mfrow = getParMfrow(length(p2.objs))
+    ## Optionally open file
+    if (!is.null(filename)) {
+        CairoPNG(file = filename, height = mfrow[[1]] * panel.size, width = mfrow[[2]] * panel.size)
+    }
+    par(mfrow = mfrow) ##, mar = c(0.5, 0.5, 0.5, 0.5), mgp = c(2, 0.65, 0), cex = 0.85)
+    common.genes <- getCommonGenes(p2.objs)
+    if (verbose) cat(length(common.genes), " common genes identified\n");
+    ## Gene genes in the signature
+    genes <- signature[signature %in% common.genes]
+    cat(length(genes), "of the ", length(signature), " genes were found\n")
+    ## Plot them all
+    lapply(names(p2.objs), function(dn) {
+        plotOneWithSignatureDistribution(p2.objs[[dn]], genes  = genes, title=dn, breaks=breaks, score.method=score.method);
+    })
+    ## Close file if opened
+    if (!is.null(filename)) {
+        dev.off()
+    }
+    invisible(NULL);
+}
+
+#' @export plotOneWithSignatureDistribution
+plotOneWithSignatureDistribution <- function(p2obj, genes = NULL, title = "", breaks=10, score.method = 'sum') {
+    genes.in.app <- genes %in% colnames(p2obj$counts);
+    if(!all(genes.in.app)) {
+        warning('Some of the specified genes were not found, keeping found genes only.');
+        genes <- genes[genes.in.app];
+    }
+    scores <- getCellSignatureScores(p2obj, genes, score.method=score.method)
+    hist(scores, main= title, breaks=breaks)
+    NULL
+}
+
+#' given a p2 app and a signature
+#' score each cell
+#' @param p2obj pagoda2 object
+#' @param genes set of genes
+#' @param score.method currently only sum supported
+#' @export getCellSignatureScores
+getCellSignatureScores <- function(p2obj, genes, score.method='sum') {
+    if(score.method == 'sum') {
+        Matrix::rowSums(p2obj$counts[,genes])
+    } else {
+        stop('Unsupported score method: ',score.method);
+    }
+}
+
+#' get number of rows and cols to use when printing a n.items number of items
+#' @param n.items number of items
+#' @param square force number of columns and rows to be equal
+#' @export getParMfrow
+getParMfrow <- function(n.items, square = FALSE) {
+    n <- ceiling(sqrt(n.items))
+    if (square)  {
+        c(n,n);
+    } else {
+        m <- ceiling(n.items/n)
+        c(n,m)
+    }
+}
 
 #' Plot multiple pagoda2 application with a specific genes and common zlim
 #' @param p2.objs list of pagoda2 applications
@@ -176,6 +261,24 @@ plotAllWithDepth <- function(p2.objs, filename=NULL,panel.size = 600,mark.cluste
 }
 
 
+#' Plot a single pagoda app with a signature
+#' @param p2obj a pagoda2 object to plot
+#' @param genes the genes in the signature
+#' @param title the title to print
+#' @export plotOneWithSignature
+plotOneWithSignature <- function(p2obj, genes = NULL, title = "") {
+    genes.in.app <- genes %in% colnames(p2obj$counts);
+    if(!all(genes.in.app)) {
+        warning('Some of the specified genes were not found, keeping found genes only.');
+        genes <- genes[genes.in.app];
+    }
+    colors <- Matrix::rowSums(p2obj$counts[,genes])
+    p2obj$plotEmbedding(type='PCA',embeddingType='tSNE', colors=colors, alpha=0.2, do.par=F)
+    legend(x='topleft',bty='n',legend=title)
+    NULL
+}
+
+
 #' Plot all apps with the aggregate of a panel of genes
 #' @param p2.objs list of pagoda2 objects
 #' @param signature character vector of genes
@@ -183,48 +286,34 @@ plotAllWithDepth <- function(p2.objs, filename=NULL,panel.size = 600,mark.cluste
 #' @param panel.size the size of the panel to save to
 #' @param mark.cluster.cex mark.cluster.cex for the plotting function
 #' @export plotAllWithSignature
-plotAllWithSignature <- function(p2.objs, signature, filename=NULL,panel.size = 600,mark.cluster.cex=0.8) {
-  require(Cairo)
-  n <- ceiling(sqrt(length(p2.objs)))
-  if (!is.null(filename)) {
-    CairoPNG(file=filename,height=n*panel.size,width=n*panel.size)
-  }
-  par(mfrow=c(n,n), mar = c(0.5,0.5,0.5,0.5), mgp = c(2,0.65,0), cex = 0.85);
-  common.genes <- getCommonGenes(p2.objs)
-  genes <- signature[signature %in% common.genes];
-  cat(length(genes), 'of the ',length(signature),'genes were found\n')
-  invisible(lapply(names(p2.objs),function(dn) {
-    d <- p2.objs[[dn]];
-    colors <- Matrix::rowSums(d$counts[,genes])
-    d$plotEmbedding(type='PCA',embeddingType='tSNE',colors=colors,alpha=0.2,do.par=F);
-    legend(x='topleft',bty='n',legend=dn)
-  }))
-  if(!is.null(filename)) {
-    dev.off()
-  }
+plotAllWithSignature <- function (p2.objs, signature, filename = NULL, panel.size = 600, mark.cluster.cex = 0.8, verbose = F) 
+{
+    require(Cairo)
+    mfrow = getParMfrow(length(p2.objs))
+    ## Optionally open file
+    if (!is.null(filename)) {
+        CairoPNG(file = filename, height = mfrow[[1]] * panel.size, width = mfrow[[2]] * panel.size)
+    }
+    par(mfrow = mfrow, mar = c(0.5, 0.5, 0.5, 0.5), mgp = c(2, 0.65, 0), cex = 0.85)
+    common.genes <- getCommonGenes(p2.objs)
+    if (verbose) cat(length(common.genes), " common genes identified\n");
+    ## Gene genes in the signature
+    genes <- signature[signature %in% common.genes]
+    cat(length(genes), "of the ", length(signature), " genes were found\n")
+    ## Plot them all
+    lapply(names(p2.objs), function(dn) {
+        plotOneWithSignature(p2.objs[[dn]], genes  = genes, title=dn);
+    })
+    ## Close file if opened
+    if (!is.null(filename)) {
+        dev.off()
+    }
+    invisible(NULL);
 }
 
 
-#' Plot an embedding of the specified pagoda2 application
-#' colored by a set of genes aggregated into a single scale
-#' @description This function will merged the expression patters of
-#' the specified genes, by scalling them individually and summing them
-#' @param app a pagoda2 app
-#' @param genes a character vector of genes to display
-#' @param type type parameter for plotEmbedding()
-#' @param embeddingType embeddingType parameter for plotEmbedding()
-#' @param main a title to display
-#' @param show.gene.count logical, append the ratio of found genes
-#' @return NULL
-#' @export p2PlotEmbeddingMultiGenes
-p2PlotEmbeddingMultiGenes <- function(app, genes, type='PCA', embeddingType='tSNE', main='', show.gene.count=TRUE) {
-  gns <- intersect(genes, colnames(app$counts))
-  if (show.gene.count) { main <- paste0(main,' ',length(gns),'/',length(genes)) }
-  colors <- rowSums(scale(app$counts[,gns]))
-  app$plotEmbedding(type=type,embeddingType=embeddingType,colors=colors,do.par=F)
-  legend(x='topleft',bty='n',legend=main)
-  NULL
-}
+
+
 
 
 #' Plot a panel of multiple gene sets using p2PlotEmbeddingMultiGenes for one app

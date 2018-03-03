@@ -5,7 +5,7 @@
 \title{Plot all apps with the aggregate of a panel of genes}
 \usage{
 plotAllWithSignature(p2.objs, signature, filename = NULL, panel.size = 600,
-  mark.cluster.cex = 0.8)
+  mark.cluster.cex = 0.8, verbose = F)
 }
 \arguments{
 \item{p2.objs}{list of pagoda2 objects}

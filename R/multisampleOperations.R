@@ -26,6 +26,22 @@ subsetAllappsToGenes <- function(r.n, genes, remove.null.apps = TRUE) {
   if(remove.null.apps) ret.apps <- removeNullapps(ret.apps)
 }
 
+#' make a pagoda2 app from a matrix, for use by the subset family of functions
+#' @param data a matrix to make the pagoda2 object from
+#' @export p2app.from.matrix
+p2app.from.matrix <- function(data, keep.genes = NULL, nPcs = 100, perplexity = 50, make.embedding=TRUE) {
+    p2 <- Pagoda2$new(data, n.cores = 20, keep.genes = keep.genes)
+    p2$adjustVariance(plot = F, gam.k = 20)
+    p2$calculatePcaReduction(nPcs = nPcs, n.odgenes = 1000, maxit = 3000)
+    p2$makeKnnGraph(k = 30, type = "PCA", center = T, weight.type = "none", n.cores = 20, distance = "cosine")
+    p2$getKnnClusters(method = infomap.community, type = "PCA", name = "infomap")
+    if(make.embedding) {
+        p2$getEmbedding(type = "PCA", embeddingType = "tSNE", perplexity = perplexity, verbose = T)
+    }
+    p2
+}
+
+
 #' Given a list of pagoda2 apps, a clustering and names of
 #' clusters to keep, subset the pagoda apps to only the selected clusters
 #' @param p2applist list of pagoda2 apps to subset
@@ -33,28 +49,25 @@ subsetAllappsToGenes <- function(r.n, genes, remove.null.apps = TRUE) {
 #' @param cl.keep character vector of cluster (from the levels of cl) to keep
 #' @param keep.genes keep.genes parameter for Pagoda2$new
 #' @export subsetAllappsToClusters
-subsetAllappsToClusters <- function(p2applist, cl, cl.keep, keep.genes = NULL) {
-  cells.keep <- names(cl)[cl %in% cl.keep]
-  cat(length(cells.keep),'\n')
-  lapply(p2applist, function(o) {
-    tryCatch({
-      rn <- rownames(o$misc$rawCounts)
-      app.cells.keep <- rn %in% cells.keep
-      if (length(app.cells.keep) < 100) { NULL  }
-      p2 <- Pagoda2$new(t(o$misc$rawCounts[app.cells.keep,]), n.cores=20, keep.genes = keep.genes)
-      p2$adjustVariance(plot=F,gam.k=20)
-      p2$calculatePcaReduction(nPcs=100,n.odgenes=1000,maxit=3000)
-      p2$getEmbedding(type='PCA',embeddingType='tSNE',perplexity=50,verbose=T);
-      p2$makeKnnGraph(k=30, type='PCA', center=T, weight.type='none', n.cores=20, distance='cosine')
-      p2$getKnnClusters(method = infomap.community, type = 'PCA' ,name = 'infomap')
-      p2
-    }, warning = function(w) {
-      NULL
-    }, error = function(e) {
-      NULL
+subsetAllappsToClusters <- function (p2applist, cl, cl.keep, keep.genes = NULL, min.cells = 100, nPcs = nPcs, perplexity = 50, make.embedding= TRUE)
+{
+    cells.keep <- names(cl)[cl %in% cl.keep]
+    cat(length(cells.keep), "\\n")
+    lapply(p2applist, function(o) {
+        try({
+            rn <- rownames(o$misc$rawCounts)
+            app.cells.keep <- rn[rn %in% cells.keep]
+            if (length(app.cells.keep) < min.cells) {
+                NULL
+            } else {
+                p2app.from.matrix(data = t(o$misc$rawCounts[app.cells.keep,]), keep.genes = keep.genes, nPcs=nPcs,
+                                  perplexity = perplexity, make.embedding=make.embedding)
+            }
+        })
     })
-  })
 }
+
+
 
 #' Get common genes between multiple pagoda apps
 #' @param r.n list of pagoda2 apps

@@ -2,13 +2,9 @@
 % Please edit documentation in R/multisampleEmbeddingPlots.R
 \name{p2PlotEmbeddingMultiGenes}
 \alias{p2PlotEmbeddingMultiGenes}
-\alias{p2PlotEmbeddingMultiGenes}
 \title{Plot the embedding of a pagoda2 app colors by the trend of expression
 of multiple genes}
 \usage{
-p2PlotEmbeddingMultiGenes(app, genes, type = "PCA", embeddingType = "tSNE",
-  main = "", show.gene.count = TRUE)
-
 p2PlotEmbeddingMultiGenes(app, genes, type = "PCA", embeddingType = "tSNE",
   main = "", show.gene.count = TRUE)
 }
@@ -24,23 +20,8 @@ p2PlotEmbeddingMultiGenes(app, genes, type = "PCA", embeddingType = "tSNE",
 \item{main}{title of plot}
 
 \item{show.gene.count}{show how many genes were found}
-
-\item{app}{a pagoda2 app}
-
-\item{genes}{a character vector of genes to display}
-
-\item{type}{type parameter for plotEmbedding()}
-
-\item{embeddingType}{embeddingType parameter for plotEmbedding()}
-
-\item{main}{a title to display}
-
-\item{show.gene.count}{logical, append the ratio of found genes}
 }
 \description{
 Plot the embedding of a pagoda2 app colors by the trend of expression
 of multiple genes
-
-This function will merged the expression patters of
-the specified genes, by scalling them individually and summing them
 }
