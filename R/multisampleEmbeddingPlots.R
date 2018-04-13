@@ -1,12 +1,4 @@
 
-#' Get common set of genes from apps
-#' @param p2objs list of pagoda2 objects
-#' @export getCommonGenes
-getCommonGenes <- function (p2objs) 
-{
-    app.genes <- lapply(p2objs, function(o) { colnames(o$counts) })
-    Reduce(intersect, app.genes)
-}
 
 #' Return TRUE if the parameter is an error object
 #' @param x the object to test
@@ -71,19 +63,6 @@ getCellSignatureScores <- function(p2obj, genes, score.method='sum') {
     }
 }
 
-#' get number of rows and cols to use when printing a n.items number of items
-#' @param n.items number of items
-#' @param square force number of columns and rows to be equal
-#' @export getParMfrow
-getParMfrow <- function(n.items, square = FALSE) {
-    n <- ceiling(sqrt(n.items))
-    if (square)  {
-        c(n,n);
-    } else {
-        m <- ceiling(n.items/n)
-        c(n,m)
-    }
-}
 
 #' Plot multiple pagoda2 application with a specific genes and common zlim
 #' @param p2.objs list of pagoda2 applications
@@ -193,72 +172,6 @@ p2PlotAllMultiGenes <- function(apps, genes, type='PCA', embeddingType='tSNE',ma
 }
 
 
-#' Plot multiple pagoda2 application with the specified groups
-#' @param p2.objs list of  pagoda2 objects
-#' @param groups names factor of groups
-#' @param filename filename to save to as PNG
-#' @param panel.size panel size for saving to disk
-#' @param mark.cluster.cex cex for cluster names
-#' @export plotAllWithGroups
-plotAllWithGroups <- function(p2.objs, groups, filename=NULL,panel.size = 600,mark.cluster.cex=0.8) {
-  require(Cairo)
-  n <- ceiling(sqrt(length(p2.objs)))
-  if (!is.null(filename)) {
-    CairoPNG(file=filename,height=n*panel.size,width=n*panel.size)
-  }
-  par(mfrow=c(n,n), mar = c(0.5,0.5,0.5,0.5), mgp = c(2,0.65,0), cex = 0.85);
-  invisible(lapply(names(p2.objs),function(dn) {
-    d <- p2.objs[[dn]];
-    g1 <- as.factor(groups)
-    colors <- NULL
-    ## If no cells present fix
-    if (!any(names(g1) %in% rownames(d$counts))) {
-      g1 <- NULL
-      cell.names <- rownames(d$counts)
-      colors <- rep('grey70',length(cell.names))
-      names(colors) <- cell.names
-    }
-    d$plotEmbedding(type='PCA',embeddingType='tSNE',groups=g1,alpha=0.2,
-                    min.group.size=0,mark.clusters = TRUE,
-                    mark.cluster.cex=mark.cluster.cex,do.par=F,colors=colors);
-    legend(x='topleft',bty='n',legend=dn)
-  }))
-  if(!is.null(filename)) {
-    dev.off()
-  }
-}
-
-
-
-#' Plot multiple pagoda2 application with a specific genes and common zlim
-#' @param p2.objs list of pagoda2 applications
-#' @param gene name of genes to plot
-#' @param filename if not NULL save to file
-#' @param panel.size panel size for saving to file
-#' @param mark.cluster.cex cex for marking clusters
-#' @return NULL
-#' @export plotAllWithDepth
-plotAllWithDepth <- function(p2.objs, filename=NULL,panel.size = 600,mark.cluster.cex=0.8) {
-  require(Cairo)
-  n <- ceiling(sqrt(length(p2.objs)))
-  if (!is.null(filename)) {
-    CairoPNG(file=filename,height=n*panel.size,width=n*panel.size)
-  }
-  ## Get all depth values
-  depthvalues <- unlist(lapply(p2.objs, function(o) {o$depth}))
-  zlim <- calcZlim(depthvalues)
-  ## Do the plotting
-  par(mfrow=c(n,n), mar = c(0.5,0.5,0.5,0.5), mgp = c(2,0.65,0), cex = 0.85);
-  invisible(lapply(names(p2.objs),function(dn) {
-    d <- p2.objs[[dn]];
-    ## If no cells present fix
-    d$plotEmbedding(type='PCA',embeddingType='tSNE',colors=d$depth,alpha=0.2,do.par=F, zlim=zlim);
-    legend(x='topleft',bty='n',legend=dn)
-  }))
-  if(!is.null(filename)) {
-    dev.off()
-  }
-}
 
 
 #' Plot a single pagoda app with a signature
