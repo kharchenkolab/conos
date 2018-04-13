@@ -1,11 +1,13 @@
-
+#' An ensemble of p2 objects that can be manipulated together
+#' #xport Pagoda2ensemble
 #' @exportClass Pagoda2ensemble
 Pagoda2ensemble <- setRefClass(
     "Pagoda2ensemble",
+  
     fields=c('p2objs','rawMatrices','n.cores','jointClustering','samplesheet','de.results','de.results.json'),
+    
     methods=list(
-
-        #' Pagoda2ensemble object constructor
+        #' @name Pagoda2ensemble object constructor
         initialize=function(x, ..., n.cores=parallel::detectCores(logical=F)) {
             p2objs <<- list();
             rawMatrices <<- list();
@@ -20,7 +22,7 @@ Pagoda2ensemble <- setRefClass(
             }
         },
         
-        #' Set the list of pagoda2 objects to work on
+        #' @name Set the list of pagoda2 objects to work on
         #' @param p2objects list of pagoda2 objects
         setObjects=function(p2objects) {
             if(!is.list(p2objects))
@@ -32,10 +34,9 @@ Pagoda2ensemble <- setRefClass(
             p2objs <<- p2objects
         },
 
-        #' Extract count matrices for differential expression
+        #' @name Extract count matrices for differential expression
         #' and proportion comparisons from pagoda2 apps
         #' @return a list of dgCMatrices
-        #' @export extractCountMatrices
         extractCountMatrices=function() {
             ## Get common genes
             gl <- lapply(p2objs, function(r) colnames(r$counts))
@@ -56,12 +57,12 @@ Pagoda2ensemble <- setRefClass(
             invisible(ccm.raw)
         },
 
-        #' Calculate joint clustering between these apps
+        #' @nameCalculate joint clustering between these apps
         calcJointClustering=function() {
             stop('Not implemented')
         },
 
-        #' Specify clustering that encompases cells from all the apps
+        #' @name Specify clustering that encompases cells from all the apps
         #' @param name name for this clustering
         #' @param jc named factor specifying the cluster membership
         setJointClustering=function(name=NULL, jc=NULL){
@@ -75,14 +76,14 @@ Pagoda2ensemble <- setRefClass(
             jointClustering[[name]] <<- jc;
         },
 
-        #' Get the genes that are in all the p2 objects in this ensemble
+        #' @name Get the genes that are in all the p2 objects in this ensemble
         #' @return names of common genes
         getCommonGenes=function() {
             app.genes <- lapply(p2objs, function(o) { colnames(o$counts) })
             Reduce(intersect, app.genes);
         },
 
-        #' Helper function for getting panel dimentions
+        #' @name Helper function for getting panel dimentions
         #' @param n.items items that we want to show
         #' @param square logical: force square shape
         #' @return integer vector with 2 numbers
@@ -95,7 +96,7 @@ Pagoda2ensemble <- setRefClass(
             }
         },
         
-        #' Plot all the apps with the designated groups
+        #' @name Plot all the apps with the designated groups
         #' @param groups a factor of groups
         #' @param filename if not NULL save to file
         #' @param panel.size panel size for saving to file
@@ -135,7 +136,7 @@ Pagoda2ensemble <- setRefClass(
             invisible(NULL);
         },
         
-        #' Plot all apps with the clusters specified by the joint clustering
+        #' @name Plot all apps with the clusters specified by the joint clustering
         #' @param ... parameters to pass to plotWithGroups
         plotWithJointclustering=function(jc.name=NULL, ...) {
             if(is.null(jc.name))
@@ -145,7 +146,7 @@ Pagoda2ensemble <- setRefClass(
             plotWithGroups(groups=jointClustering[[jc.name]]$groups, ...)
         },
 
-        #' Helper function for calculation of common zlim
+        #' @name Helper function for calculation of common zlim
         #' @param vs values
         #' @param gradient.range.quantile parameter for trimming
         #' @return zlim values
@@ -157,7 +158,7 @@ Pagoda2ensemble <- setRefClass(
             zlim
         },
 
-        #' plot embeddings of all objects colored by depth
+        #' @name plot embeddings of all objects colored by depth
         #' @param filename if not NULL save to file
         #' @param panel.size panel size for saving to file
         #' @param mark.cluster.cex cex for marking clusters
@@ -184,14 +185,14 @@ Pagoda2ensemble <- setRefClass(
             }
         },
         
-        #' set the sample sheet
+        #' @name set the sample sheet
         setSamplesheet=function(sample.sheet=NULL) {
             if(!is.data.frame(sample.sheet))
                 stop('sample.sheet is not a dataframe')
             samplesheet <<- sample.sheet;
         },
         
-        #' compare a set of cells accross the specified matrices with DESeq2
+        #' @name compare a set of cells accross the specified matrices with DESeq2
         #' @param rl1 list of test count matrices
         #' @param rl2 list of control count matrices
         #' @param n1 name for condition 1
@@ -258,7 +259,7 @@ Pagoda2ensemble <- setRefClass(
             ))
         },
         
-        ## helper function that take a factor and breaks it down
+        #' @name helper function that take a factor and breaks it down
         factorBreakdown = function(f) {
             if(!is.factor(f)) stop('not a factor!')
             lvls <- levels(f);
@@ -270,7 +271,7 @@ Pagoda2ensemble <- setRefClass(
             })
         },
         
-        #' Calculated differential expression between apps of the specified type using deseq2
+        #' @name Calculated differential expression between apps of the specified type using deseq2
         #' @param app.types a named factor allocating each app to a type
         #' @param contrasts a named list of vectors that specified comparisons to run in terms of app.types
         #' @param jc.name name of joint clustering to used
@@ -307,7 +308,7 @@ Pagoda2ensemble <- setRefClass(
             invisible(x)
         },
 
-        #' Return the specified differential expression results
+        #' @name Return the specified differential expression results
         #' @param de.name name of results
         #' @return differential expression results
         getDEresults = function(de.name='default') {
@@ -316,7 +317,7 @@ Pagoda2ensemble <- setRefClass(
             de.results[[de.name]]
         },
         
-        #' Get a table that shows the number of cells in each cluster in each app
+        #' @name Get a table that shows the number of cells in each cluster in each app
         #' @param jc.name name of joint clustering to use
         #' @param groups alternative groups to use, jc.name must be NULL
         getClusterCountsPerApp = function(jc.name=NULL,groups=NULL) {
@@ -341,14 +342,14 @@ Pagoda2ensemble <- setRefClass(
             table(x[,c('app','cluster')])
         },
         
-        #' get a table that shows the percent of cells in each cluster in each app
+        #' @name get a table that shows the percent of cells in each cluster in each app
         #' @param ... parameters passed to getClusterCountsPerApp
         getClusterPercentPerApp = function(...) {
             z <- getClusterCountsPerApp(...);
             sweep(z, 1, Matrix::rowSums(z), '/');
         },
 
-        #' get JSON file for interactive visualisation of expression
+        #' @name get JSON file for interactive visualisation of expression
         #' @param jc.name name of joint clustering to use
         #' @param groups alternative factor to use for cell grouping, jc.name must be NULL to use this
         #' @param json.output output file name
@@ -423,7 +424,7 @@ Pagoda2ensemble <- setRefClass(
             )   
         },
         
-        #' save differential expression results as JSON file for online viewing
+        #' @name save differential expression results as JSON file for online viewing
         #' @description save the differential expression results as JSON, also generates
         #' the internal structure required to make an index for the files
         #' @param de.name name of differential expression results to save
@@ -454,7 +455,7 @@ Pagoda2ensemble <- setRefClass(
             invisible(ret)     
         },
         
-        #' make an index html file for the designated comparisons
+        #' @name make an index html file for the designated comparisons
         #' @param de.name name of de expression field to use
         #' @param filename name of file to save
         #' @param deviewfile file of the html viewing interface to link to
