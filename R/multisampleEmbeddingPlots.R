@@ -237,7 +237,7 @@ plotAllWithGroups <- function(p2.objs, groups, filename=NULL,panel.size = 600,ma
 #' @param panel.size panel size for saving to file
 #' @param mark.cluster.cex cex for marking clusters
 #' @return NULL
-#' @export plotAllWithDepth2
+#' @export plotAllWithDepth
 plotAllWithDepth <- function(p2.objs, filename=NULL,panel.size = 600,mark.cluster.cex=0.8) {
   require(Cairo)
   n <- ceiling(sqrt(length(p2.objs)))

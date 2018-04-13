@@ -1,5 +1,4 @@
 #' @useDynLib clusterMatch
-#' @import plyr
 NULL
 
 #' Classify cells in a pagoda2 application given an annotated pagoda2 object
@@ -16,7 +15,6 @@ NULL
 #' @param center perform centering
 #' @param verbose print progress messages
 #' @param extra.info return extra information from the run, this is currently the gsvd decomposition object
-#' @import plyr
 #' @import geigen
 #' @export identifyCellsGSVDMNN
 identifyCellsGSVDMNN <- function(referenceP2, r2, referenceP2labels,
@@ -39,9 +37,9 @@ identifyCellsGSVDMNN <- function(referenceP2, r2, referenceP2labels,
     k2 <- k
 
     ## Get overdispersed genes, or some other relevant geneset
-    odgenes <- union(referenceP2$misc$odgenes, r2$misc$odgenes)
-    odgenes <- intersect(odgenes, colnames(referenceP2$counts))
-    odgenes <- intersect(odgenes, colnames(r2$counts))
+    odgenes <- base::union(referenceP2$misc$odgenes, r2$misc$odgenes)
+    odgenes <- base::intersect(odgenes, colnames(referenceP2$counts))
+    odgenes <- base::intersect(odgenes, colnames(r2$counts))
 
     ## Get matrices
     x1 <- referenceP2$counts[,odgenes]
@@ -139,10 +137,8 @@ identifyCellsGSVDMNN <- function(referenceP2, r2, referenceP2labels,
 #' @param annotset p2 dataset to be annotated
 #' @param clustersOrigin a names factor with cluster assignments for referenceset cells
 #' @return a named factor with labells for annotset
-#' @import dplyr
 #' @export identifyCellsGSVDMNNmulti
 identifyCellsGSVDMNNmulti <- function(referencesets, annotset, clustersOrig) {
-                                        #require(dplyr)
     d1 <- lapply(seq_along(referencesets), function(i) {
         cat(paste0('Processing reference set ', names(referencesets)[i]), '\n')
         curset <- referencesets[[i]]
@@ -180,7 +176,6 @@ identifyCellsGSVDMNNmulti <- function(referencesets, annotset, clustersOrig) {
 #' @param neighbourhood.k number of nearest neighbours to average over
 #' @param mutualOnly logical if true (defalt) only interapp links that are mutual are used, otherwise the links don'e need to be mutual (experimental) 
 #' @return a named (by cell name) factor of groups if extra.info is false, otherwise a list the factor and the extra information
-#' @import gtools
 #' @import pbapply
 #' @import igraph
 #' @export getJointClustering
@@ -203,10 +198,6 @@ getJointClustering <- function(r.n,
                                stop.return.graph = FALSE,
                                networkPairFunction = NULL) {
     
-                                        #require('gtools')
-                                        #require('pbapply')
-                                        #require('igraph')
-
     if (is.null(networkPairFunction)) {
         networkPairFunction <- getNNforP2pair;
     }
@@ -503,12 +494,10 @@ getNNforP2pair <- function(r1, r2, var.scale =T , k = 30, log.scale=T,
 #' @param clustersOrigin a names factor with cluster assignments for referenceset cells
 #' @param n.trees number of trees to use per app in total
 #' @param n.cores number of cores to use for the random forests
-#' @import dplyr
 #' @return a named factor with labells for annotset
 #' @export identifyCellsGSVDMNNmulti
 identifyGSVDRFMulti <- function(referencesets, annotset, clustersOrig,
                                 n.trees = 100, n.cores = 1) {
-                                        #require(dplyr)
     d1 <- lapply(seq_along(referencesets), function(i) {
         cat(paste0('Processing reference set ', names(referencesets)[i]), '\n')
         curset <- referencesets[[i]]
