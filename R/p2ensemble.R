@@ -4,7 +4,8 @@
 Pagoda2ensemble <- setRefClass(
     "Pagoda2ensemble",
   
-    fields=c('p2objs','rawMatrices','n.cores','jointClustering','samplesheet','de.results','de.results.json'),
+    fields=c('p2objs','rawMatrices','n.cores','jointClustering','samplesheet','de.results','de.results.json','full.matrix',
+             'cell.metadata', 'aggregateMatrices'),
     
     methods=list(
         #' @name Pagoda2ensemble object constructor
@@ -14,6 +15,7 @@ Pagoda2ensemble <- setRefClass(
             jointClustering <<- list();
             de.results <<- list();
             de.results.json <<- list();
+            aggregateMatrices <<- list();
             if(!missing(x) && class(x) == 'Pagoda2ensemble') {
                 ## copy constructor
                 callSuper(x, ..., n.cores=n.cores);
@@ -475,7 +477,32 @@ Pagoda2ensemble <- setRefClass(
             t0 <- reshape2::dcast(g0, L1 ~ L2, value.var='value')
             t0 <- t(t0)
             print(xtable::xtable(t0), sanitize.text.function=identity, type='html',file=filename)
+        },
+
+        ## '@name make a matrix by merging the individual object and store it in full.matrix
+        ## '@return invisble full.matrix
+        makeFullMatrix = function() {
+            full.matrix <<- do.call(rbind, rawMatrices)
+            invisible(full.matrix)
+        },
+
+        getFullMatrix = function() {
+            invisible(full.matrix)
+        },
+
+        setCellMetadata = function(newMeta) {
+            cell.metadata <<- newMeta
+        },
+
+        ## Sum raw cell counts according the cell.metadata fields aggr1
+        aggregateCells = function(fields=NULL) {
+            aggr1 <- apply(cell.metadata[,fields], 1, function(x) {paste(x,collapse=":")})
+            ccm.aggr1 <- rowsum(as.matrix(ens.p2$full.matrix), aggr1)
+            aggr.id <- paste(fields,collapse=':')
+            aggregateMatrices[[aggr.id]] <<- ccm.aggr1
+            invisible(aggregateMatrices[aggr.id])
         }
+                                   
         
     )
 )
