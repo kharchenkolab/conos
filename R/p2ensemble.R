@@ -5,7 +5,7 @@ Pagoda2ensemble <- setRefClass(
     "Pagoda2ensemble",
   
     fields=c('p2objs','rawMatrices','n.cores','jointClustering','samplesheet','de.results','de.results.json','full.matrix',
-             'cell.metadata', 'aggregateMatrices'),
+             'cell.metadata', 'aggregateMatrices', 'aggregateMatrixMeta'),
     
     methods=list(
         #' @name Pagoda2ensemble object constructor
@@ -16,6 +16,7 @@ Pagoda2ensemble <- setRefClass(
             de.results <<- list();
             de.results.json <<- list();
             aggregateMatrices <<- list();
+            aggregateMatrixMeta <<- list();
             if(!missing(x) && class(x) == 'Pagoda2ensemble') {
                 ## copy constructor
                 callSuper(x, ..., n.cores=n.cores);
@@ -501,8 +502,14 @@ Pagoda2ensemble <- setRefClass(
             aggr.id <- paste(fields,collapse=':')
             aggregateMatrices[[aggr.id]] <<- ccm.aggr1
             invisible(aggregateMatrices[aggr.id])
-        }
-                                   
+        },
+
+        # set metadata for aggregate matrix
+        setAggregateMatrixMeta = function(aggregateName, meta) {
+            aggregateMatrixMeta[[aggregateName]] <<- meta
+        },
+
+        
         
     )
 )
