@@ -17,6 +17,8 @@ Pagoda2ensemble <- setRefClass(
             de.results.json <<- list();
             aggregateMatrices <<- list();
             aggregateMatrixMeta <<- list();
+
+
             if(!missing(x) && class(x) == 'Pagoda2ensemble') {
                 ## copy constructor
                 callSuper(x, ..., n.cores=n.cores);
@@ -60,7 +62,7 @@ Pagoda2ensemble <- setRefClass(
             invisible(ccm.raw)
         },
 
-        #' @nameCalculate joint clustering between these apps
+        #' @name Calculate joint clustering between these apps
         calcJointClustering=function() {
             stop('Not implemented')
         },
@@ -507,10 +509,7 @@ Pagoda2ensemble <- setRefClass(
         # set metadata for aggregate matrix
         setAggregateMatrixMeta = function(aggregateName, meta) {
             aggregateMatrixMeta[[aggregateName]] <<- meta
-        },
-
-        
-        
+        }
     )
 )
 
