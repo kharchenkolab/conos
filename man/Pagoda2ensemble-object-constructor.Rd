@@ -4,8 +4,7 @@
 \name{Pagoda2ensemble object constructor}
 \alias{Pagoda2ensemble object constructor}
 \alias{Pagoda2ensemble}
-\title{An ensemble of p2 objects that can be manipulated together
-#xport Pagoda2ensemble}
+\title{An ensemble of p2 objects that can be manipulated together}
 \arguments{
 \item{p2objects}{list of pagoda2 objects}
 

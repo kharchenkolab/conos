@@ -1,5 +1,5 @@
+
 #' An ensemble of p2 objects that can be manipulated together
-#' #xport Pagoda2ensemble
 #' @exportClass Pagoda2ensemble
 Pagoda2ensemble <- setRefClass(
     "Pagoda2ensemble",
@@ -8,6 +8,7 @@ Pagoda2ensemble <- setRefClass(
              'cell.metadata', 'aggregateMatrices', 'aggregateMatrixMeta'),
     
     methods=list(
+        #' constructor
         #' @name Pagoda2ensemble object constructor
         initialize=function(x, ..., n.cores=parallel::detectCores(logical=F)) {
             p2objs <<- list();
@@ -500,7 +501,7 @@ Pagoda2ensemble <- setRefClass(
         ## Sum raw cell counts according the cell.metadata fields aggr1
         aggregateCells = function(fields=NULL) {
             aggr1 <- apply(cell.metadata[,fields], 1, function(x) {paste(x,collapse=":")})
-            ccm.aggr1 <- rowsum(as.matrix(ens.p2$full.matrix), aggr1)
+            ccm.aggr1 <- rowsum(as.matrix(full.matrix), aggr1)
             aggr.id <- paste(fields,collapse=':')
             aggregateMatrices[[aggr.id]] <<- ccm.aggr1
             invisible(aggregateMatrices[aggr.id])
