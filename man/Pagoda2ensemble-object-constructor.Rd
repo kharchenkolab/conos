@@ -113,4 +113,10 @@ differential expression results
 save the differential expression results as JSON, also generates
 the internal structure required to make an index for the files
 }
+\section{Fields}{
+
+\describe{
+\item{\code{p2objs}}{list of pagoda2 objects}
+}}
+
 
