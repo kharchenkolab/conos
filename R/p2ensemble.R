@@ -115,13 +115,14 @@ Pagoda2ensemble <- setRefClass(
         #' @param type type of embedding to plot
         #' @param embeddingType embeddingType of embedding to plot
         #' @param mark.clusters show names of clusters?
-        plotWithGroups = function(groups=NULL,filename=NULL,panel.size=600,mark.cluster.cex=0.8,
+        plotWithGroups = function(groups=NULL,filename=NULL,panel.size=300,mark.cluster.cex=0.8,
                                   mar=c(0.5,0.5,0.5,0.5), mgp = c(2,0.65,0), cex = 0.85, type='PCA',
-                                  embeddingType='tSNE',mark.clusters=TRUE) {
+                                  embeddingType='tSNE',mark.clusters=TRUE, verbose=FALSE) {
             require(Cairo)
             panel.dims <- getParMfrow(length(p2objs))
+            if (verbose) cat('Panel dimensions are ', panel.dims[1] ,' by ',panel.dims[2],'\n')
             if(!is.null(filename))
-                CairoPNG(file=filename,height=panel.dims[1],width=panel.dims[2])
+                CairoPNG(file=filename,height=panel.dims[1]*panel.size,width=panel.dims[2]*panel.size)
             par(mfrow=c(panel.dims[1],panel.dims[2]), mar = mar, mgp = mgp, cex = cex);
             lapply(names(p2objs),function(dn) {
                 d <- p2objs[[dn]];
