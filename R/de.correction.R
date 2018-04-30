@@ -22,7 +22,7 @@ topres <- function(x, ...) { r <- DESeq2::results(x, ...); r[order(r$pvalue),] }
 #' @param x12 data matrix
 #' @param coldata metadata for x12 matrix
 #' @param gene.scale.factors per gene fold chages to correct for
-#' @results deseq2 object
+#' @return deseq2 object
 DESeq2.correctFC <- function(x12, coldata, gene.scale.factors) {
     ## Get size factors
     dds1 <- DESeq2::DESeqDataSetFromMatrix(x12, coldata[colnames(x12),], design=~sample.type)
