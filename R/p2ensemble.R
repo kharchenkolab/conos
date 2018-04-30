@@ -121,7 +121,7 @@ Pagoda2ensemble <- setRefClass(
             require(Cairo)
             panel.dims <- getParMfrow(length(p2objs))
             if(!is.null(filename))
-                CairoPNG(file=filename,height=panel.dims[1],width=paneldims[2])
+                CairoPNG(file=filename,height=panel.dims[1],width=panel.dims[2])
             par(mfrow=c(panel.dims[1],panel.dims[2]), mar = mar, mgp = mgp, cex = cex);
             lapply(names(p2objs),function(dn) {
                 d <- p2objs[[dn]];
