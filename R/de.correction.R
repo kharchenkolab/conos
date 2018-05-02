@@ -1,8 +1,36 @@
-##############################
-## Helper Functions
-##############################
-
+## libraries
 library(DESeq2)
+
+## Helper funcitons
+setNames <- function(x) {names(x) <- as.character(x); x}
+na.rm <- function(x) {x[!is.na(x)]}
+
+
+## Not used
+
+## trimmedMean <- function(x) {
+##     x <- na.rm(x)
+##     min.val <- median(x) - 2 * IQR(x)
+##     max.val <- median(x) + 2 * IQR(x)
+##     x[x < min.val | x > max.val] <- NA
+##     x <-na.rm(x)
+##     mean(x)
+## }
+
+#topres <- function(x, ...) { r <- DESeq2::results(x, ...); r[order(r$pvalue),] }
+
+##########
+## DEVEL for t-test version
+
+ttest.correctFC <- function(x12,coldata,fc.correction) {
+    browser()
+}
+
+ttest2res <- function(t.res) {
+    NULL
+}
+
+###########
 
 #' Subset p2ens$aggregateMatrices$'cluster:sample' to the requested samples
 #' @param p2ens an p2 object ensemble
@@ -15,15 +43,14 @@ getSamples <- function(p2ens, sample.type, celltype) {
     aggr.data[samples,,drop=F]
 }
 
-topres <- function(x, ...) { r <- DESeq2::results(x, ...); r[order(r$pvalue),] }
-
 #' Run deseq2 and correct for the provided FCs
 #' Currently runs comparison on sample.type metadata column which is expected to be in the metadata
 #' @param x12 data matrix
 #' @param coldata metadata for x12 matrix
 #' @param gene.scale.factors per gene fold chages to correct for
-#' @return deseq2 object
-DESeq2.correctFC <- function(x12, coldata, gene.scale.factors) {
+#' @param correction.global.weight global weighting on the correction, setting to 0 results in no correction
+#' @results deseq2 object
+DESeq2.correctFC <- function(x12, coldata, gene.scale.factors, correction.global.weight=1) {
     ## Get size factors
     dds1 <- DESeq2::DESeqDataSetFromMatrix(x12, coldata[colnames(x12),], design=~sample.type)
     dds1 <- DESeq2::estimateSizeFactors(dds1)
@@ -38,7 +65,7 @@ DESeq2.correctFC <- function(x12, coldata, gene.scale.factors) {
     rownames(nf.tmp) <- rownames(x12)
     colnames(nf.tmp) <- colnames(x12)
     ## gene scaling in linear scale and in order of x12 and nf.tmp
-    gene.scale.factors <- 2^ gene.scale.factors[rownames(nf.tmp)]
+    gene.scale.factors <- 2^ (gene.scale.factors[rownames(nf.tmp)] * correction.global.weight)
     ## Build gene-specific scaling matrix
     x <- do.call(cbind,lapply(colData(dds4)$sample.type, function(x) {
         if(x == levels(coldata$sample.type)[1]) {
@@ -60,9 +87,14 @@ DESeq2.correctFC <- function(x12, coldata, gene.scale.factors) {
     dds4
 }
 
-
-
-getCelltypeFCs <- function(ens.p2=NULL, celltype=NULL, sample.type.comparison = NULL,coldata=NULL,verbose=FALSE) {
+#' get fold changes for a specific cell type comparison
+#' @param pagoda 2 ensemble object
+#' @param celltype to use
+#' @param sample.type.comparisons comparison to perform
+#' @param coldata metadata
+#' @param verbose verbosity logical
+#' @param fc.method correction method to use 'deseq2' or 'dummy' (no correction)
+getCelltypeFCs <- function(ens.p2=NULL, celltype=NULL, sample.type.comparison = NULL,coldata=NULL,verbose=FALSE,fc.method='deseq2') {
     ## check params
     if(is.null(ens.p2)) {error('ens.p2 is null')}
     if(is.null(celltype)) { error('celltype is null') }
@@ -75,22 +107,36 @@ getCelltypeFCs <- function(ens.p2=NULL, celltype=NULL, sample.type.comparison = 
     
     ## genes x aggregates
     x12.a <- cbind(x,x1)
-    ## Get differential expression  
-    dds1 <- DESeq2::DESeqDataSetFromMatrix(x12.a, coldata[colnames(x12.a),], design=~sample.type)
-    dds1 <- DESeq2::DESeq(dds1)
+    if (fc.method == 'deseq2') {
+        ## Get differential expression  
+        dds1 <- DESeq2::DESeqDataSetFromMatrix(x12.a, coldata[colnames(x12.a),], design=~sample.type)
+        dds1 <- DESeq2::DESeq(dds1)
 
-    ## extract fold changes
-    res <- DESeq2::results(dds1,cooksCutoff = FALSE, independentFiltering = FALSE)
-    fcs <- res$log2FoldChange
-    names(fcs) <- rownames(res)
-    fcs <- fcs[!is.na(fcs)]
+        ## extract fold changes
+        res <- DESeq2::results(dds1,cooksCutoff = FALSE, independentFiltering = FALSE)
+        fcs <- res$log2FoldChange
+        names(fcs) <- rownames(res)
+        fcs <- fcs[!is.na(fcs)]
+    } else if (fc.method == 'dummy') {
+        ## No correction
+        genes <- rownames(x12.a)
+        fcs <- rep(0,times=length(genes))
+        names(fcs) <- genes
+    } else {
+        error('Unknown fc correction method');
+    }
     fcs
 }
 
-setNames <- function(x) {names(x) <- as.character(x); x}
-
-
-getPerCellTypeFCs <- function(ens.p2  =NULL, levels =  NULL, sample.type.comparison = NULL, coldata=NULL, n.cores=1, verbose=FALSE) {
+#' get a list of fold changes per cell type
+#' @param ens.p2 pagdoda2 ensembl object
+#' @param levels levels of the cell type assignment factor
+#' @param sample.type.comparison comparison to perform
+#' @param coldata metadata
+#' @param n.cores number of cores
+#' @param verbose verbosity logical
+#' @param fc.method method to use to calculate fcs, passed to getCelltypeFCs
+getPerCellTypeFCs <- function(ens.p2  =NULL, levels =  NULL, sample.type.comparison = NULL, coldata=NULL, n.cores=1, verbose=FALSE,fc.method='deseq2') {
     ## Check args
     if (is.null(levels)) { stop('Provided levels is null') }
     if (is.null(ens.p2)) {stop('ens.p2 is null')}
@@ -101,43 +147,19 @@ getPerCellTypeFCs <- function(ens.p2  =NULL, levels =  NULL, sample.type.compari
         celltype <- as.character(celltype)
         cat('Calculating FC for ', celltype,'\n');
             try({
-                getCelltypeFCs(ens.p2 = ens.p2, celltype=celltype, sample.type.comparison=sample.type.comparison,coldata=coldata,verbose=verbose)
+                getCelltypeFCs(ens.p2 = ens.p2, celltype=celltype,
+                               sample.type.comparison=sample.type.comparison,coldata=coldata,verbose=verbose,fc.method=fc.method)
             })
     },mc.cores=n.cores)
     fcs
 }
 
-na.rm <- function(x) {x[!is.na(x)]}
-
-trimmedMean <- function(x) {
-    x <- na.rm(x)
-    min.val <- median(x) - 2 * IQR(x)
-    max.val <- median(x) + 2 * IQR(x)
-    x[x < min.val | x > max.val] <- NA
-    x <-na.rm(x)
-    mean(x)
-}
-
-range01 <- function(x){(x-min(x))/(max(x)-min(x))}
-
-
-getCorrectedDE <- function(ens.p2, cell.type=NULL, sample.type.comparison=NULL, coldata=NULL, fc.correction.3=NULL,
-                           membrane.gene.names=NULL) {
-    ## Check arguments
-    if(is.null(ens.p2)) {stop('ens.p2 is null')}
-    if(is.null(cell.type)) {stop('cell.type is null')}
-    if(is.null(sample.type.comparison)) {stop('sample.type.comparison is null')}
-    if(is.null(coldata)) {stop('coldata is null')}
-    if(is.null(fc.correction.3)) {stop('fc.correction.3 is null')}
-    ## get data
-    x12 <- t(rbind(
-        getSamples(ens.p2, sample.type.comparison[2], cell.type),
-        getSamples(ens.p2, sample.type.comparison[1], cell.type)
-    ))
-    ## run de
-    dds <- DESeq2.correctFC(x12, coldata,  fc.correction.3)
-    # prep res
-    res <- DESeq2::results(dds)
+#' adaptr to convert deseq2 results object to suitable data.frame
+#' @param res deseq2 results object
+#' @param membrane.gene.names genes to annotate as membrane genes
+ddsres2res <- function(res,membrane.gene.names) {
+   # prep res
+    #res <- DESeq2::results(dds)
     allgenes <- rownames(res)
     res <- as.data.frame(res)
     res <- cbind(gene=allgenes,res)
@@ -148,6 +170,45 @@ getCorrectedDE <- function(ens.p2, cell.type=NULL, sample.type.comparison=NULL, 
     }
     res$Z <- (-1) * qnorm(res$pvalue)*sign(res$log2FoldChange)
     res$Za <- (-1) * qnorm(res$padj)*sign(res$log2FoldChange)
+    res
+}
+
+#' get differential expression corrected by the specified vector
+#' @param ens.p2 pagoda2 ensembl object
+#' @param cell.type cell type to do the comparison of
+#' @param sample.type.comparison comparison to perform
+#' @param coldata metadata
+#' @param fc.correction vector of fold changes to correct
+#' @param membrane.gene.names character vector of genes that are membrane
+#' @param de.method method to do differential expression currently deseq2
+#' @param correction.global.weight global weight to apply to correction
+getCorrectedDE <- function(ens.p2, cell.type=NULL, sample.type.comparison=NULL, coldata=NULL, fc.correction=NULL,
+                           membrane.gene.names=NULL,de.method='deseq2', correction.global.weight=1) {
+    ## Check arguments
+    if(is.null(ens.p2)) {stop('ens.p2 is null')}
+    if(is.null(cell.type)) {stop('cell.type is null')}
+    if(is.null(sample.type.comparison)) {stop('sample.type.comparison is null')}
+    if(is.null(coldata)) {stop('coldata is null')}
+    if(is.null(fc.correction)) {stop('fc.correction is null')}
+    ## get data
+    x12 <- t(rbind(
+        getSamples(ens.p2, sample.type.comparison[2], cell.type),
+        getSamples(ens.p2, sample.type.comparison[1], cell.type)
+    ))
+    ## run de
+    if(de.method=='deseq2'){
+        dds <- DESeq2.correctFC(x12, coldata,  fc.correction, correction.global.weight=correction.global.weight)
+        ## convert de to results table
+        res <- DESeq2::results(dds)
+        allgenes <- rownames(res);
+        res <- ddsres2res(res,membrane.gene.names)
+    } else if (de.method=='t.test') {
+        warning('Partly implemented t.test method');
+        ttres <- ttest.correctFC();
+        res <- ttest2res(ttrest);
+    }  else {
+        stop('Unknown DE method: ',de.method);
+    }
     ## ilev
     tmp1 <- sample.type.comparison
     names(tmp1) <- sample.type.comparison
@@ -167,7 +228,6 @@ getCorrectedDE <- function(ens.p2, cell.type=NULL, sample.type.comparison=NULL, 
     ))
 }
 
-
 #' Get a correction vector by combining fold changes over all the results
 #' @param ens.p2 ensembl p2 object
 #' @param aggregation.id the aggregation data slot to use from the ens.p2 object
@@ -175,17 +235,24 @@ getCorrectedDE <- function(ens.p2, cell.type=NULL, sample.type.comparison=NULL, 
 #' @param cell.types.exclude cell types to ignore
 #' @param scaleByVariance scale the mean fold changes by the Variance
 #' @param useTrimmed return results from trimmed mean
-#' @param a name numeric vector of consistent fold changes
+#' @param n.cores number of cores to use
+#' @param coldata metadata for aggregated data
+#' @param cell.type.factor named factor of cell type assignments to groups
+#' @param per.cell.type.fcs pre-calculated per cell type FCs, if null they will be recalculated here
+#' @param verbose logical verbosity
+#' @param fc.method method to pass to getPerCellTypeFCs() if precalculated per.cell.type.fcs are not provided
 calcFCcorrection <- function(ens.p2, aggregation.id, sample.type.comparison, cell.types.exclude = c('tumor'),
                              scaleByVariance=TRUE, useTrimmed=FALSE,n.cores=1,coldata=NULL, cell.type.factor=NULL,
-                             per.cell.type.fcs=NULL,verbose=FALSE) {
+                             per.cell.type.fcs=NULL,verbose=FALSE,fc.method='deseq2') {
+
     ## Get FCs for all cells
     if(is.null(per.cell.type.fcs)) {
         fcs <- getPerCellTypeFCs(levels = levels(cell.type.factor), ens.p2=ens.p2,
                                  sample.type.comparison=sample.type.comparison,
-                                 coldata=coldata,n.cores=n.cores)
+                                 coldata=coldata,n.cores=n.cores,fc.method=fc.method)
     } else {
         if (verbose) cat('Using pre-calculated per celltype fcs');
+        ## NOTE fc.method is ignored here
         fcs <- per.cell.type.fcs
     }
     ## TODO: some fail, make sure we know why
@@ -201,36 +268,42 @@ calcFCcorrection <- function(ens.p2, aggregation.id, sample.type.comparison, cel
         trimmedMean = apply(fcs.mat,2, trimmedMean),
         var = apply(fcs.mat, 2, function(x) {var(x,na.rm=TRUE)})
     )
+    ## fill missing trimmed means
+    fc.mean.var$trimmedMean[is.na(fc.mean.var$trimmedMean)] <- 0
+    
     ## Scale correction by variance
-    fc.mean.var$trimmedMean[is.na(fc.mean.var$trimmedMean)] <- 1e-6 # fill missing trimmed means
-    fc.mean.var$var[is.na(fc.mean.var$var)] <- 1e-6 # fill missing var
-    fc.mean.var$var.scaled <- as.numeric(range01(scale(fc.mean.var$var))) # standardise var
-    fc.mean.var$weight <- 1-fc.mean.var$var.scaled # weight is inverse std var
+    fc.mean.var$var[is.na(fc.mean.var$var)] <- 0 # fill missing var
+    
+    ## Assuming normal distribution of the fcs
+    ## we will weight them with 1 -  chi-square probability
+    ## the degrees of freedom are the number of comparisons minu1
+    fc.mean.var$weight <- 1 - pchisq(q = fc.mean.var$var, df = nrow(fcs.mat) - 1)
+
     fc.mean.var$correction.fc <- fc.mean.var$mean * fc.mean.var$weight # fc to use for correct
     fc.mean.var$correction.fc.trimmed <- fc.mean.var$trimmedMean * fc.mean.var$weight # fc to use for correct with trimming
     ## Return the requested result
     if (scaleByVariance) {
         if (useTrimmed) {
             ## fc correction vector
-            fc.correction.3 <- fc.mean.var[,'correction.fc']
-            names(fc.correction.3) <- rownames(fc.mean.var)
+            fc.correction <- fc.mean.var[,'correction.fc']
+            names(fc.correction) <- rownames(fc.mean.var)
         } else {
-            fc.correction.3 <- fc.mean.var[,'correction.fc.trimmed']
-            names(fc.correction.3) <- rownames(fc.mean.var)
+            fc.correction <- fc.mean.var[,'correction.fc.trimmed']
+            names(fc.correction) <- rownames(fc.mean.var)
         }
     } else {
         if (useTrimmed) {
-            fc.correction.3 <- fc.mean.var[,'trimmedMean']
-            names(fc.correction.3) <- rownames(fc.mean.var)
+            fc.correction <- fc.mean.var[,'trimmedMean']
+            names(fc.correction) <- rownames(fc.mean.var)
         } else {
-            fc.correction.3 <- fc.mean.var[,'mean']
-            names(fc.correction.3) <- rownames(fc.mean.var)
+            fc.correction <- fc.mean.var[,'mean']
+            names(fc.correction) <- rownames(fc.mean.var)
         }
     }
-    fc.correction.3
+    fc.correction
 }
 
-
+#' save results of de expression as json files with designated prefix (can be directory)
 saveComparisonsAsJSON <- function (comps, fileprefix='')
 {
     ret <- lapply(namedNames(comps), function(ncc) {
@@ -254,12 +327,24 @@ saveComparisonsAsJSON <- function (comps, fileprefix='')
     invisible(ret)
 }
 
-
+#' @param ens.p2 pagoda 2 object ensemble
+#' @param cellfactor a named factor with cell assignments to groups
+#' @param sample.type.comparison character vector of length 2 signifying the comparison to perform from the sample.type metadata column
+#' @param membrane.gene.names a character vector of genes to annotate as membrane genes
+#' @param n.cores number of cores to use
+#' @param correction.method character of lenght 1 global or exclcurrent, exclcurrent corrects with a vector that excludes considered cel tyep
+#' @param cell.types.fc.exclude cell types not to consider in generating the fold changes
+#' @param verbose verbosity logical
+#' @param de.method method for differential expression, currently only deseq2 supported
+#' @param fc.method method for fc generation for the correction, deseq2 or dummy (no correction) currently supported
+#' @param correction.global.weight global weighting of correction, 0 is no correction, 1 default
 getCorrectedDE.allTypes <-  function(ens.p2, cellfactor, sample.type.comparison,
                                      membrane.gene.names,n.cores=1,correction.method='global',
-                                     cell.types.fc.exclude=NULL,verbose=FALSE) {
+                                     cell.types.fc.exclude=NULL,verbose=FALSE,de.method='deseq2',
+                                     fc.method='deseq2', correction.global.weight=1) {
     ## Check arguments
     if(!correction.method %in% c('global','exclcurrent')) {stop('Unknown correction method: ',correction.method)}
+    if(!de.method %in% c('deseq2')) {stop('Unknown de method: ', de.method)}
 
     ## Prepare metadata
     coldata <- subset(ens.p2$aggregateMatrixMeta[['cluster:sample']], sample.type %in% sample.type.comparison)
@@ -275,13 +360,14 @@ getCorrectedDE.allTypes <-  function(ens.p2, cellfactor, sample.type.comparison,
                                            cell.types.exclude=cell.types.fc.exclude,
                                            scaleByVariance=TRUE,
                                            useTrimmed=FALSE, n.cores=n.cores,coldata=coldata,
-                                           cell.type.factor = cellfactor,verbose=verbose)
+                                           cell.type.factor = cellfactor,verbose=verbose,fc.method=fc.method)
         per.cell.type.fcs <- NULL
     } else {
-        ## Cache the per cell type corrections
+        ## Cache the per cell type corrections (from which global or per cell type corrections are derived)
+        ## This prevents recomputing them for every single cell type
         per.cell.type.fcs <- getPerCellTypeFCs(levels=levels(cellfactor),ens.p2=ens.p2,
                                                sample.type.comparison=sample.type.comparison,
-                                               coldata=coldata, n.cores=n.cores,verbose=verbose)
+                                               coldata=coldata, n.cores=n.cores,verbose=verbose,fc.method=fc.method)
     }
 
     ## Run differential expression
@@ -289,6 +375,9 @@ getCorrectedDE.allTypes <-  function(ens.p2, cellfactor, sample.type.comparison,
         cat('Processing ',cell.type,'...')
         try({
             if (correction.method == 'exclcurrent') {
+                ## Get cell type specific correction using the cached results per.cell.type.fcs
+                ## essentially collapse the cell specific fold changes ignoring the current
+                ## cell types, but without recalculating them all
                 fc.correction <- calcFCcorrection(ens.p2=ens.p2,
                                                    aggregation.id='cluster:sample',
                                                    sample.type.comparison=sample.type.comparison,
@@ -300,9 +389,8 @@ getCorrectedDE.allTypes <-  function(ens.p2, cellfactor, sample.type.comparison,
             getCorrectedDE(ens.p2=ens.p2, cell.type=cell.type,
                            sample.type.comparison=sample.type.comparison,
                            coldata=coldata,
-                           fc.correction.3=fc.correction,
-                           membrane.gene.names = membrane.gene.names
-                           )
+                           fc.correction=fc.correction,
+                           membrane.gene.names = membrane.gene.names,de.method=de.method, correction.global.weight=correction.global.weight)
         })
     }, mc.cores=n.cores)
     
@@ -313,3 +401,80 @@ getCorrectedDE.allTypes <-  function(ens.p2, cellfactor, sample.type.comparison,
     res
 }
 
+
+## Functions for working with the output of differential expression
+
+getDEcount <- function(de.result.set = NULL, type = c('all','up','down')) {
+    ## check input
+    if (is.null(de.result.set) ) stop('de.result.set not provided')
+    if (!type %in% c('all','up','down')) stop('type not valid')
+    ## Get summary stats
+    x <- lapply(de.result.set, function(type.comparison) {
+        lapply(type.comparison, function(cell.comparison) {
+            ##cell.comparison <- de.result.set[[1]][[1]]
+            res <- cell.comparison$res
+            ## calc results
+            summary <- list(
+                all = sum(res$significant, na.rm=TRUE),
+                up =  sum(res$significant & res$log2FoldChange > 0, na.rm=TRUE),
+                down =  sum(res$significant & res$log2FoldChange < 0, na.rm=TRUE)
+            )
+            ## return
+            summary[[type]]
+        })
+    })
+    ## convert to array
+    x <- melt(x)
+    acast(x, L1 ~ L2, value.var='value',fill=0)
+}
+
+
+
+
+getFCmatrix <- function(de.result.set = NULL, type.comparison.name = NULL) {
+    if (is.null(de.result.set)) stop('de.result.set not specified')
+    if (is.null(type.comparison.name)) stop('type.comparison.name not specified')
+    type.comparison <- de.result.set[[type.comparison.name]]
+    ##
+    x <- lapply(type.comparison, function(cell.comparison) {
+        fcs <-  cell.comparison$res$log2FoldChange
+        names(fcs) <- rownames(cell.comparison$res)
+        fcs
+    })
+    ##
+    x <- do.call(cbind, x)
+    x[is.na(x)] <- 0
+    ##
+    x    
+}
+
+
+getSignmatrix <- function(de.result.set = NULL, type.comparison.name = NULL) {
+    if (is.null(de.result.set)) stop('de.result.set not specified')
+    if (is.null(type.comparison.name)) stop('type.comparison.name not specified')
+    type.comparison <- de.result.set[[type.comparison.name]]
+    ##
+    x <- lapply(type.comparison, function(cell.comparison) {
+        sign <-  cell.comparison$res$significant
+        names(sign) <- rownames(cell.comparison$res)
+        sign
+    })
+    ##
+    x <- do.call(cbind, x)
+    x[is.na(x)] <- 0
+    ##
+    x    
+}
+
+
+getFCcormat <- function(de.result.set,type.comparison.name,method='pearson',sign.only=TRUE) {
+    fc.mat <- getFCmatrix(de.result.set,type.comparison.name)
+    if(sign.only) {
+        sign.mat <- getSignmatrix(de.dummy,type.comparison.name)
+        sign.genes <- rownames(sign.mat)[rowSums(sign.mat) > 0]
+        fc.mat <- fc.mat[sign.only,]
+    }
+    cor.mat <- cor(fc.mat[sign.genes,], method=method)
+    diag(cor.mat) <- 0
+    cor.mat
+}
