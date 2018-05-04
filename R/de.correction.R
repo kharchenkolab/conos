@@ -4,7 +4,7 @@ library(DESeq2)
 ## Helper funcitons
 setNames <- function(x) {names(x) <- as.character(x); x}
 na.rm <- function(x) {x[!is.na(x)]}
-
+is.error <- function(x) {inherits(x, c('try-error','error'))}
 
 ## Not used
 
@@ -17,18 +17,7 @@ na.rm <- function(x) {x[!is.na(x)]}
 ##     mean(x)
 ## }
 
-#topres <- function(x, ...) { r <- DESeq2::results(x, ...); r[order(r$pvalue),] }
-
-##########
-## DEVEL for t-test version
-
-ttest.correctFC <- function(x12,coldata,fc.correction) {
-    browser()
-}
-
-ttest2res <- function(t.res) {
-    NULL
-}
+                                        #topres <- function(x, ...) { r <- DESeq2::results(x, ...); r[order(r$pvalue),] }
 
 ###########
 
@@ -96,10 +85,10 @@ DESeq2.correctFC <- function(x12, coldata, gene.scale.factors, correction.global
 #' @param fc.method correction method to use 'deseq2' or 'dummy' (no correction)
 getCelltypeFCs <- function(ens.p2=NULL, celltype=NULL, sample.type.comparison = NULL,coldata=NULL,verbose=FALSE,fc.method='deseq2') {
     ## check params
-    if(is.null(ens.p2)) {error('ens.p2 is null')}
-    if(is.null(celltype)) { error('celltype is null') }
-    if(is.null(sample.type.comparison)) {error('sample type comparison is null')}
-    if(is.null(coldata)) {error('coldata is null')}
+    if(is.null(ens.p2)) {stop('ens.p2 is null')}
+    if(is.null(celltype)) { stop('celltype is null') }
+    if(is.null(sample.type.comparison)) {stop('sample type comparison is null')}
+    if(is.null(coldata)) {stop('coldata is null')}
 
     ## Get approprate submatrice
     x <- t(getSamples(ens.p2, sample.type.comparison[2], celltype))
@@ -122,8 +111,13 @@ getCelltypeFCs <- function(ens.p2=NULL, celltype=NULL, sample.type.comparison = 
         genes <- rownames(x12.a)
         fcs <- rep(0,times=length(genes))
         names(fcs) <- genes
+    } else if (fc.method == 'simple') {
+        ## Simple fold change between the two conditions for each gene
+        x.cpm <- sweep(x,2,apply(x,2,sum),FUN='/') * 1e6
+        x1.cpm <- sweep(x1,2,apply(x1,2,sum),FUN='/') * 1e6
+        fcs <- log2((apply(x.cpm,1,mean) + 1) / (apply(x1.cpm,1,mean) + 1))
     } else {
-        error('Unknown fc correction method');
+        stop('Unknown fc correction method');
     }
     fcs
 }
@@ -146,10 +140,13 @@ getPerCellTypeFCs <- function(ens.p2  =NULL, levels =  NULL, sample.type.compari
     fcs <- parallel::mclapply(setNames(levels), function(celltype) {
         celltype <- as.character(celltype)
         cat('Calculating FC for ', celltype,'\n');
-            try({
-                getCelltypeFCs(ens.p2 = ens.p2, celltype=celltype,
-                               sample.type.comparison=sample.type.comparison,coldata=coldata,verbose=verbose,fc.method=fc.method)
-            })
+        try({
+            getCelltypeFCs(ens.p2 = ens.p2, celltype=celltype,
+                           sample.type.comparison=sample.type.comparison,
+                           coldata=coldata,
+                           verbose=verbose,
+                           fc.method=fc.method)
+        })
     },mc.cores=n.cores)
     fcs
 }
@@ -158,8 +155,8 @@ getPerCellTypeFCs <- function(ens.p2  =NULL, levels =  NULL, sample.type.compari
 #' @param res deseq2 results object
 #' @param membrane.gene.names genes to annotate as membrane genes
 ddsres2res <- function(res,membrane.gene.names) {
-   # prep res
-    #res <- DESeq2::results(dds)
+                                        # prep res
+                                        #res <- DESeq2::results(dds)
     allgenes <- rownames(res)
     res <- as.data.frame(res)
     res <- cbind(gene=allgenes,res)
@@ -173,6 +170,81 @@ ddsres2res <- function(res,membrane.gene.names) {
     res
 }
 
+## library(codetools);
+## findGlobals(t.test.correctFC)
+
+t.test.correctFC <- function(x12, coldata, fc.correction, correction.global.weight, membrane.gene.names,
+                             sample.type.comparison, n.cores=1) {
+    
+    ## Calculate effective correction in the linear scale
+    effective.correction <- 2^(fc.correction * correction.global.weight)
+
+    ## can't correct for fcs right now so throw a warning if corrections are requestes
+    if(!all((abs(effective.correction)-1) < 1e-3)) {
+        warning('t-test does NOT support FC correction, non-zero effective weights detected')
+    }
+
+    ## Get the sample names we are comparing
+    samplesA <- rownames(coldata)[coldata$sample.type == sample.type.comparison[1]]
+    samplesB <- rownames(coldata)[coldata$sample.type == sample.type.comparison[2]]
+    ## Subset to samples in our input matrices
+    samplesA <- samplesA[samplesA %in% colnames(x12)]
+    samplesB <- samplesB[samplesB %in% colnames(x12)]
+
+    ## calculate cpms
+    cpmmat <- sweep(x12, 2, apply(x12,2,sum), FUN='/') * 1e6
+    baseMean <- apply(cpmmat, 1, mean)
+    allgenes <- rownames(cpmmat)
+    
+    ## We need at least 2 samples per condition for t-tests
+    if (length(samplesA) > 1 & length(samplesB) >1) {
+        ## Run t-tests on cpms
+        tts <- parallel::mclapply(1:nrow(cpmmat), function(m) {
+            tryCatch({
+                t.test(cpmmat[m,samplesA], cpmmat[m,samplesB])
+            })
+        },mc.cores=n.cores)
+
+        ## calculate result table entries
+        p.vals <- unlist(lapply(tts, function(x) {x$p.value}))
+        padj <- p.adjust(p.vals, 'fdr')
+        stat <- unname(unlist(lapply(tts, function(x) {x$statistic})))
+
+        ## put results table together
+        res <- data.frame(
+            gene = allgenes,
+            baseMean = baseMean,
+            log2FoldChange = rep(0,nrow(cpmmat)),
+            lfcSE = rep(0,nrow(cpmmat)), ## just for compatibility with deseq2 results, not used
+            stat = stat,
+            pvalue = p.vals,
+            padj = padj,
+            significant = padj < 0.05,
+            membrane = rownames(cpmmat) %in% membrane.gene.names,
+            ## TODO
+            Z = rep(0,nrow(cpmmat)),
+            Za = rep(0,nrow(cpmmat))
+        )
+    } else {
+        warning(paste0('Not enough samples: ',length(samplesA), ' vs ', length(samplesB)))
+        
+        res <- data.frame(
+            gene = allgenes,
+            baseMean = baseMean,
+            log2FoldChange = rep(0,nrow(cpmmat)),
+            lfcSE = rep(0,nrow(cpmmat)), ## just for compatibility with deseq2 results, not used
+            stat = rep(NA,nrow(cpmmat)),
+            pvalue = rep(NA,nrow(cpmmat)),
+            padj = rep(NA,nrow(cpmmat)),
+            significant = rep(FALSE,nrow(cpmmat)),
+            membrane = rep(FALSE,nrow(cpmmat)),
+            ## TODO
+            Z = rep(0,nrow(cpmmat)),
+            Za = rep(0,nrow(cpmmat))
+        )
+    }
+}
+
 #' get differential expression corrected by the specified vector
 #' @param ens.p2 pagoda2 ensembl object
 #' @param cell.type cell type to do the comparison of
@@ -183,7 +255,7 @@ ddsres2res <- function(res,membrane.gene.names) {
 #' @param de.method method to do differential expression currently deseq2
 #' @param correction.global.weight global weight to apply to correction
 getCorrectedDE <- function(ens.p2, cell.type=NULL, sample.type.comparison=NULL, coldata=NULL, fc.correction=NULL,
-                           membrane.gene.names=NULL,de.method='deseq2', correction.global.weight=1) {
+                           membrane.gene.names=NULL,de.method='deseq2', correction.global.weight=1,n.cores =1) {
     ## Check arguments
     if(is.null(ens.p2)) {stop('ens.p2 is null')}
     if(is.null(cell.type)) {stop('cell.type is null')}
@@ -203,9 +275,11 @@ getCorrectedDE <- function(ens.p2, cell.type=NULL, sample.type.comparison=NULL, 
         allgenes <- rownames(res);
         res <- ddsres2res(res,membrane.gene.names)
     } else if (de.method=='t.test') {
-        warning('Partly implemented t.test method');
-        ttres <- ttest.correctFC();
-        res <- ttest2res(ttrest);
+        res <- t.test.correctFC(x12, coldata, fc.correction,
+                                correction.global.weight=correction.global.weight,
+                                sample.type.comparison=sample.type.comparison,
+                                membrane.gene.names=membrane.gene.names)
+        allgenes <- rownames(res)
     }  else {
         stop('Unknown DE method: ',de.method);
     }
@@ -224,7 +298,8 @@ getCorrectedDE <- function(ens.p2, cell.type=NULL, sample.type.comparison=NULL, 
         res=res,
         genes=allgenes,
         ilev=ilev,
-        snames=levels(coldata$sample.type)
+        snames=levels(coldata$sample.type),
+        correction=fc.correction
     ))
 }
 
@@ -344,8 +419,6 @@ getCorrectedDE.allTypes <-  function(ens.p2, cellfactor, sample.type.comparison,
                                      fc.method='deseq2', correction.global.weight=1) {
     ## Check arguments
     if(!correction.method %in% c('global','exclcurrent')) {stop('Unknown correction method: ',correction.method)}
-    if(!de.method %in% c('deseq2')) {stop('Unknown de method: ', de.method)}
-
     ## Prepare metadata
     coldata <- subset(ens.p2$aggregateMatrixMeta[['cluster:sample']], sample.type %in% sample.type.comparison)
     rownames(coldata) <- coldata$sample.name
@@ -379,18 +452,22 @@ getCorrectedDE.allTypes <-  function(ens.p2, cellfactor, sample.type.comparison,
                 ## essentially collapse the cell specific fold changes ignoring the current
                 ## cell types, but without recalculating them all
                 fc.correction <- calcFCcorrection(ens.p2=ens.p2,
-                                                   aggregation.id='cluster:sample',
-                                                   sample.type.comparison=sample.type.comparison,
-                                                   cell.types.exclude=c(cell.types.fc.exclude,cell.type),
-                                                   scaleByVariance=TRUE,
-                                                   useTrimmed=FALSE, n.cores=1,coldata=coldata, ## n.cores == 1
-                                                   cell.type.factor = cellfactor, per.cell.type.fcs=per.cell.type.fcs)
+                                                  aggregation.id='cluster:sample',
+                                                  sample.type.comparison=sample.type.comparison,
+                                                  cell.types.exclude=c(cell.types.fc.exclude,cell.type),
+                                                  scaleByVariance=TRUE,
+                                                  useTrimmed=FALSE, n.cores=1,coldata=coldata, ## n.cores == 1
+                                                  cell.type.factor = cellfactor,
+                                                  per.cell.type.fcs=per.cell.type.fcs)
             }
             getCorrectedDE(ens.p2=ens.p2, cell.type=cell.type,
                            sample.type.comparison=sample.type.comparison,
                            coldata=coldata,
                            fc.correction=fc.correction,
-                           membrane.gene.names = membrane.gene.names,de.method=de.method, correction.global.weight=correction.global.weight)
+                           membrane.gene.names = membrane.gene.names,
+                           de.method=de.method,
+                           correction.global.weight=correction.global.weight)
+            
         })
     }, mc.cores=n.cores)
     
@@ -402,7 +479,6 @@ getCorrectedDE.allTypes <-  function(ens.p2, cellfactor, sample.type.comparison,
 }
 
 
-## Functions for working with the output of differential expression
 
 getDEcount <- function(de.result.set = NULL, type = c('all','up','down')) {
     ## check input
@@ -466,15 +542,36 @@ getSignmatrix <- function(de.result.set = NULL, type.comparison.name = NULL) {
     x    
 }
 
+getComparisonFCpca <- function(de.res, comparison.name) {
+    fcs <- getFCmatrix(de.res, comparison.name)
+    pca0 <- prcomp(t(fcs))
+    ret <- as.data.frame(pca0$x)
+    ret$sample <- rownames(ret)
+    ret
+}
 
 getFCcormat <- function(de.result.set,type.comparison.name,method='pearson',sign.only=TRUE) {
     fc.mat <- getFCmatrix(de.result.set,type.comparison.name)
     if(sign.only) {
-        sign.mat <- getSignmatrix(de.dummy,type.comparison.name)
+        sign.mat <- getSignmatrix(de.result.set,type.comparison.name)
         sign.genes <- rownames(sign.mat)[rowSums(sign.mat) > 0]
         fc.mat <- fc.mat[sign.only,]
     }
     cor.mat <- cor(fc.mat[sign.genes,], method=method)
     diag(cor.mat) <- 0
     cor.mat
+}
+
+
+generateSerializedAppsWithJC <- function(ens.p2, jc, prefix="") {
+    lapply(names(ens.p2$p2objs), function(n) {
+        p2 <- ens.p2$p2objs[[n]]
+        jc2 <- jc[rownames(p2$counts)]
+        extra.meta = list(
+            jointClustering=p2.metadata.from.factor(jc2, displayname='joint clustering')
+        );
+        p2web <- basicP2web(p2,app.title=n,extra.meta,n.cores=4)
+        p2web$serializeToStaticFast(binary.filename=paste0(prefix,n,'.bin'));
+    })
+    invisible(NULL)
 }

@@ -7,7 +7,8 @@
 calcFCcorrection(ens.p2, aggregation.id, sample.type.comparison,
   cell.types.exclude = c("tumor"), scaleByVariance = TRUE,
   useTrimmed = FALSE, n.cores = 1, coldata = NULL,
-  cell.type.factor = NULL, per.cell.type.fcs = NULL, verbose = FALSE)
+  cell.type.factor = NULL, per.cell.type.fcs = NULL, verbose = FALSE,
+  fc.method = "deseq2")
 }
 \arguments{
 \item{ens.p2}{ensembl p2 object}
@@ -22,7 +23,17 @@ calcFCcorrection(ens.p2, aggregation.id, sample.type.comparison,
 
 \item{useTrimmed}{return results from trimmed mean}
 
-\item{a}{name numeric vector of consistent fold changes}
+\item{n.cores}{number of cores to use}
+
+\item{coldata}{metadata for aggregated data}
+
+\item{cell.type.factor}{named factor of cell type assignments to groups}
+
+\item{per.cell.type.fcs}{pre-calculated per cell type FCs, if null they will be recalculated here}
+
+\item{verbose}{logical verbosity}
+
+\item{fc.method}{method to pass to getPerCellTypeFCs() if precalculated per.cell.type.fcs are not provided}
 }
 \description{
 Get a correction vector by combining fold changes over all the results

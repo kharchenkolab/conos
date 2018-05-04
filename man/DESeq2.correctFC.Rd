@@ -5,7 +5,8 @@
 \title{Run deseq2 and correct for the provided FCs
 Currently runs comparison on sample.type metadata column which is expected to be in the metadata}
 \usage{
-DESeq2.correctFC(x12, coldata, gene.scale.factors)
+DESeq2.correctFC(x12, coldata, gene.scale.factors,
+  correction.global.weight = 1)
 }
 \arguments{
 \item{x12}{data matrix}
@@ -13,9 +14,8 @@ DESeq2.correctFC(x12, coldata, gene.scale.factors)
 \item{coldata}{metadata for x12 matrix}
 
 \item{gene.scale.factors}{per gene fold chages to correct for}
-}
-\value{
-deseq2 object
+
+\item{correction.global.weight}{global weighting on the correction, setting to 0 results in no correction}
 }
 \description{
 Run deseq2 and correct for the provided FCs
