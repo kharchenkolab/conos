@@ -6,6 +6,17 @@ setNames <- function(x) {names(x) <- as.character(x); x}
 na.rm <- function(x) {x[!is.na(x)]}
 is.error <- function(x) {inherits(x, c('try-error','error'))}
 
+contain.identical <- function(a,b,check.unique=TRUE) {
+    ci <- all(a %in% b) & all(b %in% a)
+    un <- !any(duplicated(a)) & !any(duplicated(b)) ## both contain no dups
+    if(check.unique)
+        ci & un
+    else
+        ci
+}
+
+
+
 ## Not used
 
 ## trimmedMean <- function(x) {
@@ -17,7 +28,8 @@ is.error <- function(x) {inherits(x, c('try-error','error'))}
 ##     mean(x)
 ## }
 
-                                        #topres <- function(x, ...) { r <- DESeq2::results(x, ...); r[order(r$pvalue),] }
+
+## topres <- function(x, ...) { r <- DESeq2::results(x, ...); r[order(r$pvalue),] }
 
 ###########
 
@@ -100,11 +112,11 @@ getCelltypeFCs <- function(ens.p2=NULL, celltype=NULL, sample.type.comparison = 
         ## Get differential expression  
         dds1 <- DESeq2::DESeqDataSetFromMatrix(x12.a, coldata[colnames(x12.a),], design=~sample.type)
         dds1 <- DESeq2::DESeq(dds1)
-
         ## extract fold changes
         res <- DESeq2::results(dds1,cooksCutoff = FALSE, independentFiltering = FALSE)
         fcs <- res$log2FoldChange
         names(fcs) <- rownames(res)
+        ## TODO offer option to set these to 0
         fcs <- fcs[!is.na(fcs)]
     } else if (fc.method == 'dummy') {
         ## No correction
@@ -262,6 +274,9 @@ getCorrectedDE <- function(ens.p2, cell.type=NULL, sample.type.comparison=NULL, 
     if(is.null(sample.type.comparison)) {stop('sample.type.comparison is null')}
     if(is.null(coldata)) {stop('coldata is null')}
     if(is.null(fc.correction)) {stop('fc.correction is null')}
+
+    
+    
     ## get data
     x12 <- t(rbind(
         getSamples(ens.p2, sample.type.comparison[2], cell.type),
@@ -304,10 +319,19 @@ getCorrectedDE <- function(ens.p2, cell.type=NULL, sample.type.comparison=NULL, 
 }
 
 #' Get a correction vector by combining fold changes over all the results
+#'
+#' @description Get a correction vector by combining fold changes of every gene accross multiple cell types
+#' into a single value. The correction change is weighted by the chi square distribution so that genes
+#' with variable fold changes do not get corrected.
+#'
+#' Two different cell groupings need to be provided. fc.cellfactor dictates the groupings of the cells used
+#' for collapsing, this should either be identical or more coarse than cell.type.factor. If this is provided a
+#' many to one map from clusters of cell.type.factor to fc.cellfactor is required as cell.factor.map
+#' 
 #' @param ens.p2 ensembl p2 object
 #' @param aggregation.id the aggregation data slot to use from the ens.p2 object
 #' @param sample.type.comparison character vector of 'sample.type' to compare e.g. T vs W
-#' @param cell.types.exclude cell types to ignore
+#' @param cell.types.exclude cell types to ignore from the fine-grained cell.type.factor after mapping to coarser clusters
 #' @param scaleByVariance scale the mean fold changes by the Variance
 #' @param useTrimmed return results from trimmed mean
 #' @param n.cores number of cores to use
@@ -316,23 +340,51 @@ getCorrectedDE <- function(ens.p2, cell.type=NULL, sample.type.comparison=NULL, 
 #' @param per.cell.type.fcs pre-calculated per cell type FCs, if null they will be recalculated here
 #' @param verbose logical verbosity
 #' @param fc.method method to pass to getPerCellTypeFCs() if precalculated per.cell.type.fcs are not provided
+#' @param cell.factor.map many to one mapping of levels of cell.type.factor to levels of fc.cellfactor
+#' @param fc.cellfactor cell grouping to use for the fold change generation
 calcFCcorrection <- function(ens.p2, aggregation.id, sample.type.comparison, cell.types.exclude = c('tumor'),
                              scaleByVariance=TRUE, useTrimmed=FALSE,n.cores=1,coldata=NULL, cell.type.factor=NULL,
-                             per.cell.type.fcs=NULL,verbose=FALSE,fc.method='deseq2') {
+                             per.cell.type.fcs=NULL,verbose=FALSE,fc.method='deseq2',cell.factor.map=NULL, fc.cellfactor = NULL) {
 
-    ## Get FCs for all cells
+    if (is.null(cell.type.factor)) {
+        stop('cell.type.factor is NULL')
+    }
+
+    if (is.null(fc.cellfactor)) {
+        warning('fc.cellfactor is NULL, using cell.type.factor levels')
+        fc.cellfactor <- cell.type.factor
+    }
+    
+    ## Check if precalculated per cell type fcs for the coarse clusters
     if(is.null(per.cell.type.fcs)) {
-        fcs <- getPerCellTypeFCs(levels = levels(cell.type.factor), ens.p2=ens.p2,
+        fcs <- getPerCellTypeFCs(levels = levels(fc.cellfactor),
+                                 ens.p2=ens.p2,
                                  sample.type.comparison=sample.type.comparison,
-                                 coldata=coldata,n.cores=n.cores,fc.method=fc.method)
+                                 coldata=coldata,
+                                 n.cores=n.cores,
+                                 fc.method=fc.method)
     } else {
         if (verbose) cat('Using pre-calculated per celltype fcs');
-        ## NOTE fc.method is ignored here
+        ## NOTE fc.method is ignored here, it is assumed that the calling function knows
+        ## what it is doing
         fcs <- per.cell.type.fcs
     }
-    ## TODO: some fail, make sure we know why
+    
+
     fcs <- fcs[!unlist(lapply(fcs, is.error))]
-    fcs <- fcs[!names(fcs) %in% cell.types.exclude]
+
+    ## Map from fine to coarse clusters
+    if (!is.null(cell.factor.map)) {
+        excl.coarse <- cell.factor.map[cell.types.exclude]
+    } else {
+        ## if not cell.factor map is provided and we are here then
+        ## we assume that we are not dealing with two levels of clusters
+        excl.coarse <- cell.types.exclude
+    }
+
+    ## Keep only desired FCs
+    fcs <- fcs[!names(fcs) %in% excl.coarse]
+    
     ## Put the fcs in a matrix: celltype x genes
     all.genes <- unique(unlist(lapply(fcs, function(x) {names(x)})))
     fcs.mat <- do.call(rbind, lapply(fcs, function(x) {x[all.genes]}))
@@ -413,12 +465,32 @@ saveComparisonsAsJSON <- function (comps, fileprefix='')
 #' @param de.method method for differential expression, currently only deseq2 supported
 #' @param fc.method method for fc generation for the correction, deseq2 or dummy (no correction) currently supported
 #' @param correction.global.weight global weighting of correction, 0 is no correction, 1 default
-getCorrectedDE.allTypes <-  function(ens.p2, cellfactor, sample.type.comparison,
+#' @param fc.cellfactor cell factor to use for obtaining FC correction, if NULL cellfactor is used. If this is specified and the correction method is not exclcurrent, then a map from the levels of cellfactor to fc.cellfactor (many to one) need to be specified to know which clusters to drop when excluding the current
+#' @param cell.factor.map many to one mapping from cellfactor levels to fc.cellfactor levels
+getCorrectedDE.allTypes <-  function(ens.p2, cellfactor, sample.type.comparison, 
                                      membrane.gene.names,n.cores=1,correction.method='global',
                                      cell.types.fc.exclude=NULL,verbose=FALSE,de.method='deseq2',
-                                     fc.method='deseq2', correction.global.weight=1) {
-    ## Check arguments
+                                     fc.method='deseq2', correction.global.weight=1, fc.cellfactor = NULL,
+                                     cell.factor.map = NULL) {
+    ## Check arguments -- TODO add more
     if(!correction.method %in% c('global','exclcurrent')) {stop('Unknown correction method: ',correction.method)}
+
+    if (is.null(fc.cellfactor)) {
+        fc.cellfactor <- cellfactor
+    } else {
+        if (correction.method=='exclcurrent') {
+            if (!is.null(cell.factor.map)) {
+                ## Check that the cell.factor.map is valid
+                if (!(contain.identical(levels(cellfactor), names(cell.factor.map)) &
+                      contain.identical(cell.factor.map, levels(fc.cellfactor),check.unique=FALSE))) {
+                    stop('Invalid cell.factor.map provided');
+                }
+            }  else {
+                stop("Correction method is 'exclcurrent' and 'fc.cellfactor' is specified without 'cell.factor.map': cluster correspondence for dropout can't be established. Use global correction.method or specify cell.factor.map")
+            }
+        }
+    }
+    
     ## Prepare metadata
     coldata <- subset(ens.p2$aggregateMatrixMeta[['cluster:sample']], sample.type %in% sample.type.comparison)
     rownames(coldata) <- coldata$sample.name
@@ -432,15 +504,23 @@ getCorrectedDE.allTypes <-  function(ens.p2, cellfactor, sample.type.comparison,
                                            sample.type.comparison=sample.type.comparison,
                                            cell.types.exclude=cell.types.fc.exclude,
                                            scaleByVariance=TRUE,
-                                           useTrimmed=FALSE, n.cores=n.cores,coldata=coldata,
-                                           cell.type.factor = cellfactor,verbose=verbose,fc.method=fc.method)
+                                           useTrimmed=FALSE, n.cores=n.cores,
+                                           coldata=coldata,
+                                           cell.type.factor = cellfactor,
+                                           fc.cellfactor = fc.cellfactor,
+                                           verbose=verbose,
+                                           fc.method=fc.method)
         per.cell.type.fcs <- NULL
     } else {
         ## Cache the per cell type corrections (from which global or per cell type corrections are derived)
         ## This prevents recomputing them for every single cell type
-        per.cell.type.fcs <- getPerCellTypeFCs(levels=levels(cellfactor),ens.p2=ens.p2,
+        per.cell.type.fcs <- getPerCellTypeFCs(levels=levels(fc.cellfactor),#levels(cellfactor),
+                                               ens.p2=ens.p2,
                                                sample.type.comparison=sample.type.comparison,
-                                               coldata=coldata, n.cores=n.cores,verbose=verbose,fc.method=fc.method)
+                                               coldata=coldata,
+                                               n.cores=n.cores,
+                                               verbose=verbose,
+                                               fc.method=fc.method)
     }
 
     ## Run differential expression
@@ -456,11 +536,15 @@ getCorrectedDE.allTypes <-  function(ens.p2, cellfactor, sample.type.comparison,
                                                   sample.type.comparison=sample.type.comparison,
                                                   cell.types.exclude=c(cell.types.fc.exclude,cell.type),
                                                   scaleByVariance=TRUE,
-                                                  useTrimmed=FALSE, n.cores=1,coldata=coldata, ## n.cores == 1
-                                                  cell.type.factor = cellfactor,
-                                                  per.cell.type.fcs=per.cell.type.fcs)
+                                                  useTrimmed=FALSE,
+                                                  n.cores=1,
+                                                  coldata=coldata,
+                                                  cell.type.factor = fc.cellfactor, #cellfactor,
+                                                  per.cell.type.fcs=per.cell.type.fcs,
+                                                  cell.factor.map = cell.factor.map)
             }
-            getCorrectedDE(ens.p2=ens.p2, cell.type=cell.type,
+            getCorrectedDE(ens.p2=ens.p2,
+                           cell.type=cell.type,
                            sample.type.comparison=sample.type.comparison,
                            coldata=coldata,
                            fc.correction=fc.correction,
