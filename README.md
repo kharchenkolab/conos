@@ -88,13 +88,27 @@ comparisons <- list(
 ## Run differential expression for each cell type in jcl3         
 de.global <- lapply(comparisons, function(c1) {                             
     try({
-        res <- getCorrectedDE.allTypes(ens.p2=p2ens,
-                                       cellfactor=jcl3,
-                                       sample.type.comparison=c1, 
-                                       membrane.gene.names=hs.membrane.hgnc,
-                                       n.cores=32,
-                                       correction.method='global',
-                                       cell.types.fc.exclude=c('tumor'),verbose=T)
+        res <- getCorrectedDE.allTypes(ens.p2=p2ens, ## pagoda ensemble object to use
+                                       cellfactor=jcl3, ## factor specifing cell types
+                                       sample.type.comparison=c1, ## compare what with what
+                                       membrane.gene.names=hs.membrane.hgnc, ## which genes are membrane gens
+                                       n.cores=32, ## number of cores
+                                       ## perform global('global') or cell type specific correction 'exclcurrent'?
+                                       correction.method='global',  
+                                       ## method for differential expression correction
+                                       ## current deseq2 or t.test
+                                       de.method = 'deseq2',
+                                       ## fc.method: method for calculation of correction vector
+                                       ## deseq2 -- use deseq2 moderated fold changes
+                                       ## simple -- just get fold changes from cpms
+                                       ## dummy -- don't perform any correction
+                                       fc.method = 'deseq2',
+                                       ## factor by which to weight the corrections globally
+                                       ## 0 is same as setting dummy to fc.method
+                                       correction.global.weight,
+                                       ## cell types not to consider when generatin FC correction
+                                       cell.types.fc.exclude=c('Tcells'), 
+                                       verbose=T) ## verbosity
         res
     })
 })   
