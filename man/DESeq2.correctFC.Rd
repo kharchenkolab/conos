@@ -17,6 +17,9 @@ DESeq2.correctFC(x12, coldata, gene.scale.factors,
 
 \item{correction.global.weight}{global weighting on the correction, setting to 0 results in no correction}
 }
+\value{
+deseq2 object
+}
 \description{
 Run deseq2 and correct for the provided FCs
 Currently runs comparison on sample.type metadata column which is expected to be in the metadata

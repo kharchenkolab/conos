@@ -38,7 +38,7 @@ getSamples <- function(p2ens, sample.type, celltype) {
 #' @param coldata metadata for x12 matrix
 #' @param gene.scale.factors per gene fold chages to correct for
 #' @param correction.global.weight global weighting on the correction, setting to 0 results in no correction
-#' @results deseq2 object
+#' @return deseq2 object
 DESeq2.correctFC <- function(x12, coldata, gene.scale.factors, correction.global.weight=1) {
     ## Get size factors
     dds1 <- DESeq2::DESeqDataSetFromMatrix(x12, coldata[colnames(x12),], design=~sample.type)

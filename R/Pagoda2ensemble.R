@@ -513,7 +513,23 @@ Pagoda2ensemble <- setRefClass(
         # set metadata for aggregate matrix
         setAggregateMatrixMeta = function(aggregateName, meta) {
             aggregateMatrixMeta[[aggregateName]] <<- meta
+        },
+        
+        # generate web apps for all p2 objects
+        generateSerializedAppsWithJC = function(jc, prefix="",n.cores=1) {
+          lapply(names(p2objs), function(n) {
+            p2 <- p2objs[[n]]
+            jc2 <- jc[rownames(p2$counts)]
+            extra.meta = list(
+              jointClustering=p2.metadata.from.factor(jc2, displayname='joint clustering')
+            );
+            p2web <- basicP2web(p2,app.title=n,extra.meta,n.cores=n.cores)
+            p2web$serializeToStaticFast(binary.filename=paste0(prefix,n,'.bin'));
+          })
+          invisible(NULL)
         }
+        
+        
     )
 )
 
