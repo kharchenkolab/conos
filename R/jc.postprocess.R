@@ -14,7 +14,7 @@ postProcessWalktrapClusters <- function(jfac, p2ens, no.cl=200, size.cutoff=10, 
     factorBreakdown <- function(f) {tapply(names(f),f, identity) }
     ## Get joint global clusters at requested number
     global.cluster <- cut_at(cls, no=no.cl)
-    names(global.cluster) <-  names(membership(jcl3$cls))
+    names(global.cluster) <-  names(membership(jfac$cls))
     ## identify clusters to merge
     fqs <- as.data.frame(table(global.cluster))
     cl.to.merge <- fqs[fqs$Freq < size.cutoff,]$global.cluster

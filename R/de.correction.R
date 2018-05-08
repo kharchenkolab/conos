@@ -118,6 +118,16 @@ getCelltypeFCs <- function(ens.p2=NULL, celltype=NULL, sample.type.comparison = 
         names(fcs) <- rownames(res)
         ## TODO offer option to set these to 0
         fcs <- fcs[!is.na(fcs)]
+    } else if (fc.method == 'deseq1') {
+        condition <- coldata[colnames(x12.a),]$sample.type
+        cds <- DESeq::newCountDataSet(x12.a, condition)
+        cds <- DESeq::estimateSizeFactors(cds)
+        cds <- DESeq::estimateDispersions(cds)
+        res <- DESeq::nbinomTest(cds, sample.type.comparison[1], sample.type.comparison[2])
+        ## extract fcs
+        fcs2 <- res$log2FoldChange
+        names(fcs2) <- res$id
+        fcs <- fcs2[!is.na(fcs)]
     } else if (fc.method == 'dummy') {
         ## No correction
         genes <- rownames(x12.a)
