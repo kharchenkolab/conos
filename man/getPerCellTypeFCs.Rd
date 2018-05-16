@@ -6,7 +6,7 @@
 \usage{
 getPerCellTypeFCs(ens.p2 = NULL, levels = NULL,
   sample.type.comparison = NULL, coldata = NULL, n.cores = 1,
-  verbose = FALSE, fc.method = "deseq2")
+  verbose = FALSE, fc.method = "deseq2", counts.add.bg = NULL)
 }
 \arguments{
 \item{ens.p2}{pagdoda2 ensembl object}

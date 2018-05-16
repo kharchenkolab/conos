@@ -8,7 +8,8 @@ calcFCcorrection(ens.p2, aggregation.id, sample.type.comparison,
   cell.types.exclude = c("tumor"), scaleByVariance = TRUE,
   useTrimmed = FALSE, n.cores = 1, coldata = NULL,
   cell.type.factor = NULL, per.cell.type.fcs = NULL, verbose = FALSE,
-  fc.method = "deseq2")
+  fc.method = "deseq2", cell.factor.map = NULL, fc.cellfactor = NULL,
+  counts.add.bg = NULL)
 }
 \arguments{
 \item{ens.p2}{ensembl p2 object}
@@ -17,7 +18,7 @@ calcFCcorrection(ens.p2, aggregation.id, sample.type.comparison,
 
 \item{sample.type.comparison}{character vector of 'sample.type' to compare e.g. T vs W}
 
-\item{cell.types.exclude}{cell types to ignore}
+\item{cell.types.exclude}{cell types to ignore from the fine-grained cell.type.factor after mapping to coarser clusters}
 
 \item{scaleByVariance}{scale the mean fold changes by the Variance}
 
@@ -34,7 +35,17 @@ calcFCcorrection(ens.p2, aggregation.id, sample.type.comparison,
 \item{verbose}{logical verbosity}
 
 \item{fc.method}{method to pass to getPerCellTypeFCs() if precalculated per.cell.type.fcs are not provided}
+
+\item{cell.factor.map}{many to one mapping of levels of cell.type.factor to levels of fc.cellfactor}
+
+\item{fc.cellfactor}{cell grouping to use for the fold change generation}
 }
 \description{
-Get a correction vector by combining fold changes over all the results
+Get a correction vector by combining fold changes of every gene accross multiple cell types
+into a single value. The correction change is weighted by the chi square distribution so that genes
+with variable fold changes do not get corrected.
+
+Two different cell groupings need to be provided. fc.cellfactor dictates the groupings of the cells used
+for collapsing, this should either be identical or more coarse than cell.type.factor. If this is provided a
+many to one map from clusters of cell.type.factor to fc.cellfactor is required as cell.factor.map
 }

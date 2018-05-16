@@ -15,18 +15,14 @@ contain.identical <- function(a,b,check.unique=TRUE) {
         ci
 }
 
-
-
-## Not used
-
-## trimmedMean <- function(x) {
-##     x <- na.rm(x)
-##     min.val <- median(x) - 2 * IQR(x)
-##     max.val <- median(x) + 2 * IQR(x)
-##     x[x < min.val | x > max.val] <- NA
-##     x <-na.rm(x)
-##     mean(x)
-## }
+trimmedMean <- function(x) {
+    x <- na.rm(x)
+    min.val <- median(x) - 2 * IQR(x)
+    max.val <- median(x) + 2 * IQR(x)
+    x[x < min.val | x > max.val] <- NA
+    x <-na.rm(x)
+    mean(x)
+}
 
 
 ## topres <- function(x, ...) { r <- DESeq2::results(x, ...); r[order(r$pvalue),] }
@@ -95,7 +91,7 @@ DESeq2.correctFC <- function(x12, coldata, gene.scale.factors, correction.global
 #' @param coldata metadata
 #' @param verbose verbosity logical
 #' @param fc.method correction method to use 'deseq2' or 'dummy' (no correction)
-getCelltypeFCs <- function(ens.p2=NULL, celltype=NULL, sample.type.comparison = NULL,coldata=NULL,verbose=FALSE,fc.method='deseq2') {
+getCelltypeFCs <- function(ens.p2=NULL, celltype=NULL, sample.type.comparison = NULL,coldata=NULL,verbose=FALSE,fc.method='deseq2',counts.add.bg=NULL) {
     ## check params
     if(is.null(ens.p2)) {stop('ens.p2 is null')}
     if(is.null(celltype)) { stop('celltype is null') }
@@ -121,8 +117,9 @@ getCelltypeFCs <- function(ens.p2=NULL, celltype=NULL, sample.type.comparison = 
         names(fcs) <- rownames(x12.a)
     } else {
         if (fc.method == 'deseq2') {
+            if(is.null(counts.add.bg)) counts.add.bg <- 0
             ## Get differential expression  
-            dds1 <- DESeq2::DESeqDataSetFromMatrix(x12.a, coldata[colnames(x12.a),], design=~sample.type)
+            dds1 <- DESeq2::DESeqDataSetFromMatrix(x12.a + counts.add.bg, coldata[colnames(x12.a),], design=~sample.type)
             dds1 <- DESeq2::DESeq(dds1)
             ## extract fold changes
             res <- DESeq2::results(dds1,cooksCutoff = FALSE, independentFiltering = FALSE)
@@ -131,6 +128,7 @@ getCelltypeFCs <- function(ens.p2=NULL, celltype=NULL, sample.type.comparison = 
             ## TODO offer option to set these to 0
             fcs <- fcs[!is.na(fcs)]
         } else if (fc.method == 'deseq1') {
+            if (!is.null(counts.add.bg)) warning('deseq1 FC calculation ignores value of counts.add.bg')
             condition <- coldata[colnames(x12.a),]$sample.type
             cds <- DESeq::newCountDataSet(x12.a, condition)
             cds <- DESeq::estimateSizeFactors(cds)
@@ -141,8 +139,10 @@ getCelltypeFCs <- function(ens.p2=NULL, celltype=NULL, sample.type.comparison = 
             names(fcs2) <- res$id
             fcs <- fcs2[!is.na(fcs2)]
         } else if (fc.method == 'edgeR') {
+            ## edgeR defaults to bg correction of +1
+            if(is.null(counts.add.bg)) counts.add.bg <- 1
             group <- coldata[colnames(x12.a),]$sample.type
-            y <- DGEList(counts=x12.a,group=group)
+            y <- DGEList(counts=x12.a+counts.add.bg,group=group)
             y <- calcNormFactors(y)
             design <- model.matrix(~group)
             y <- estimateDisp(y,design)
@@ -153,11 +153,13 @@ getCelltypeFCs <- function(ens.p2=NULL, celltype=NULL, sample.type.comparison = 
             names(fcs) <- rownames(tt1$table)
             ## TODO set method used to obtain fcs as attribute
         } else if (fc.method == 'dummy') {
+            if (!is.null(counts.add.bg)) warning('dummy FC calculation ignores value of counts.add.bg')
             ## No correction
             genes <- rownames(x12.a)
             fcs <- rep(0,times=length(genes))
             names(fcs) <- genes
         } else if (fc.method == 'simple') {
+            if (!is.null(counts.add.bg)) warning('simple FC calculation ignores value of counts.add.bg')
             ## Simple fold change between the two conditions for each gene
             x.cpm <- sweep(x,2,apply(x,2,sum),FUN='/') * 1e6
             x1.cpm <- sweep(x1,2,apply(x1,2,sum),FUN='/') * 1e6
@@ -177,13 +179,13 @@ getCelltypeFCs <- function(ens.p2=NULL, celltype=NULL, sample.type.comparison = 
 #' @param n.cores number of cores
 #' @param verbose verbosity logical
 #' @param fc.method method to use to calculate fcs, passed to getCelltypeFCs
-getPerCellTypeFCs <- function(ens.p2  =NULL, levels =  NULL, sample.type.comparison = NULL, coldata=NULL, n.cores=1, verbose=FALSE,fc.method='deseq2') {
+getPerCellTypeFCs <- function(ens.p2  =NULL, levels =  NULL, sample.type.comparison = NULL, coldata=NULL, n.cores=1, verbose=FALSE,fc.method='deseq2', counts.add.bg=NULL) {
     ## Check args
     if (is.null(levels)) { stop('Provided levels is null') }
     if (is.null(ens.p2)) {stop('ens.p2 is null')}
     if (is.null(sample.type.comparison)) {stop('sample type comparison is null')}
     if (is.null(coldata)) {stop('coldata is NULL')}
-    ## Calculate the fold changes
+    ## Calculate the fold changes for each cell type
     fcs <- parallel::mclapply(setNames(levels), function(celltype) {
         celltype <- as.character(celltype)
         cat('Calculating FC for ', celltype,'\n');
@@ -192,7 +194,8 @@ getPerCellTypeFCs <- function(ens.p2  =NULL, levels =  NULL, sample.type.compari
                            sample.type.comparison=sample.type.comparison,
                            coldata=coldata,
                            verbose=verbose,
-                           fc.method=fc.method)
+                           fc.method=fc.method,
+                           counts.add.bg=NULL)
         })
     },mc.cores=n.cores)
     fcs
@@ -302,7 +305,7 @@ t.test.correctFC <- function(x12, coldata, fc.correction, correction.global.weig
 #' @param de.method method to do differential expression currently deseq2
 #' @param correction.global.weight global weight to apply to correction
 getCorrectedDE <- function(ens.p2, cell.type=NULL, sample.type.comparison=NULL, coldata=NULL, fc.correction=NULL,
-                           membrane.gene.names=NULL,de.method='deseq2', correction.global.weight=1,n.cores =1) {
+                           membrane.gene.names=NULL,de.method='deseq2', correction.global.weight=1,n.cores =1, counts.add.bg=NULL) {
     ## Check arguments
     if(is.null(ens.p2)) {stop('ens.p2 is null')}
     if(is.null(cell.type)) {stop('cell.type is null')}
@@ -310,13 +313,22 @@ getCorrectedDE <- function(ens.p2, cell.type=NULL, sample.type.comparison=NULL, 
     if(is.null(coldata)) {stop('coldata is null')}
     if(is.null(fc.correction)) {stop('fc.correction is null')}
     ## get data
-    x12 <- t(rbind(
-        getSamples(ens.p2, sample.type.comparison[2], cell.type),
-        getSamples(ens.p2, sample.type.comparison[1], cell.type)
-    ))
+    samples2 <- getSamples(ens.p2, sample.type.comparison[2], cell.type)
+    samples1 <- getSamples(ens.p2, sample.type.comparison[1], cell.type)
+    if (nrow(samples2) < 2 | nrow(samples1) < 2) {
+        ## not enough samples for comparison here
+        stop('Not enough samples for comparison')
+    }
+    ## Put together
+    x12 <- t(rbind(samples2, samples1))
     ## run de
     if(de.method=='deseq2'){
-        dds <- DESeq2.correctFC(x12, coldata,  fc.correction, correction.global.weight=correction.global.weight)
+        if(is.null(counts.add.bg)) { ## default to provided matrix
+            cm <- x12
+        } else {
+            cm <- x12 + counts.add.bg
+        }
+        dds <- DESeq2.correctFC(cm, coldata,  fc.correction, correction.global.weight=correction.global.weight)
         ## convert de to results table
         res <- DESeq2::results(dds)
         allgenes <- rownames(res);
@@ -324,9 +336,13 @@ getCorrectedDE <- function(ens.p2, cell.type=NULL, sample.type.comparison=NULL, 
     } else if (de.method=='edgeR') {
         ## TODO: factor this out in a function
         grp1 <- coldata[colnames(x12),]$sample.type
-        if(length(unique(grp1)) == 2) {
+        if(length(unique(grp1)) == 2) {            
+            if (counts.add.bg == 0) warning('counts.add.bg is zero and de.method is edgeR, this is not recommended')
+            if (is.null(counts.add.bg)) {
+                counts.add.bg <- 1 ## default to adding 1
+            }
             ## put together an object just for norm factos
-            cm <- x12 +1 ## required to stabilise
+            cm <- x12 + counts.add.bg ## required to stabilise
             fc.correction <- fc.correction[!is.na(fc.correction)]
             cm <- cm[rownames(cm) %in% names(fc.correction),] ## only keep genes wer can correct
             y <- DGEList(counts=cm, group=grp1)
@@ -351,7 +367,8 @@ getCorrectedDE <- function(ens.p2, cell.type=NULL, sample.type.comparison=NULL, 
             yc$offset <- of2
             yc <- calcNormFactors(yc)
             design <- model.matrix(~grp1)
-            yc <- estimateDisp(y=yc, design=design)
+            ## using loess here because default 'locfit' fails with memory errors under some circuimstances
+            yc <- estimateDisp(y=yc, design=design, trend.method='loess') 
             fit2 <- glmQLFit(yc,design)
             qlf2 <- glmQLFTest(fit2, coef=2)
             tt2 <- as.data.frame(topTags(qlf2, n=Inf))
@@ -491,14 +508,15 @@ getCorrectedDE <- function(ens.p2, cell.type=NULL, sample.type.comparison=NULL, 
 #' @param fc.cellfactor cell grouping to use for the fold change generation
 calcFCcorrection <- function(ens.p2, aggregation.id, sample.type.comparison, cell.types.exclude = c('tumor'),
                              scaleByVariance=TRUE, useTrimmed=FALSE,n.cores=1,coldata=NULL, cell.type.factor=NULL,
-                             per.cell.type.fcs=NULL,verbose=FALSE,fc.method='deseq2',cell.factor.map=NULL, fc.cellfactor = NULL) {
+                             per.cell.type.fcs=NULL,verbose=FALSE,fc.method='deseq2',cell.factor.map=NULL,
+                             fc.cellfactor = NULL, counts.add.bg = NULL) {
 
     if (is.null(cell.type.factor)) {
         stop('cell.type.factor is NULL')
     }
 
     if (is.null(fc.cellfactor)) {
-        warning('fc.cellfactor is NULL, using cell.type.factor levels')
+        #cat('calcFCcorrection: fc.cellfactor is NULL, using cell.type.factor levels\n')
         fc.cellfactor <- cell.type.factor
     }
     
@@ -509,9 +527,10 @@ calcFCcorrection <- function(ens.p2, aggregation.id, sample.type.comparison, cel
                                  sample.type.comparison=sample.type.comparison,
                                  coldata=coldata,
                                  n.cores=n.cores,
-                                 fc.method=fc.method)
+                                 fc.method=fc.method,
+                                 counts.add.bg = counts.add.bg)
     } else {
-        if (verbose) cat('Using pre-calculated per celltype fcs');
+        if (verbose) cat('Using pre-calculated per celltype fcs\n');
         ## NOTE fc.method is ignored here, it is assumed that the calling function knows
         ## what it is doing
         fcs <- per.cell.type.fcs
@@ -618,7 +637,8 @@ getCorrectedDE.allTypes <-  function(ens.p2, cellfactor, sample.type.comparison,
                                      membrane.gene.names,n.cores=1,correction.method='global',
                                      cell.types.fc.exclude=NULL,verbose=FALSE,de.method='deseq2',
                                      fc.method='deseq2', correction.global.weight=1, fc.cellfactor = NULL,
-                                     cell.factor.map = NULL) {
+                                     cell.factor.map = NULL,
+                                     counts.add.bg = NULL) {
     ## Check arguments -- TODO add more
     if(!correction.method %in% c('global','exclcurrent')) {stop('Unknown correction method: ',correction.method)}
 
@@ -644,8 +664,10 @@ getCorrectedDE.allTypes <-  function(ens.p2, cellfactor, sample.type.comparison,
     
     ## Ensure levels are consistend with those provided
     coldata$sample.type <- factor(coldata$sample.type,levels=sample.type.comparison)
+
+    ## If correction is global calculate it once, otherwise...
     if (correction.method == 'global') {
-        if(verbose) cat('Calculating global correction...')
+        if(verbose) cat('Calculating global correction...\n')
         fc.correction <-  calcFCcorrection(ens.p2=ens.p2,
                                            aggregation.id='cluster:sample',
                                            sample.type.comparison=sample.type.comparison,
@@ -656,23 +678,24 @@ getCorrectedDE.allTypes <-  function(ens.p2, cellfactor, sample.type.comparison,
                                            cell.type.factor = cellfactor,
                                            fc.cellfactor = fc.cellfactor,
                                            verbose=verbose,
-                                           fc.method=fc.method)
+                                           fc.method=fc.method,
+                                           counts.add.bg=counts.add.bg)
         per.cell.type.fcs <- NULL
     } else {
-        ## Cache the per cell type corrections (from which global or per cell type corrections are derived)
-        ## This prevents recomputing them for every single cell type
+        ## ... cache the per cell type corrections (from which global or per cell type corrections are derived)
         per.cell.type.fcs <- getPerCellTypeFCs(levels=levels(fc.cellfactor),#levels(cellfactor),
                                                ens.p2=ens.p2,
                                                sample.type.comparison=sample.type.comparison,
                                                coldata=coldata,
                                                n.cores=n.cores,
                                                verbose=verbose,
-                                               fc.method=fc.method)
+                                               fc.method=fc.method,
+                                               counts.add.bg=counts.add.bg)
     }
 
-    ## Run differential expression
+    ## Run differential expression for each cell type
     res <- parallel::mclapply(setNames(levels(cellfactor)), function(cell.type) {
-        cat('Processing ',cell.type,'...')
+        cat('Processing ',cell.type,'...\n')
         try({
             if (correction.method == 'exclcurrent') {
                 ## Get cell type specific correction using the cached results per.cell.type.fcs
@@ -688,7 +711,8 @@ getCorrectedDE.allTypes <-  function(ens.p2, cellfactor, sample.type.comparison,
                                                   coldata=coldata,
                                                   cell.type.factor = fc.cellfactor, #cellfactor,
                                                   per.cell.type.fcs=per.cell.type.fcs,
-                                                  cell.factor.map = cell.factor.map)
+                                                  cell.factor.map = cell.factor.map,
+                                                  counts.add.bg=counts.add.bg)
             }
             getCorrectedDE(ens.p2=ens.p2,
                            cell.type=cell.type,
@@ -697,7 +721,8 @@ getCorrectedDE.allTypes <-  function(ens.p2, cellfactor, sample.type.comparison,
                            fc.correction=fc.correction,
                            membrane.gene.names = membrane.gene.names,
                            de.method=de.method,
-                           correction.global.weight=correction.global.weight)
+                           correction.global.weight=correction.global.weight,
+                           counts.add.bg=counts.add.bg)
             
         })
     }, mc.cores=n.cores)
@@ -809,93 +834,93 @@ generateSerializedAppsWithJC <- function(ens.p2, jc, prefix="") {
 
 
 
-tryEdgerCorrection <- function() {
+## tryEdgerCorrection <- function() {
 
-    ## Test dataset
-    library(pasilla)
-    data(pasillaGenes)
+##     ## Test dataset
+##     library(pasilla)
+##     data(pasillaGenes)
 
     
-    edgeRtest <- function(useGeneOffsets=TRUE,setOffsets=TRUE,v1=0,return.details=FALSE) {
-        library(edgeR)
-        ## Add one to avoid uncorrectable lfcs
-        cm <- counts(pasillaGenes) +1
-        ## extract groups from names
-        group <- as.factor(ifelse(grepl('untreated',colnames(cm)),'untreated','treated'))
-        ## Run normal differential expression to obtain fold-changes
-        y <- DGEList(counts=cm,group=group)
-        y <- calcNormFactors(y)
-        design <- model.matrix(~group)
-        y <- estimateDisp(y,design)
-        fit <- glmQLFit(y,design)
-        qlf <- glmQLFTest(fit,coef=2)
-        tt1 <- topTags(qlf,n=Inf)
-        ## Setup correction matrix
-        ## matrix of all 1s
-        gene.scale <- matrix(rep(0, length(y$counts)),nrow=nrow(y$counts),ncol=ncol(y$counts))
-        ## setup matrix with the lib sizes
-        ## NOTE: Using this will for offset will yield identical results to the above
-        ## Using natural log here, as the package does
-        of1 <- sweep(gene.scale,2,log(y$samples$lib.size * y$samples$norm.factors),FUN='+')
-        rownames(of1) <- rownames(cm);  colnames(of1) <- colnames(cm)
-        ## Gene scale factors
-        ## These are log2 s (in code, undocumented), put in base e (that is what the lib sizes are in)
-        gene.scale.factors <- tt1$table$logFC / (1/log(2))
-        #gene.scale.factors <- log(2) / tt1$table$logFC
-        names(gene.scale.factors) <- rownames(tt1$table)
-        gene.scale.factors <- gene.scale.factors[rownames(of1)]
-        ## setup columns according to the group factor
-        pn <- do.call(cbind, lapply(group, function(x) {
-            if(x == 'treated') {
-                rep(0,nrow(of1))
-            } else {
-                gene.scale.factors
-            }
-        }))
-        ## Add gene offsets to the library size correction
-        of2 <- of1 + pn #/2
-        ## Rerun differential expression with the offsets
-        yc <- DGEList(counts=cm,group=group)
-        yc$offset <- of2 ## set offsets
-        yc <- calcNormFactors(yc)
-        design <- model.matrix(~group)
-        yc <- estimateDisp(y=yc,design=design)
-        fit2 <- glmQLFit(yc,design)
-        qlf2 <- glmQLFTest(fit2,coef=2)
-        tt2 <- topTags(qlf2,n=Inf)
-        if (return.details) {
-            return(list(tt1=tt1,tt2=tt2,of1=of1,of2=of2,pn=pn,gene.scale.factors=gene.scale.factors))
-        } else {
-            return(tt2)
-        }
-    }
+##     edgeRtest <- function(useGeneOffsets=TRUE,setOffsets=TRUE,v1=0,return.details=FALSE) {
+##         library(edgeR)
+##         ## Add one to avoid uncorrectable lfcs
+##         cm <- counts(pasillaGenes) +1
+##         ## extract groups from names
+##         group <- as.factor(ifelse(grepl('untreated',colnames(cm)),'untreated','treated'))
+##         ## Run normal differential expression to obtain fold-changes
+##         y <- DGEList(counts=cm,group=group)
+##         y <- calcNormFactors(y)
+##         design <- model.matrix(~group)
+##         y <- estimateDisp(y,design)
+##         fit <- glmQLFit(y,design)
+##         qlf <- glmQLFTest(fit,coef=2)
+##         tt1 <- topTags(qlf,n=Inf)
+##         ## Setup correction matrix
+##         ## matrix of all 1s
+##         gene.scale <- matrix(rep(0, length(y$counts)),nrow=nrow(y$counts),ncol=ncol(y$counts))
+##         ## setup matrix with the lib sizes
+##         ## NOTE: Using this will for offset will yield identical results to the above
+##         ## Using natural log here, as the package does
+##         of1 <- sweep(gene.scale,2,log(y$samples$lib.size * y$samples$norm.factors),FUN='+')
+##         rownames(of1) <- rownames(cm);  colnames(of1) <- colnames(cm)
+##         ## Gene scale factors
+##         ## These are log2 s (in code, undocumented), put in base e (that is what the lib sizes are in)
+##         gene.scale.factors <- tt1$table$logFC / (1/log(2))
+##         #gene.scale.factors <- log(2) / tt1$table$logFC
+##         names(gene.scale.factors) <- rownames(tt1$table)
+##         gene.scale.factors <- gene.scale.factors[rownames(of1)]
+##         ## setup columns according to the group factor
+##         pn <- do.call(cbind, lapply(group, function(x) {
+##             if(x == 'treated') {
+##                 rep(0,nrow(of1))
+##             } else {
+##                 gene.scale.factors
+##             }
+##         }))
+##         ## Add gene offsets to the library size correction
+##         of2 <- of1 + pn #/2
+##         ## Rerun differential expression with the offsets
+##         yc <- DGEList(counts=cm,group=group)
+##         yc$offset <- of2 ## set offsets
+##         yc <- calcNormFactors(yc)
+##         design <- model.matrix(~group)
+##         yc <- estimateDisp(y=yc,design=design)
+##         fit2 <- glmQLFit(yc,design)
+##         qlf2 <- glmQLFTest(fit2,coef=2)
+##         tt2 <- topTags(qlf2,n=Inf)
+##         if (return.details) {
+##             return(list(tt1=tt1,tt2=tt2,of1=of1,of2=of2,pn=pn,gene.scale.factors=gene.scale.factors))
+##         } else {
+##             return(tt2)
+##         }
+##     }
 
-    test.a <- edgeRtest(useGeneOffsets=TRUE,setOffsets=TRUE,return.details=TRUE)
+##     test.a <- edgeRtest(useGeneOffsets=TRUE,setOffsets=TRUE,return.details=TRUE)
 
-    res1 <- as.numeric(test.a$tt1$table$logFC)
-    names(res1) <- rownames(test.a$tt1$table)
-    res2 <- as.numeric(test.a$tt2$table$logFC)
-    names(res2) <- rownames(test.a$tt2$table)
-    plot(res1,res2[names(res1)])
+##     res1 <- as.numeric(test.a$tt1$table$logFC)
+##     names(res1) <- rownames(test.a$tt1$table)
+##     res2 <- as.numeric(test.a$tt2$table$logFC)
+##     names(res2) <- rownames(test.a$tt2$table)
+##     plot(res1,res2[names(res1)])
 
-    X11()
+##     X11()
 
-    ## When add one is FALSE some things don't get corrected
-    ## Here we show that these are things with 0s in one condition
-    test.a$tt1[1:10,]
-    test.a$tt2[1:10,]
-    tt2 <- as.data.frame(test.a$tt2)
-    head(tt2)
-    table(tt2$logFC > 2)
-    fail.to.correct <- rownames(tt2[abs(tt2$logFC) >2,])
-    test.a$tt1[fail.to.correct,]
-    test.a$gene.scale.factors[fail.to.correct]
-    cm.orig <- counts(pasillaGenes)
-    table(apply(cm.orig[fail.to.correct,] == 0,1,any))
-    table(apply(cm.orig[!rownames(cm.orig) %in% fail.to.correct,] == 0,1,any))
+##     ## When add one is FALSE some things don't get corrected
+##     ## Here we show that these are things with 0s in one condition
+##     test.a$tt1[1:10,]
+##     test.a$tt2[1:10,]
+##     tt2 <- as.data.frame(test.a$tt2)
+##     head(tt2)
+##     table(tt2$logFC > 2)
+##     fail.to.correct <- rownames(tt2[abs(tt2$logFC) >2,])
+##     test.a$tt1[fail.to.correct,]
+##     test.a$gene.scale.factors[fail.to.correct]
+##     cm.orig <- counts(pasillaGenes)
+##     table(apply(cm.orig[fail.to.correct,] == 0,1,any))
+##     table(apply(cm.orig[!rownames(cm.orig) %in% fail.to.correct,] == 0,1,any))
     
         
-}
+## }
 
 
 

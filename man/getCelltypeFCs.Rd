@@ -6,7 +6,7 @@
 \usage{
 getCelltypeFCs(ens.p2 = NULL, celltype = NULL,
   sample.type.comparison = NULL, coldata = NULL, verbose = FALSE,
-  fc.method = "deseq2")
+  fc.method = "deseq2", counts.add.bg = NULL)
 }
 \arguments{
 \item{celltype}{to use}

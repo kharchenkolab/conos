@@ -6,7 +6,8 @@
 \usage{
 getCorrectedDE(ens.p2, cell.type = NULL, sample.type.comparison = NULL,
   coldata = NULL, fc.correction = NULL, membrane.gene.names = NULL,
-  de.method = "deseq2", correction.global.weight = 1, n.cores = 1)
+  de.method = "deseq2", correction.global.weight = 1, n.cores = 1,
+  counts.add.bg = NULL)
 }
 \arguments{
 \item{ens.p2}{pagoda2 ensembl object}
