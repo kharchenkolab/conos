@@ -4,7 +4,7 @@
 library(DESeq2)
 
 
-
+#' get differential correction for all cell types
 #' @param ens.p2 pagoda 2 object ensemble
 #' @param cellfactor a named factor with cell assignments to groups
 #' @param sample.type.comparison character vector of length 2 signifying the comparison to perform from the sample.type metadata column
@@ -19,6 +19,7 @@ library(DESeq2)
 #' @param fc.cellfactor cell factor to use for obtaining FC correction, if NULL cellfactor is used. If this is specified and the correction method is not exclcurrent, then a map from the levels of cellfactor to fc.cellfactor (many to one) need to be specified to know which clusters to drop when excluding the current
 #' @param cell.factor.map many to one mapping from cellfactor levels to fc.cellfactor levels
 #' @param counts.add.bg pseudocount to add to all counts, default NULL will add a method dependent adjustment (edgeR will have a pc, other methods not)
+#' @export getCorrectedDE.allTypes
 getCorrectedDE.allTypes <-  function(ens.p2, cellfactor, sample.type.comparison, 
                                      membrane.gene.names,n.cores=1,correction.method='global',
                                      cell.types.fc.exclude=NULL,verbose=FALSE,de.method='deseq2',
@@ -138,6 +139,7 @@ getCorrectedDE.allTypes <-  function(ens.p2, cellfactor, sample.type.comparison,
 #' @param membrane.gene.names character vector of genes that are membrane
 #' @param de.method method to do differential expression currently deseq2
 #' @param correction.global.weight global weight to apply to correction
+#' @export getCorrectedDE
 getCorrectedDE <- function(ens.p2, cell.type=NULL, sample.type.comparison=NULL, coldata=NULL, fc.correction=NULL,
                            membrane.gene.names=NULL,de.method='deseq2', correction.global.weight=1,n.cores =1, counts.add.bg=NULL) {
     ## Check arguments
@@ -332,6 +334,7 @@ getCorrectedDE <- function(ens.p2, cell.type=NULL, sample.type.comparison=NULL, 
 #' @param p2ens an p2 object ensemble
 #' @param sample.type the samples type
 #' @param celltype the celltype
+#' @export getSamples
 getSamples <- function(p2ens, sample.type, celltype) {
     aggr.data <- p2ens$aggregateMatrices$`cluster:sample`
     meta <- p2ens$aggregateMatrixMeta$`cluster:sample`
@@ -346,8 +349,9 @@ getSamples <- function(p2ens, sample.type, celltype) {
 #' @param gene.scale.factors per gene fold chages to correct for
 #' @param correction.global.weight global weighting on the correction, setting to 0 results in no correction
 #' @return deseq2 object
+#' @export DESeq2.correctFC
 DESeq2.correctFC <- function(x12, coldata, gene.scale.factors, correction.global.weight=1) {
-    if (!is.null(gene.scale.factor)) {
+    if (!is.null(gene.scale.factors)) {
         ## Get size factors
         dds1 <- DESeq2::DESeqDataSetFromMatrix(x12, coldata[colnames(x12),], design=~sample.type)
         dds1 <- DESeq2::estimateSizeFactors(dds1)
@@ -396,6 +400,7 @@ DESeq2.correctFC <- function(x12, coldata, gene.scale.factors, correction.global
 #' @param coldata metadata
 #' @param verbose verbosity logical
 #' @param fc.method correction method to use 'deseq2' or 'dummy' (no correction)
+#' @export getCelltypeFCs
 getCelltypeFCs <- function(ens.p2=NULL, celltype=NULL, sample.type.comparison = NULL,coldata=NULL,verbose=FALSE,fc.method='deseq2',counts.add.bg=NULL) {
     ## check params
     if(is.null(ens.p2)) {stop('ens.p2 is null')}
@@ -484,6 +489,7 @@ getCelltypeFCs <- function(ens.p2=NULL, celltype=NULL, sample.type.comparison = 
 #' @param n.cores number of cores
 #' @param verbose verbosity logical
 #' @param fc.method method to use to calculate fcs, passed to getCelltypeFCs
+#' @export getPerCellTypeFCs
 getPerCellTypeFCs <- function(ens.p2  =NULL, levels =  NULL, sample.type.comparison = NULL, coldata=NULL, n.cores=1, verbose=FALSE,fc.method='deseq2', counts.add.bg=NULL) {
     ## Check args
     if (is.null(levels)) { stop('Provided levels is null') }
@@ -624,6 +630,7 @@ t.test.correctFC <- function(x12, coldata, fc.correction, correction.global.weig
 #' @param fc.method method to pass to getPerCellTypeFCs() if precalculated per.cell.type.fcs are not provided
 #' @param cell.factor.map many to one mapping of levels of cell.type.factor to levels of fc.cellfactor
 #' @param fc.cellfactor cell grouping to use for the fold change generation
+#' @export calcFCcorrection
 calcFCcorrection <- function(ens.p2, aggregation.id, sample.type.comparison, cell.types.exclude = c('tumor'),
                              scaleByVariance=TRUE, useTrimmed=FALSE,n.cores=1,coldata=NULL, cell.type.factor=NULL,
                              per.cell.type.fcs=NULL,verbose=FALSE,fc.method='deseq2',cell.factor.map=NULL,
