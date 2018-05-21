@@ -168,7 +168,7 @@ getCorrectedDE <- function(ens.p2, cell.type=NULL, sample.type.comparison=NULL, 
         allgenes <- rownames(res);
         res <- ddsres2res(res,membrane.gene.names)
     } else if (de.method=='edgeR') {
-        if (is.null(fc.correction)) { stop(paste0('Correction method ',de.method,' does not support uncorrected results and fc.correction is NULL') };
+        if (is.null(fc.correction)) { stop(paste0('Correction method ',de.method,' does not support uncorrected results and fc.correction is NULL')) };
         ## TODO: factor this out in a function
         grp1 <- coldata[colnames(x12),]$sample.type
         if(length(unique(grp1)) == 2) {            
@@ -241,7 +241,7 @@ getCorrectedDE <- function(ens.p2, cell.type=NULL, sample.type.comparison=NULL, 
             allgenes <- rownames(x12)
         }
     } else if (de.method == 'deseq1') {
-        if (is.null(fc.correction)) { stop(paste0('Correction method ',de.method,' does not support uncorrected results and fc.correction is NULL') };
+        if (is.null(fc.correction)) { stop(paste0('Correction method ',de.method,' does not support uncorrected results and fc.correction is NULL') )};
         ## TODO: move this to a function
         ## can't correct for fcs right now so throw a warning if corrections are requestes
         if(!all((abs(fc.correction)) < 1e-3)) {
@@ -291,7 +291,7 @@ getCorrectedDE <- function(ens.p2, cell.type=NULL, sample.type.comparison=NULL, 
         
     } else if (de.method=='t.test') {
         ## actually it does and can only do that but the fc correction need to be specified fo rnow
-        if (is.null(fc.correction)) { stop(paste0('Correction method ',de.method,' does not support uncorrected results and fc.correction is NULL') };
+        if (is.null(fc.correction)) { stop(paste0('Correction method ',de.method,' does not support uncorrected results and fc.correction is NULL')) };
         res <- t.test.correctFC(x12, coldata, fc.correction,
                                 correction.global.weight=correction.global.weight,
                                 sample.type.comparison=sample.type.comparison,
