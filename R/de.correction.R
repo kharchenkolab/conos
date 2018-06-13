@@ -25,8 +25,12 @@ getCorrectedDE.allTypes <-  function(ens.p2, cellfactor, sample.type.comparison,
                                      cell.types.fc.exclude=NULL,verbose=FALSE,de.method='deseq2',
                                      fc.method='deseq2', correction.global.weight=1, fc.cellfactor = NULL,
                                      cell.factor.map = NULL,
-                                     counts.add.bg = NULL) {
+                                     counts.add.bg = NULL, formula=NULL) {
     ## Check arguments -- TODO add more
+    if(!is.null(formula) & (de.method != 'deseq2' | fc.method != 'deseq2'))
+        stop('formula parameter supported only by deseq2 and de.method or fc.method is not deseq2');
+    ## also can only run with global
+    
     if(!correction.method %in% c('global','exclcurrent','none')) {stop('Unknown correction method: ',correction.method)}
 
     if (is.null(fc.cellfactor)) {
@@ -55,6 +59,7 @@ getCorrectedDE.allTypes <-  function(ens.p2, cellfactor, sample.type.comparison,
     ## If correction is global calculate it once, otherwise...
     if (correction.method == 'global') {
         if(verbose) cat('Calculating global correction...\n')
+        ## TODO: add formula here
         fc.correction <-  calcFCcorrection(ens.p2=ens.p2,
                                            aggregation.id='cluster:sample',
                                            sample.type.comparison=sample.type.comparison,
@@ -66,10 +71,12 @@ getCorrectedDE.allTypes <-  function(ens.p2, cellfactor, sample.type.comparison,
                                            fc.cellfactor = fc.cellfactor,
                                            verbose=verbose,
                                            fc.method=fc.method,
-                                           counts.add.bg=counts.add.bg)
+                                           counts.add.bg=counts.add.bg,
+                                           formula=formula)
         per.cell.type.fcs <- NULL
     } else if (correction.method == 'exclcurrent') {
         ## ... cache the per cell type corrections (from which global or per cell type corrections are derived)
+        ## TODO: add formula here
         per.cell.type.fcs <- getPerCellTypeFCs(levels=levels(fc.cellfactor),#levels(cellfactor),
                                                ens.p2=ens.p2,
                                                sample.type.comparison=sample.type.comparison,
@@ -77,7 +84,8 @@ getCorrectedDE.allTypes <-  function(ens.p2, cellfactor, sample.type.comparison,
                                                n.cores=n.cores,
                                                verbose=verbose,
                                                fc.method=fc.method,
-                                               counts.add.bg=counts.add.bg)
+                                               counts.add.bg=counts.add.bg,
+                                               formula=formula)
     } else if (correction.method == 'none') {
         fc.correction <- NULL;
     } else {
@@ -90,6 +98,7 @@ getCorrectedDE.allTypes <-  function(ens.p2, cellfactor, sample.type.comparison,
         try({
             ## if excl current prepare a fc correction from the individual per
             ## cell type corrections
+            ## TODO: Add formula here
             if (correction.method == 'exclcurrent') {
                 ## Get cell type specific correction using the cached results per.cell.type.fcs
                 ## essentially collapse the cell specific fold changes ignoring the current
@@ -105,7 +114,8 @@ getCorrectedDE.allTypes <-  function(ens.p2, cellfactor, sample.type.comparison,
                                                   cell.type.factor = fc.cellfactor, #cellfactor,
                                                   per.cell.type.fcs=per.cell.type.fcs,
                                                   cell.factor.map = cell.factor.map,
-                                                  counts.add.bg=counts.add.bg)
+                                                  counts.add.bg=counts.add.bg,
+                                                  formula=formula)
             }
             
             getCorrectedDE(ens.p2=ens.p2,
@@ -116,7 +126,7 @@ getCorrectedDE.allTypes <-  function(ens.p2, cellfactor, sample.type.comparison,
                            membrane.gene.names = membrane.gene.names,
                            de.method=de.method,
                            correction.global.weight=correction.global.weight,
-                           counts.add.bg=counts.add.bg)
+                           counts.add.bg=counts.add.bg, formula=formula)
             
         })
     }, mc.cores=n.cores)
@@ -141,7 +151,8 @@ getCorrectedDE.allTypes <-  function(ens.p2, cellfactor, sample.type.comparison,
 #' @param correction.global.weight global weight to apply to correction
 #' @export getCorrectedDE
 getCorrectedDE <- function(ens.p2, cell.type=NULL, sample.type.comparison=NULL, coldata=NULL, fc.correction=NULL,
-                           membrane.gene.names=NULL,de.method='deseq2', correction.global.weight=1,n.cores =1, counts.add.bg=NULL) {
+                           membrane.gene.names=NULL,de.method='deseq2', correction.global.weight=1,n.cores =1,
+                           counts.add.bg=NULL,formula=NULL) {
     ## Check arguments
     if(is.null(ens.p2)) {stop('ens.p2 is null')}
     if(is.null(cell.type)) {stop('cell.type is null')}
@@ -164,8 +175,9 @@ getCorrectedDE <- function(ens.p2, cell.type=NULL, sample.type.comparison=NULL, 
         } else {
             cm <- x12 + counts.add.bg
         }
-        dds <- DESeq2.correctFC(cm, coldata,  fc.correction, correction.global.weight=correction.global.weight)
+        dds <- DESeq2.correctFC(cm, coldata,  fc.correction, correction.global.weight=correction.global.weight,formula)
         ## convert de to results table
+        ## res <- DESeq2::results(dds, independentFiltering=FALSE, cooksCutoff=FALSE)
         res <- DESeq2::results(dds)
         allgenes <- rownames(res);
         res <- ddsres2res(res,membrane.gene.names)
@@ -350,17 +362,23 @@ getSamples <- function(p2ens, sample.type, celltype) {
 #' @param correction.global.weight global weighting on the correction, setting to 0 results in no correction
 #' @return deseq2 object
 #' @export DESeq2.correctFC
-DESeq2.correctFC <- function(x12, coldata, gene.scale.factors, correction.global.weight=1) {
+DESeq2.correctFC <- function(x12, coldata, gene.scale.factors, correction.global.weight=1,formula=NULL) {
+    if (is.null(formula)) {
+        formula = ~sample.type;
+        cat('Formula is null defaulting to ~sample.type');
+    } else {
+        cat('Formula is not NULL');
+    }
     if (!is.null(gene.scale.factors)) {
         ## Get size factors
-        dds1 <- DESeq2::DESeqDataSetFromMatrix(x12, coldata[colnames(x12),], design=~sample.type)
+        dds1 <- DESeq2::DESeqDataSetFromMatrix(x12, coldata[colnames(x12),], design=formula)
         dds1 <- DESeq2::estimateSizeFactors(dds1)
         sf <- DESeq2::sizeFactors(dds1)
         ## Remove gene for which we don't have scaling information
         genes.keep <- names(gene.scale.factors)
         ## subset x12 and build dds4
         x12 <- x12[genes.keep,]
-        dds4 <- DESeq2::DESeqDataSetFromMatrix(x12, coldata[colnames(x12),], design=~sample.type)
+        dds4 <- DESeq2::DESeqDataSetFromMatrix(x12, coldata[colnames(x12),], design=formula)
         ## norm factor with lib size
         nf.tmp <- matrix(rep(sf, nrow(x12)),nrow=nrow(x12),byrow=TRUE)
         rownames(nf.tmp) <- rownames(x12)
@@ -401,13 +419,26 @@ DESeq2.correctFC <- function(x12, coldata, gene.scale.factors, correction.global
 #' @param verbose verbosity logical
 #' @param fc.method correction method to use 'deseq2' or 'dummy' (no correction)
 #' @export getCelltypeFCs
-getCelltypeFCs <- function(ens.p2=NULL, celltype=NULL, sample.type.comparison = NULL,coldata=NULL,verbose=FALSE,fc.method='deseq2',counts.add.bg=NULL) {
+getCelltypeFCs <- function(ens.p2=NULL, celltype=NULL, sample.type.comparison = NULL,
+                           coldata=NULL,verbose=FALSE,fc.method='deseq2',counts.add.bg=NULL, formula=NULL) {
     ## check params
     if(is.null(ens.p2)) {stop('ens.p2 is null')}
     if(is.null(celltype)) { stop('celltype is null') }
     if(is.null(sample.type.comparison)) {stop('sample type comparison is null')}
     if(is.null(coldata)) {stop('coldata is null')}
 
+    
+    if (is.null(formula)) {
+        formula=~sample.type
+        cat('formula is null, defaulting to ~sample.type')
+    } else {
+        cat('formula is not null')
+        if (fc.method != 'deseq2') {
+            stop('getCelltypeFCs: formula is not NULL and method is not deseq2')
+        }
+    }
+    
+    
     ## Get approprate submatrice
     x <- t(getSamples(ens.p2, sample.type.comparison[2], celltype))
     x1 <- t(getSamples(ens.p2, sample.type.comparison[1],  celltype))
@@ -429,7 +460,7 @@ getCelltypeFCs <- function(ens.p2=NULL, celltype=NULL, sample.type.comparison = 
         if (fc.method == 'deseq2') {
             if(is.null(counts.add.bg)) counts.add.bg <- 0
             ## Get differential expression  
-            dds1 <- DESeq2::DESeqDataSetFromMatrix(x12.a + counts.add.bg, coldata[colnames(x12.a),], design=~sample.type)
+            dds1 <- DESeq2::DESeqDataSetFromMatrix(x12.a + counts.add.bg, coldata[colnames(x12.a),], design=formula)
             dds1 <- DESeq2::DESeq(dds1)
             ## extract fold changes
             res <- DESeq2::results(dds1,cooksCutoff = FALSE, independentFiltering = FALSE)
@@ -490,12 +521,15 @@ getCelltypeFCs <- function(ens.p2=NULL, celltype=NULL, sample.type.comparison = 
 #' @param verbose verbosity logical
 #' @param fc.method method to use to calculate fcs, passed to getCelltypeFCs
 #' @export getPerCellTypeFCs
-getPerCellTypeFCs <- function(ens.p2  =NULL, levels =  NULL, sample.type.comparison = NULL, coldata=NULL, n.cores=1, verbose=FALSE,fc.method='deseq2', counts.add.bg=NULL) {
+getPerCellTypeFCs <- function(ens.p2  =NULL, levels =  NULL, sample.type.comparison = NULL,
+                              coldata=NULL, n.cores=1, verbose=FALSE,fc.method='deseq2', counts.add.bg=NULL,
+                              formula=NULL) {
     ## Check args
     if (is.null(levels)) { stop('Provided levels is null') }
     if (is.null(ens.p2)) {stop('ens.p2 is null')}
     if (is.null(sample.type.comparison)) {stop('sample type comparison is null')}
     if (is.null(coldata)) {stop('coldata is NULL')}
+    
     ## Calculate the fold changes for each cell type
     fcs <- parallel::mclapply(setNames(levels), function(celltype) {
         celltype <- as.character(celltype)
@@ -506,7 +540,8 @@ getPerCellTypeFCs <- function(ens.p2  =NULL, levels =  NULL, sample.type.compari
                            coldata=coldata,
                            verbose=verbose,
                            fc.method=fc.method,
-                           counts.add.bg=NULL)
+                           counts.add.bg=NULL,
+                           formula=formula)
         })
     },mc.cores=n.cores)
     fcs
@@ -634,7 +669,7 @@ t.test.correctFC <- function(x12, coldata, fc.correction, correction.global.weig
 calcFCcorrection <- function(ens.p2, aggregation.id, sample.type.comparison, cell.types.exclude = c('tumor'),
                              scaleByVariance=TRUE, useTrimmed=FALSE,n.cores=1,coldata=NULL, cell.type.factor=NULL,
                              per.cell.type.fcs=NULL,verbose=FALSE,fc.method='deseq2',cell.factor.map=NULL,
-                             fc.cellfactor = NULL, counts.add.bg = NULL) {
+                             fc.cellfactor = NULL, counts.add.bg = NULL, formula=NULL) {
 
     if (is.null(cell.type.factor)) {
         stop('cell.type.factor is NULL')
@@ -653,7 +688,8 @@ calcFCcorrection <- function(ens.p2, aggregation.id, sample.type.comparison, cel
                                  coldata=coldata,
                                  n.cores=n.cores,
                                  fc.method=fc.method,
-                                 counts.add.bg = counts.add.bg)
+                                 counts.add.bg = counts.add.bg,
+                                 formula=formula)
     } else {
         if (verbose) cat('Using pre-calculated per celltype fcs\n');
         ## NOTE fc.method is ignored here, it is assumed that the calling function knows
