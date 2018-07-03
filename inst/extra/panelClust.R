@@ -361,6 +361,8 @@ panelClust <- function(p2list,
     if (community.detection.method == 'multilevel') {
         cls <- igraph::multilevel.community(g);
         cat('done\n')
+    } else if  (community.detection.method == 'walktrap') {
+        cls <- igraph::walktrap.community(g);
     } else {
         stop(paste0('unknown community.detection.method',community.detection.method))
     }
@@ -525,3 +527,69 @@ getPercentGlobalClusters <- function(p2list, pjc, pc.samples.cutoff = 0.9, min.c
     sum(global.cluster) / length(global.cluster)
 }
 
+
+
+## helper function for breaking down a factor into a list
+factorBreakdown <- function(f) {tapply(names(f),f, identity) }
+
+#' Post process clusters generated with walktrap to control granularity
+#' @param p2list list of pagoda2 objects
+#' @param pjc joint clustering that was performed with walktrap
+#' @param no.cl number of clusters to get from the walktrap dendrogram
+#' @param size.cutoff cutoff below which to merge the clusters
+#' @param n.cores number of cores to use
+postProcessWalktrapClusters <- function(p2list, pjc, no.cl = 200, size.cutoff = 10, n.cores=4) {
+    ##devel
+    ## pjc <- pjc3
+    ## no.cl <- 200
+    ## size.cutoff <- 10
+    ## n.cores <- 4
+    ## rm(pjc, no.cl,size.cutoff, n.cores)
+    ##
+    global.cluster <- igraph::cut_at(cls, no=no.cl)
+    names(global.cluster) <- names(igraph::membership(cls))
+    ## identify clusters to merge
+    fqs <- as.data.frame(table(global.cluster))
+    cl.to.merge <- fqs[fqs$Freq < size.cutoff,]$global.cluster
+    cl.to.keep <- fqs[fqs$Freq >= size.cutoff,]$global.cluster
+    ## Memberships to keep
+    global.cluster.filtered <- as.factor(global.cluster[global.cluster %in% cl.to.keep])
+    ## Get new assignments for all the cells
+    new.assign <- unlist(unname(parallel::mclapply(p2list, function(p2o) {
+        try({
+            ## get global cluster centroids for cells in this app
+            global.cluster.filtered.bd <- factorBreakdown(global.cluster.filtered)
+            global.cl.centers <- do.call(rbind, lapply(global.cluster.filtered.bd, function(cells) {
+                cells <- cells[cells %in% rownames(p2o$counts)]
+                if (length(cells) > 1) {
+                    Matrix::colSums(p2o$counts[cells,])
+                } else {
+                    NULL
+                }
+            }))
+            ## cells to reassign in this app
+            cells.reassign <- names(global.cluster[global.cluster %in% cl.to.merge])
+            cells.reassign <- cells.reassign[cells.reassign %in% rownames(p2o$counts)]
+            xcor <- cor(t(as.matrix(p2o$counts[cells.reassign,,drop=FALSE])), t(as.matrix(global.cl.centers)))
+            ## Get new cluster assignments
+            new.cluster.assign <- apply(xcor,1, function(x) {colnames(xcor)[which.max(x)]})
+            new.cluster.assign
+        })
+    },mc.cores=n.cores)))
+    ## Merge
+    x <- as.character(global.cluster.filtered)
+    names(x) <- names(global.cluster.filtered)
+    new.clusters <- as.factor(c(x,new.assign))
+    new.clusters
+}
+
+## Example usage for post-processing
+pjc3 <- panelClust(p2list,reduction.method='GeneSpace',community.detection.method = "walktrap")    
+
+ppjc3 <- postProcessWalktrapClusters(p2list, pjc3, no.cl=200,size.cutoff=10,n.cores=4)
+
+X11()
+par(mfrow=c(1,3))
+lapply(p2list, function(o) {
+    o$plotEmbedding(type='PCA',embeddingType='tSNE', mark.clusters=T, groups=ppjc3)
+})
