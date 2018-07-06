@@ -94,6 +94,22 @@ quickJNMF <- function(p2.objs = NULL, n.comps = 30, n.odgenes=NULL, var.scale=TR
     list(rot1=rot1, rot2=rot2,z=z,cgsf=cgsf)
 }
 
+cpcaFast <- function(covl,ncells,ncomp=10,maxit=1000,tol=1e-6,use.irlba=TRUE,verbose=F) {
+  if(use.irlba) {
+    # irlba initialization
+    p <- nrow(covl[[1]]);
+    S <- matrix(0, nrow = p, ncol = p)  
+    for(i in 1:length(covl)) {
+      S <- S + (ncells[i] / sum(ncells)) * covl[[i]]
+    }
+    ev <- irlba::irlba(S,ncomp)
+    cc <- abind::abind(covl,along=3)
+    cpcaF(cc,ncells,ncomp,maxit,tol,eigenvR=ev$v,verbose)
+  } else {
+    cpcaF(cc,ncells,ncomp,maxit,tol,verbose=verbose)
+  }
+}
+
 #' Perform pairwise CPCA
 quickCPCA <- function(p2.objs = NULL, n.comps = 30, n.odgenes = NULL, var.scale = T, verbose = T,
                       n.cores = 32, max.iter=1000, neighborhood.average = FALSE) {
@@ -128,7 +144,8 @@ quickCPCA <- function(p2.objs = NULL, n.comps = 30, n.odgenes = NULL, var.scale 
     ## Perform CPCA
     if(verbose) cat('getting common PCs...');
     ncells <- unlist(lapply(p2.objs, function(x) nrow(x$counts)));
-    xcp <- cpca::cpca(covl, ncells, ncomp=n.comps, maxit=max.iter)
+    xcp <- cpcaFast(covl, ncells, ncomp=n.comps, maxit=max.iter)
+    #xcp <- cpca::cpca(covl, ncells, ncomp=n.comps, maxit=max.iter)
     rownames(xcp$CPC) <- odgenes;
     if(verbose) cat('done\n');
     ## TODO: Check for convergence
