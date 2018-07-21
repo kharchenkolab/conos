@@ -1,3 +1,29 @@
-PKG_CXXFLAGS=-I"../inst/include" $(SHLIB_OPENMP_CXXFLAGS)
-PKG_LIBS=-L/usr/lib/ -lgsl -lpthread -lstdc++ `$(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()"` $(LAPACK_LIBS) $(BLAS_LIBS) $(SHLIB_OPENMP_CXXFLAGS) -lm 
+# Set the path to your non metric space library here
+PKG_CXXFLAGS= -I"../inst/include" -I"./n2/include" -I"./include" $(SHLIB_OPENMP_CXXFLAGS) 
+PKG_LIBS=-L/usr/lib/ -L"." -lpthread -lstdc++ -ln2 -lm `$(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()"` $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS) $(SHLIB_OPENMP_CXXFLAGS)
 CXX_STD = CXX11
+MkInclude = $(R_HOME)/etc${R_ARCH}/Makeconf
+
+#.PHONY: all sublibs
+
+#OBJECTS = $(.cpp=.o)
+SUBDIRS = n2 
+SUBLIBS = libn2.a 
+
+all: $(SHLIB) 
+$(SHLIB): $(OBJECTS) sublibs
+sublibs: sublibraries
+
+sublibraries: 
+	@for d in $(SUBDIRS); do \
+          (cd $${d} && CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" MAKE="$(MAKE) -f \"$(MkInclude)\" -f Makefile" $(MAKE) -f "$(MkInclude)" -f Makefile lib) || exit 1; \
+        done
+
+clean: subclean
+	@-rm -f *.o $(SHLIB)
+
+subclean:
+	@-rm -f *.a
+	@for d in $(SUBDIRS); do \
+	 (cd $${d} && MkInclude="$(MkInclude)" $(MAKE) clean) || exit 1; \
+	done
