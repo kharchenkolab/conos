@@ -39,5 +39,6 @@ rsconnect/
 .RData
 *.so
 *.o
+*.a
 *~
 inst/doc
