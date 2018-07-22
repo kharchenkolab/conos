@@ -331,7 +331,7 @@ Conos <- setRefClass(
         if(is.null(clustering)) { # take the first one
           rg <- clusters[[1]]$groups
         } else {
-          if(is.null(clusts[[clustering]])) { stop(paste("clustering",clustering,"hasn't been calculated")) }
+          if(is.null(clusters[[clustering]])) { stop(paste("clustering",clustering,"hasn't been calculated")) }
           rg <- clusters[[clustering]]$groups
         }
       }
