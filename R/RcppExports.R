@@ -5,6 +5,14 @@ cpcaF <- function(cov, ng, ncomp = 10L, maxit = 1000L, tol = 1e-6, eigenvR = NUL
     .Call('_conos_cpcaF', PACKAGE = 'conos', cov, ng, ncomp, maxit, tol, eigenvR, verbose)
 }
 
+n2Knn <- function(m, k, nThreads = 10L, verbose = TRUE, indexType = "angular", M = 12L, MaxM0 = 24L) {
+    .Call('_conos_n2Knn', PACKAGE = 'conos', m, k, nThreads, verbose, indexType, M, MaxM0)
+}
+
+n2CrossKnn <- function(mA, mB, k, nThreads = 10L, verbose = TRUE, indexType = "angular", M = 12L, MaxM0 = 24L) {
+    .Call('_conos_n2CrossKnn', PACKAGE = 'conos', mA, mB, k, nThreads, verbose, indexType, M, MaxM0)
+}
+
 spcov <- function(m, cm) {
     .Call('_conos_spcov', PACKAGE = 'conos', m, cm)
 }

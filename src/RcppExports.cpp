@@ -24,6 +24,41 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// n2Knn
+arma::sp_mat n2Knn(const NumericMatrix& m, int k, int nThreads, bool verbose, std::string indexType, int M, int MaxM0);
+RcppExport SEXP _conos_n2Knn(SEXP mSEXP, SEXP kSEXP, SEXP nThreadsSEXP, SEXP verboseSEXP, SEXP indexTypeSEXP, SEXP MSEXP, SEXP MaxM0SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type m(mSEXP);
+    Rcpp::traits::input_parameter< int >::type k(kSEXP);
+    Rcpp::traits::input_parameter< int >::type nThreads(nThreadsSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    Rcpp::traits::input_parameter< std::string >::type indexType(indexTypeSEXP);
+    Rcpp::traits::input_parameter< int >::type M(MSEXP);
+    Rcpp::traits::input_parameter< int >::type MaxM0(MaxM0SEXP);
+    rcpp_result_gen = Rcpp::wrap(n2Knn(m, k, nThreads, verbose, indexType, M, MaxM0));
+    return rcpp_result_gen;
+END_RCPP
+}
+// n2CrossKnn
+arma::sp_mat n2CrossKnn(const NumericMatrix& mA, const NumericMatrix& mB, int k, int nThreads, bool verbose, std::string indexType, int M, int MaxM0);
+RcppExport SEXP _conos_n2CrossKnn(SEXP mASEXP, SEXP mBSEXP, SEXP kSEXP, SEXP nThreadsSEXP, SEXP verboseSEXP, SEXP indexTypeSEXP, SEXP MSEXP, SEXP MaxM0SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type mA(mASEXP);
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type mB(mBSEXP);
+    Rcpp::traits::input_parameter< int >::type k(kSEXP);
+    Rcpp::traits::input_parameter< int >::type nThreads(nThreadsSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    Rcpp::traits::input_parameter< std::string >::type indexType(indexTypeSEXP);
+    Rcpp::traits::input_parameter< int >::type M(MSEXP);
+    Rcpp::traits::input_parameter< int >::type MaxM0(MaxM0SEXP);
+    rcpp_result_gen = Rcpp::wrap(n2CrossKnn(mA, mB, k, nThreads, verbose, indexType, M, MaxM0));
+    return rcpp_result_gen;
+END_RCPP
+}
 // spcov
 Eigen::MatrixXd spcov(const Eigen::SparseMatrix<double>& m, Eigen::VectorXd cm);
 RcppExport SEXP _conos_spcov(SEXP mSEXP, SEXP cmSEXP) {
@@ -39,6 +74,8 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_conos_cpcaF", (DL_FUNC) &_conos_cpcaF, 7},
+    {"_conos_n2Knn", (DL_FUNC) &_conos_n2Knn, 7},
+    {"_conos_n2CrossKnn", (DL_FUNC) &_conos_n2CrossKnn, 8},
     {"_conos_spcov", (DL_FUNC) &_conos_spcov, 2},
     {NULL, NULL, 0}
 };

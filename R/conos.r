@@ -1,3 +1,4 @@
+#' @useDynLib conos
 #' @import Matrix
 #' @import igraph
 #' @importFrom parallel mclapply
@@ -108,7 +109,7 @@ cpcaFast <- function(covl,ncells,ncomp=10,maxit=1000,tol=1e-6,use.irlba=TRUE,ver
 #' @param neighborhood.average use neighborhood average values
 #' @param n.cores number of cores to use 
 #' @export quickCPCA
-quickCPCA <- function(r.n,k=30,ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=T,cgsf=NULL,neighborhood.average=FALSE,n.cores=30) {
+quickCPCA <- function(r.n,k=30,ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=TRUE,cgsf=NULL,neighborhood.average=FALSE,n.cores=30) {
   #require(parallel)
   #require(cpca)
   #require(Matrix)
@@ -125,7 +126,7 @@ quickCPCA <- function(r.n,k=30,ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=
   } else {
     odgenes <- names(cgsf)
   }
-  cat("using",length(odgenes),"odgenes\n") 
+  if(verbose) cat("using",length(odgenes),"odgenes\n") 
   # common variance scaling
   if (var.scale) {
     if(is.null(cgsf)) {
@@ -167,11 +168,12 @@ quickCPCA <- function(r.n,k=30,ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=
   ## covl <- lapply(covl,sparse.cov,cMeans=centering)
   
   if(verbose) cat(' done\n')
-  
+
+  #W: get counts
   ncells <- unlist(lapply(r.n,function(x) nrow(x$counts)));
   if(verbose) cat('common PCs ...')
   #xcp <- cpca(covl,ncells,ncomp=ncomps)
-  xcp <- cpcaFast(covl,ncells,ncomp=ncomps,verbose=TRUE,maxit=500,tol=1e-5);
+  xcp <- cpcaFast(covl,ncells,ncomp=ncomps,verbose=verbose,maxit=500,tol=1e-5);
   #system.time(xcp <- cpca:::cpca_stepwise_base(covl,ncells,k=ncomps))
   #xcp <- cpc(abind(covl,along=3),k=ncomps)
   rownames(xcp$CPC) <- odgenes;
@@ -417,6 +419,62 @@ conosCluster <- function(r.n, k=30, k.self=10, k.self.weight=0.1,community.detec
 }
 
 
+# quick helper function to plot the results of a panel clustering
+##' A function for quickly plotting collections and joint clustering
+##'
+##' @param r.n list of pagoda2 apps
+##' @param res results of the conosCluster
+##' @param filename optional name of a PNG file where to save the plot
+##' @param panel.size width/height of an individual sample panel
+##' @param shuffle.colors whether cluster colors should be randomly shuffled
+##' @param embeddingType name of the embedding to use for each datasets (default='tSNE')
+##' @param groups optional groups (factor) to show with colors (instead of res$groups)
+##' @param gene name of the gene to show with colors
+##' @param group.level.colors explicitly specify colors for group factor levels
+##' @param n number of columns to arrange the samples in
+##' @param mark.cluster.cex cex parameter for cluster labels
+##' @param colors per-cell colors to show 
+##' @return nothing
+##' @export
+conosPlot <- function(r.n,res,filename=NULL,panel.size=250,shuffle.colors=F,embeddingType='tSNE',groups=NULL,gene=NULL,group.level.colors=NULL,n=NULL,mark.cluster.cex=0.8,colors=NULL) {
+  require(Cairo)
+  if(is.null(n)) {
+    n <- ceiling(sqrt(length(r.n)))
+  }
+  n2 <- ceiling(length(r.n)/n)
+  if(!is.null(filename)) {
+    CairoPNG(file=filename,height=n2*panel.size,width=n*panel.size)
+  }
+  gc <- pagoda2:::fac2col(as.factor(res$groups),return.details=T,shuffle=shuffle.colors);
+  if(!is.null(group.level.colors)) { gc$palette <- group.level.colors }
+  if(!is.null(groups)) { res$groups[!res$groups %in% groups] <- NA }
+  par(mfrow=c(n2,n), mar = c(0.5,0.5,0.5,0.5), mgp = c(2,0.65,0), cex = 0.85);
+  invisible(lapply(names(r.n),function(dn) {
+    d <- r.n[[dn]];
+    if(length(intersect(names(na.omit(res$groups)),rownames(d$counts)))<2) { res$groups <- rep(NA,nrow(d$counts)); names(res$groups) <- rownames(d$counts); res$groups[1] <- 1; }
+    if(!is.null(gene)) {
+      if(gene %in% colnames(d$counts)) {
+        d$plotEmbedding(type='PCA',embeddingType=embeddingType,colors=d$counts[,gene],group.level.colors=gc$palette,alpha=0.2,min.group.size=0,mark.clusters = TRUE, mark.cluster.cex=mark.cluster.cex,do.par=F);
+      } else {
+        res$groups <- rep(NA,nrow(d$counts)); names(res$groups) <- rownames(d$counts); res$groups[1] <- 1;
+        d$plotEmbedding(type='PCA',embeddingType='tSNE',groups=as.factor(res$groups),group.level.colors=gc$palette,alpha=0.2,min.group.size=0,mark.clusters = TRUE, mark.cluster.cex=mark.cluster.cex,do.par=F);
+      }
+    } else if(!is.null(colors)) {
+      d$plotEmbedding(type='PCA',embeddingType=embeddingType,colors=colors,alpha=0.2,min.group.size=0,do.par=F);
+    } else  {
+      d$plotEmbedding(type='PCA',embeddingType=embeddingType,groups=as.factor(res$groups),group.level.colors=gc$palette,alpha=0.2,min.group.size=0,mark.clusters = TRUE, mark.cluster.cex=mark.cluster.cex,do.par=F);
+    } 
+    legend(x='topleft',bty='n',legend=dn)
+  }))
+  if(!is.null(filename)) {
+    dev.off();
+  }
+}
+
+
+
+
+# other functions
 
 # use mclapply if available, fall back on BiocParallel, but use regular
 # lapply() when only one core is specified
