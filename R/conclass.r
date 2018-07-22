@@ -358,7 +358,7 @@ Conos <- setRefClass(
           if(is.null(clustering)) { # take the first one
             groups <- clusters[[1]]$groups
           } else {
-            if(is.null(clusts[[clustering]])) { stop(paste("clustering",clustering,"hasn't been calculated")) }
+            if(is.null(clusters[[clustering]])) { stop(paste("clustering",clustering,"hasn't been calculated")) }
             groups <- clusters[[clustering]]$groups
           }
         } else if(color.by=='sample') {
