@@ -66,6 +66,8 @@ defined for the plot.}
 defined at the top level of the plot.}
   \item{stat}{The statistical transformation to use on the data for this
 layer, as a string.}
+  \item{position}{Position adjustment, either as a string, or the result of
+a call to a position adjustment function.}
   \item{parse}{If TRUE, the labels will be parsed into expressions and
 displayed as described in ?plotmath}
   \item{box.padding}{Amount of padding around bounding box, as unit or number.
