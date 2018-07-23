@@ -96,6 +96,7 @@ plotPagodas <- function(pagoda.samples, groups=NULL, colors=NULL, gene=NULL, emb
 ##' @param title plot title
 ##' @param plot.theme theme for the plot
 ##' @param palette function, which accepts number of colors and return list of colors (i.e. see colorRampPalette)
+##' @param color.range controls range, in which colors are estimated. Pass "all" to estimate range based on all values of "colors", pass "data" to estimate it only based on colors, presented in the embedding. Alternatively you can pass vector of length 2 with (min, max) values.
 ##' @param font.size font size for cluster labels. It can either be single number for constant font size or pair (min, max) for font size depending on cluster size
 ##' @param show.ticks show ticks and tick labels
 ##' @param legend.position vector with (x, y) positions of the legend
@@ -107,9 +108,9 @@ plotPagodas <- function(pagoda.samples, groups=NULL, colors=NULL, gene=NULL, emb
 ##' @return ggplot2 object
 ##' @export
 embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min.cluster.size=0, mark.groups=TRUE,
-                         show.legend=FALSE, alpha=0.4, size=0.8, title=NULL, plot.theme=NULL, palette=NULL,
-                         font.size=c(3, 7), show.ticks=FALSE, show.labels=FALSE, legend.position=NULL, legend.title=NULL,
-                         raster=FALSE, raster.width=NULL, raster.height=NULL, raster.dpi=300,
+                          show.legend=FALSE, alpha=0.4, size=0.8, title=NULL, plot.theme=NULL, palette=NULL, color.range="all",
+                          font.size=c(3, 7), show.ticks=FALSE, show.labels=FALSE, legend.position=NULL, legend.title=NULL,
+                          raster=FALSE, raster.width=NULL, raster.height=NULL, raster.dpi=300,
                          ...) {
   labels <- ggplot2::labs(x='Component 1', y='Component 2')
   plot.df <- tibble::rownames_to_column(as.data.frame(embedding), "CellName")
@@ -174,10 +175,18 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
       gg <- gg + ggplot2::guides(color=ggplot2::guide_colorbar(title=legend.title))
     }
 
+    if (length(color.range) == 1) {
+      if (color.range == "all") {
+        color.range <- range(colors)
+      } else if (color.range == "data") {
+        color.range <- NULL
+      }
+    }
+
     if (!is.null(palette)) {
-      gg <- gg + ggplot2::scale_colour_gradientn(colors=palette(100))
+      gg <- gg + ggplot2::scale_colour_gradientn(colors=palette(100), limits=color.range)
     } else {
-      gg <- gg + ggplot2::scale_color_gradient(low="#d8d0d0", high="#ff0000")
+      gg <- gg + ggplot2::scale_color_gradient(low="#d8d0d0", high="#ff0000", limits=color.range)
     }
   } else {
     gg <- ggplot2::ggplot(plot.df, ggplot2::aes(x=x, y=y)) +
