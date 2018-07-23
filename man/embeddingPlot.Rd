@@ -7,9 +7,10 @@
 embeddingPlot(embedding, groups = NULL, colors = NULL, plot.na = TRUE,
   min.cluster.size = 0, mark.groups = TRUE, show.legend = FALSE,
   alpha = 0.4, size = 0.8, title = NULL, plot.theme = NULL,
-  font.size = c(3, 7), show.ticks = FALSE, show.labels = FALSE,
-  legend.position = NULL, legend.title = NULL, raster = FALSE,
-  raster.width = NULL, raster.height = NULL, raster.dpi = 300, ...)
+  palette = NULL, font.size = c(3, 7), show.ticks = FALSE,
+  show.labels = FALSE, legend.position = NULL, legend.title = NULL,
+  raster = FALSE, raster.width = NULL, raster.height = NULL,
+  raster.dpi = 300, ...)
 }
 \arguments{
 \item{embedding}{two-column matrix with x and y coordinates of the embedding, rownames contain cell names and are used to match coordinates with groups or colors}
@@ -33,6 +34,8 @@ embeddingPlot(embedding, groups = NULL, colors = NULL, plot.na = TRUE,
 \item{title}{plot title}
 
 \item{plot.theme}{theme for the plot}
+
+\item{palette}{function, which accepts number of colors and return list of colors (i.e. see colorRampPalette)}
 
 \item{font.size}{font size for cluster labels. It can either be single number for constant font size or pair (min, max) for font size depending on cluster size}
 
@@ -61,8 +64,6 @@ defined for the plot.}
 defined at the top level of the plot.}
   \item{stat}{The statistical transformation to use on the data for this
 layer, as a string.}
-  \item{position}{Position adjustment, either as a string, or the result of
-a call to a position adjustment function.}
   \item{parse}{If TRUE, the labels will be parsed into expressions and
 displayed as described in ?plotmath}
   \item{box.padding}{Amount of padding around bounding box, as unit or number.

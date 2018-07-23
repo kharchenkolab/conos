@@ -45,10 +45,10 @@ Conos <- setRefClass(
   #   - clusters will contain potentially multiple clustering results/data
   #   - embedding contains embedding of the joint graph
 
-  fields=c('samples','pairs','graph','clusters','embedding','n.cores','misc'),
+  fields=c('samples','pairs','graph','clusters','embedding','n.cores','misc', 'override.conos.plot.theme'),
 
   methods = list(
-    initialize=function(x, ..., n.cores=parallel::detectCores(logical=F), verbose=TRUE) {
+    initialize=function(x, ..., n.cores=parallel::detectCores(logical=F), verbose=TRUE, override.conos.plot.theme=FALSE) {
       # # init all the output lists
       samples <<- list();
       pairs <<- list();
@@ -56,6 +56,7 @@ Conos <- setRefClass(
       clusters <<- list();
       misc <<-list();
       n.cores <<- n.cores;
+      override.conos.plot.theme <<- override.conos.plot.theme;
 
       if(!missing(x) && class(x)=='Conos') { # copy constructor
         callSuper(x, ..., n.cores=n.cores);
@@ -75,6 +76,21 @@ Conos <- setRefClass(
       }
     },
 
+    adjustTheme=function(theme) {
+      if (is.null(theme)) {
+        theme <- ggplot2::theme()
+      }
+      main.theme <- ggplot2::theme_bw() + ggplot2::theme(
+        legend.background=ggplot2::element_rect(fill=ggplot2::alpha("white", 0.6)),
+        plot.margin=ggplot2::margin()
+      )
+
+      if (override.conos.plot.theme) {
+        return(main.theme + ggplot2::theme_get() + theme)
+      }
+
+      return(main.theme + theme)
+    },
 
     addSamples=function(x, replace=FALSE, verbose=FALSE) {
       # check names
@@ -134,7 +150,7 @@ Conos <- setRefClass(
           if(space=='CPCA') {
             xcp <- quickCPCA(samples[cis[,i]],k=k,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale,neighborhood.average=neighborhood.average)
           } else if(space=='JNMF') {
-            xcp <- quickJNMF(samples[cis[,i]],k=k,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale,neighborhood.average=neighborhood.average,maxiter=3e3)
+            xcp <- quickJNMF(samples[cis[,i]],n.comps=ncomps,n.odgenes=n.odgenes,var.scale=var.scale,verbose=FALSE,max.iter=3e3,neighborhood.average=neighborhood.average)
           } else if (space == 'genes') {
             xcp <- quickNULL(p2.objs = samlpes[cis[,i]], n.odgenes = n.odgenes, var.scale = var.scale, verbose = FALSE, neighborhood.average=neighborhood.average);
           }
@@ -315,13 +331,24 @@ Conos <- setRefClass(
 
     },
 
-    plotPanel=function(clustering=NULL, groups=NULL, colors=NULL, gene=NULL, embedding.type='tSNE', ncol=NULL, nrow=NULL, raster=FALSE, panel.size=NULL, adjust.func=NULL, ...) {
-      
-      if (is.null(groups) && is.null(colors) && is.null(gene)) {
+    plotPanel=function(clustering=NULL, groups=NULL, colors=NULL, gene=NULL, embedding.type='tSNE', ncol=NULL, nrow=NULL, raster=FALSE, panel.size=NULL,
+                       adjust.func=NULL, use.local.clusters=FALSE, plot.theme=NULL, ...) {
+      if (use.local.clusters) {
+        if (is.null(clustering)) {
+          stop("You have to provide 'clustering' parameter to be able to use local clusters")
+        }
+
+        groups <- Reduce(c, lapply(samples, function(x) x$clusters$PCA[[clustering]]))
+        if (is.null(groups)) {
+          stop(paste0("No clustering '", clustering, "' presented in the samples"))
+        }
+      }
+      else if (is.null(groups) && is.null(colors) && is.null(gene)) {
         groups <- getClusteringGroups(clusters, clustering)
       }
 
-      gg <- plotPagodas(samples, groups=groups, colors=colors, gene=gene, embedding.type=embedding.type, ncol=ncol, nrow=nrow, raster=raster, panel.size=panel.size, adjust.func=adjust.func, ...)
+      gg <- plotPagodas(samples, groups=groups, colors=colors, gene=gene, embedding.type=embedding.type, ncol=ncol, nrow=nrow, raster=raster,
+                        panel.size=panel.size, adjust.func=adjust.func, plot.theme=adjustTheme(plot.theme), ...)
       return(gg)
     },
 
@@ -334,7 +361,7 @@ Conos <- setRefClass(
       return(invisible(embedding))
     },
 
-    plotGraph=function(conos, color.by='cluster', clustering=NULL, groups=NULL, colors=NULL, ...) {
+    plotGraph=function(conos, color.by='cluster', clustering=NULL, groups=NULL, colors=NULL, plot.theme=NULL, ...) {
       if(class(embedding)[1] == "uninitializedField") {
         embedGraph();
       }
@@ -350,7 +377,7 @@ Conos <- setRefClass(
         }
       }
 
-      return(embeddingPlot(t(con$embedding), groups=groups, colors=colors, ...))
+      return(embeddingPlot(t(con$embedding), groups=groups, colors=colors, plot.theme=adjustTheme(plot.theme), ...))
     }
   )
 

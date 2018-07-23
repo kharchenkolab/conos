@@ -31,7 +31,7 @@ getClusteringGroups <- function(clusters, clustering) {
 ##' @param panel.size vector with two numbers, which specified (width, height) of the panel in inches. Ignored if raster == FALSE.
 ##' @param adjust.func function to adjust plots before combining them to single panel. Can be used, for example, to provide color pallette of guides of the plots.
 ##' @return ggplot2 object with the panel of plots
-plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow=NULL, raster=FALSE, panel.size=NULL, adjust.func=NULL, ...) {
+plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow=NULL, raster=FALSE, panel.size=NULL, adjust.func=NULL, title.size=6, ...) {
   if (is.null(panel.size)) {
     panel.size <- dev.size(units="in")
   } else if (length(panel.size) == 1) {
@@ -42,15 +42,20 @@ plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow
   if (is.null(ncol) && is.null(nrow)) {
     ncol <- ceiling(sqrt(n.plots))
   }
-  if (is.null(ncol))
+  if (is.null(ncol)) {
     ncol <- ceiling(n.plots / nrow)
+  }
   if (is.null(nrow)) {
     nrow <- ceiling(n.plots / ncol)
   }
 
   plot.list <- lapply(names(embeddings), function(n)
-    embeddingPlot(embeddings[[n]], groups=groups, colors=colors, raster=raster, title=n,
-                 raster.width=panel.size[1] / nrow, raster.height=panel.size[2] / ncol, ...))
+    embeddingPlot(embeddings[[n]], groups=groups, colors=colors, raster=raster,
+                  raster.width=panel.size[1] / nrow, raster.height=panel.size[2] / ncol, ...) +
+      ggplot2::geom_label(data=data.frame(x=-Inf, y=Inf, label=n), mapping=ggplot2::aes(x=x, y=y, label=label),
+                          fill=ggplot2::alpha("white", 0.6), hjust=0, vjust=1, size=title.size,
+                          label.padding=ggplot2::unit(title.size / 4, "pt"), label.size = NA)
+    )
 
   if (!is.null(adjust.func)) {
     plot.list <- lapply(plot.list, adjust.func)
@@ -90,6 +95,7 @@ plotPagodas <- function(pagoda.samples, groups=NULL, colors=NULL, gene=NULL, emb
 ##' @param size point size
 ##' @param title plot title
 ##' @param plot.theme theme for the plot
+##' @param palette function, which accepts number of colors and return list of colors (i.e. see colorRampPalette)
 ##' @param font.size font size for cluster labels. It can either be single number for constant font size or pair (min, max) for font size depending on cluster size
 ##' @param show.ticks show ticks and tick labels
 ##' @param legend.position vector with (x, y) positions of the legend
@@ -101,7 +107,7 @@ plotPagodas <- function(pagoda.samples, groups=NULL, colors=NULL, gene=NULL, emb
 ##' @return ggplot2 object
 ##' @export
 embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min.cluster.size=0, mark.groups=TRUE,
-                         show.legend=FALSE, alpha=0.4, size=0.8, title=NULL, plot.theme=NULL,
+                         show.legend=FALSE, alpha=0.4, size=0.8, title=NULL, plot.theme=NULL, palette=NULL,
                          font.size=c(3, 7), show.ticks=FALSE, show.labels=FALSE, legend.position=NULL, legend.title=NULL,
                          raster=FALSE, raster.width=NULL, raster.height=NULL, raster.dpi=300,
                          ...) {
@@ -120,27 +126,23 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
   }
 
   if (!is.null(groups)) {
-    plot.df <- plot.df %>% dplyr::mutate(Cluster=groups[CellName])
+    plot.df <- plot.df %>% dplyr::mutate(Group=groups[CellName])
 
-    plot.df$Cluster <- as.character(plot.df$Cluster)
+    plot.df$Group <- as.character(plot.df$Group)
 
-    big.clusts <- (plot.df %>% dplyr::group_by(Cluster) %>% dplyr::summarise(Size=n()) %>%
-                     dplyr::filter(Size >= min.cluster.size))$Cluster %>% as.vector()
+    big.clusts <- (plot.df %>% dplyr::group_by(Group) %>% dplyr::summarise(Size=n()) %>%
+                     dplyr::filter(Size >= min.cluster.size))$Group %>% as.vector()
 
-    plot.df$Cluster[!(plot.df$Cluster %in% big.clusts)] <- NA
-    na.plot.df <- plot.df %>% dplyr::filter(is.na(Cluster))
-    plot.df <- plot.df %>% dplyr::filter(!is.na(Cluster))
+    plot.df$Group[!(plot.df$Group %in% big.clusts)] <- NA
+    na.plot.df <- plot.df %>% dplyr::filter(is.na(Group))
+    plot.df <- plot.df %>% dplyr::filter(!is.na(Group))
 
     gg <- ggplot2::ggplot(plot.df, ggplot2::aes(x=x, y=y)) +
-      geom_point_w(ggplot2::aes(col=Cluster), alpha=alpha, size=size) +
+      geom_point_w(ggplot2::aes(col=Group), alpha=alpha, size=size) +
       labels
 
-    if (plot.na) {
-      gg <- gg + geom_point_w(data=na.plot.df, alpha=alpha, size=size, color='black', shape=4)
-    }
-
     if (mark.groups) {
-      labels.data <- plot.df %>% dplyr::group_by(Cluster) %>%
+      labels.data <- plot.df %>% dplyr::group_by(Group) %>%
         dplyr::summarise(x=mean(x, tirm=0.4), y=mean(y, trim=0.4), Size=n())
 
       if (length(font.size) == 1) {
@@ -148,7 +150,7 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
       }
 
       gg <- gg + ggrepel::geom_label_repel(
-        data=labels.data, ggplot2::aes(label=Cluster, size=Size), color='black',
+        data=labels.data, ggplot2::aes(label=Group, size=Size), color='black',
         fill=ggplot2::alpha('white', 0.7), label.size = NA,
         label.padding=ggplot2::unit(1, "pt"), seed=42, ...) +
         ggplot2::scale_size_continuous(range=font.size, trans='identity', guide='none')
@@ -158,8 +160,12 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
       gg <- gg + ggplot2::guides(color=ggplot2::guide_legend(title=legend.title))
     }
 
+    gg <- gg + ggplot2::scale_color_discrete(palette=if(is.null(palette)) rainbow else palette)
   } else if (!is.null(colors)) {
     plot.df <- plot.df %>% dplyr::mutate(Color=colors[CellName])
+    na.plot.df <- plot.df %>% dplyr::filter(is.na(Color))
+    plot.df <- plot.df %>% dplyr::filter(!is.na(Color))
+
     gg <- ggplot2::ggplot(plot.df, ggplot2::aes(x=x, y=y)) +
       geom_point_w(ggplot2::aes(col=Color), alpha=alpha, size=size) +
       labels
@@ -168,10 +174,19 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
       gg <- gg + ggplot2::guides(color=ggplot2::guide_colorbar(title=legend.title))
     }
 
+    if (!is.null(palette)) {
+      gg <- gg + ggplot2::scale_colour_gradientn(colors=palette(100))
+    } else {
+      gg <- gg + ggplot2::scale_color_gradient(low="#d8d0d0", high="#ff0000")
+    }
   } else {
     gg <- ggplot2::ggplot(plot.df, ggplot2::aes(x=x, y=y)) +
       geom_point_w(alpha=alpha, size=size) +
       labels
+  }
+
+  if (plot.na && exists("na.plot.df")) {
+    gg <- gg + geom_point_w(data=na.plot.df, alpha=alpha, size=size, color='black', shape=4)
   }
 
   ## Styling
