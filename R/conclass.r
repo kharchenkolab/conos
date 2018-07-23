@@ -350,7 +350,7 @@ Conos <- setRefClass(
         }
       }
 
-      return(embedingPlot(t(con$embedding), groups=groups, colors=colors, ...))
+      return(embeddingPlot(t(con$embedding), groups=groups, colors=colors, ...))
     }
   )
 

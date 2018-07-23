@@ -106,7 +106,7 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
                          raster=FALSE, raster.width=NULL, raster.height=NULL, raster.dpi=300,
                          ...) {
   labels <- ggplot2::labs(x='Component 1', y='Component 2')
-  plot.df <- tibble::as_tibble(embedding, rownames="CellName")
+  plot.df <- tibble::rownames_to_column(as.data.frame(embedding), "CellName")
   colnames(plot.df)[2:3] <- c("x", "y")
 
   if (raster && requireNamespace("ggrastr", quietly = TRUE)) {
