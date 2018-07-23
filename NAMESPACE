@@ -2,11 +2,12 @@
 
 export(Conos)
 export(conosCluster)
-export(conosPlot)
+export(embedingPlot)
 export(quickCPCA)
 exportClasses(Conos)
 import(Matrix)
 import(igraph)
 import(methods)
+importFrom(dplyr,"%>%")
 importFrom(parallel,mclapply)
 useDynLib(conos)
