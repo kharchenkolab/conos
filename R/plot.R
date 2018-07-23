@@ -127,6 +127,7 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
   }
 
   if (!is.null(groups)) {
+    groups <- as.factor(groups)
     plot.df <- plot.df %>% dplyr::mutate(Group=groups[CellName])
 
     plot.df$Group <- as.character(plot.df$Group)
@@ -157,11 +158,16 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
         ggplot2::scale_size_continuous(range=font.size, trans='identity', guide='none')
     }
 
-    if (!is.null(legend.title)) {
-      gg <- gg + ggplot2::guides(color=ggplot2::guide_legend(title=legend.title))
+    if (is.null(legend.title)) {
+      legend.title <- "Group"
+      # gg <- gg + ggplot2::guides(color=ggplot2::guide_legend(title=))
     }
 
-    gg <- gg + ggplot2::scale_color_discrete(palette=if(is.null(palette)) rainbow else palette)
+    if(is.null(palette)) {
+      palette <- rainbow
+    }
+
+    gg <- gg + ggplot2::scale_color_manual(name=legend.title, values=palette(length(levels(groups))), labels=levels(groups))
   } else if (!is.null(colors)) {
     plot.df <- plot.df %>% dplyr::mutate(Color=colors[CellName])
     na.plot.df <- plot.df %>% dplyr::filter(is.na(Color))
