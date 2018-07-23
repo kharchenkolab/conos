@@ -85,7 +85,7 @@ cpcaFast <- function(covl,ncells,ncomp=10,maxit=1000,tol=1e-6,use.irlba=TRUE,ver
   if(use.irlba) {
     # irlba initialization
     p <- nrow(covl[[1]]);
-    S <- matrix(0, nrow = p, ncol = p)  
+    S <- matrix(0, nrow = p, ncol = p)
     for(i in 1:length(covl)) {
       S <- S + (ncells[i] / sum(ncells)) * covl[[i]]
     }
@@ -105,14 +105,14 @@ cpcaFast <- function(covl,ncells,ncomp=10,maxit=1000,tol=1e-6,use.irlba=TRUE,ver
 #' @param n.odgenes number of overdispersed genes to take from each dataset
 #' @param var.scale whether to scale variance (default=TRUE)
 #' @param verbose whether to be verbose
-#' @param cgsf an optional set of common genes to align on 
+#' @param cgsf an optional set of common genes to align on
 #' @param neighborhood.average use neighborhood average values
-#' @param n.cores number of cores to use 
+#' @param n.cores number of cores to use
 quickCPCA <- function(r.n,k=30,ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=TRUE,cgsf=NULL,neighborhood.average=FALSE,n.cores=30) {
   #require(parallel)
   #require(cpca)
   #require(Matrix)
-  
+
   # select a common set of genes
   if(is.null(cgsf)) {
     if(is.null(n.odgenes)) {
@@ -125,7 +125,7 @@ quickCPCA <- function(r.n,k=30,ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=
   } else {
     odgenes <- names(cgsf)
   }
-  if(verbose) cat("using",length(odgenes),"odgenes\n") 
+  if(verbose) cat("using",length(odgenes),"odgenes\n")
   # common variance scaling
   if (var.scale) {
     if(is.null(cgsf)) {
@@ -134,7 +134,7 @@ quickCPCA <- function(r.n,k=30,ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=
     }
   }
 
-  
+
   if(verbose) cat('calculating covariances for',length(r.n),' datasets ...')
 
   # use internal C++ implementation
@@ -143,7 +143,7 @@ quickCPCA <- function(r.n,k=30,ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=
     covmat <- spcov(x,cMeans);
   }
 
-  
+
   covl <- lapply(r.n,function(r) {
     x <- r$counts[,odgenes];
     if(var.scale) {
@@ -155,7 +155,7 @@ quickCPCA <- function(r.n,k=30,ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=
     }
     sparse.cov(x)
   })
-  
+
   ## # centering
   ## if(common.centering) {
   ##   ncells <- unlist(lapply(covl,nrow));
@@ -163,9 +163,9 @@ quickCPCA <- function(r.n,k=30,ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=
   ## } else {
   ##   centering <- NULL;
   ## }
-  
+
   ## covl <- lapply(covl,sparse.cov,cMeans=centering)
-  
+
   if(verbose) cat(' done\n')
 
   #W: get counts
@@ -180,62 +180,6 @@ quickCPCA <- function(r.n,k=30,ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=
   if(verbose) cat(' done\n')
   return(xcp);
 }
-
-
-
-# quick helper function to plot the results of a panel clustering
-##' A function for quickly plotting collections and joint clustering
-##'
-##' @param r.n list of pagoda2 apps
-##' @param res results of the conosCluster
-##' @param filename optional name of a PNG file where to save the plot
-##' @param panel.size width/height of an individual sample panel
-##' @param shuffle.colors whether cluster colors should be randomly shuffled
-##' @param embeddingType name of the embedding to use for each datasets (default='tSNE')
-##' @param groups optional groups (factor) to show with colors (instead of res$groups)
-##' @param gene name of the gene to show with colors
-##' @param group.level.colors explicitly specify colors for group factor levels
-##' @param n number of columns to arrange the samples in
-##' @param mark.cluster.cex cex parameter for cluster labels
-##' @param colors per-cell colors to show 
-##' @return nothing
-##' @export
-conosPlot <- function(r.n,res,filename=NULL,panel.size=250,shuffle.colors=F,embeddingType='tSNE',groups=NULL,gene=NULL,group.level.colors=NULL,n=NULL,mark.cluster.cex=0.8,colors=NULL) {
-  require(Cairo)
-  if(is.null(n)) {
-    n <- ceiling(sqrt(length(r.n)))
-  }
-  n2 <- ceiling(length(r.n)/n)
-  if(!is.null(filename)) {
-    CairoPNG(file=filename,height=n2*panel.size,width=n*panel.size)
-  }
-  gc <- pagoda2:::fac2col(as.factor(res$groups),return.details=T,shuffle=shuffle.colors);
-  if(!is.null(group.level.colors)) { gc$palette <- group.level.colors }
-  if(!is.null(groups)) { res$groups[!res$groups %in% groups] <- NA }
-  par(mfrow=c(n2,n), mar = c(0.5,0.5,0.5,0.5), mgp = c(2,0.65,0), cex = 0.85);
-  invisible(lapply(names(r.n),function(dn) {
-    d <- r.n[[dn]];
-    if(length(intersect(names(na.omit(res$groups)),rownames(d$counts)))<2) { res$groups <- rep(NA,nrow(d$counts)); names(res$groups) <- rownames(d$counts); res$groups[1] <- 1; }
-    if(!is.null(gene)) {
-      if(gene %in% colnames(d$counts)) {
-        d$plotEmbedding(type='PCA',embeddingType=embeddingType,colors=d$counts[,gene],group.level.colors=gc$palette,alpha=0.2,min.group.size=0,mark.clusters = TRUE, mark.cluster.cex=mark.cluster.cex,do.par=F);
-      } else {
-        res$groups <- rep(NA,nrow(d$counts)); names(res$groups) <- rownames(d$counts); res$groups[1] <- 1;
-        d$plotEmbedding(type='PCA',embeddingType='tSNE',groups=as.factor(res$groups),group.level.colors=gc$palette,alpha=0.2,min.group.size=0,mark.clusters = TRUE, mark.cluster.cex=mark.cluster.cex,do.par=F);
-      }
-    } else if(!is.null(colors)) {
-      d$plotEmbedding(type='PCA',embeddingType=embeddingType,colors=colors,alpha=0.2,min.group.size=0,do.par=F);
-    } else  {
-      d$plotEmbedding(type='PCA',embeddingType=embeddingType,groups=as.factor(res$groups),group.level.colors=gc$palette,alpha=0.2,min.group.size=0,mark.clusters = TRUE, mark.cluster.cex=mark.cluster.cex,do.par=F);
-    } 
-    legend(x='topleft',bty='n',legend=dn)
-  }))
-  if(!is.null(filename)) {
-    dev.off();
-  }
-}
-
-
 
 
 # other functions

@@ -7,18 +7,24 @@ Depends: R (>= 3.2.1), Matrix
 License: GPL3
 Encoding: UTF-8
 LazyData: true
-Imports: utils,
-    Rcpp,
-    igraph,
-    Rcpp,
-    parallel,
-    irlba,
-    RcppArmadillo,
-    RcppProgress,
-    Rtsne,
-    stats,
-    RMTstat
-Suggests: knitr, rmarkdown
+Imports: 
+  cowplot,
+  dplyr,
+  ggplot2,
+  igraph,
+  irlba,
+  Rcpp,
+  RcppArmadillo,
+  RcppProgress,
+  RMTstat,
+  Rtsne,
+  parallel,
+  stats,
+  utils
+Suggests: 
+  ggrastr,
+  knitr,
+  rmarkdown
 VignetteBuilder: knitr
 RoxygenNote: 6.0.1
 LinkingTo: Rcpp, RcppArmadillo, RcppEigen

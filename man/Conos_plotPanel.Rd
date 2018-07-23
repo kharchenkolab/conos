@@ -3,31 +3,8 @@
 \name{Conos_plotPanel}
 \alias{Conos_plotPanel}
 \title{A function for quickly plotting collections and joint clustering}
-\arguments{
-\item{filename}{optional name of a PNG file where to save the plot}
-
-\item{panel.size}{width/height of an individual sample panel}
-
-\item{shuffle.colors}{whether cluster colors should be randomly shuffled}
-
-\item{embeddingType}{name of the embedding to use for each datasets (default='tSNE')}
-
-\item{groups}{optional groups (factor) to show with colors (instead of res$groups)}
-
-\item{gene}{name of the gene to show with colors}
-
-\item{group.level.colors}{explicitly specify colors for group factor levels}
-
-\item{n}{number of columns to arrange the samples in}
-
-\item{mark.cluster.cex}{cex parameter for cluster labels}
-
-\item{colors}{per-cell colors to show}
-
-\item{res}{results of the conosCluster}
-}
 \value{
-nothing
+ggplot2 object with the panel of plots
 }
 \description{
 A function for quickly plotting collections and joint clustering
