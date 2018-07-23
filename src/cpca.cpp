@@ -79,7 +79,7 @@ Rcpp::List cpcaF(const arma::cube& cov,const arma::vec& ng,int ncomp=10,int maxi
     //cout<<"q*t(q)="<<v<<endl;
     Qw-=q * q.t();
   }
-  cout<<"]"<<endl;
+  if(verbose) cout<<"]"<<endl;
   
   // return
   List ret;
