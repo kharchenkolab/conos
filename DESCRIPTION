@@ -20,7 +20,8 @@ Imports:
   Rtsne,
   parallel,
   stats,
-  utils
+  utils,
+  abind
 Suggests: 
   ggrastr,
   knitr,
