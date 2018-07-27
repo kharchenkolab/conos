@@ -1,7 +1,7 @@
 # conos
 ## Clustering on Network of Samples
 * What is Conos? 
-It's a package to write together large collections of single-cell RNA-seq datasets. It focuses on uniform mapping of homologous cell types across heterogeneous sample collections. For instance, a collection of dozens of peripheral blood samples from cancer patients, combined with dozens of controls. And perhaps also including samples of a related tissue, such as lymph nodes.
+It's a package to wire together large collections of single-cell RNA-seq datasets. It focuses on uniform mapping of homologous cell types across heterogeneous sample collections. For instance, a collection of dozens of peripheral blood samples from cancer patients, combined with dozens of controls. And perhaps also including samples of a related tissue, such as lymph nodes.
 
 * How does it work? 
 ![overview](http://pklab.med.harvard.edu/peterk/conos/Figure1_take3.pk.png)
