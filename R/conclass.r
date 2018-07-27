@@ -181,6 +181,13 @@ Conos <- setRefClass(
         stop(paste0("only the following spaces are currently supported: [",paste(supported.spaces),"]"))
       }
 
+      supported.matching.methods <- c("mNN","NN");
+      if(!matching.method %in% supported.matching.methods) {
+        stop(paste0("only the following matching methods are currently supported: [",paste(supported.matching.methods),"]"))
+      }
+      
+
+      # calculate or update pairwise alignments
       cis <- updatePairs(space=space,ncomps=ncomps,n.odgenes=n.odgenes,verbose=verbose,var.scale=var.scale,neighborhood.average=neighborhood.average,neighborhood.average.k=10)
 
 
@@ -245,30 +252,13 @@ Conos <- setRefClass(
           n1 <- cis[1,i]; n2 <- cis[2,i]
           if(verbose) cat(".")
 
-          n12 <- n2CrossKnn(cpproj[[n1]],cpproj[[n2]],k,1,FALSE)
-          n21 <- n2CrossKnn(cpproj[[n2]],cpproj[[n1]],k,1,FALSE)
-          #colnames(n12) <- rownames(n21) <- rownames(cpproj[[n1]])
-          #colnames(n21) <- rownames(n12) <- rownames(cpproj[[n2]])
-          mnn <- drop0(n21*t(n12))
-          mnn <- as(n21*t(n12),'dgTMatrix')
-          return(data.frame('mA.lab'=rownames(cpproj[[n1]])[mnn@i+1],'mB.lab'=rownames(cpproj[[n2]])[mnn@j+1],'w'=pmax(1-mnn@x,0),stringsAsFactors=F))
-
-
+          mnn <- get.neighbor.matrix(cpproj[[n1]],cpproj[[n2]],k,matching=matching.method)
+          return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=pmax(1-mnn@x,0),stringsAsFactors=F))
+          
         } else if (space=='genes') {
           ## Overdispersed Gene space
-          n12 <- n2CrossKnn(as.matrix(xl[[i]]$genespace1), as.matrix(xl[[i]]$genespace2),k,1,FALSE)
-          n21 <- n2CrossKnn(as.matrix(xl[[i]]$genespace2), as.matrix(xl[[i]]$genespace1),k,1,FALSE)
-
-          ##
-          mnn <- drop0(n21*t(n12))
-          mnn <- as(n21*t(n12),'dgTMatrix')
-
-          ## return
-          ret.df <- data.frame(
-            'mA.lab'=rownames(xl[[i]]$genespace1)[mnn@i+1],
-            'mB.lab'=rownames(xl[[i]]$genespace2)[mnn@j+1],
-            'w'=pmax(1-mnn@x,0),stringsAsFactors=F
-          )
+          mnn <- get.neighbor.matrix(as.matrix(xl[[i]]$genespace1), as.matrix(xl[[i]]$genespace2),k,matching=matching.method)
+          return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=pmax(1-mnn@x,0),stringsAsFactors=F))
         }
         mnnres
       },n.cores=n.cores)
@@ -293,8 +283,7 @@ Conos <- setRefClass(
         cat(' done\n')
         el <- rbind(el,x)
       }
-      misc$el <<- el; # cache edge list, though we coudl get it back from the igraph object as well
-
+      # TODO: add edge labels to distinguish inter and intra-sample edges
       g  <- graph_from_edgelist(as.matrix(el[,c(1,2)]), directed =FALSE)
       E(g)$weight <- el[,3]
 
@@ -382,3 +371,177 @@ Conos <- setRefClass(
   )
 
 );
+
+
+## helper functions
+##' Establish rough neighbor matching between samples given their projections in a common space
+##'
+##' @param p1 projection of sample 1
+##' @param p2 projection of sample 2
+##' @param k neighborhood radius
+##' @param matching mNN (default) or NN
+##' @param indexType distance type (default: "angular")
+##' @return matrix 
+get.neighbor.matrix <- function(p1,p2,k,matching='mNN',indexType='angular') {
+  n12 <- n2CrossKnn(p1,p2,k,1,FALSE)
+  n21 <- n2CrossKnn(p2,p1,k,1,FALSE)
+  # Viktor's solution
+  n12@x[n12@x<0] <- 0
+  n21@x[n21@x<0] <- 0
+  
+  if(matching=='NN') {
+    mnn <- n21+t(n12);
+    mnn@x <- mnn@x/2;
+  } else { # mNN
+    mnn <- drop0(n21*t(n12))
+    mnn@x <- sqrt(mnn@x)
+  }
+  mnn <- as(mnn,'dgTMatrix')
+  rownames(mnn) <- rownames(p1); colnames(mnn) <- rownames(p2);
+  mnn
+}
+
+
+# TODO: multitrap method
+##' mutlilevel+walktrap communities
+##'
+##' Constructrs a two-step clustering, first running multilevel.communities, and then walktrap.communities within each
+##' These are combined into an overall hierarchy
+##' @param graph graph
+##' @param n.cores number of cores to use
+##' @param hclust.link link function to use when clustering multilevel communities (based on collapsed graph connectivity)
+##' @param min.community.size minimal community size parameter for the walktrap communities .. communities smaller than that will be merged
+##' @param verbose whether to output progress messages
+##' @param ... passed to walktrap
+##' @return a fakeCommunities object that has methods membership() and as.dendrogram() to mimic regular igraph returns
+##' @export
+multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=F), hclust.link='single', min.community.size=10, verbose=FALSE, ...) {
+  graph <- con$graph
+  if(verbose) cat("running multilevel ... ");
+  mt <- multilevel.community(graph);
+  mem <- membership(mt);
+
+  if(verbose) cat("found",length(unique(mem)),"communities\nrunning walktraps ... ")
+  
+  wtl <- conos:::papply(sn(unique(mem)), function(cluster) {
+    cn <- names(mem)[which(mem==cluster)]
+    sg <- induced.subgraph(graph,cn)
+    walktrap.community(induced.subgraph(graph,cn))
+  },n.cores=n.cores)
+
+  mbl <- lapply(wtl,membership);
+  # correct small communities
+  mbl <- lapply(mbl,function(x) {
+    tx <- table(x)
+    ivn <- names(tx)[tx<min.community.size]
+    if(length(ivn)>1) {
+      x[x %in% ivn] <- as.integer(ivn[1]); # collapse into one group
+    }
+    x
+  })
+
+  if(verbose) cat("found",sum(unlist(lapply(wtl,function(x) length(unique(x))))),"communities\nmerging dendrograms ... ")
+  
+  # calculate hierarchy on the multilevel clusters
+  # collapse connectivity matrix between clusters
+
+  gcon <- get.cluster.graph(graph,mem,plot=FALSE)
+  cm <- -log(as.matrix(as_adj(gcon,attr='weight')))
+  cm[!is.finite(cm)] <- 0;
+  mthc <- hclust(as.dist(cm),method=hclust.link)
+  d <- as.dendrogram(mthc);
+
+  wtld <- lapply(wtl,as.dendrogram)
+  max.height <- max(unlist(lapply(wtld,attr,'height')))
+
+  # shift leaf ids to fill in 1..N range
+  mn <- unlist(lapply(wtld,attr,'members'))
+  shift.leaf.ids <- function(l,v) { if(is.leaf(l)) { la <- attributes(l); l <- as.integer(l)+v; attributes(l) <- la; }; l  }
+  nshift <- cumsum(c(0,mn))[-(length(mn)+1)]; names(nshift) <- names(mn); # how much to shift ids in each tree
+
+  get.heights <- function(l) {
+    if(is.leaf(l)) {
+      return(attr(l,'height'))
+    } else {
+      return(c(attr(l,'height'),unlist(lapply(l,get.heights))))
+    }
+  }
+  min.d.height <- min(get.heights(d))
+  height.scale <- length(wtld)*2
+  height.shift <- 2
+
+  shift.heights <- function(l,s) { attr(l,'height') <- attr(l,'height')+s; l }
+
+  glue.dends <- function(l) {
+    if(is.leaf(l)) {
+      nam <- as.character(attr(l,'label'));
+      id <- dendrapply(wtld[[nam]], shift.leaf.ids, v=nshift[nam])
+      return(dendrapply(id,shift.heights,s=max.height-attr(id,'height')))
+      
+    } 
+    attr(l,'height') <- (attr(l,'height')-min.d.height)*height.scale + max.height + height.shift;
+    l[[1]] <- glue.dends(l[[1]]); l[[2]] <- glue.dends(l[[2]])
+    attr(l,'members') <- attr(l[[1]],'members') + attr(l[[2]],'members')
+    return(l)
+  }
+  combd <- glue.dends(d)
+  if(verbose) cat("done\n");
+
+  # combined clustering factor
+  fv <- unlist(lapply(sn(names(wtl)),function(cn) {
+    paste(cn,as.character(mbl[[cn]]),sep='-')
+  }))
+  names(fv) <- unlist(lapply(mbl,names))
+
+  # enclose in a masquerading class
+  res <- list(membership=fv,dendrogram=combd,algorithm='multitrap');
+  class(res) <- rev("fakeCommunities");
+  return(res);
+  
+}
+
+
+##' returns pre-calculated dendrogram
+##'
+##' @param obj fakeCommunities object
+##' @param ... dropped
+##' @return dendrogram
+##' @export
+as.dendrogram.fakeCommunities <- function(obj, ...) {
+  return(obj$dendrogram)
+}
+##' returns pre-calculated membership factor
+##'
+##' @param obj fakeCommunities object
+##' @return membership factor
+##' @export
+membership.fakeCommunities <- function(obj) {
+  return(obj$membership)
+}
+
+
+
+##' Collapse vertices belonging to each cluster in a graph
+##'
+##' @param graph graph to be collapsed
+##' @param groups factor on vertives describing cluster assignment (can specify integer vertex ids, or character vertex names which will be matched)
+##' @param plot whether to show collapsed graph plot
+##' @return collapsed graph
+##' @export
+get.cluster.graph <- function(graph,groups,plot=FALSE,node.scale=50,edge.scale=50,edge.alpha=0.3) {
+  if(plot) V(graph)$num <- 1;
+  gcon <- contract.vertices(graph,groups,vertex.attr.comb=list('num'='sum',"ignore"))
+  gcon <- simplify(gcon, edge.attr.comb=list(weight="sum","ignore"))
+  gcon <- induced.subgraph(gcon, unique(groups))
+  
+  if(plot) {
+    set.seed(1)
+    par(mar = rep(0.1, 4)) 
+    plot.igraph(gcon, layout=layout_with_fr(gcon), vertex.size=V(gcon)$num/(sum(V(gcon)$num)/node.scale), edge.width=E(gcon)$weight/sum(E(gcon)$weight/edge.scale), edge.color=adjustcolor('black',alpha=edge.alpha))
+  }
+  return(invisible(gcon))
+}
+
+
+# TODO: p2 abstraction
+
