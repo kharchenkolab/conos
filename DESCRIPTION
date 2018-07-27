@@ -21,7 +21,8 @@ Imports:
   parallel,
   stats,
   utils,
-  abind
+  abind,
+  ggrepel
 Suggests: 
   ggrastr,
   knitr,
