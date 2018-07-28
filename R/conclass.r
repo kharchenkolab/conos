@@ -419,9 +419,17 @@ multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=F),
   graph <- con$graph
   if(verbose) cat("running multilevel ... ");
   mt <- multilevel.community(graph);
-  mem <- membership(mt);
 
+  # get the highest level
+  mem <- mt$memberships[1,]; names(mem) <- mt$names;
   if(verbose) cat("found",length(unique(mem)),"communities\nrunning walktraps ... ")
+  
+  # calculate hierarchy on the multilevel clusters
+  cgraph <- get.cluster.graph(graph,mem)
+  chwt <- walktrap.community(cgraph,steps=8)
+  d <- as.dendrogram(chwt);
+
+  
   
   wtl <- conos:::papply(sn(unique(mem)), function(cluster) {
     cn <- names(mem)[which(mem==cluster)]
@@ -442,15 +450,7 @@ multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=F),
 
   if(verbose) cat("found",sum(unlist(lapply(wtl,function(x) length(unique(x))))),"communities\nmerging dendrograms ... ")
   
-  # calculate hierarchy on the multilevel clusters
-  # collapse connectivity matrix between clusters
-
-  gcon <- get.cluster.graph(graph,mem,plot=FALSE)
-  cm <- -log(as.matrix(as_adj(gcon,attr='weight')))
-  cm[!is.finite(cm)] <- 0;
-  mthc <- hclust(as.dist(cm),method=hclust.link)
-  d <- as.dendrogram(mthc);
-
+  
   wtld <- lapply(wtl,as.dendrogram)
   max.height <- max(unlist(lapply(wtld,attr,'height')))
 
