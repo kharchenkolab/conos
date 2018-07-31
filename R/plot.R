@@ -175,7 +175,7 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
 
     gg <- ggplot2::ggplot(plot.df, ggplot2::aes(x=x, y=y))+labels;
     if(is.character(colors)) {
-      gg <- gg + geom_point_w(color=plot.df$Color, alpha=alpha, size=size) 
+      gg <- gg + geom_point_w(color=plot.df$Color, alpha=alpha, size=size)
     } else {
       gg <- gg + geom_point_w(ggplot2::aes(col=Color), alpha=alpha, size=size)
 
@@ -186,12 +186,11 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
           color.range <- NULL
         }
       }
-      
+
       if (!is.null(palette)) {
-        gg <- gg + ggplot2::scale_colour_gradientn(colors=palette(100))
         gg <- gg + ggplot2::scale_colour_gradientn(colors=palette(100), limits=color.range)
       } else {
-        if(prod(range(colors))<0) {
+        if (prod(range(colors, na.rm=T)) < 0) {
           gg <- gg + ggplot2::scale_color_gradient2(low="#0000ff",mid="#d8d0d0", high="#ff0000", limits=color.range)
         } else {
           gg <- gg + ggplot2::scale_color_gradient(low="#d8d0d0", high="#ff0000", limits=color.range)
