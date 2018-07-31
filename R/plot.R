@@ -114,7 +114,7 @@ plotPagodas <- function(pagoda.samples, groups=NULL, colors=NULL, gene=NULL, emb
 embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min.cluster.size=0, mark.groups=TRUE,
                           show.legend=FALSE, alpha=0.4, size=0.8, title=NULL, plot.theme=NULL, palette=NULL, color.range="all",
                           font.size=c(3, 7), show.ticks=FALSE, show.labels=FALSE, legend.position=NULL, legend.title=NULL,
-                          raster=FALSE, raster.width=NULL, raster.height=NULL, raster.dpi=300,
+                          raster=FALSE, raster.width=NULL, raster.height=NULL, raster.dpi=300, shuffle.colors=FALSE,
                          ...) {
   labels <- ggplot2::labs(x='Component 1', y='Component 2')
   plot.df <- tibble::rownames_to_column(as.data.frame(embedding), "CellName")
@@ -168,7 +168,12 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
       palette <- rainbow
     }
 
-    gg <- gg + ggplot2::scale_color_manual(name=legend.title, values=palette(length(levels(groups))), labels=levels(groups), drop=F)
+    color.vals <- palette(length(levels(groups)))
+    if (shuffle.colors) {
+      color.vals <- sample(color.vals)
+    }
+    gg <- gg + ggplot2::scale_color_manual(name=legend.title, values=color.vals, labels=levels(groups), drop=F) +
+      ggplot2::guides(color=ggplot2::guide_legend(override.aes=list(alpha=1.0)))
   } else if (!is.null(colors)) {
     plot.df <- plot.df %>% dplyr::mutate(Color=colors[CellName])
     na.plot.df <- plot.df %>% dplyr::filter(is.na(Color))
