@@ -173,27 +173,37 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
     na.plot.df <- plot.df %>% dplyr::filter(is.na(Color))
     plot.df <- plot.df %>% dplyr::filter(!is.na(Color))
 
-    gg <- ggplot2::ggplot(plot.df, ggplot2::aes(x=x, y=y)) +
-      geom_point_w(ggplot2::aes(col=Color), alpha=alpha, size=size) +
-      labels
+    gg <- ggplot2::ggplot(plot.df, ggplot2::aes(x=x, y=y))+labels;
+    if(is.character(colors)) {
+      gg <- gg + geom_point_w(color=plot.df$Color, alpha=alpha, size=size) 
+    } else {
+      gg <- gg + geom_point_w(ggplot2::aes(col=Color), alpha=alpha, size=size)
+
+      if (length(color.range) == 1) {
+        if (color.range == "all") {
+          color.range <- range(colors)
+        } else if (color.range == "data") {
+          color.range <- NULL
+        }
+      }
+      
+      if (!is.null(palette)) {
+        gg <- gg + ggplot2::scale_colour_gradientn(colors=palette(100))
+        gg <- gg + ggplot2::scale_colour_gradientn(colors=palette(100), limits=color.range)
+      } else {
+        if(prod(range(colors))<0) {
+          gg <- gg + ggplot2::scale_color_gradient2(low="#0000ff",mid="#d8d0d0", high="#ff0000", limits=color.range)
+        } else {
+          gg <- gg + ggplot2::scale_color_gradient(low="#d8d0d0", high="#ff0000", limits=color.range)
+        }
+      }
+    }
 
     if (!is.null(legend.title)) {
       gg <- gg + ggplot2::guides(color=ggplot2::guide_colorbar(title=legend.title))
     }
 
-    if (length(color.range) == 1) {
-      if (color.range == "all") {
-        color.range <- range(colors)
-      } else if (color.range == "data") {
-        color.range <- NULL
-      }
-    }
 
-    if (!is.null(palette)) {
-      gg <- gg + ggplot2::scale_colour_gradientn(colors=palette(100), limits=color.range)
-    } else {
-      gg <- gg + ggplot2::scale_color_gradient(low="#d8d0d0", high="#ff0000", limits=color.range)
-    }
   } else {
     gg <- ggplot2::ggplot(plot.df, ggplot2::aes(x=x, y=y)) +
       geom_point_w(alpha=alpha, size=size) +
