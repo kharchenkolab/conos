@@ -51,11 +51,13 @@ si_map_t parse_edges(const Rcpp::StringMatrix &edge_verts, const std::vector<dou
   return vertex_ids;
 }
 
-void smooth_count_matrix(const std::vector<Edge> &edges, Mat &count_matrix, int max_n_iters, double diffusion_fading, double diffusion_fading_const) {
+void smooth_count_matrix(const std::vector<Edge> &edges, Mat &count_matrix, int max_n_iters, double diffusion_fading, double diffusion_fading_const, double tol, bool verbose) {
   std::vector<double> sum_weights(count_matrix.rows(), 1);
-  Progress p(max_n_iters * edges.size(), true);
+  Progress p(max_n_iters * edges.size(), verbose);
   double min_weight = 1e10, max_weight = 0;
-  for (int iter = 0; iter < max_n_iters; ++iter) {
+  double inf_norm = 1e10;
+  int iter = 0;
+  for (iter = 0; iter < max_n_iters; ++iter) {
     Mat cm_new(count_matrix);
     for (auto const &e : edges) {
       if (Progress::check_abort())
@@ -79,18 +81,24 @@ void smooth_count_matrix(const std::vector<Edge> &edges, Mat &count_matrix, int 
       sum_weights.at(row_id) = 1;
     }
 
-    double diff = (cm_new - count_matrix).array().abs().matrix().lpNorm<Eigen::Infinity>();
-    std::cout << iter << ": " << diff << std::endl;
+    inf_norm = (cm_new - count_matrix).array().abs().matrix().lpNorm<Eigen::Infinity>();
+    if (inf_norm < tol)
+      break;
+
     count_matrix = cm_new;
   }
 
-  std::cout << "Min weight: " << min_weight << ", max weight: " << max_weight << ", fading: ("
+  if (!verbose)
+    return;
+
+  std::cout << "Stop after " << iter << " iterations. Norm: " << inf_norm << std::endl
+            << "Min weight: " << min_weight << ", max weight: " << max_weight << ", fading: ("
             << diffusion_fading << ", " << diffusion_fading_const << ")" << std::endl;
 }
 
 // [[Rcpp::export]]
 SEXP smooth_count_matrix(const Rcpp::StringMatrix &edge_verts, const std::vector<double> &edge_weights, const Rcpp::NumericMatrix &count_matrix,
-                         int max_n_iters=10, double diffusion_fading=1.0, double diffusion_fading_const=0.1) {
+                         int max_n_iters=10, double diffusion_fading=1.0, double diffusion_fading_const=0.1, double tol=1e-3, bool verbose=true) {
   // Parse data
   Mat cm_eigen(Rcpp::as<Mat>(count_matrix));
 
@@ -101,7 +109,7 @@ SEXP smooth_count_matrix(const Rcpp::StringMatrix &edge_verts, const std::vector
   auto vertex_ids = parse_edges(edge_verts, edge_weights, edges, cell_names);
 
   // Process data
-  smooth_count_matrix(edges, cm_eigen, max_n_iters, diffusion_fading, diffusion_fading_const);
+  smooth_count_matrix(edges, cm_eigen, max_n_iters, diffusion_fading, diffusion_fading_const, tol, verbose);
 
   // Convert result back to R
   Rcpp::NumericMatrix cm_res = Rcpp::wrap(cm_eigen);

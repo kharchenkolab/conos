@@ -59,6 +59,47 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// smooth_count_matrix
+SEXP smooth_count_matrix(const Rcpp::StringMatrix& edge_verts, const std::vector<double>& edge_weights, const Rcpp::NumericMatrix& count_matrix, int max_n_iters, double diffusion_fading, double diffusion_fading_const, double tol, bool verbose);
+RcppExport SEXP _conos_smooth_count_matrix(SEXP edge_vertsSEXP, SEXP edge_weightsSEXP, SEXP count_matrixSEXP, SEXP max_n_itersSEXP, SEXP diffusion_fadingSEXP, SEXP diffusion_fading_constSEXP, SEXP tolSEXP, SEXP verboseSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::StringMatrix& >::type edge_verts(edge_vertsSEXP);
+    Rcpp::traits::input_parameter< const std::vector<double>& >::type edge_weights(edge_weightsSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericMatrix& >::type count_matrix(count_matrixSEXP);
+    Rcpp::traits::input_parameter< int >::type max_n_iters(max_n_itersSEXP);
+    Rcpp::traits::input_parameter< double >::type diffusion_fading(diffusion_fadingSEXP);
+    Rcpp::traits::input_parameter< double >::type diffusion_fading_const(diffusion_fading_constSEXP);
+    Rcpp::traits::input_parameter< double >::type tol(tolSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    rcpp_result_gen = Rcpp::wrap(smooth_count_matrix(edge_verts, edge_weights, count_matrix, max_n_iters, diffusion_fading, diffusion_fading_const, tol, verbose));
+    return rcpp_result_gen;
+END_RCPP
+}
+// adjacent_vertices
+Rcpp::List adjacent_vertices(const Rcpp::StringMatrix& edge_verts);
+RcppExport SEXP _conos_adjacent_vertices(SEXP edge_vertsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::StringMatrix& >::type edge_verts(edge_vertsSEXP);
+    rcpp_result_gen = Rcpp::wrap(adjacent_vertices(edge_verts));
+    return rcpp_result_gen;
+END_RCPP
+}
+// adjacent_vertex_weights
+Rcpp::List adjacent_vertex_weights(const Rcpp::StringMatrix& edge_verts, const std::vector<double>& edge_weights);
+RcppExport SEXP _conos_adjacent_vertex_weights(SEXP edge_vertsSEXP, SEXP edge_weightsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::StringMatrix& >::type edge_verts(edge_vertsSEXP);
+    Rcpp::traits::input_parameter< const std::vector<double>& >::type edge_weights(edge_weightsSEXP);
+    rcpp_result_gen = Rcpp::wrap(adjacent_vertex_weights(edge_verts, edge_weights));
+    return rcpp_result_gen;
+END_RCPP
+}
 // spcov
 Eigen::MatrixXd spcov(const Eigen::SparseMatrix<double>& m, Eigen::VectorXd cm);
 RcppExport SEXP _conos_spcov(SEXP mSEXP, SEXP cmSEXP) {
@@ -76,6 +117,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_conos_cpcaF", (DL_FUNC) &_conos_cpcaF, 7},
     {"_conos_n2Knn", (DL_FUNC) &_conos_n2Knn, 7},
     {"_conos_n2CrossKnn", (DL_FUNC) &_conos_n2CrossKnn, 8},
+    {"_conos_smooth_count_matrix", (DL_FUNC) &_conos_smooth_count_matrix, 8},
+    {"_conos_adjacent_vertices", (DL_FUNC) &_conos_adjacent_vertices, 1},
+    {"_conos_adjacent_vertex_weights", (DL_FUNC) &_conos_adjacent_vertex_weights, 2},
     {"_conos_spcov", (DL_FUNC) &_conos_spcov, 2},
     {NULL, NULL, 0}
 };
