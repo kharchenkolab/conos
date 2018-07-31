@@ -45,7 +45,7 @@ Conos <- setRefClass(
   #   - clusters will contain potentially multiple clustering results/data
   #   - embedding contains embedding of the joint graph
 
-  fields=c('samples','pairs','graph','clusters','embedding','n.cores','misc', 'override.conos.plot.theme'),
+  fields=c('samples','pairs','graph','clusters', 'counts','embedding','n.cores','misc', 'override.conos.plot.theme'),
 
   methods = list(
     initialize=function(x, ..., n.cores=parallel::detectCores(logical=F), verbose=TRUE, override.conos.plot.theme=FALSE) {
@@ -185,7 +185,7 @@ Conos <- setRefClass(
       if(!matching.method %in% supported.matching.methods) {
         stop(paste0("only the following matching methods are currently supported: [",paste(supported.matching.methods),"]"))
       }
-      
+
 
       # calculate or update pairwise alignments
       cis <- updatePairs(space=space,ncomps=ncomps,n.odgenes=n.odgenes,verbose=verbose,var.scale=var.scale,neighborhood.average=neighborhood.average,neighborhood.average.k=10)
@@ -254,7 +254,7 @@ Conos <- setRefClass(
 
           mnn <- get.neighbor.matrix(cpproj[[n1]],cpproj[[n2]],k,matching=matching.method)
           return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=pmax(1-mnn@x,0),stringsAsFactors=F))
-          
+
         } else if (space=='genes') {
           ## Overdispersed Gene space
           mnn <- get.neighbor.matrix(as.matrix(xl[[i]]$genespace1), as.matrix(xl[[i]]$genespace2),k,matching=matching.method)
@@ -381,14 +381,14 @@ Conos <- setRefClass(
 ##' @param k neighborhood radius
 ##' @param matching mNN (default) or NN
 ##' @param indexType distance type (default: "angular")
-##' @return matrix 
+##' @return matrix
 get.neighbor.matrix <- function(p1,p2,k,matching='mNN',indexType='angular') {
   n12 <- n2CrossKnn(p1,p2,k,1,FALSE)
   n21 <- n2CrossKnn(p2,p1,k,1,FALSE)
   # Viktor's solution
   n12@x[n12@x<0] <- 0
   n21@x[n21@x<0] <- 0
-  
+
   if(matching=='NN') {
     mnn <- n21+t(n12);
     mnn@x <- mnn@x/2;
@@ -423,14 +423,14 @@ multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=F),
   # get the highest level
   mem <- mt$memberships[1,]; names(mem) <- mt$names;
   if(verbose) cat("found",length(unique(mem)),"communities\nrunning walktraps ... ")
-  
+
   # calculate hierarchy on the multilevel clusters
   cgraph <- get.cluster.graph(graph,mem)
   chwt <- walktrap.community(cgraph,steps=8)
   d <- as.dendrogram(chwt);
 
-  
-  
+
+
   wtl <- conos:::papply(sn(unique(mem)), function(cluster) {
     cn <- names(mem)[which(mem==cluster)]
     sg <- induced.subgraph(graph,cn)
@@ -449,8 +449,8 @@ multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=F),
   })
 
   if(verbose) cat("found",sum(unlist(lapply(wtl,function(x) length(unique(x))))),"communities\nmerging dendrograms ... ")
-  
-  
+
+
   wtld <- lapply(wtl,as.dendrogram)
   max.height <- max(unlist(lapply(wtld,attr,'height')))
 
@@ -477,8 +477,8 @@ multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=F),
       nam <- as.character(attr(l,'label'));
       id <- dendrapply(wtld[[nam]], shift.leaf.ids, v=nshift[nam])
       return(dendrapply(id,shift.heights,s=max.height-attr(id,'height')))
-      
-    } 
+
+    }
     attr(l,'height') <- (attr(l,'height')-min.d.height)*height.scale + max.height + height.shift;
     l[[1]] <- glue.dends(l[[1]]); l[[2]] <- glue.dends(l[[2]])
     attr(l,'members') <- attr(l[[1]],'members') + attr(l[[2]],'members')
@@ -497,7 +497,7 @@ multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=F),
   res <- list(membership=fv,dendrogram=combd,algorithm='multitrap');
   class(res) <- rev("fakeCommunities");
   return(res);
-  
+
 }
 
 
@@ -533,10 +533,10 @@ get.cluster.graph <- function(graph,groups,plot=FALSE,node.scale=50,edge.scale=5
   gcon <- contract.vertices(graph,groups,vertex.attr.comb=list('num'='sum',"ignore"))
   gcon <- simplify(gcon, edge.attr.comb=list(weight="sum","ignore"))
   gcon <- induced.subgraph(gcon, unique(groups))
-  
+
   if(plot) {
     set.seed(1)
-    par(mar = rep(0.1, 4)) 
+    par(mar = rep(0.1, 4))
     plot.igraph(gcon, layout=layout_with_fr(gcon), vertex.size=V(gcon)$num/(sum(V(gcon)$num)/node.scale), edge.width=E(gcon)$weight/sum(E(gcon)$weight/edge.scale), edge.color=adjustcolor('black',alpha=edge.alpha))
   }
   return(invisible(gcon))

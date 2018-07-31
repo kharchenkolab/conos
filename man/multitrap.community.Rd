@@ -5,7 +5,7 @@
 \title{mutlilevel+walktrap communities}
 \usage{
 multitrap.community(graph, n.cores = parallel::detectCores(logical = F),
-  hclust.link = "single", ...)
+  hclust.link = "single", min.community.size = 10, verbose = FALSE, ...)
 }
 \arguments{
 \item{graph}{graph}
@@ -13,6 +13,10 @@ multitrap.community(graph, n.cores = parallel::detectCores(logical = F),
 \item{n.cores}{number of cores to use}
 
 \item{hclust.link}{link function to use when clustering multilevel communities (based on collapsed graph connectivity)}
+
+\item{min.community.size}{minimal community size parameter for the walktrap communities .. communities smaller than that will be merged}
+
+\item{verbose}{whether to output progress messages}
 
 \item{...}{passed to walktrap}
 }

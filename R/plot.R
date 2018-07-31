@@ -72,6 +72,10 @@ plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow
 ##' @param embedding.type type of pagoda2 embedding
 ##' @return ggplot2 object with the panel of plots
 plotPagodas <- function(pagoda.samples, groups=NULL, colors=NULL, gene=NULL, embedding.type='tSNE', ...) {
+  if (!is.null(groups)) {
+    groups <- as.factor(groups)
+  }
+
   embeddings <- lapply(pagoda.samples, function(s) s$embeddings$PCA[[embedding.type]])
   if (!is.null(gene)) {
     colors <- Reduce(c, sapply(pagoda.samples, function(d)
@@ -130,8 +134,6 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
     groups <- as.factor(groups)
     plot.df <- plot.df %>% dplyr::mutate(Group=groups[CellName])
 
-    plot.df$Group <- as.character(plot.df$Group)
-
     big.clusts <- (plot.df %>% dplyr::group_by(Group) %>% dplyr::summarise(Size=n()) %>%
                      dplyr::filter(Size >= min.cluster.size))$Group %>% as.vector()
 
@@ -160,14 +162,13 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
 
     if (is.null(legend.title)) {
       legend.title <- "Group"
-      # gg <- gg + ggplot2::guides(color=ggplot2::guide_legend(title=))
     }
 
     if(is.null(palette)) {
       palette <- rainbow
     }
 
-    gg <- gg + ggplot2::scale_color_manual(name=legend.title, values=palette(length(levels(groups))), labels=levels(groups))
+    gg <- gg + ggplot2::scale_color_manual(name=legend.title, values=palette(length(levels(groups))), labels=levels(groups), drop=F)
   } else if (!is.null(colors)) {
     plot.df <- plot.df %>% dplyr::mutate(Color=colors[CellName])
     na.plot.df <- plot.df %>% dplyr::filter(is.na(Color))
