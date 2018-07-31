@@ -360,7 +360,7 @@ Conos <- setRefClass(
           groups <- getClusteringGroups(clusters, clustering)
         } else if(color.by == 'sample') {
           cl <- lapply(samples, function(x) rownames(x$counts))
-          groups <- rep(names(cl), sapply(cl, length)) %>% setNames(unlist(cl)) %>% as.factor()
+          groups <- rep(names(cl), sapply(cl, length)) %>% stats::setNames(unlist(cl)) %>% as.factor()
         } else {
           stop('supported values of color.by are ("cluster" and "sample")')
         }

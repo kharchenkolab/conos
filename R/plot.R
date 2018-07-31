@@ -75,7 +75,7 @@ plotPagodas <- function(pagoda.samples, groups=NULL, colors=NULL, gene=NULL, emb
   embeddings <- lapply(pagoda.samples, function(s) s$embeddings$PCA[[embedding.type]])
   if (!is.null(gene)) {
     colors <- Reduce(c, sapply(pagoda.samples, function(d)
-      if(gene %in% colnames(d$counts)) d$counts[,gene] else setNames(rep(NA,nrow(d$counts)), rownames(d$counts))))
+      if(gene %in% colnames(d$counts)) d$counts[,gene] else stats::setNames(rep(NA,nrow(d$counts)), rownames(d$counts))))
   }
 
   return(plotEmbeddings(embeddings, groups=groups, colors=colors, ...))
