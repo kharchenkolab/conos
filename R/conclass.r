@@ -111,7 +111,7 @@ Conos <- setRefClass(
       samples <<- c(samples,x);
     },
 
-    updatePairs=function(space='CPCA',ncomps=50,n.odgenes=1e3,var.scale=TRUE,neighborhood.average=FALSE,neighborhood.average.k=10, verbose=FALSE) {
+    updatePairs=function(space='CPCA',ncomps=50,n.odgenes=1e3,var.scale=TRUE,neighborhood.average=FALSE,neighborhood.average.k=10, exclude.pairs=NULL, exclude.samples=NULL, verbose=FALSE) {
       if(neighborhood.average) {
         # pre-calculate averaging matrices for each sample
         if(verbose)  cat("calculating local averaging neighborhoods ")
@@ -133,8 +133,19 @@ Conos <- setRefClass(
       }
 
       # make a list of all pairs
+      snam <- names(samples);
+      if(!is.null(exclude.samples)) {
+        mi <- snam %in% exclude.samples;
+        if(verbose) { cat("excluded",sum(mi),"out of",length(snam),"samples, based on supplied exclude.samples\n") }
+        snam <- snam[!vi];
+      }
       cis <- combn(names(samples),2);
       # TODO: add random subsampling for very large panels
+      if(!is.null(exclude.pairs)) { # remove pairs that shouldn't be compared directly
+        ivi <- apply(cis,2,paste,collapse='.vs.') %in% apply(exclude.pairs,2,paste,collapse='.vs.') | apply(cis[c(2,1),],2,paste,collapse='.vs.') %in% apply(exclude.pairs,2,paste,collapse='.vs.')
+        if(verbose) cat("excluded",sum(ivi),"pairs, based on the passed exclude.pairs\n")
+        cis <- cis[,!ivi]
+      }
 
       # determine the pairs that need to be calculated
       if(is.null(pairs[[space]])) { pairs[[space]] <<- list() }
@@ -170,12 +181,11 @@ Conos <- setRefClass(
       nm <- match(apply(cis[c(2,1),,drop=F],2,paste,collapse='.vs.'),names(pairs[[space]]));
       mi[which(!is.na(nm))] <- na.omit(nm);
       if(any(is.na(mi))) { stop("unable to get complete set of pair comparison results") }
-      pairs[[space]] <<- pairs[[space]][mi]
       if(verbose) cat(" done\n");
       return(invisible(cis))
     },
 
-    buildGraph=function(k=30, k.self=10, k.self.weight=0.1, space='CPCA', matching.method='mNN', var.scale =TRUE, ncomps=50, n.odgenes=1000, return.details=T,neighborhood.average=FALSE,neighborhood.average.k=10, common.centering=TRUE , verbose=TRUE) {
+    buildGraph=function(k=30, k.self=10, k.self.weight=0.1, space='CPCA', matching.method='mNN', var.scale =TRUE, ncomps=50, n.odgenes=1000, return.details=T,neighborhood.average=FALSE,neighborhood.average.k=10, exclude.pairs=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE) {
 
       supported.spaces <- c("CPCA","JNMF","genes")
       if(!space %in% supported.spaces) {
@@ -189,14 +199,19 @@ Conos <- setRefClass(
 
 
       # calculate or update pairwise alignments
-      cis <- updatePairs(space=space,ncomps=ncomps,n.odgenes=n.odgenes,verbose=verbose,var.scale=var.scale,neighborhood.average=neighborhood.average,neighborhood.average.k=10)
+      cis <- updatePairs(space=space,ncomps=ncomps,n.odgenes=n.odgenes,verbose=verbose,var.scale=var.scale,neighborhood.average=neighborhood.average,neighborhood.average.k=10,exclude.pairs=exclude.pairs,exclude.samples=exclude.samples)
 
 
       # determine inter-sample mapping
       if(verbose) cat('inter-sample links using ',matching.method,' ');
       xl <- pairs[[space]]
-      mnnres <- papply(1:ncol(cis), function(i) {
-        r.ns <- samples[cis[,i]]
+      mnnres <- papply(1:ncol(cis), function(j) {
+        r.ns <- samples[cis[,j]]
+        # we'll look up the pair by name (possibly reversed), not to assume for the ordering of $pairs[[space]] to be the same
+        i <- match(paste(cis[,j],collapse='.vs.'),names(xl));
+        if(is.na(i)) { i <- match(paste(rev(cis[,j]),collapse='.vs.'),names(xl)) }
+        if(is.na(i)) { stop(paste("unable to find alignment for pair",paste(cis[,j],collapse='.vs.'))) }
+        
         if(space=='JNMF') {
           n12 <- n2CrossKnn(xl[[i]]$rot1,xl[[i]]$rot2,k,1,FALSE)
           n21 <- n2CrossKnn(xl[[i]]$rot2,xl[[i]]$rot1,k,1,FALSE)
@@ -250,7 +265,7 @@ Conos <- setRefClass(
             x <- t(as.matrix(t(x))-centering)
             x %*% rot;
           })
-          n1 <- cis[1,i]; n2 <- cis[2,i]
+          n1 <- cis[1,j]; n2 <- cis[2,j]
           if(verbose) cat(".")
 
           mnn <- get.neighbor.matrix(cpproj[[n1]],cpproj[[n2]],k,matching=matching.method)
