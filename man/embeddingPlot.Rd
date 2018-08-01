@@ -10,7 +10,7 @@ embeddingPlot(embedding, groups = NULL, colors = NULL, plot.na = TRUE,
   palette = NULL, color.range = "all", font.size = c(3, 7),
   show.ticks = FALSE, show.labels = FALSE, legend.position = NULL,
   legend.title = NULL, raster = FALSE, raster.width = NULL,
-  raster.height = NULL, raster.dpi = 300, ...)
+  raster.height = NULL, raster.dpi = 300, shuffle.colors = FALSE, ...)
 }
 \arguments{
 \item{embedding}{two-column matrix with x and y coordinates of the embedding, rownames contain cell names and are used to match coordinates with groups or colors}

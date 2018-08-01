@@ -353,3 +353,17 @@ postProcessWalktrapClusters <- function(p2list, pjc, no.cl = 200, size.cutoff = 
     new.clusters <- as.factor(c(x,new.assign))
     new.clusters
 }
+
+#' Get top overdispersed genes across samples
+#' @param samples list of pagoda2 objects
+#' @param n.genes number of overdispersed genes to extract
+getOdGenesUniformly <- function(samples, n.genes) {
+  gene.info <- lapply(samples, function(s)
+    tibble::rownames_to_column(s$misc[['varinfo']], "gene") %>%
+      dplyr::mutate(rank=rank(lpa, ties.method="first"))
+  )
+  genes <- gene.info %>% dplyr::bind_rows() %>% dplyr::group_by(gene) %>%
+    dplyr::summarise(rank=min(rank)) %>% dplyr::arrange(rank) %>% .$gene
+
+  return(genes[1:min(n.genes, length(genes))])
+}

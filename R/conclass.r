@@ -45,7 +45,7 @@ Conos <- setRefClass(
   #   - clusters will contain potentially multiple clustering results/data
   #   - embedding contains embedding of the joint graph
 
-  fields=c('samples','pairs','graph','clusters', 'counts','embedding','n.cores','misc', 'override.conos.plot.theme'),
+  fields=c('samples','pairs','graph','clusters', 'expression.adj','embedding','n.cores','misc', 'override.conos.plot.theme'),
 
   methods = list(
     initialize=function(x, ..., n.cores=parallel::detectCores(logical=F), verbose=TRUE, override.conos.plot.theme=FALSE) {
@@ -54,6 +54,7 @@ Conos <- setRefClass(
       pairs <<- list();
       graph <<- NULL;
       clusters <<- list();
+      expression.adj <<- list();
       misc <<-list();
       n.cores <<- n.cores;
       override.conos.plot.theme <<- override.conos.plot.theme;
@@ -367,9 +368,56 @@ Conos <- setRefClass(
       }
 
       return(embeddingPlot(t(con$embedding), groups=groups, colors=colors, plot.theme=adjustTheme(plot.theme), ...))
+    },
+
+    correctGenes=function(genes=NULL, n.od.genes=500, fading=1.0, fading.const=0.05, max.iters=15, tol=1e-3, name='diffusion', verbose=TRUE) {
+      "Smooth expression of genes, so they better represent structure of the graph.\n
+       Use diffusion of expression on graph with the equation dv = exp(-a * (v + b))\n
+       Params:\n
+       - genes: list of genes for smoothing\n
+       - n.od.genes: if 'genes' is NULL, top n.od.genes of overdispersed genes are taken across all samples. Default: 500.\n
+       - fading: level of fading of expression change from distance on the graph (parameter 'a' of the equation). Default: 1.0.\n
+       - fading.const: minimal penalty for each new edge during diffusion (parameter 'b' of the equation). Default: 0.05.\n
+       - max.iters: maximal number of diffusion iterations. Default: 15.\n
+       - tol: tolerance after which the diffusion stops. Default: 1e-3.\n
+       - name: name to save the correction. Default: diffusion.\n
+       - verbose: verbose mode. Default: TRUE.
+      "
+      if (is.null(genes)) {
+        genes <- getOdGenesUniformly(samples, n.genes=n.od.genes)
+      }
+
+      edges <- igraph::as_edgelist(graph)
+      edge.weights <- igraph::edge.attributes(graph)$weight
+
+      cms <- lapply(samples, `[[`, "counts")
+      genes <- Reduce(intersect, lapply(cms, colnames)) %>% intersect(genes)
+      cm <- Reduce(rbind, lapply(cms, function(x) x[, genes])) %>% as.matrix()
+
+      cm <- smooth_count_matrix(edges, edge.weights, cm, max_n_iters=max.iters, diffusion_fading=fading, diffusion_fading_const=fading.const, verbose=verbose)
+      return(invisible(expression.adj[[name]] <<- cm))
+    },
+
+    propagateLabels=function(labels, max.iters=15, return.distribution=TRUE, verbose=TRUE) {
+    "Estimate labeling distribution for each vertex, based on provided labels.\n
+     Params:\n
+     - labels: vector of character labels, named by cell names\n
+     - max.iters: maximal number of iterations. Default: 15.\n
+     - return.distribution: return distribution of labeling, but not single label for each vertex. Default: TRUE.\n
+     - verbose: verbose mode. Default: TRUE.\n
+     \n
+     Return: matrix with distribution of label probabilities for each vertex by rows.
+    "
+      edges <- igraph::as_edgelist(graph)
+      edge.weights <- igraph::edge.attributes(graph)$weight
+      label.distribution <- propagate_labels(edges, edge.weights, vert_labels=labels, max_n_iters=max.iters, verbose=verbose)
+      if (return.distribution) {
+        return(label.distribution)
+      }
+
+      return(colnames(label.distribution)[apply(label.distribution, 1, which.max)])
     }
   )
-
 );
 
 
