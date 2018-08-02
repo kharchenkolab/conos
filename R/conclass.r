@@ -416,7 +416,7 @@ get.neighbor.matrix <- function(p1,p2,k,matching='mNN',indexType='angular') {
 ##' @return a fakeCommunities object that has methods membership() and as.dendrogram() to mimic regular igraph returns
 ##' @export
 multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=F), hclust.link='single', min.community.size=10, verbose=FALSE, ...) {
-  graph <- con$graph
+  #graph <- con$graph
   if(verbose) cat("running multilevel ... ");
   mt <- multilevel.community(graph);
   mem <- membership(mt);
