@@ -182,6 +182,66 @@ quickCPCA <- function(r.n,k=30,ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=
 }
 
 
+#' Use space of combined sample-specific PCAs as a space
+#' @param r.n list of p2 objects
+#' @param k neighborhood size to use
+#' @param ncomps number of components to calculate (default=30)
+#' @param n.odgenes number of overdispersed genes to take from each dataset
+#' @param var.scale whether to scale variance (default=TRUE)
+#' @param verbose whether to be verbose
+#' @param cgsf an optional set of common genes to align on
+#' @param neighborhood.average use neighborhood average values
+#' @param n.cores number of cores to use
+quickPlainPCA <- function(r.n,k=30,ncomps=30,n.odgenes=NULL,var.scale=TRUE,verbose=TRUE,cgsf=NULL,neighborhood.average=FALSE,n.cores=30) {
+
+  # select a common set of genes
+  if(is.null(cgsf)) {
+    if(is.null(n.odgenes)) {
+      odgenes <- table(unlist(lapply(r.n,function(x) x$misc$odgenes)))
+    } else {
+      odgenes <- table(unlist(lapply(r.n,function(x) rownames(x$misc$varinfo)[(order(x$misc$varinfo$lp,decreasing=F)[1:min(ncol(x$counts),n.odgenes)])])))
+    }
+    odgenes <- odgenes[names(odgenes) %in% Reduce(intersect,lapply(r.n,function(x) colnames(x$counts)))]
+    odgenes <- names(odgenes)[1:min(length(odgenes),n.odgenes)]
+  } else {
+    odgenes <- names(cgsf)
+  }
+  if(verbose) cat("using",length(odgenes),"odgenes\n")
+
+  # common variance scaling
+  if (var.scale) {
+    if(is.null(cgsf)) {
+      cgsf <- do.call(cbind,lapply(r.n,function(x) x$misc$varinfo[odgenes,]$gsf))
+      cgsf <- exp(rowMeans(log(cgsf)))
+    }
+  }
+
+  if(verbose) cat('calculating PCs for',length(r.n),' datasets ...')
+
+  pcs <- lapply(r.n,function(r) {
+    x <- r$counts[,odgenes];
+    if(var.scale) {
+      x@x <- x@x*rep(cgsf,diff(x@p))
+    }
+    if(neighborhood.average) {
+      xk <- r$misc$edgeMat$quickCPCA;
+      x <- t(xk) %*% x
+    }
+    x <- x
+    cm <- Matrix::colMeans(x);
+    pcs <- irlba::irlba(x, nv=ncomps, nu =0, center=cm, right_only = F, reorth = T);
+    #rownames(pcs$v) <- colnames(x);
+    pcs$v
+  })
+  pcs <- do.call(cbind,pcs)
+  rownames(pcs) <- odgenes;
+
+  if(verbose) cat(' done\n')
+
+  return(list(CPC=pcs));
+}
+
+
 # other functions
 
 # use mclapply if available, fall back on BiocParallel, but use regular

@@ -164,7 +164,9 @@ Conos <- setRefClass(
           } else if(space=='JNMF') {
             xcp <- quickJNMF(samples[cis[,i]],n.comps=ncomps,n.odgenes=n.odgenes,var.scale=var.scale,verbose=FALSE,max.iter=3e3,neighborhood.average=neighborhood.average)
           } else if (space == 'genes') {
-            xcp <- quickNULL(p2.objs = samlpes[cis[,i]], n.odgenes = n.odgenes, var.scale = var.scale, verbose = FALSE, neighborhood.average=neighborhood.average);
+            xcp <- quickNULL(p2.objs = samples[cis[,i]], n.odgenes = n.odgenes, var.scale = var.scale, verbose = FALSE, neighborhood.average=neighborhood.average);
+          } else if (space == 'PCA') {
+            xcp <- quickPlainPCA(samples[cis[,i]],k=k,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale,neighborhood.average=neighborhood.average)
           }
           if(verbose) cat('.')
           xcp
@@ -187,14 +189,14 @@ Conos <- setRefClass(
 
     buildGraph=function(k=30, k.self=10, k.self.weight=0.1, space='CPCA', matching.method='mNN', var.scale =TRUE, ncomps=50, n.odgenes=1000, return.details=T,neighborhood.average=FALSE,neighborhood.average.k=10, exclude.pairs=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE) {
 
-      supported.spaces <- c("CPCA","JNMF","genes")
+      supported.spaces <- c("CPCA","JNMF","genes","PCA")
       if(!space %in% supported.spaces) {
-        stop(paste0("only the following spaces are currently supported: [",paste(supported.spaces),"]"))
+        stop(paste0("only the following spaces are currently supported: [",paste(supported.spaces,collapse=' '),"]"))
       }
 
       supported.matching.methods <- c("mNN","NN");
       if(!matching.method %in% supported.matching.methods) {
-        stop(paste0("only the following matching methods are currently supported: [",paste(supported.matching.methods),"]"))
+        stop(paste0("only the following matching methods are currently supported: [",paste(supported.matching.methods,collapse=' '),"]"))
       }
 
 
@@ -222,11 +224,11 @@ Conos <- setRefClass(
           return(data.frame('mA.lab'=rownames(xl[[i]]$rot1)[mnn@i+1],'mB.lab'=rownames(xl[[i]]$rot2)[mnn@j+1],'w'=pmax(1-mnn@x,0),stringsAsFactors=F))
           #return(data.frame('mA.lab'=rownames(xl[[i]]$rot1)[mnn@i+1],'mB.lab'=rownames(xl[[i]]$rot2)[mnn@j+1],'w'=1/pmax(1,log(mnn@x)),stringsAsFactors=F))
 
-        } else if (space %in% c("CPCA","GSVD")) {
+        } else if (space %in% c("CPCA","GSVD","PCA")) {
           # W: get counts
           common.genes <- Reduce(intersect,lapply(r.ns,function(x) colnames(x$counts)))
           if(!is.null(xl[[i]]$CPC)) {
-            # CPCA
+            # CPCA or PCA
             odgenes <- intersect(rownames(xl[[i]]$CPC),common.genes)
             rot <- xl[[i]]$CPC[odgenes,];
           } else if(!is.null(xl[[i]]$o$Q)) {
