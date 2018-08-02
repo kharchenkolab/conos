@@ -187,7 +187,7 @@ Conos <- setRefClass(
       return(invisible(cis))
     },
 
-    buildGraph=function(k=30, k.self=10, k.self.weight=0.1, space='CPCA', matching.method='mNN', var.scale =TRUE, ncomps=50, n.odgenes=1000, return.details=T,neighborhood.average=FALSE,neighborhood.average.k=10, exclude.pairs=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE) {
+    buildGraph=function(k=30, k.self=10, k.self.weight=0.1, space='CPCA', matching.method='mNN', metric='angular', l2.sigma=30, var.scale =TRUE, ncomps=50, n.odgenes=1000, return.details=T,neighborhood.average=FALSE,neighborhood.average.k=10, exclude.pairs=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE) {
 
       supported.spaces <- c("CPCA","JNMF","genes","PCA")
       if(!space %in% supported.spaces) {
@@ -197,6 +197,11 @@ Conos <- setRefClass(
       supported.matching.methods <- c("mNN","NN");
       if(!matching.method %in% supported.matching.methods) {
         stop(paste0("only the following matching methods are currently supported: [",paste(supported.matching.methods,collapse=' '),"]"))
+      }
+
+      supported.metrics <- c("L2","angular");
+      if(!metric %in% supported.metrics) {
+        stop(paste0("only the following distance metrics are currently supported: [",paste(supported.metrics,collapse=' '),"]"))
       }
 
 
@@ -215,12 +220,8 @@ Conos <- setRefClass(
         if(is.na(i)) { stop(paste("unable to find alignment for pair",paste(cis[,j],collapse='.vs.'))) }
         
         if(space=='JNMF') {
-          n12 <- n2CrossKnn(xl[[i]]$rot1,xl[[i]]$rot2,k,1,FALSE)
-          n21 <- n2CrossKnn(xl[[i]]$rot2,xl[[i]]$rot1,k,1,FALSE)
-          mnn <- drop0(n21*t(n12))
-          mnn <- as(n21*t(n12),'dgTMatrix')
+          mnn <- get.neighbor.matrix(xl[[i]]$rot1,xl[[i]]$rot2,k,matching=matching.method,metric=metric,l2.sigma=l2.sigma)
           if(verbose) cat(".")
-
           return(data.frame('mA.lab'=rownames(xl[[i]]$rot1)[mnn@i+1],'mB.lab'=rownames(xl[[i]]$rot2)[mnn@j+1],'w'=pmax(1-mnn@x,0),stringsAsFactors=F))
           #return(data.frame('mA.lab'=rownames(xl[[i]]$rot1)[mnn@i+1],'mB.lab'=rownames(xl[[i]]$rot2)[mnn@j+1],'w'=1/pmax(1,log(mnn@x)),stringsAsFactors=F))
 
@@ -270,12 +271,12 @@ Conos <- setRefClass(
           n1 <- cis[1,j]; n2 <- cis[2,j]
           if(verbose) cat(".")
 
-          mnn <- get.neighbor.matrix(cpproj[[n1]],cpproj[[n2]],k,matching=matching.method)
+          mnn <- get.neighbor.matrix(cpproj[[n1]],cpproj[[n2]],k,matching=matching.method,metric=metric,l2.sigma=l2.sigma)
           return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=pmax(1-mnn@x,0),stringsAsFactors=F))
 
         } else if (space=='genes') {
           ## Overdispersed Gene space
-          mnn <- get.neighbor.matrix(as.matrix(xl[[i]]$genespace1), as.matrix(xl[[i]]$genespace2),k,matching=matching.method)
+          mnn <- get.neighbor.matrix(as.matrix(xl[[i]]$genespace1), as.matrix(xl[[i]]$genespace2),k,matching=matching.method,metric=metric,l2.sigma=l2.sigma)
           return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=pmax(1-mnn@x,0),stringsAsFactors=F))
         }
         mnnres
@@ -445,11 +446,12 @@ Conos <- setRefClass(
 ##' @param p2 projection of sample 2
 ##' @param k neighborhood radius
 ##' @param matching mNN (default) or NN
-##' @param indexType distance type (default: "angular")
+##' @param metric distance type (default: "angular", can also be 'L2')
+##' @param l2.sigma L2 distances get transformed as exp(-d/sigma) using this value (default=30)
 ##' @return matrix
-get.neighbor.matrix <- function(p1,p2,k,matching='mNN',indexType='angular') {
-  n12 <- n2CrossKnn(p1,p2,k,1,FALSE)
-  n21 <- n2CrossKnn(p2,p1,k,1,FALSE)
+get.neighbor.matrix <- function(p1,p2,k,matching='mNN',metric='angular',l2.sigma=30) {
+  n12 <- n2CrossKnn(p1,p2,k,1,FALSE,metric)
+  n21 <- n2CrossKnn(p2,p1,k,1,FALSE,metric)
   # Viktor's solution
   n12@x[n12@x<0] <- 0
   n21@x[n21@x<0] <- 0
@@ -463,6 +465,7 @@ get.neighbor.matrix <- function(p1,p2,k,matching='mNN',indexType='angular') {
   }
   mnn <- as(mnn,'dgTMatrix')
   rownames(mnn) <- rownames(p1); colnames(mnn) <- rownames(p2);
+  if(metric!='angular') { mnn@x <- exp(-mnn@x / l2.sigma) } # scale L2 distance 
   mnn
 }
 
