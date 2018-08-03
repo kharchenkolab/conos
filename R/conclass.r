@@ -187,7 +187,7 @@ Conos <- setRefClass(
       return(invisible(cis))
     },
 
-    buildGraph=function(k=30, k.self=10, k.self.weight=0.1, space='CPCA', matching.method='mNN', metric='angular', l2.sigma=30, var.scale =TRUE, ncomps=50, n.odgenes=1000, return.details=T,neighborhood.average=FALSE,neighborhood.average.k=10, exclude.pairs=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE) {
+    buildGraph=function(k=30, k.self=10, k.self.weight=0.1, space='CPCA', matching.method='mNN', metric='angular', l2.sigma=1e5, var.scale =TRUE, ncomps=50, n.odgenes=1000, return.details=T,neighborhood.average=FALSE,neighborhood.average.k=10, exclude.pairs=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE) {
 
       supported.spaces <- c("CPCA","JNMF","genes","PCA")
       if(!space %in% supported.spaces) {
@@ -453,7 +453,7 @@ Conos <- setRefClass(
 ##' @param metric distance type (default: "angular", can also be 'L2')
 ##' @param l2.sigma L2 distances get transformed as exp(-d/sigma) using this value (default=30)
 ##' @return matrix with the similarity (!) values corresponding to weight (1-d for angular, and exp(-d/l2.sigma) for L2)
-get.neighbor.matrix <- function(p1,p2,k,matching='mNN',metric='angular',l2.sigma=30) {
+get.neighbor.matrix <- function(p1,p2,k,matching='mNN',metric='angular',l2.sigma=1e5) {
   n12 <- n2CrossKnn(p1,p2,k,1,FALSE,metric)
   n21 <- n2CrossKnn(p2,p1,k,1,FALSE,metric)
   # Viktor's solution
