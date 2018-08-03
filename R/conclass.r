@@ -222,7 +222,7 @@ Conos <- setRefClass(
         if(space=='JNMF') {
           mnn <- get.neighbor.matrix(xl[[i]]$rot1,xl[[i]]$rot2,k,matching=matching.method,metric=metric,l2.sigma=l2.sigma)
           if(verbose) cat(".")
-          return(data.frame('mA.lab'=rownames(xl[[i]]$rot1)[mnn@i+1],'mB.lab'=rownames(xl[[i]]$rot2)[mnn@j+1],'w'=pmax(1-mnn@x,0),stringsAsFactors=F))
+          return(data.frame('mA.lab'=rownames(xl[[i]]$rot1)[mnn@i+1],'mB.lab'=rownames(xl[[i]]$rot2)[mnn@j+1],'w'=mnn@x,stringsAsFactors=F))
           #return(data.frame('mA.lab'=rownames(xl[[i]]$rot1)[mnn@i+1],'mB.lab'=rownames(xl[[i]]$rot2)[mnn@j+1],'w'=1/pmax(1,log(mnn@x)),stringsAsFactors=F))
 
         } else if (space %in% c("CPCA","GSVD","PCA")) {
@@ -272,39 +272,40 @@ Conos <- setRefClass(
           if(verbose) cat(".")
 
           mnn <- get.neighbor.matrix(cpproj[[n1]],cpproj[[n2]],k,matching=matching.method,metric=metric,l2.sigma=l2.sigma)
-          return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=pmax(1-mnn@x,0),stringsAsFactors=F))
+          return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=mnn@x,stringsAsFactors=F))
 
         } else if (space=='genes') {
           ## Overdispersed Gene space
           mnn <- get.neighbor.matrix(as.matrix(xl[[i]]$genespace1), as.matrix(xl[[i]]$genespace2),k,matching=matching.method,metric=metric,l2.sigma=l2.sigma)
-          return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=pmax(1-mnn@x,0),stringsAsFactors=F))
+          return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=mnn@x,stringsAsFactors=F))
         }
         mnnres
       },n.cores=n.cores)
       if(verbose) cat(" done\n")
       ## Merge the results into a edge table
       el <- do.call(rbind,mnnres)
-      #el <- el$type <- 1; # encode connection type 1- intersample, 0- intrasample
+      el$type <- 1; # encode connection type 1- intersample, 0- intrasample
 
       # append some local edges
       if(k.self>0) {
         if(verbose) cat('local pairs ')
         x <- data.frame(do.call(rbind,papply(samples,function(x) {
           # W: get PCA reduction
-          xk <- n2Knn(x$reductions$PCA,k.self,1,FALSE)
-          diag(xk) <- 0;
+          xk <- n2Knn(x$reductions$PCA,k.self+1,1,FALSE) # +1 accounts for self-edges that will be removed in the next line
+          diag(xk) <- 0; # no self-edges
           xk <- as(xk,'dgTMatrix')
           cat(".")
           return(data.frame('mA.lab'=rownames(x$reductions$PCA)[xk@i+1],'mB.lab'=rownames(x$reductions$PCA)[xk@j+1],'w'=pmax(1-xk@x,0),stringsAsFactors=F))
         },n.cores=n.cores)),stringsAsFactors = F)
         x$w <- k.self.weight
-        #x$type <- 0;
+        x$type <- 0;
         cat(' done\n')
         el <- rbind(el,x)
       }
       # TODO: add edge labels to distinguish inter and intra-sample edges
       g  <- graph_from_edgelist(as.matrix(el[,c(1,2)]), directed =FALSE)
       E(g)$weight <- el[,3]
+      E(g)$type <- el[,4]
 
       graph <<- g;
       return(invisible(g))
@@ -360,9 +361,12 @@ Conos <- setRefClass(
       return(gg)
     },
 
-    embedGraph=function(method='largeVis',M=1,gamma=1,alpha=0.1,perplexity=50,sgd_batches=1e8,seed=1,verbose=TRUE) {
+    embedGraph=function(method='largeVis',M=1,gamma=1,alpha=0.1,perplexity=NA,sgd_batches=1e8,seed=1,verbose=TRUE) {
       if(method!='largeVis') { stop("currently, only largeVis embeddings are supported") }
-      wij <- largeVis:::buildWijMatrix(as_adj(graph,attr='weight'),perplexity=perplexity,threads=n.cores)
+      wij <- as_adj(graph,attr='weight');
+      if(!is.na(perplexity)) {
+        wij <- largeVis:::buildWijMatrix(wij,perplexity=perplexity,threads=n.cores)
+      }
       coords <- largeVis:::projectKNNs(wij = wij, dim=2, verbose = verbose,sgd_batches = sgd_batches,gamma=gamma, M=M, seed=seed, alpha=alpha, rho=1, threads=n.cores)
       colnames(coords) <- V(graph)$name
       embedding <<- coords;
@@ -448,7 +452,7 @@ Conos <- setRefClass(
 ##' @param matching mNN (default) or NN
 ##' @param metric distance type (default: "angular", can also be 'L2')
 ##' @param l2.sigma L2 distances get transformed as exp(-d/sigma) using this value (default=30)
-##' @return matrix
+##' @return matrix with the similarity (!) values corresponding to weight (1-d for angular, and exp(-d/l2.sigma) for L2)
 get.neighbor.matrix <- function(p1,p2,k,matching='mNN',metric='angular',l2.sigma=30) {
   n12 <- n2CrossKnn(p1,p2,k,1,FALSE,metric)
   n21 <- n2CrossKnn(p2,p1,k,1,FALSE,metric)
@@ -465,7 +469,11 @@ get.neighbor.matrix <- function(p1,p2,k,matching='mNN',metric='angular',l2.sigma
   }
   mnn <- as(mnn,'dgTMatrix')
   rownames(mnn) <- rownames(p1); colnames(mnn) <- rownames(p2);
-  if(metric!='angular') { mnn@x <- exp(-mnn@x / l2.sigma) } # scale L2 distance 
+  if(metric=='angular') {
+    mnn@x <- pmax(0,1-mnn@x)
+  } else { # L2 metric
+    mnn@x <- exp(-mnn@x/l2.sigma)
+  }
   mnn
 }
 
@@ -480,16 +488,22 @@ get.neighbor.matrix <- function(p1,p2,k,matching='mNN',metric='angular',l2.sigma
 ##' @param hclust.link link function to use when clustering multilevel communities (based on collapsed graph connectivity)
 ##' @param min.community.size minimal community size parameter for the walktrap communities .. communities smaller than that will be merged
 ##' @param verbose whether to output progress messages
+##' @param level what level of multitrap clustering to use in the starting step. By default, uses the top level. An integer can be specified for a lower level (i.e. 1).
 ##' @param ... passed to walktrap
 ##' @return a fakeCommunities object that has methods membership() and as.dendrogram() to mimic regular igraph returns
 ##' @export
-multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=F), hclust.link='single', min.community.size=10, verbose=FALSE, ...) {
-  graph <- con$graph
+multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=F), hclust.link='single', min.community.size=10, verbose=FALSE, level=NULL, ...) {
   if(verbose) cat("running multilevel ... ");
   mt <- multilevel.community(graph);
 
-  # get the highest level
-  mem <- mt$memberships[1,]; names(mem) <- mt$names;
+  if(is.null(level)) {
+    # get higest level (to avoid oversplitting at the initial step)
+    mem <- membership(mt);
+  } else {
+    # get the specified level
+    mem <- mt$memberships[level,]; names(mem) <- mt$names;
+  }
+    
   if(verbose) cat("found",length(unique(mem)),"communities\nrunning walktraps ... ")
 
   # calculate hierarchy on the multilevel clusters
