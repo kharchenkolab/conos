@@ -239,6 +239,13 @@ Conos <- setRefClass(
           } else {
             stop("unknown reduction provided")
           }
+          # TODO: a more careful analysis of parameters used to calculate the cached version
+          if(ncomps>ncol(rot)) {
+            warning(paste0("specified ncomps (",ncomps,") is greater than the cached version (",ncol(rot),")"))
+          } else {
+            rot <- rot[,1:ncomps,drop=F]
+          }
+          
           if (var.scale) {
             # W: get variance scaling
             cgsf <- do.call(cbind,lapply(r.ns,function(x) x$misc$varinfo[odgenes,]$gsf))
@@ -373,7 +380,7 @@ Conos <- setRefClass(
       return(invisible(embedding))
     },
 
-    plotGraph=function(conos, color.by='cluster', clustering=NULL, groups=NULL, colors=NULL, plot.theme=NULL, ...) {
+    plotGraph=function(color.by='cluster', clustering=NULL, groups=NULL, colors=NULL, plot.theme=NULL, ...) {
       if(class(embedding)[1] == "uninitializedField") {
         embedGraph();
       }
@@ -389,7 +396,7 @@ Conos <- setRefClass(
         }
       }
 
-      return(embeddingPlot(t(con$embedding), groups=groups, colors=colors, plot.theme=adjustTheme(plot.theme), ...))
+      return(embeddingPlot(t(embedding), groups=groups, colors=colors, plot.theme=adjustTheme(plot.theme), ...))
     },
 
     correctGenes=function(genes=NULL, n.od.genes=500, fading=1.0, fading.const=0.05, max.iters=15, tol=1e-3, name='diffusion', verbose=TRUE) {
@@ -530,7 +537,7 @@ multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=F),
     x
   })
 
-  if(verbose) cat("found",sum(unlist(lapply(wtl,function(x) length(unique(x))))),"communities\nmerging dendrograms ... ")
+  if(verbose) cat("found",sum(unlist(lapply(mbl,function(x) length(unique(x))))),"communities\nmerging dendrograms ... ")
 
 
   wtld <- lapply(wtl,as.dendrogram)
