@@ -5,7 +5,8 @@
 \title{mutlilevel+walktrap communities}
 \usage{
 multitrap.community(graph, n.cores = parallel::detectCores(logical = F),
-  hclust.link = "single", min.community.size = 10, verbose = FALSE, ...)
+  hclust.link = "single", min.community.size = 10, verbose = FALSE,
+  level = NULL, ...)
 }
 \arguments{
 \item{graph}{graph}
@@ -17,6 +18,8 @@ multitrap.community(graph, n.cores = parallel::detectCores(logical = F),
 \item{min.community.size}{minimal community size parameter for the walktrap communities .. communities smaller than that will be merged}
 
 \item{verbose}{whether to output progress messages}
+
+\item{level}{what level of multitrap clustering to use in the starting step. By default, uses the top level. An integer can be specified for a lower level (i.e. 1).}
 
 \item{...}{passed to walktrap}
 }

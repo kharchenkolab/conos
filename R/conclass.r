@@ -372,9 +372,9 @@ Conos <- setRefClass(
       if(method!='largeVis') { stop("currently, only largeVis embeddings are supported") }
       wij <- as_adj(graph,attr='weight');
       if(!is.na(perplexity)) {
-        wij <- largeVis:::buildWijMatrix(wij,perplexity=perplexity,threads=n.cores)
+        wij <- conos:::buildWijMatrix(wij,perplexity=perplexity,threads=n.cores)
       }
-      coords <- largeVis:::projectKNNs(wij = wij, dim=2, verbose = verbose,sgd_batches = sgd_batches,gamma=gamma, M=M, seed=seed, alpha=alpha, rho=1, threads=n.cores)
+      coords <- conos:::projectKNNs(wij = wij, dim=2, verbose = verbose,sgd_batches = sgd_batches,gamma=gamma, M=M, seed=seed, alpha=alpha, rho=1, threads=n.cores)
       colnames(coords) <- V(graph)$name
       embedding <<- coords;
       return(invisible(embedding))

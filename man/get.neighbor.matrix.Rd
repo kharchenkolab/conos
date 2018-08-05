@@ -4,7 +4,8 @@
 \alias{get.neighbor.matrix}
 \title{Establish rough neighbor matching between samples given their projections in a common space}
 \usage{
-get.neighbor.matrix(p1, p2, k, matching = "mNN", indexType = "angular")
+get.neighbor.matrix(p1, p2, k, matching = "mNN", metric = "angular",
+  l2.sigma = 1e+05)
 }
 \arguments{
 \item{p1}{projection of sample 1}
@@ -15,10 +16,12 @@ get.neighbor.matrix(p1, p2, k, matching = "mNN", indexType = "angular")
 
 \item{matching}{mNN (default) or NN}
 
-\item{indexType}{distance type (default: "angular")}
+\item{metric}{distance type (default: "angular", can also be 'L2')}
+
+\item{l2.sigma}{L2 distances get transformed as exp(-d/sigma) using this value (default=30)}
 }
 \value{
-matrix
+matrix with the similarity (!) values corresponding to weight (1-d for angular, and exp(-d/l2.sigma) for L2)
 }
 \description{
 Establish rough neighbor matching between samples given their projections in a common space
