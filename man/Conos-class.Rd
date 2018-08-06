@@ -11,4 +11,50 @@ Conos reference class
 \details{
 The class encompasses sample collections, providing methods for calculating and visualizing joint graph and communities.
 }
+\section{Methods}{
+
+\describe{
+\item{\code{correctGenes(genes = NULL, n.od.genes = 500, fading = 1,
+  fading.const = 0.05, max.iters = 15, tol = 0.001, name = "diffusion",
+  verbose = TRUE)}}{Smooth expression of genes, so they better represent structure of the graph.
+
+       Use diffusion of expression on graph with the equation dv = exp(-a * (v + b))
+
+       Params:
+
+       - genes: list of genes for smoothing
+
+       - n.od.genes: if 'genes' is NULL, top n.od.genes of overdispersed genes are taken across all samples. Default: 500.
+
+       - fading: level of fading of expression change from distance on the graph (parameter 'a' of the equation). Default: 1.0.
+
+       - fading.const: minimal penalty for each new edge during diffusion (parameter 'b' of the equation). Default: 0.05.
+
+       - max.iters: maximal number of diffusion iterations. Default: 15.
+
+       - tol: tolerance after which the diffusion stops. Default: 1e-3.
+
+       - name: name to save the correction. Default: diffusion.
+
+       - verbose: verbose mode. Default: TRUE.
+      }
+
+\item{\code{propagateLabels(labels, max.iters = 15, return.distribution = TRUE,
+  verbose = TRUE)}}{Estimate labeling distribution for each vertex, based on provided labels.
+
+     Params:
+
+     - labels: vector of character labels, named by cell names
+
+     - max.iters: maximal number of iterations. Default: 15.
+
+     - return.distribution: return distribution of labeling, but not single label for each vertex. Default: TRUE.
+
+     - verbose: verbose mode. Default: TRUE.
+
+     
+
+     Return: matrix with distribution of label probabilities for each vertex by rows.
+    }
+}}
 

@@ -72,10 +72,24 @@ plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow
 ##' @param embedding.type type of pagoda2 embedding
 ##' @return ggplot2 object with the panel of plots
 plotPagodas <- function(pagoda.samples, groups=NULL, colors=NULL, gene=NULL, embedding.type='tSNE', ...) {
+  if (!is.null(groups)) {
+    groups <- as.factor(groups)
+  }
+
   embeddings <- lapply(pagoda.samples, function(s) s$embeddings$PCA[[embedding.type]])
+  no.embedding <- sapply(embeddings, is.null)
+  if (all(no.embedding)) {
+    stop(paste0("No '", embedding.type, "' embedding presented in the samples"))
+  }
+
+  if (any(no.embedding)) {
+    warning(paste0(sum(no.embedding), " of your samples doesn't have '", embedding.type, "' embedding"))
+    embeddings <- embeddings[!no.embedding]
+  }
+
   if (!is.null(gene)) {
     colors <- Reduce(c, sapply(pagoda.samples, function(d)
-      if(gene %in% colnames(d$counts)) d$counts[,gene] else setNames(rep(NA,nrow(d$counts)), rownames(d$counts))))
+      if(gene %in% colnames(d$counts)) d$counts[,gene] else stats::setNames(rep(NA,nrow(d$counts)), rownames(d$counts))))
   }
 
   return(plotEmbeddings(embeddings, groups=groups, colors=colors, ...))
@@ -96,6 +110,7 @@ plotPagodas <- function(pagoda.samples, groups=NULL, colors=NULL, gene=NULL, emb
 ##' @param title plot title
 ##' @param plot.theme theme for the plot
 ##' @param palette function, which accepts number of colors and return list of colors (i.e. see colorRampPalette)
+##' @param color.range controls range, in which colors are estimated. Pass "all" to estimate range based on all values of "colors", pass "data" to estimate it only based on colors, presented in the embedding. Alternatively you can pass vector of length 2 with (min, max) values.
 ##' @param font.size font size for cluster labels. It can either be single number for constant font size or pair (min, max) for font size depending on cluster size
 ##' @param show.ticks show ticks and tick labels
 ##' @param legend.position vector with (x, y) positions of the legend
@@ -107,9 +122,9 @@ plotPagodas <- function(pagoda.samples, groups=NULL, colors=NULL, gene=NULL, emb
 ##' @return ggplot2 object
 ##' @export
 embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min.cluster.size=0, mark.groups=TRUE,
-                         show.legend=FALSE, alpha=0.4, size=0.8, title=NULL, plot.theme=NULL, palette=NULL,
-                         font.size=c(3, 7), show.ticks=FALSE, show.labels=FALSE, legend.position=NULL, legend.title=NULL,
-                         raster=FALSE, raster.width=NULL, raster.height=NULL, raster.dpi=300,
+                          show.legend=FALSE, alpha=0.4, size=0.8, title=NULL, plot.theme=NULL, palette=NULL, color.range="all",
+                          font.size=c(3, 7), show.ticks=FALSE, show.labels=FALSE, legend.position=NULL, legend.title=NULL,
+                          raster=FALSE, raster.width=NULL, raster.height=NULL, raster.dpi=300, shuffle.colors=FALSE,
                          ...) {
   labels <- ggplot2::labs(x='Component 1', y='Component 2')
   plot.df <- tibble::rownames_to_column(as.data.frame(embedding), "CellName")
@@ -126,9 +141,8 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
   }
 
   if (!is.null(groups)) {
+    groups <- as.factor(groups)
     plot.df <- plot.df %>% dplyr::mutate(Group=groups[CellName])
-
-    plot.df$Group <- as.character(plot.df$Group)
 
     big.clusts <- (plot.df %>% dplyr::group_by(Group) %>% dplyr::summarise(Size=n()) %>%
                      dplyr::filter(Size >= min.cluster.size))$Group %>% as.vector()
@@ -156,11 +170,20 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
         ggplot2::scale_size_continuous(range=font.size, trans='identity', guide='none')
     }
 
-    if (!is.null(legend.title)) {
-      gg <- gg + ggplot2::guides(color=ggplot2::guide_legend(title=legend.title))
+    if (is.null(legend.title)) {
+      legend.title <- "Group"
     }
 
-    gg <- gg + ggplot2::scale_color_discrete(palette=if(is.null(palette)) rainbow else palette)
+    if(is.null(palette)) {
+      palette <- rainbow
+    }
+
+    color.vals <- palette(length(levels(groups)))
+    if (shuffle.colors) {
+      color.vals <- sample(color.vals)
+    }
+    gg <- gg + ggplot2::scale_color_manual(name=legend.title, values=color.vals, labels=levels(groups), drop=F) +
+      ggplot2::guides(color=ggplot2::guide_legend(override.aes=list(alpha=1.0)))
   } else if (!is.null(colors)) {
     plot.df <- plot.df %>% dplyr::mutate(Color=colors[CellName])
     na.plot.df <- plot.df %>% dplyr::filter(is.na(Color))
@@ -168,24 +191,33 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
 
     gg <- ggplot2::ggplot(plot.df, ggplot2::aes(x=x, y=y))+labels;
     if(is.character(colors)) {
-      gg <- gg + geom_point_w(color=plot.df$Color, alpha=alpha, size=size) 
+      gg <- gg + geom_point_w(color=plot.df$Color, alpha=alpha, size=size)
     } else {
       gg <- gg + geom_point_w(ggplot2::aes(col=Color), alpha=alpha, size=size)
+
+      if (length(color.range) == 1) {
+        if (color.range == "all") {
+          color.range <- range(colors)
+        } else if (color.range == "data") {
+          color.range <- NULL
+        }
+      }
+
       if (!is.null(palette)) {
-        gg <- gg + ggplot2::scale_colour_gradientn(colors=palette(100))
+        gg <- gg + ggplot2::scale_colour_gradientn(colors=palette(100), limits=color.range)
       } else {
-        if(prod(range(colors))<0) {
-          gg <- gg + ggplot2::scale_color_gradient2(low="#0000ff",mid="#d8d0d0", high="#ff0000")
+        if (prod(range(colors, na.rm=T)) < 0) {
+          gg <- gg + ggplot2::scale_color_gradient2(low="#0000ff",mid="#d8d0d0", high="#ff0000", limits=color.range)
         } else {
-          gg <- gg + ggplot2::scale_color_gradient(low="#d8d0d0", high="#ff0000")
+          gg <- gg + ggplot2::scale_color_gradient(low="#d8d0d0", high="#ff0000", limits=color.range)
         }
       }
     }
 
-
     if (!is.null(legend.title)) {
       gg <- gg + ggplot2::guides(color=ggplot2::guide_colorbar(title=legend.title))
     }
+
 
   } else {
     gg <- ggplot2::ggplot(plot.df, ggplot2::aes(x=x, y=y)) +
