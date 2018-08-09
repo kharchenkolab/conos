@@ -427,3 +427,21 @@ getOdGenesUniformly <- function(samples, n.genes) {
 
   return(genes[1:min(n.genes, length(genes))])
 }
+
+
+
+##' Find threshold of cluster detectability
+##'
+##' For a given clustering, walks the walktrap result tree to find
+##' a subtree with max(min(sens,spec)) for each cluster, where sens is sensitivity, spec is specificity
+##' @param res walktrap result object (igraph)
+##' @param clusters cluster factor
+##' @return a list of $thresholds - per cluster optimal detectability values, and $node - internal node id (merge row) where the optimum was found
+##' @export
+bestClusterThresholds <- function(res,clusters) {
+  # prepare cluster vectors
+  cl <- as.integer(clusters[res$names]);
+  clT <- tabulate(cl)
+  # run
+  x <- findBestClusterThreshold(res$merges-1L,cl-1L,clT)
+}

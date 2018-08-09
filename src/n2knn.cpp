@@ -1,4 +1,3 @@
-
 #include <RcppArmadillo.h>
 #include <queue>
 #include <algorithm>
