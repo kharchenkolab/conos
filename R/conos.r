@@ -439,9 +439,10 @@ getOdGenesUniformly <- function(samples, n.genes) {
 ##' @return a list of $thresholds - per cluster optimal detectability values, and $node - internal node id (merge row) where the optimum was found
 ##' @export
 bestClusterThresholds <- function(res,clusters) {
+  clusters <- as.factor(clusters);
   # prepare cluster vectors
   cl <- as.integer(clusters[res$names]);
-  clT <- tabulate(cl)
+  clT <- tabulate(cl,nbins=length(levels(clusters)))
   # run
   x <- findBestClusterThreshold(res$merges-1L,cl-1L,clT)
 }
