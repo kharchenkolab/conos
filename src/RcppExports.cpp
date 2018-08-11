@@ -27,6 +27,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// findBestClusterThreshold
+Rcpp::List findBestClusterThreshold(arma::imat& merges, arma::ivec& clusters, arma::ivec& clusterTotals);
+RcppExport SEXP _conos_findBestClusterThreshold(SEXP mergesSEXP, SEXP clustersSEXP, SEXP clusterTotalsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::imat& >::type merges(mergesSEXP);
+    Rcpp::traits::input_parameter< arma::ivec& >::type clusters(clustersSEXP);
+    Rcpp::traits::input_parameter< arma::ivec& >::type clusterTotals(clusterTotalsSEXP);
+    rcpp_result_gen = Rcpp::wrap(findBestClusterThreshold(merges, clusters, clusterTotals));
+    return rcpp_result_gen;
+END_RCPP
+}
 // cpcaF
 Rcpp::List cpcaF(const arma::cube& cov, const arma::vec& ng, int ncomp, int maxit, double tol, Nullable<NumericMatrix> eigenvR, bool verbose);
 RcppExport SEXP _conos_cpcaF(SEXP covSEXP, SEXP ngSEXP, SEXP ncompSEXP, SEXP maxitSEXP, SEXP tolSEXP, SEXP eigenvRSEXP, SEXP verboseSEXP) {
@@ -191,6 +204,7 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_conos_checkBits", (DL_FUNC) &_conos_checkBits, 0},
     {"_conos_checkOpenMP", (DL_FUNC) &_conos_checkOpenMP, 0},
+    {"_conos_findBestClusterThreshold", (DL_FUNC) &_conos_findBestClusterThreshold, 3},
     {"_conos_cpcaF", (DL_FUNC) &_conos_cpcaF, 7},
     {"_conos_referenceWij", (DL_FUNC) &_conos_referenceWij, 5},
     {"_conos_sgd", (DL_FUNC) &_conos_sgd, 15},

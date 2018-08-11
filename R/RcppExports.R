@@ -9,6 +9,10 @@ checkOpenMP <- function() {
     .Call('_conos_checkOpenMP', PACKAGE = 'conos')
 }
 
+findBestClusterThreshold <- function(merges, clusters, clusterTotals) {
+    .Call('_conos_findBestClusterThreshold', PACKAGE = 'conos', merges, clusters, clusterTotals)
+}
+
 cpcaF <- function(cov, ng, ncomp = 10L, maxit = 1000L, tol = 1e-6, eigenvR = NULL, verbose = TRUE) {
     .Call('_conos_cpcaF', PACKAGE = 'conos', cov, ng, ncomp, maxit, tol, eigenvR, verbose)
 }
