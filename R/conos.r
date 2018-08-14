@@ -125,6 +125,9 @@ quickCPCA <- function(r.n,k=30,ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=
   } else {
     odgenes <- names(cgsf)
   }
+
+  ncomps <- min(ncomps, length(odgenes) - 1)
+
   if(verbose) cat("using",length(odgenes),"odgenes\n")
   # common variance scaling
   if (var.scale) {
@@ -246,16 +249,20 @@ quickPlainPCA <- function(r.n,k=30,ncomps=30,n.odgenes=NULL,var.scale=TRUE,verbo
 
 # use mclapply if available, fall back on BiocParallel, but use regular
 # lapply() when only one core is specified
-papply <- function(...,n.cores=detectCores(), mc.preschedule=FALSE) {
+papply <- function(...,n.cores=parallel::detectCores(), mc.preschedule=FALSE) {
   if(n.cores>1) {
     if(requireNamespace("parallel", quietly = TRUE)) {
-      return(mclapply(...,mc.cores=n.cores,mc.preschedule=mc.preschedule))
+      res <- mclapply(...,mc.cores=n.cores,mc.preschedule=mc.preschedule)
     }
-
-    if(requireNamespace("BiocParallel", quietly = TRUE)) {
+    else if(requireNamespace("BiocParallel", quietly = TRUE)) {
       # It should never happen because parallel is specified in Imports
-      return(BiocParallel::bplapply(... , BPPARAM = BiocParallel::MulticoreParam(workers = n.cores)))
+      res <- BiocParallel::bplapply(... , BPPARAM = BiocParallel::MulticoreParam(workers = n.cores))
     }
+  }
+
+  is.error <- (sapply(res, class) == "try-error")
+  if (any(is.error)) {
+    stop(paste("Errors in papply:", res[is.error]))
   }
 
   # fall back on lapply
