@@ -57,6 +57,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// greedyModularityCut
+Rcpp::List greedyModularityCut(arma::imat& merges, arma::vec& deltaM, int N, int minsize);
+RcppExport SEXP _conos_greedyModularityCut(SEXP mergesSEXP, SEXP deltaMSEXP, SEXP NSEXP, SEXP minsizeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::imat& >::type merges(mergesSEXP);
+    Rcpp::traits::input_parameter< arma::vec& >::type deltaM(deltaMSEXP);
+    Rcpp::traits::input_parameter< int >::type N(NSEXP);
+    Rcpp::traits::input_parameter< int >::type minsize(minsizeSEXP);
+    rcpp_result_gen = Rcpp::wrap(greedyModularityCut(merges, deltaM, N, minsize));
+    return rcpp_result_gen;
+END_RCPP
+}
 // referenceWij
 arma::sp_mat referenceWij(const arma::ivec& i, const arma::ivec& j, arma::vec& d, Rcpp::Nullable<Rcpp::NumericVector> threads, double perplexity);
 RcppExport SEXP _conos_referenceWij(SEXP iSEXP, SEXP jSEXP, SEXP dSEXP, SEXP threadsSEXP, SEXP perplexitySEXP) {
@@ -206,6 +220,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_conos_checkOpenMP", (DL_FUNC) &_conos_checkOpenMP, 0},
     {"_conos_findBestClusterThreshold", (DL_FUNC) &_conos_findBestClusterThreshold, 3},
     {"_conos_cpcaF", (DL_FUNC) &_conos_cpcaF, 7},
+    {"_conos_greedyModularityCut", (DL_FUNC) &_conos_greedyModularityCut, 4},
     {"_conos_referenceWij", (DL_FUNC) &_conos_referenceWij, 5},
     {"_conos_sgd", (DL_FUNC) &_conos_sgd, 15},
     {"_conos_n2Knn", (DL_FUNC) &_conos_n2Knn, 7},

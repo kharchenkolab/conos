@@ -446,3 +446,23 @@ bestClusterThresholds <- function(res,clusters) {
   # run
   x <- findBestClusterThreshold(res$merges-1L,cl-1L,clT)
 }
+
+
+
+##' performs a greedy top-down selective cut to optmize modularity
+##'
+##' @param wt walktrap rsult
+##' @param N number of top greedy splits to take
+##' @param minsize minimum size of the branch (in number of leafs) 
+##' @return list(hclust - hclust structure of the derived tree, leafContent - binary matrix with rows corresponding to old leaves, columns to new ones, deltaM - modularity increments)
+##' @export
+greedy.modularity.cut <- function(wt,N,minsize=0) {
+  x <- greedyModularityCut(wt$merges-1L,-1*diff(wt$modularity),N,minsize)
+  # transfer cell names for the leaf content
+  if(!is.null(wt$names)) { rownames(x$leafContent) <- wt$names; } else { rownames(x$leafContent) <- c(1:nrow(x$leafContent)) }
+  m <- x$merges+1; nleafs <- nrow(m)+1; m[m<=nleafs] <- -1*m[m<=nleafs]; m[m>0] <- m[m>0]-nleafs;
+  hc <- list(merge=m,height=1:nrow(m),labels=c(1:nleafs),order=c(1:nleafs)); class(hc) <- 'hclust'
+  # fix the ordering so that edges don't intersects
+  hc$order <- order.dendrogram(as.dendrogram(hc))
+  return(list(hc=hc,leafContent=x$leafContent,deltaM=x$deltaM))
+}

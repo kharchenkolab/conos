@@ -17,6 +17,10 @@ cpcaF <- function(cov, ng, ncomp = 10L, maxit = 1000L, tol = 1e-6, eigenvR = NUL
     .Call('_conos_cpcaF', PACKAGE = 'conos', cov, ng, ncomp, maxit, tol, eigenvR, verbose)
 }
 
+greedyModularityCut <- function(merges, deltaM, N, minsize = 0L) {
+    .Call('_conos_greedyModularityCut', PACKAGE = 'conos', merges, deltaM, N, minsize)
+}
+
 referenceWij <- function(i, j, d, threads, perplexity) {
     .Call('_conos_referenceWij', PACKAGE = 'conos', i, j, d, threads, perplexity)
 }
