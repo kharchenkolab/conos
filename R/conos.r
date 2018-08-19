@@ -460,16 +460,32 @@ bestClusterThresholds <- function(res,clusters) {
 ##'
 ##' @param wt walktrap rsult
 ##' @param N number of top greedy splits to take
+##' @param leaf.labels leaf sample label factor, for breadth calculations - must be a named factor containing all wt$names, or if wt$names is null, a factor listing cells in the same order as wt leafs
 ##' @param minsize minimum size of the branch (in number of leafs) 
+##' @param minbreadth minimum allowed breadth of a branch (measured as normalized entropy)
 ##' @return list(hclust - hclust structure of the derived tree, leafContent - binary matrix with rows corresponding to old leaves, columns to new ones, deltaM - modularity increments)
 ##' @export
-greedy.modularity.cut <- function(wt,N,minsize=0) {
-  x <- greedyModularityCut(wt$merges-1L,-1*diff(wt$modularity),N,minsize)
+greedy.modularity.cut <- function(wt,N,leaf.labels=NULL,minsize=0,minbreadth=0) {
+  # prepare labels
+  nleafs <- nrow(wt$merges)+1;
+  if(is.null(leaf.labels)) {
+    ll <- integer(nleafs);
+  } else {
+    if(is.null(wt$names)) { 
+    # assume that leaf.labels are provided in the correct order
+      if(length(leaf.labels)!=nleafs) stop("leaf.labels is of incorrct length and wt$names is NULL")
+      ll <- as.integer(as.factor(leaf.labels))-1L;
+    } else {
+      if(!all(wt$names %in% names(leaf.labels))) { stop("leaf.labels do not cover all wt$names")}
+      ll <- as.integer(as.factor(leaf.labels[wt$names]))-1L;
+    }
+  }
+  x <- conos:::greedyModularityCut(wt$merges-1L,-1*diff(wt$modularity),N,minsize,ll,minbreadth)
   # transfer cell names for the leaf content
   if(!is.null(wt$names)) { rownames(x$leafContent) <- wt$names; } else { rownames(x$leafContent) <- c(1:nrow(x$leafContent)) }
   m <- x$merges+1; nleafs <- nrow(m)+1; m[m<=nleafs] <- -1*m[m<=nleafs]; m[m>0] <- m[m>0]-nleafs;
   hc <- list(merge=m,height=1:nrow(m),labels=c(1:nleafs),order=c(1:nleafs)); class(hc) <- 'hclust'
   # fix the ordering so that edges don't intersects
   hc$order <- order.dendrogram(as.dendrogram(hc))
-  return(list(hc=hc,leafContent=x$leafContent,deltaM=x$deltaM))
+  return(list(hc=hc,leafContent=x$leafContent,deltaM=x$deltaM,breadth=as.vector(x$breadth)))
 }

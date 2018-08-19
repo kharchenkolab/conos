@@ -4,14 +4,19 @@
 \alias{greedy.modularity.cut}
 \title{performs a greedy top-down selective cut to optmize modularity}
 \usage{
-greedy.modularity.cut(wt, N, minsize = 0)
+greedy.modularity.cut(wt, N, leaf.labels = NULL, minsize = 0,
+  minbreadth = 0)
 }
 \arguments{
 \item{wt}{walktrap rsult}
 
 \item{N}{number of top greedy splits to take}
 
+\item{leaf.labels}{leaf sample label factor, for breadth calculations - must be a named factor containing all wt$names, or if wt$names is null, a factor listing cells in the same order as wt leafs}
+
 \item{minsize}{minimum size of the branch (in number of leafs)}
+
+\item{minbreadth}{minimum allowed breadth of a branch (measured as normalized entropy)}
 }
 \value{
 list(hclust - hclust structure of the derived tree, leafContent - binary matrix with rows corresponding to old leaves, columns to new ones, deltaM - modularity increments)
