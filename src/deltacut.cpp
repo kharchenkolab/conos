@@ -155,40 +155,48 @@ Rcpp::List greedyModularityCut(arma::imat& merges, arma::vec& deltaM, int N, int
   pq.push(pair<int,double>(merges.n_rows -1, deltaM[merges.n_rows -1]));
   int nsplits=0;
   while(!pq.empty() && nsplits<N) {
-    int split=pq.top().first; deltamod.push_back(pq.top().second); pq.pop();
+    int split=pq.top().first; 
+    double deltam=pq.top().second;
+    pq.pop();
     //cout<<"considering split "<<split<<" ("<<(split+nleafs-2)<<"):"<<endl;
     // record split
     arma::irowvec r=merges.row(split);
-    splitsequence.push_back(split+nleafs);
-    leafNodes.erase(split+nleafs); // splitting the node, so it's not a leaf
+    bool take=true;
     
+    // we need to test the split first, for that we'll need to look at the children
     for(int i=0;i<2;i++) {
-      //cout<<" "<<r[i];
-      leafNodes.insert(r[i]);
-      if(r[i]>=nleafs) { // internal node
-        // todo: check other requirements, such as min size, breadth, etc.
-        bool add=true;
-        if(minsize>0 || minbreadth>0) {
-          arma::ivec membership=get_membership(r[i],merges,vlabs);
-          if(minsize>0 && sum(membership) < minsize) { // size restriction
-            add=false;
-          }
-          if(add && minbreadth>0) { // check breadth restriction
-            arma::ivec cllabs=labels.elem(find(membership));
-            double breadth=normalized_entropy(cllabs,nlabels);
-            breadth_map[r[i]]=breadth;
-            if(breadth<minbreadth) { add=false; }
-          }
+      // todo: check other requirements, such as min size, breadth, etc.
+      if(minsize>0 || minbreadth>0) {
+        arma::ivec membership=get_membership(r[i],merges,vlabs);
+        if(minsize>0 && sum(membership) < minsize) { // size restriction
+          take=false;
         }
-        //cout<<" pushing ("<<r[i]<<", "<<(r[i]-nleafs)<<", "<<deltaM[ r[i]-nleafs ]<<")";
-        if(add) { pq.push(pair<int,double>(r[i]-nleafs,deltaM[ r[i]-nleafs ])); }
-        //cout<<endl;
+        if(take && minbreadth>0) { // check breadth restriction
+          arma::ivec cllabs=labels.elem(find(membership));
+          double breadth=normalized_entropy(cllabs,nlabels);
+          breadth_map[r[i]]=breadth;
+          if(breadth<minbreadth) { take=false; }
+        }
       }
     }
-    nsplits++;
+    
+    if(take) {  // take the split
+      splitsequence.push_back(split+nleafs);
+      leafNodes.erase(split+nleafs); // splitting the node, so it's not a leaf
+      deltamod.push_back(deltam); 
+      // add children to the queue, without checking anything other the fact that they're not leafs
+      for(int i=0;i<2;i++) {
+        leafNodes.insert(r[i]);
+        if(r[i]>=nleafs) {
+          pq.push(pair<int,double>(r[i]-nleafs,deltaM[ r[i]-nleafs ]));
+        }
+      }
+      nsplits++;
+    }
   }
 
   //cout<<"done"<<endl;
+  leafNodes.clear();
 
   // construct new merge matrix by walking up the merge sequence
   arma::imat nm(N,2); // new merge matrix
@@ -218,6 +226,7 @@ Rcpp::List greedyModularityCut(arma::imat& merges, arma::vec& deltaM, int N, int
       } else { // leaf node
         //cout<<(r[i])<<"~>"<<leafid<<" "<<flush;
         double breadth=get_breadth(r[i],labels,nlabels,breadth_map, merges, vlabs);
+        leafNodes.insert(r[i]);
         int ni=r[i]=idm[r[i]]=leafid++;
         nbreadth[r[i]]=breadth;
       }
