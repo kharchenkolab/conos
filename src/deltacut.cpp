@@ -6,6 +6,9 @@
 #include <stack>
 #include <queue>
 
+//#define DEBUG 1
+#undef DEBUG
+
 using namespace std;
 using namespace arma;
 using namespace Rcpp;
@@ -145,11 +148,13 @@ Rcpp::List greedyModularityCut(arma::imat& merges, arma::vec& deltaM, int N, int
   //cout<<"done ("<<vlabs.size()<<" nodes)"<<endl;
   //cout<<"["; for(auto kv : vlabs) { cout<<kv.first<<" "; };   cout<<"]"<<endl;
 
-  //cout<<"walking down the tree ";
+#ifdef DEBUG
+  cout<<"walking down the tree ";
+#endif
   
   unordered_set<int> leafNodes;
   vector<int> splitsequence; splitsequence.reserve(N); // sequence of chosen splits
-  vector<double> deltamod; splitsequence.reserve(N); // keep track of the modularity changes
+  vector<double> deltamod; deltamod.reserve(N); // keep track of the modularity changes
 
   // start with the top split
   pq.push(pair<int,double>(merges.n_rows -1, deltaM[merges.n_rows -1]));
@@ -158,7 +163,9 @@ Rcpp::List greedyModularityCut(arma::imat& merges, arma::vec& deltaM, int N, int
     int split=pq.top().first; 
     double deltam=pq.top().second;
     pq.pop();
-    //cout<<"considering split "<<split<<" ("<<(split+nleafs-2)<<"):"<<endl;
+#ifdef DEBUG
+    cout<<"considering split "<<split<<" ("<<(split+nleafs-2)<<"): ";
+#endif
     // record split
     arma::irowvec r=merges.row(split);
     bool take=true;
@@ -169,18 +176,29 @@ Rcpp::List greedyModularityCut(arma::imat& merges, arma::vec& deltaM, int N, int
       if(minsize>0 || minbreadth>0) {
         arma::ivec membership=get_membership(r[i],merges,vlabs);
         if(minsize>0 && sum(membership) < minsize) { // size restriction
+#ifdef DEBUG
+          cout<<"size "<<minsize<<" < minsize"<<endl;
+#endif
           take=false;
         }
         if(take && minbreadth>0) { // check breadth restriction
           arma::ivec cllabs=labels.elem(find(membership));
           double breadth=normalized_entropy(cllabs,nlabels);
           breadth_map[r[i]]=breadth;
-          if(breadth<minbreadth) { take=false; }
+          if(breadth<minbreadth) { 
+#ifdef DEBUG
+            cout<<"breadth "<<breadth<<" < minbreadth"<<endl;
+#endif
+            take=false; 
+          }
         }
       }
     }
     
     if(take) {  // take the split
+#ifdef DEBUG
+      cout<<"accepting"<<endl;
+#endif
       splitsequence.push_back(split+nleafs);
       leafNodes.erase(split+nleafs); // splitting the node, so it's not a leaf
       deltamod.push_back(deltam); 
@@ -194,12 +212,18 @@ Rcpp::List greedyModularityCut(arma::imat& merges, arma::vec& deltaM, int N, int
       nsplits++;
     }
   }
+  if(splitsequence.empty()) {
+#ifdef DEBUG
+    cout<<"returning empty sequence"<<endl;
+#endif
+    return List::create(Named("splitsequence")=splitsequence);
+  }
 
   //cout<<"done"<<endl;
   leafNodes.clear();
 
   // construct new merge matrix by walking up the merge sequence
-  arma::imat nm(N,2); // new merge matrix
+  arma::imat nm(splitsequence.size(),2); // new merge matrix
   int nmleafs=nm.n_rows+1; // number of leafs in the new merge matrix
   arma::imat leafContent(nleafs,nmleafs);
   // initialize id counters
@@ -207,7 +231,9 @@ Rcpp::List greedyModularityCut(arma::imat& merges, arma::vec& deltaM, int N, int
   int internalid=nmleafs;
   arma::vec nbreadth(nm.n_rows+nmleafs);
   unordered_map<int,int> idm; // original node id to new node id translation table
-  //cout<<"constructing new merge matrix "<<flush;
+#ifdef DEBUG
+  cout<<"constructing new merge matrix "<<flush;
+#endif
   for(auto it=splitsequence.rbegin(); it!=splitsequence.rend(); ++it) {
     double breadth=get_breadth(*it,labels,nlabels,breadth_map, merges, vlabs);
     int id=idm[*it]=internalid++;
@@ -233,7 +259,9 @@ Rcpp::List greedyModularityCut(arma::imat& merges, arma::vec& deltaM, int N, int
     }
     nm.row(id-nmleafs)=r;    
   }
-  //cout<<endl;
+#ifdef DEBUG
+  cout<<endl;
+#endif
 
   //cout<<"filling out leaf content "<<flush;
   for(auto ln: leafNodes) { 
