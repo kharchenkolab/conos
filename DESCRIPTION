@@ -22,7 +22,15 @@ Imports:
   stats,
   utils,
   abind,
-  ggrepel
+  ggrepel,
+  shiny,
+  gridExtra,
+  dendextend,
+  heatmaply,
+  d3heatmap,
+  largeVis,
+  entropy,
+  ramify
 Suggests: 
   ggrastr,
   knitr,
