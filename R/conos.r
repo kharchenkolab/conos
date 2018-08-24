@@ -493,7 +493,14 @@ greedy.modularity.cut <- function(wt,N,leaf.labels=NULL,minsize=0,minbreadth=0) 
   return(list(hc=hc,leafContent=x$leafContent,deltaM=x$deltaM,breadth=as.vector(x$breadth),splits=x$splitsequence))
 }
 
-#' @export
+##' deploys Shiny application to visualize waltktrap tree and select cut level 
+##'
+##' @param wt walktrap rsult
+##' @param N number of top greedy splits to take
+##' @param leaf.labels leaf sample label factor, for breadth calculations - must be a named factor containing all wt$names, or if wt$names is null, a factor listing cells in the same order as wt leafs
+##' @param minsize minimum size of the branch (in number of leafs) 
+##' @param minbreadth minimum allowed breadth of a branch (measured as normalized entropy)
+##' @export
 runShinyApp <- function(wt=NULL, N=NULL, leaf.labels=NULL, minsize=0, minbreadth=0) {
   appDir <- system.file("app", package = "conos")
   if (appDir == "") {
