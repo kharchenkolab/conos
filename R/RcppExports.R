@@ -9,16 +9,24 @@ checkOpenMP <- function() {
     .Call('_conos_checkOpenMP', PACKAGE = 'conos')
 }
 
-findBestClusterThreshold <- function(merges, clusters, clusterTotals) {
-    .Call('_conos_findBestClusterThreshold', PACKAGE = 'conos', merges, clusters, clusterTotals)
-}
-
 cpcaF <- function(cov, ng, ncomp = 10L, maxit = 1000L, tol = 1e-6, eigenvR = NULL, verbose = TRUE) {
     .Call('_conos_cpcaF', PACKAGE = 'conos', cov, ng, ncomp, maxit, tol, eigenvR, verbose)
 }
 
 greedyModularityCut <- function(merges, deltaM, N, minsize, labels, minbreadth) {
     .Call('_conos_greedyModularityCut', PACKAGE = 'conos', merges, deltaM, N, minsize, labels, minbreadth)
+}
+
+findBestClusterThreshold <- function(merges, clusters, clusterTotals) {
+    .Call('_conos_findBestClusterThreshold', PACKAGE = 'conos', merges, clusters, clusterTotals)
+}
+
+scoreTreeConsistency <- function(test, ref, leafidmap, minsize = 10L) {
+    .Call('_conos_scoreTreeConsistency', PACKAGE = 'conos', test, ref, leafidmap, minsize)
+}
+
+maxStableClusters <- function(merges, thresholds, minthreshold = 0.8, minsize = 10L) {
+    .Call('_conos_maxStableClusters', PACKAGE = 'conos', merges, thresholds, minthreshold, minsize)
 }
 
 referenceWij <- function(i, j, d, threads, perplexity) {

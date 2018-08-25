@@ -492,3 +492,38 @@ greedy.modularity.cut <- function(wt,N,leaf.labels=NULL,minsize=0,minbreadth=0) 
   hc$order <- order.dendrogram(as.dendrogram(hc))
   return(list(hc=hc,leafContent=x$leafContent,deltaM=x$deltaM,breadth=as.vector(x$breadth),splits=x$splitsequence))
 }
+
+
+##' determine number of detectable clusters given a reference walktrap and a bunch of permuted walktraps
+##'
+##' @param refwt reference walktrap rsult
+##' @param tests a list of permuted walktrap results
+##' @param min.threshold min detectability threshold
+##' @param min.size minimum cluster size (number of leafs)
+##' @param average.thresholds report a single number of detectable clusters for averaged detected thresholds (a list of detected clusters for each element of the tests list is returned by default)
+##' @return number of detectable stable clusters
+##' @export
+stable.tree.clusters <- function(refwt,tests,min.threshold=0.8,min.size=10,n.cores=30,average.thresholds=FALSE) {
+  # calculate detectability thresholds for each node against entire list of tests
+  i<- 0; 
+  thrs <- lapply(tests,function(testwt) {
+    i<<- i+1; cat("i=",i,'\n');
+    idmap <- match(refwt$names,testwt$names)-1L;
+    idmap[is.na(idmap)] <- -1;
+    x <- scoreTreeConsistency(testwt$merges-1L,refwt$merges-1L,idmap ,min.size)
+    x$thresholds;
+  })
+  if(length(tests)==1) {
+    x <- maxStableClusters(refwt$merges-1L,thrs[[1]],min.threshold,min.size)
+    return(length(x$terminalnodes))
+  } else {
+    if(average.thresholds) {
+      # calculate average detection threshold and
+      x <- maxStableClusters(refwt$merges-1L,rowMeans(do.call(cbind,thrs)),min.threshold,min.size)
+      return(length(x$terminalnodes))
+    } else { # reporting the resulting numbers of clusters for each
+      xl <- lapply(thrs,function(z) maxStableClusters(refwt$merges-1L,z,min.threshold,min.size))
+      return(unlist(lapply(xl,function(x) length(x$terminalnodes))))
+    }
+  }
+}

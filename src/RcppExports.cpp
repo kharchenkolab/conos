@@ -27,19 +27,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// findBestClusterThreshold
-Rcpp::List findBestClusterThreshold(arma::imat& merges, arma::ivec& clusters, arma::ivec& clusterTotals);
-RcppExport SEXP _conos_findBestClusterThreshold(SEXP mergesSEXP, SEXP clustersSEXP, SEXP clusterTotalsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::imat& >::type merges(mergesSEXP);
-    Rcpp::traits::input_parameter< arma::ivec& >::type clusters(clustersSEXP);
-    Rcpp::traits::input_parameter< arma::ivec& >::type clusterTotals(clusterTotalsSEXP);
-    rcpp_result_gen = Rcpp::wrap(findBestClusterThreshold(merges, clusters, clusterTotals));
-    return rcpp_result_gen;
-END_RCPP
-}
 // cpcaF
 Rcpp::List cpcaF(const arma::cube& cov, const arma::vec& ng, int ncomp, int maxit, double tol, Nullable<NumericMatrix> eigenvR, bool verbose);
 RcppExport SEXP _conos_cpcaF(SEXP covSEXP, SEXP ngSEXP, SEXP ncompSEXP, SEXP maxitSEXP, SEXP tolSEXP, SEXP eigenvRSEXP, SEXP verboseSEXP) {
@@ -70,6 +57,47 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::ivec& >::type labels(labelsSEXP);
     Rcpp::traits::input_parameter< double >::type minbreadth(minbreadthSEXP);
     rcpp_result_gen = Rcpp::wrap(greedyModularityCut(merges, deltaM, N, minsize, labels, minbreadth));
+    return rcpp_result_gen;
+END_RCPP
+}
+// findBestClusterThreshold
+Rcpp::List findBestClusterThreshold(arma::imat& merges, arma::ivec& clusters, arma::ivec& clusterTotals);
+RcppExport SEXP _conos_findBestClusterThreshold(SEXP mergesSEXP, SEXP clustersSEXP, SEXP clusterTotalsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::imat& >::type merges(mergesSEXP);
+    Rcpp::traits::input_parameter< arma::ivec& >::type clusters(clustersSEXP);
+    Rcpp::traits::input_parameter< arma::ivec& >::type clusterTotals(clusterTotalsSEXP);
+    rcpp_result_gen = Rcpp::wrap(findBestClusterThreshold(merges, clusters, clusterTotals));
+    return rcpp_result_gen;
+END_RCPP
+}
+// scoreTreeConsistency
+Rcpp::List scoreTreeConsistency(arma::imat& test, arma::imat& ref, arma::ivec& leafidmap, int minsize);
+RcppExport SEXP _conos_scoreTreeConsistency(SEXP testSEXP, SEXP refSEXP, SEXP leafidmapSEXP, SEXP minsizeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::imat& >::type test(testSEXP);
+    Rcpp::traits::input_parameter< arma::imat& >::type ref(refSEXP);
+    Rcpp::traits::input_parameter< arma::ivec& >::type leafidmap(leafidmapSEXP);
+    Rcpp::traits::input_parameter< int >::type minsize(minsizeSEXP);
+    rcpp_result_gen = Rcpp::wrap(scoreTreeConsistency(test, ref, leafidmap, minsize));
+    return rcpp_result_gen;
+END_RCPP
+}
+// maxStableClusters
+Rcpp::List maxStableClusters(arma::imat& merges, arma::vec& thresholds, double minthreshold, int minsize);
+RcppExport SEXP _conos_maxStableClusters(SEXP mergesSEXP, SEXP thresholdsSEXP, SEXP minthresholdSEXP, SEXP minsizeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::imat& >::type merges(mergesSEXP);
+    Rcpp::traits::input_parameter< arma::vec& >::type thresholds(thresholdsSEXP);
+    Rcpp::traits::input_parameter< double >::type minthreshold(minthresholdSEXP);
+    Rcpp::traits::input_parameter< int >::type minsize(minsizeSEXP);
+    rcpp_result_gen = Rcpp::wrap(maxStableClusters(merges, thresholds, minthreshold, minsize));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -220,9 +248,11 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_conos_checkBits", (DL_FUNC) &_conos_checkBits, 0},
     {"_conos_checkOpenMP", (DL_FUNC) &_conos_checkOpenMP, 0},
-    {"_conos_findBestClusterThreshold", (DL_FUNC) &_conos_findBestClusterThreshold, 3},
     {"_conos_cpcaF", (DL_FUNC) &_conos_cpcaF, 7},
     {"_conos_greedyModularityCut", (DL_FUNC) &_conos_greedyModularityCut, 6},
+    {"_conos_findBestClusterThreshold", (DL_FUNC) &_conos_findBestClusterThreshold, 3},
+    {"_conos_scoreTreeConsistency", (DL_FUNC) &_conos_scoreTreeConsistency, 4},
+    {"_conos_maxStableClusters", (DL_FUNC) &_conos_maxStableClusters, 4},
     {"_conos_referenceWij", (DL_FUNC) &_conos_referenceWij, 5},
     {"_conos_sgd", (DL_FUNC) &_conos_sgd, 15},
     {"_conos_n2Knn", (DL_FUNC) &_conos_n2Knn, 7},
