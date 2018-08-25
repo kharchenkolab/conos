@@ -399,7 +399,7 @@ server <- function(input, output) { #plots under a slider
   
 }
 
-shinyApp(ui, server)
+#shinyApp(ui, server)
 
 
 
