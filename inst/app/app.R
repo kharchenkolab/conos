@@ -211,7 +211,7 @@ color_nodes <- function (x=NULL,labels_mapping=NULL,hc=NULL,leafContent=NULL,map
 
 
 
-greedy.modularity.cut.result <- conos::greedy.modularity.cut(wt=.con$clusters$walktrap$result, N=.N, leaf.labels=.leaf.labels, minsize=.minsize, minbreadth=.minbreadth)
+greedy.modularity.cut.result <- conos::greedy.modularity.cut(wt=.local_conos_object$clusters$walktrap$result, N=.N, leaf.labels=.leaf.labels, minsize=.minsize, minbreadth=.minbreadth)
 
 leafContent <- greedy.modularity.cut.result$leafContent
 hc <- greedy.modularity.cut.result$hc
@@ -380,21 +380,21 @@ server <- function(input, output) { #plots under a slider
   output$treePlot5 <- renderPlot({
     memb <- dataInput()$memb
     colors <- dataInput()$colors  
-    .con$plotPanel(groups=memb, adjust.func = function(gg) gg + scale_color_manual(values = setNames(colors, names(colors))))
+    .local_conos_object$plotPanel(groups=memb, adjust.func = function(gg) gg + scale_color_manual(values = setNames(colors, names(colors))))
   },width = 1000, height = 800)
   
   output$treePlot6 <- renderPlot({
     memb <- dataInput()$memb
     colors <- dataInput()$colors 
-    .con$plotGraph(groups = memb) + scale_color_manual(values = setNames(colors, names(colors)))
+    .local_conos_object$plotGraph(groups = memb) + scale_color_manual(values = setNames(colors, names(colors)))
   }, height = 320)
   
   observeEvent(input$do, {
     memb <- dataInput()$memb
     gready.cut.groups <- paste("gready.cut.groups.",".clusters",sep=as.character(input$N))
     names <- names(memb)
-    .con$clusters$walktrap[[gready.cut.groups]] <- as.character(memb)
-    names(.con$clusters$walktrap[[gready.cut.groups]]) <- names
+    .local_conos_object$clusters$walktrap[[gready.cut.groups]] <- as.character(memb)
+    names(.local_conos_object$clusters$walktrap[[gready.cut.groups]]) <- names
   })
   
 }
