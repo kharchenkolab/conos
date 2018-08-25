@@ -22,7 +22,7 @@ runShinyApp <- function(wt=NULL, N=NULL, leaf.labels=NULL, minsize=0, minbreadth
     stop("Could not find example directory. Try re-installing `mypackage`.", call. = FALSE)
   }
   
-  source(paste(.appDir,"helprers.R",sep="/"))
+  source(paste(appDir,"helprers.R",sep="/"))
   
   
   greedy.modularity.cut.result <- conos::greedy.modularity.cut(wt=wt, N=N, leaf.labels=leaf.labels, minsize=minsize, minbreadth=minbreadth)
