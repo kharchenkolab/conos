@@ -89,7 +89,7 @@ cpcaFast <- function(covl,ncells,ncomp=10,maxit=1000,tol=1e-6,use.irlba=TRUE,ver
     for(i in 1:length(covl)) {
       S <- S + (ncells[i] / sum(ncells)) * covl[[i]]
     }
-    ev <- irlba::irlba(S,ncomp)
+    ev <- irlba::irlba(S, ncomp, maxit=10000)
     cc <- abind::abind(covl,along=3)
     cpcaF(cc,ncells,ncomp,maxit,tol,eigenvR=ev$v,verbose)
   } else {
@@ -258,6 +258,9 @@ papply <- function(...,n.cores=parallel::detectCores(), mc.preschedule=FALSE) {
       # It should never happen because parallel is specified in Imports
       res <- BiocParallel::bplapply(... , BPPARAM = BiocParallel::MulticoreParam(workers = n.cores))
     }
+  } else {
+    # fall back on lapply
+    res <- lapply(...)
   }
 
   is.error <- (sapply(res, class) == "try-error")
@@ -265,8 +268,7 @@ papply <- function(...,n.cores=parallel::detectCores(), mc.preschedule=FALSE) {
     stop(paste("Errors in papply:", res[is.error]))
   }
 
-  # fall back on lapply
-  lapply(...)
+  return(res)
 }
 
 ##################################
@@ -461,7 +463,7 @@ bestClusterThresholds <- function(res,clusters) {
 ##' @param wt walktrap rsult
 ##' @param N number of top greedy splits to take
 ##' @param leaf.labels leaf sample label factor, for breadth calculations - must be a named factor containing all wt$names, or if wt$names is null, a factor listing cells in the same order as wt leafs
-##' @param minsize minimum size of the branch (in number of leafs) 
+##' @param minsize minimum size of the branch (in number of leafs)
 ##' @param minbreadth minimum allowed breadth of a branch (measured as normalized entropy)
 ##' @return list(hclust - hclust structure of the derived tree, leafContent - binary matrix with rows corresponding to old leaves, columns to new ones, deltaM - modularity increments)
 ##' @export
@@ -471,7 +473,7 @@ greedy.modularity.cut <- function(wt,N,leaf.labels=NULL,minsize=0,minbreadth=0) 
   if(is.null(leaf.labels)) {
     ll <- integer(nleafs);
   } else {
-    if(is.null(wt$names)) { 
+    if(is.null(wt$names)) {
     # assume that leaf.labels are provided in the correct order
       if(length(leaf.labels)!=nleafs) stop("leaf.labels is of incorrct length and wt$names is NULL")
       ll <- as.integer(as.factor(leaf.labels))-1L;
@@ -481,7 +483,7 @@ greedy.modularity.cut <- function(wt,N,leaf.labels=NULL,minsize=0,minbreadth=0) 
     }
   }
   x <- conos:::greedyModularityCut(wt$merges-1L,-1*diff(wt$modularity),N,minsize,ll,minbreadth)
-  if(length(x$splitsequence)<1) { 
+  if(length(x$splitsequence)<1) {
     stop("unable to make a single split using specified size/breadth restrictions")
   }
   # transfer cell names for the leaf content
