@@ -159,6 +159,7 @@ Conos <- setRefClass(
       if(any(is.na(mi))) { # some pairs are missing
         if(verbose) cat('running',sum(is.na(mi)),'additional',space,' space pairs ')
         xl2 <- papply(which(is.na(mi)), function(i) {
+          # W: these functions strongly depends on Pagoda format
           if(space=='CPCA') {
             xcp <- quickCPCA(samples[cis[,i]],k=k,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale,neighborhood.average=neighborhood.average)
           } else if(space=='JNMF') {
@@ -218,7 +219,7 @@ Conos <- setRefClass(
         i <- match(paste(cis[,j],collapse='.vs.'),names(xl));
         if(is.na(i)) { i <- match(paste(rev(cis[,j]),collapse='.vs.'),names(xl)) }
         if(is.na(i)) { stop(paste("unable to find alignment for pair",paste(cis[,j],collapse='.vs.'))) }
-        
+
         if(space=='JNMF') {
           mnn <- get.neighbor.matrix(xl[[i]]$rot1,xl[[i]]$rot2,k,matching=matching.method,metric=metric,l2.sigma=l2.sigma)
           if(verbose) cat(".")
@@ -245,7 +246,7 @@ Conos <- setRefClass(
           } else {
             rot <- rot[,1:ncomps,drop=F]
           }
-          
+
           if (var.scale) {
             # W: get variance scaling
             cgsf <- do.call(cbind,lapply(r.ns,function(x) x$misc$varinfo[odgenes,]$gsf))
@@ -510,7 +511,7 @@ multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=F),
     # get the specified level
     mem <- mt$memberships[level,]; names(mem) <- mt$names;
   }
-    
+
   if(verbose) cat("found",length(unique(mem)),"communities\nrunning walktraps ... ")
 
   # calculate hierarchy on the multilevel clusters

@@ -4,81 +4,81 @@
 #' @importFrom parallel mclapply
 NULL
 
+varScaleFactor <- function(p2.objs, od.genes) {
+  cgsf <- do.call(cbind, lapply(p2.objs,function(x) x$misc$varinfo[od.genes,]$gsf))
+  cgsf <- exp(rowMeans(log(cgsf)))
+  names(cgsf) <- od.genes
+  return(cgsf)
+}
+
+commonOverdispersedGenes <- function(samples, n.odgenes) {
+  od.genes <- table(unlist(lapply(samples, getOverdispersedGenes, n.odgenes)))
+  od.genes <- od.genes[names(od.genes) %in% Reduce(intersect, lapply(samples, getGenes))]
+
+  return(names(od.genes)[1:min(length(od.genes),n.odgenes)])
+}
+
 quickNULL <- function(p2.objs = NULL, n.odgenes = NULL, var.scale = T,
                       verbose = TRUE, neighborhood.average=FALSE) {
-    if(length(p2.objs) != 2) stop('quickNULL only supports pairwise alignment');
-    ## Get common set of genes
-    if(is.null(n.odgenes)) {
-        odgenes <- table(unlist(lapply(p2.objs,function(x) x$misc$odgenes)))
-    } else {
-        odgenes <- table(unlist(lapply(p2.objs,function(x) rownames(x$misc$varinfo)[(order(x$misc$varinfo$lp,decreasing=F)[1:min(ncol(x$counts),n.odgenes)])])))
+  if(length(p2.objs) != 2) stop('quickNULL only supports pairwise alignment');
+
+  od.genes <- commonOverdispersedGenes(p2.objs, n.odgenes)
+
+  ## Common variance scaling
+  if (var.scale) {
+    cgsf <- varScaleFactor(p2.objs, od.genes)
+  }
+  ## Prepare the matrices
+  cproj <- lapply(p2.objs,function(r) {
+    x <- r$counts[,od.genes];
+    if(var.scale) {
+      x@x <- x@x*rep(cgsf,diff(x@p))
     }
-    odgenes <- odgenes[names(odgenes) %in% Reduce(intersect,lapply(p2.objs,function(x) colnames(x$counts)))]
-    odgenes <- names(odgenes)[1:min(length(odgenes),n.odgenes)]
-    ## Common variance scaling
-    if (var.scale) {
-        cgsf <- do.call(cbind,lapply(p2.objs,function(x) x$misc$varinfo[odgenes,]$gsf))
-        cgsf <- exp(rowMeans(log(cgsf)))
-        names(cgsf) <- odgenes
+    if(neighborhood.average) {
+      ## use the averaged matrices
+      xk <- r$misc$edgeMat$quickCPCA;
+      x <- Matrix::t(xk) %*% x
     }
-    ## Prepare the matrices
-    cproj <- lapply(p2.objs,function(r) {
-        x <- r$counts[,odgenes];
-        if(var.scale) {
-            x@x <- x@x*rep(cgsf,diff(x@p))
-        }
-        if(neighborhood.average) {
-            ## use the averaged matrices
-            xk <- r$misc$edgeMat$quickCPCA;
-            x <- Matrix::t(xk) %*% x
-        }
-        x
-    })
-    list(genespace1=cproj[[1]], genespace2=cproj[[2]],cgsf=cgsf)
+    x
+  })
+  list(genespace1=cproj[[1]], genespace2=cproj[[2]],cgsf=cgsf)
 }
 
 #' Perform pairwise JNMF
 quickJNMF <- function(p2.objs = NULL, n.comps = 30, n.odgenes=NULL, var.scale=TRUE,
                       verbose =TRUE, max.iter=1000, neighborhood.average=FALSE) {
-    ## Stop if more than 2 samples
-    if (length(p2.objs) != 2) stop('quickJNMF only supports pairwise alignment');
-    ## Get common set of genes
-    if(is.null(n.odgenes)) {
-        odgenes <- table(unlist(lapply(p2.objs,function(x) x$misc$odgenes)))
-    } else {
-        odgenes <- table(unlist(lapply(p2.objs,function(x) rownames(x$misc$varinfo)[(order(x$misc$varinfo$lp,decreasing=F)[1:min(ncol(x$counts),n.odgenes)])])))
+  ## Stop if more than 2 samples
+  if (length(p2.objs) != 2) stop('quickJNMF only supports pairwise alignment');
+
+  od.genes <- commonOverdispersedGenes(p2.objs, n.odgenes)
+
+  ## Common variance scaling
+  if (var.scale) {
+    cgsf <- varScaleFactor(p2.objs, od.genes)
+  }
+  ## Prepare the matrices
+  cproj <- lapply(p2.objs,function(r) {
+    x <- r$counts[,od.genes];
+    if(var.scale) {
+      x@x <- x@x*rep(cgsf,diff(x@p))
     }
-    odgenes <- odgenes[names(odgenes) %in% Reduce(intersect,lapply(p2.objs,function(x) colnames(x$counts)))]
-    odgenes <- names(odgenes)[1:min(length(odgenes),n.odgenes)]
-    ## Common variance scaling
-    if (var.scale) {
-        cgsf <- do.call(cbind,lapply(p2.objs,function(x) x$misc$varinfo[odgenes,]$gsf))
-        cgsf <- exp(rowMeans(log(cgsf)))
-        names(cgsf) <- odgenes
+    if(neighborhood.average) {
+      ## use the averaged matrices
+      xk <- r$misc$edgeMat$quickCPCA;
+      x <- Matrix::t(xk) %*% x
     }
-    ## Prepare the matrices
-    cproj <- lapply(p2.objs,function(r) {
-        x <- r$counts[,odgenes];
-        if(var.scale) {
-            x@x <- x@x*rep(cgsf,diff(x@p))
-        }
-        if(neighborhood.average) {
-            ## use the averaged matrices
-            xk <- r$misc$edgeMat$quickCPCA;
-            x <- Matrix::t(xk) %*% x
-        }
-        x
-    })
-    ## Convert to matrix
-    cproj <- lapply(cproj, as.matrix)
-    rjnmf.seed <- 12345
-    ## Do JNMF
-    z <- Rjnmf::Rjnmf(Xs=t(cproj[[1]]), Xu=t(cproj[[2]]), k=n.comps, alpha=0.5, lambda = 0.5, epsilon = 0.001,
-                 maxiter= max.iter, verbose=F, seed=rjnmf.seed)
-    rot1 <- cproj[[1]] %*% z$W
-    rot2 <- cproj[[2]] %*% z$W
-    ## return
-    list(rot1=rot1, rot2=rot2,z=z,cgsf=cgsf)
+    x
+  })
+  ## Convert to matrix
+  cproj <- lapply(cproj, as.matrix)
+  rjnmf.seed <- 12345
+  ## Do JNMF
+  z <- Rjnmf::Rjnmf(Xs=t(cproj[[1]]), Xu=t(cproj[[2]]), k=n.comps, alpha=0.5, lambda = 0.5, epsilon = 0.001,
+                    maxiter= max.iter, verbose=F, seed=rjnmf.seed)
+  rot1 <- cproj[[1]] %*% z$W
+  rot2 <- cproj[[2]] %*% z$W
+  ## return
+  list(rot1=rot1, rot2=rot2,z=z,cgsf=cgsf)
 }
 
 cpcaFast <- function(covl,ncells,ncomp=10,maxit=1000,tol=1e-6,use.irlba=TRUE,verbose=F) {
@@ -115,26 +115,17 @@ quickCPCA <- function(r.n,k=30,ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=
 
   # select a common set of genes
   if(is.null(cgsf)) {
-    if(is.null(n.odgenes)) {
-      odgenes <- table(unlist(lapply(r.n,function(x) x$misc$odgenes)))
-    } else {
-      odgenes <- table(unlist(lapply(r.n,function(x) rownames(x$misc$varinfo)[(order(x$misc$varinfo$lp,decreasing=F)[1:min(ncol(x$counts),n.odgenes)])])))
-    }
-    odgenes <- odgenes[names(odgenes) %in% Reduce(intersect,lapply(r.n,function(x) colnames(x$counts)))]
-    odgenes <- names(odgenes)[1:min(length(odgenes),n.odgenes)]
+    od.genes <- commonOverdispersedGenes(r.n, n.odgenes)
   } else {
-    odgenes <- names(cgsf)
+    od.genes <- names(cgsf)
   }
 
-  ncomps <- min(ncomps, length(odgenes) - 1)
+  ncomps <- min(ncomps, length(od.genes) - 1)
 
-  if(verbose) cat("using",length(odgenes),"odgenes\n")
+  if(verbose) cat("using",length(od.genes),"od genes\n")
   # common variance scaling
-  if (var.scale) {
-    if(is.null(cgsf)) {
-      cgsf <- do.call(cbind,lapply(r.n,function(x) x$misc$varinfo[odgenes,]$gsf))
-      cgsf <- exp(rowMeans(log(cgsf)))
-    }
+  if (var.scale && is.null(cgsf)) {
+    cgsf <- varScaleFactor(r.n, od.genes)
   }
 
 
@@ -148,7 +139,7 @@ quickCPCA <- function(r.n,k=30,ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=
 
 
   covl <- lapply(r.n,function(r) {
-    x <- r$counts[,odgenes];
+    x <- r$counts[,od.genes];
     if(var.scale) {
       x@x <- x@x*rep(cgsf,diff(x@p))
     }
@@ -178,7 +169,7 @@ quickCPCA <- function(r.n,k=30,ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=
   xcp <- cpcaFast(covl,ncells,ncomp=ncomps,verbose=verbose,maxit=500,tol=1e-5);
   #system.time(xcp <- cpca:::cpca_stepwise_base(covl,ncells,k=ncomps))
   #xcp <- cpc(abind(covl,along=3),k=ncomps)
-  rownames(xcp$CPC) <- odgenes;
+  rownames(xcp$CPC) <- od.genes;
   #xcp$rot <- xcp$CPC*cgsf;
   if(verbose) cat(' done\n')
   return(xcp);
@@ -199,30 +190,21 @@ quickPlainPCA <- function(r.n,k=30,ncomps=30,n.odgenes=NULL,var.scale=TRUE,verbo
 
   # select a common set of genes
   if(is.null(cgsf)) {
-    if(is.null(n.odgenes)) {
-      odgenes <- table(unlist(lapply(r.n,function(x) x$misc$odgenes)))
-    } else {
-      odgenes <- table(unlist(lapply(r.n,function(x) rownames(x$misc$varinfo)[(order(x$misc$varinfo$lp,decreasing=F)[1:min(ncol(x$counts),n.odgenes)])])))
-    }
-    odgenes <- odgenes[names(odgenes) %in% Reduce(intersect,lapply(r.n,function(x) colnames(x$counts)))]
-    odgenes <- names(odgenes)[1:min(length(odgenes),n.odgenes)]
+    od.genes <- commonOverdispersedGenes(p2.objs, n.odgenes)
   } else {
-    odgenes <- names(cgsf)
+    od.genes <- names(cgsf)
   }
-  if(verbose) cat("using",length(odgenes),"odgenes\n")
+  if(verbose) cat("using",length(od.genes),"od genes\n")
 
   # common variance scaling
-  if (var.scale) {
-    if(is.null(cgsf)) {
-      cgsf <- do.call(cbind,lapply(r.n,function(x) x$misc$varinfo[odgenes,]$gsf))
-      cgsf <- exp(rowMeans(log(cgsf)))
-    }
+  if (var.scale && is.null(cgsf)) {
+    cgsf <- varScaleFactor(r.n, od.genes)
   }
 
   if(verbose) cat('calculating PCs for',length(r.n),' datasets ...')
 
   pcs <- lapply(r.n,function(r) {
-    x <- r$counts[,odgenes];
+    x <- r$counts[,od.genes];
     if(var.scale) {
       x@x <- x@x*rep(cgsf,diff(x@p))
     }
@@ -237,7 +219,7 @@ quickPlainPCA <- function(r.n,k=30,ncomps=30,n.odgenes=NULL,var.scale=TRUE,verbo
     pcs$v
   })
   pcs <- do.call(cbind,pcs)
-  rownames(pcs) <- odgenes;
+  rownames(pcs) <- od.genes;
 
   if(verbose) cat(' done\n')
 
