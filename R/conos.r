@@ -506,13 +506,13 @@ greedy.modularity.cut <- function(wt,N,leaf.labels=NULL,minsize=0,minbreadth=0) 
 stable.tree.clusters <- function(refwt,tests,min.threshold=0.8,min.size=10,n.cores=30,average.thresholds=FALSE) {
   # calculate detectability thresholds for each node against entire list of tests
   i<- 0; 
-  thrs <- lapply(tests,function(testwt) {
+  thrs <- papply(tests,function(testwt) {
     i<<- i+1; cat("i=",i,'\n');
     idmap <- match(refwt$names,testwt$names)-1L;
     idmap[is.na(idmap)] <- -1;
     x <- scoreTreeConsistency(testwt$merges-1L,refwt$merges-1L,idmap ,min.size)
     x$thresholds;
-  })
+  },n.cores=n.cores)
   if(length(tests)==1) {
     x <- maxStableClusters(refwt$merges-1L,thrs[[1]],min.threshold,min.size)
     return(length(x$terminalnodes))
