@@ -36,12 +36,12 @@ quickNULL <- function(p2.objs = NULL, n.odgenes = NULL, var.scale = T,
     }
     if(neighborhood.average) {
       ## use the averaged matrices
-      xk <- r$misc$edgeMat$quickCPCA;
+      xk <- edgeMat(r)$mat
       x <- Matrix::t(xk) %*% x
     }
     x
   })
-  list(genespace1=cproj[[1]], genespace2=cproj[[2]],cgsf=cgsf)
+  list(genespace1=cproj[[1]], genespace2=cproj[[2]])
 }
 
 #' Perform pairwise JNMF
@@ -64,7 +64,7 @@ quickJNMF <- function(p2.objs = NULL, n.comps = 30, n.odgenes=NULL, var.scale=TR
     }
     if(neighborhood.average) {
       ## use the averaged matrices
-      xk <- r$misc$edgeMat$quickCPCA;
+      xk <- edgeMat(r)$mat
       x <- Matrix::t(xk) %*% x
     }
     x
@@ -78,7 +78,7 @@ quickJNMF <- function(p2.objs = NULL, n.comps = 30, n.odgenes=NULL, var.scale=TR
   rot1 <- cproj[[1]] %*% z$W
   rot2 <- cproj[[2]] %*% z$W
   ## return
-  list(rot1=rot1, rot2=rot2,z=z,cgsf=cgsf)
+  list(rot1=rot1, rot2=rot2,z=z)
 }
 
 cpcaFast <- function(covl,ncells,ncomp=10,maxit=1000,tol=1e-6,use.irlba=TRUE,verbose=F) {
@@ -144,7 +144,7 @@ quickCPCA <- function(r.n,k=30,ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=
       x@x <- x@x*rep(cgsf,diff(x@p))
     }
     if(neighborhood.average) {
-      xk <- r$misc$edgeMat$quickCPCA;
+      xk <- edgeMat(r)$mat
       x <- t(xk) %*% x
     }
     sparse.cov(x)
@@ -209,7 +209,7 @@ quickPlainPCA <- function(r.n,k=30,ncomps=30,n.odgenes=NULL,var.scale=TRUE,verbo
       x@x <- x@x*rep(cgsf,diff(x@p))
     }
     if(neighborhood.average) {
-      xk <- r$misc$edgeMat$quickCPCA;
+      xk <- edgeMat(r)$mat
       x <- t(xk) %*% x
     }
     x <- x

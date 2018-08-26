@@ -117,15 +117,13 @@ Conos <- setRefClass(
         if(verbose)  cat("calculating local averaging neighborhoods ")
         lapply(samples,function(r) {
           # W: get PCA reduction
-          if(is.null(r$misc$edgeMat$quickCPCA) || r$misc$edgeMat$quickCPCAk != neighborhood.average.k) {
-            xk <- n2Knn(r$reductions$PCA[rownames(r$counts),],neighborhood.average.k,n.cores,FALSE)
+          if(is.null(edgeMat(r)$mat) || edgeMat(r)$k != neighborhood.average.k) {
+            xk <- n2Knn(getPca(r)[rownames(r$counts),],neighborhood.average.k,n.cores,FALSE)
             xk@x <- pmax(1-xk@x,0);
             diag(xk) <- 1;
             xk <- t(t(xk)/colSums(xk))
             colnames(xk) <- rownames(xk) <- rownames(r$counts)
-            # W: store averaging neighborhoods
-            r$misc$edgeMat$quickCPCA <- xk;
-            r$misc$edgeMat$quickCPCAk <- neighborhood.average.k;
+            edgeMat(r) <- list(mat=xk, k=neighborhood.average.k)
             if(verbose) cat(".")
           }
         })
@@ -240,6 +238,7 @@ Conos <- setRefClass(
           } else {
             stop("unknown reduction provided")
           }
+
           # TODO: a more careful analysis of parameters used to calculate the cached version
           if(ncomps>ncol(rot)) {
             warning(paste0("specified ncomps (",ncomps,") is greater than the cached version (",ncol(rot),")"))
@@ -249,8 +248,7 @@ Conos <- setRefClass(
 
           if (var.scale) {
             # W: get variance scaling
-            cgsf <- do.call(cbind,lapply(r.ns,function(x) x$misc$varinfo[odgenes,]$gsf))
-            cgsf <- exp(rowMeans(log(cgsf)))
+            cgsf <- varScaleFactor(r.ns, odgenes)
           }
           # create matrices, adjust variance
           cproj <- lapply(r.ns,function(r) {
@@ -260,7 +258,7 @@ Conos <- setRefClass(
             }
             if(neighborhood.average) {
               # W: get neighborhood averaging matrix
-              xk <- r$misc$edgeMat$quickCPCA;
+              xk <- edgeMat(r)$mat
               x <- t(xk) %*% x
             }
             x
@@ -350,6 +348,7 @@ Conos <- setRefClass(
 
     plotPanel=function(clustering=NULL, groups=NULL, colors=NULL, gene=NULL, embedding.type='tSNE', ncol=NULL, nrow=NULL, raster=FALSE, panel.size=NULL,
                        adjust.func=NULL, use.local.clusters=FALSE, plot.theme=NULL, ...) {
+      # W: clusters and plots
       if (use.local.clusters) {
         if (is.null(clustering)) {
           stop("You have to provide 'clustering' parameter to be able to use local clusters")
