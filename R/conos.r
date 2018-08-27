@@ -453,6 +453,7 @@ bestClusterThresholds <- function(res,clusters) {
   cl <- as.integer(clusters[res$names]);
   clT <- tabulate(cl,nbins=length(levels(clusters)))
   # run
+  res$merges <- igraph:::complete.dend(res,FALSE)
   x <- findBestClusterThreshold(res$merges-1L,cl-1L,clT)
 }
 
@@ -468,6 +469,7 @@ bestClusterThresholds <- function(res,clusters) {
 ##' @return list(hclust - hclust structure of the derived tree, leafContent - binary matrix with rows corresponding to old leaves, columns to new ones, deltaM - modularity increments)
 ##' @export
 greedy.modularity.cut <- function(wt,N,leaf.labels=NULL,minsize=0,minbreadth=0) {
+  wt$merges <- igraph:::complete.dend(wt,FALSE)
   # prepare labels
   nleafs <- nrow(wt$merges)+1;
   if(is.null(leaf.labels)) {
@@ -507,9 +509,11 @@ greedy.modularity.cut <- function(wt,N,leaf.labels=NULL,minsize=0,minbreadth=0) 
 ##' @export
 stable.tree.clusters <- function(refwt,tests,min.threshold=0.8,min.size=10,n.cores=30,average.thresholds=FALSE) {
   # calculate detectability thresholds for each node against entire list of tests
-  i<- 0; 
+  #i<- 0; 
+  refwt$merges <- igraph:::complete.dend(refwt,FALSE)
+  for(i in 1:length(tests)) tests[[i]]$merges <- igraph:::complete.dend(tests[[i]],FALSE)
   thrs <- papply(tests,function(testwt) {
-    i<<- i+1; cat("i=",i,'\n');
+    #i<<- i+1; cat("i=",i,'\n');
     idmap <- match(refwt$names,testwt$names)-1L;
     idmap[is.na(idmap)] <- -1;
     x <- scoreTreeConsistency(testwt$merges-1L,refwt$merges-1L,idmap ,min.size)
