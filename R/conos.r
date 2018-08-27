@@ -4,73 +4,97 @@
 #' @importFrom parallel mclapply
 NULL
 
-varScaleFactor <- function(p2.objs, od.genes) {
-  cgsf <- do.call(cbind, lapply(p2.objs,function(x) x$misc$varinfo[od.genes,]$gsf))
-  cgsf <- exp(rowMeans(log(cgsf)))
-  names(cgsf) <- od.genes
-  return(cgsf)
+scaledMatricesP2 <- function(p2.objs, data.type, od.genes, var.scale, neighborhood.average) {
+  ## Common variance scaling
+  if (var.scale) {
+    cgsf <- do.call(cbind, lapply(p2.objs,function(x) x$misc$varinfo[od.genes,]$gsf)) %>%
+      log() %>% rowMeans() %>% exp()
+  }
+  ## Prepare the matrices
+  cproj <- lapply(p2.objs,function(r) {
+    if (data.type == 'counts') {
+      x <- r$counts[,od.genes];
+    } else if (data.type %in% names(r$reductions)){
+      x <- r$reductions[[data.type]][,od.genes];
+    } else {
+      stop("No reduction named '", data.type, "' in pagoda")
+    }
+
+    if(var.scale) {
+      # x@x <- x@x*rep(r$misc$varinfo[od.genes,]$gsf,diff(x@p))
+      x@x <- x@x*rep(cgsf,diff(x@p))
+    }
+    if(neighborhood.average) {
+      ## use the averaged matrices
+      x <- Matrix::t(edgeMat(r)$mat) %*% x
+    }
+    x
+  })
+
+  return(cproj)
 }
 
-commonOverdispersedGenes <- function(samples, n.odgenes) {
+scaledMatricesSeurat <- function(so.objs, data.type, od.genes, var.scale, neighborhood.average) {
+  if (var.scale) {
+    warning("Seurat doesn't support variance scaling")
+  }
+
+  if (data.type == 'scaled') {
+    x.data <- lapply(so.objs, function(so) t(so@scale.data)[,od.genes])
+  } else if (data.type == 'counts') {
+    x.data <- lapply(so.objs, function(so) t(so@data)[,od.genes])
+  } else {
+    stop("Unknown data type for Seurat: ", data.type)
+  }
+
+  res <- mapply(function(so, x) if(neighborhood.average) Matrix::t(edgeMat(so)$mat) %*% x else x,
+                so.objs, x.data)
+
+  return(res)
+}
+
+scaledMatrices <- function(samples, data.type, od.genes, var.scale, neighborhood.average) {
+  if (class(samples[[1]]) == "Pagoda2")
+    return(scaledMatricesP2(samples, data.type=data.type, od.genes, var.scale, neighborhood.average))
+
+  if (class(samples[[1]]) == "seurat")
+    return(scaledMatricesSeurat(samples, data.type=data.type, od.genes, var.scale, neighborhood.average))
+
+  stop("Unknown class of sample: ", class(samples[[1]]))
+}
+
+commonOverdispersedGenes <- function(samples, n.odgenes, verbose) {
   od.genes <- table(unlist(lapply(samples, getOverdispersedGenes, n.odgenes)))
   od.genes <- od.genes[names(od.genes) %in% Reduce(intersect, lapply(samples, getGenes))]
+
+  if(verbose) cat("using",length(od.genes),"od genes\n")
 
   return(names(od.genes)[1:min(length(od.genes),n.odgenes)])
 }
 
-quickNULL <- function(p2.objs = NULL, n.odgenes = NULL, var.scale = T,
+quickNULL <- function(p2.objs, data.type='counts', n.odgenes = NULL, var.scale = T,
                       verbose = TRUE, neighborhood.average=FALSE) {
   if(length(p2.objs) != 2) stop('quickNULL only supports pairwise alignment');
 
-  od.genes <- commonOverdispersedGenes(p2.objs, n.odgenes)
+  od.genes <- commonOverdispersedGenes(p2.objs, n.odgenes, verbose=verbose)
+  cproj <- scaledMatrices(p2.objs, data.type=data.type, od.genes=od.genes, var.scale=var.scale,
+                          neighborhood.average=neighborhood.average)
 
-  ## Common variance scaling
-  if (var.scale) {
-    cgsf <- varScaleFactor(p2.objs, od.genes)
-  }
-  ## Prepare the matrices
-  cproj <- lapply(p2.objs,function(r) {
-    x <- r$counts[,od.genes];
-    if(var.scale) {
-      x@x <- x@x*rep(cgsf,diff(x@p))
-    }
-    if(neighborhood.average) {
-      ## use the averaged matrices
-      xk <- edgeMat(r)$mat
-      x <- Matrix::t(xk) %*% x
-    }
-    x
-  })
-  list(genespace1=cproj[[1]], genespace2=cproj[[2]])
+  return(list(genespace1=cproj[[1]], genespace2=cproj[[2]]))
 }
 
 #' Perform pairwise JNMF
-quickJNMF <- function(p2.objs = NULL, n.comps = 30, n.odgenes=NULL, var.scale=TRUE,
+quickJNMF <- function(p2.objs, data.type='counts', n.comps = 30, n.odgenes=NULL, var.scale=TRUE,
                       verbose =TRUE, max.iter=1000, neighborhood.average=FALSE) {
   ## Stop if more than 2 samples
   if (length(p2.objs) != 2) stop('quickJNMF only supports pairwise alignment');
 
-  od.genes <- commonOverdispersedGenes(p2.objs, n.odgenes)
+  od.genes <- commonOverdispersedGenes(p2.objs, n.odgenes, verbose=verbose)
 
-  ## Common variance scaling
-  if (var.scale) {
-    cgsf <- varScaleFactor(p2.objs, od.genes)
-  }
-  ## Prepare the matrices
-  cproj <- lapply(p2.objs,function(r) {
-    x <- r$counts[,od.genes];
-    if(var.scale) {
-      x@x <- x@x*rep(cgsf,diff(x@p))
-    }
-    if(neighborhood.average) {
-      ## use the averaged matrices
-      xk <- edgeMat(r)$mat
-      x <- Matrix::t(xk) %*% x
-    }
-    x
-  })
-  ## Convert to matrix
-  cproj <- lapply(cproj, as.matrix)
+  cproj <- scaledMatrices(p2.objs, data.type=data.type, od.genes=od.genes, var.scale=var.scale,
+                          neighborhood.average=neighborhood.average) %>%
+    lapply(as.matrix)
+
   rjnmf.seed <- 12345
   ## Do JNMF
   z <- Rjnmf::Rjnmf(Xs=t(cproj[[1]]), Xu=t(cproj[[2]]), k=n.comps, alpha=0.5, lambda = 0.5, epsilon = 0.001,
@@ -105,50 +129,24 @@ cpcaFast <- function(covl,ncells,ncomp=10,maxit=1000,tol=1e-6,use.irlba=TRUE,ver
 #' @param n.odgenes number of overdispersed genes to take from each dataset
 #' @param var.scale whether to scale variance (default=TRUE)
 #' @param verbose whether to be verbose
-#' @param cgsf an optional set of common genes to align on
 #' @param neighborhood.average use neighborhood average values
 #' @param n.cores number of cores to use
-quickCPCA <- function(r.n,k=30,ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=TRUE,cgsf=NULL,neighborhood.average=FALSE,n.cores=30) {
-  #require(parallel)
-  #require(cpca)
-  #require(Matrix)
-
-  # select a common set of genes
-  if(is.null(cgsf)) {
-    od.genes <- commonOverdispersedGenes(r.n, n.odgenes)
-  } else {
-    od.genes <- names(cgsf)
-  }
+quickCPCA <- function(r.n,data.type='counts',k=30,ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=TRUE,neighborhood.average=FALSE,n.cores=30) {
+  od.genes <- commonOverdispersedGenes(r.n, n.odgenes, verbose=verbose)
 
   ncomps <- min(ncomps, length(od.genes) - 1)
 
-  if(verbose) cat("using",length(od.genes),"od genes\n")
-  # common variance scaling
-  if (var.scale && is.null(cgsf)) {
-    cgsf <- varScaleFactor(r.n, od.genes)
-  }
-
-
   if(verbose) cat('calculating covariances for',length(r.n),' datasets ...')
 
-  # use internal C++ implementation
-  sparse.cov <- function(x,cMeans=NULL){
-    if(is.null(cMeans)) {  cMeans <- Matrix::colMeans(x) }
-    covmat <- spcov(x,cMeans);
-  }
+  ## # use internal C++ implementation
+  ## sparse.cov <- function(x,cMeans=NULL){
+  ##   if(is.null(cMeans)) {  cMeans <- Matrix::colMeans(x) }
+  ##   covmat <- spcov(x,cMeans);
+  ## }
 
-
-  covl <- lapply(r.n,function(r) {
-    x <- r$counts[,od.genes];
-    if(var.scale) {
-      x@x <- x@x*rep(cgsf,diff(x@p))
-    }
-    if(neighborhood.average) {
-      xk <- edgeMat(r)$mat
-      x <- t(xk) %*% x
-    }
-    sparse.cov(x)
-  })
+  covl <- scaledMatrices(r.n, data.type=data.type, od.genes=od.genes, var.scale=var.scale,
+                         neighborhood.average=neighborhood.average) %>%
+    lapply(function(x) spcov(as(x, "dgCMatrix"), Matrix::colMeans(x)))
 
   ## # centering
   ## if(common.centering) {
@@ -163,7 +161,7 @@ quickCPCA <- function(r.n,k=30,ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=
   if(verbose) cat(' done\n')
 
   #W: get counts
-  ncells <- unlist(lapply(r.n,function(x) nrow(x$counts)));
+  ncells <- unlist(lapply(r.n,function(x) length(getCellNames(x))));
   if(verbose) cat('common PCs ...')
   #xcp <- cpca(covl,ncells,ncomp=ncomps)
   xcp <- cpcaFast(covl,ncells,ncomp=ncomps,verbose=verbose,maxit=500,tol=1e-5);
@@ -186,38 +184,20 @@ quickCPCA <- function(r.n,k=30,ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=
 #' @param cgsf an optional set of common genes to align on
 #' @param neighborhood.average use neighborhood average values
 #' @param n.cores number of cores to use
-quickPlainPCA <- function(r.n,k=30,ncomps=30,n.odgenes=NULL,var.scale=TRUE,verbose=TRUE,cgsf=NULL,neighborhood.average=FALSE,n.cores=30) {
-
-  # select a common set of genes
-  if(is.null(cgsf)) {
-    od.genes <- commonOverdispersedGenes(p2.objs, n.odgenes)
-  } else {
-    od.genes <- names(cgsf)
-  }
-  if(verbose) cat("using",length(od.genes),"od genes\n")
-
-  # common variance scaling
-  if (var.scale && is.null(cgsf)) {
-    cgsf <- varScaleFactor(r.n, od.genes)
-  }
+quickPlainPCA <- function(r.n,data.type='counts',k=30,ncomps=30,n.odgenes=NULL,var.scale=TRUE,verbose=TRUE,neighborhood.average=FALSE,n.cores=30) {
+  od.genes <- commonOverdispersedGenes(r.n, n.odgenes, verbose=verbose)
 
   if(verbose) cat('calculating PCs for',length(r.n),' datasets ...')
 
-  pcs <- lapply(r.n,function(r) {
-    x <- r$counts[,od.genes];
-    if(var.scale) {
-      x@x <- x@x*rep(cgsf,diff(x@p))
-    }
-    if(neighborhood.average) {
-      xk <- edgeMat(r)$mat
-      x <- t(xk) %*% x
-    }
-    x <- x
-    cm <- Matrix::colMeans(x);
-    pcs <- irlba::irlba(x, nv=ncomps, nu =0, center=cm, right_only = F, reorth = T);
-    #rownames(pcs$v) <- colnames(x);
-    pcs$v
-  })
+  pcs <- scaledMatrices(r.n, data.type=data.type, od.genes=od.genes, var.scale=var.scale,
+                        neighborhood.average=neighborhood.average) %>%
+    lapply(function(x) {
+      cm <- Matrix::colMeans(x);
+      pcs <- irlba::irlba(x, nv=ncomps, nu =0, center=cm, right_only = F, reorth = T);
+      #rownames(pcs$v) <- colnames(x);
+      pcs$v
+    })
+
   pcs <- do.call(cbind,pcs)
   rownames(pcs) <- od.genes;
 
@@ -270,7 +250,7 @@ getClusterPrivacy <- function(p2list, pjc, priv.cutoff= 0.99) {
         x <- p2list[[n]];
         data.frame(
             p2name = c(n),
-            cellid = rownames(x$counts)
+            cellid = getCellNames(x)
         )
     }))
     ## get sample / cluster counts
@@ -297,7 +277,7 @@ sn <- function(x) { names(x) <- x; x }
 getClusterRelationshipConsistency <- function(p2list, pjc) {
     hcs <- lapply(sn(names(p2list)), function(n) {
         x <- p2list[[n]]
-        app.cl <- pjc[names(pjc) %in% rownames(x$counts)]
+        app.cl <- pjc[names(pjc) %in% getCellNames(x)]
         cpm <- sweep(rowsum(as.matrix(x$misc$rawCounts),
                             app.cl[rownames(x$misc$rawCounts)]),1, table(app.cl), FUN='/') * 1e6
         as.dendrogram(hclust(as.dist( 1 - cor(t(cpm)))))
@@ -337,7 +317,7 @@ getPercentGlobalClusters <- function(p2list, pjc, pc.samples.cutoff = 0.9, min.c
         x <- p2list[[n]];
         data.frame(
             p2name = c(n),
-            cellid = rownames(x$counts)
+            cellid = getCellNames(x)
         )
     }))
     ## get sample / cluster counts
@@ -381,8 +361,10 @@ postProcessWalktrapClusters <- function(p2list, pjc, no.cl = 200, size.cutoff = 
         try({
             ## get global cluster centroids for cells in this app
             global.cluster.filtered.bd <- factorBreakdown(global.cluster.filtered)
+
+            # W: counts accessor
             global.cl.centers <- do.call(rbind, lapply(global.cluster.filtered.bd, function(cells) {
-                cells <- cells[cells %in% rownames(p2o$counts)]
+                cells <- cells[cells %in% getCellNames(p2o)]
                 if (length(cells) > 1) {
                     Matrix::colSums(p2o$counts[cells,])
                 } else {
@@ -392,6 +374,8 @@ postProcessWalktrapClusters <- function(p2list, pjc, no.cl = 200, size.cutoff = 
             ## cells to reassign in this app
             cells.reassign <- names(global.cluster[global.cluster %in% cl.to.merge])
             cells.reassign <- cells.reassign[cells.reassign %in% rownames(p2o$counts)]
+
+            # W: counts accessor
             xcor <- cor(t(as.matrix(p2o$counts[cells.reassign,,drop=FALSE])), t(as.matrix(global.cl.centers)))
             ## Get new cluster assignments
             new.cluster.assign <- apply(xcor,1, function(x) {colnames(xcor)[which.max(x)]})

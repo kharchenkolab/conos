@@ -68,10 +68,10 @@ Conos <- setRefClass(
             stop("x is not a list of pagoda2 or Seurat objects")
           }
 
-          if (class(x[[1]]) == 'Pagoda2') { # Pagoda2
+          if (class(x[[1]]) %in% c('Pagoda2', 'seurat')) {
             addSamples(x);
           } else {
-            stop("only pagoda2 result lists are currently supported");
+            stop("only Pagoda2 or Seurat result lists are currently supported");
           }
         }
       }
@@ -111,22 +111,23 @@ Conos <- setRefClass(
       samples <<- c(samples,x);
     },
 
-    updatePairs=function(space='CPCA',ncomps=50,n.odgenes=1e3,var.scale=TRUE,neighborhood.average=FALSE,neighborhood.average.k=10, exclude.pairs=NULL, exclude.samples=NULL, verbose=FALSE) {
+    updatePairs=function(space='CPCA',data.type='counts',ncomps=50,n.odgenes=1e3,var.scale=TRUE,neighborhood.average=FALSE,neighborhood.average.k=10, exclude.pairs=NULL, exclude.samples=NULL, verbose=FALSE) {
       if(neighborhood.average) {
         # pre-calculate averaging matrices for each sample
         if(verbose)  cat("calculating local averaging neighborhoods ")
-        lapply(samples,function(r) {
-          # W: get PCA reduction
-          if(is.null(edgeMat(r)$mat) || edgeMat(r)$k != neighborhood.average.k) {
-            xk <- n2Knn(getPca(r)[rownames(r$counts),],neighborhood.average.k,n.cores,FALSE)
-            xk@x <- pmax(1-xk@x,0);
-            diag(xk) <- 1;
-            xk <- t(t(xk)/colSums(xk))
-            colnames(xk) <- rownames(xk) <- rownames(r$counts)
-            edgeMat(r) <- list(mat=xk, k=neighborhood.average.k)
-            if(verbose) cat(".")
-          }
-        })
+        for (n in names(samples)) {
+          r <- samples[[n]]
+          if(!is.null(edgeMat(r)$mat) && edgeMat(r)$k != neighborhood.average.k)
+            next
+
+          xk <- n2Knn(getPca(r)[getCellNames(r),],neighborhood.average.k,n.cores,FALSE)
+          xk@x <- pmax(1-xk@x,0);
+          diag(xk) <- 1;
+          xk <- t(t(xk)/colSums(xk))
+          colnames(xk) <- rownames(xk) <- getCellNames(r)
+          edgeMat(samples[[n]]) <<- list(mat=xk, k=neighborhood.average.k)
+          if(verbose) cat(".")
+        }
         if(verbose) cat(" done\n")
       }
 
@@ -157,15 +158,14 @@ Conos <- setRefClass(
       if(any(is.na(mi))) { # some pairs are missing
         if(verbose) cat('running',sum(is.na(mi)),'additional',space,' space pairs ')
         xl2 <- papply(which(is.na(mi)), function(i) {
-          # W: these functions strongly depends on Pagoda format
           if(space=='CPCA') {
-            xcp <- quickCPCA(samples[cis[,i]],k=k,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale,neighborhood.average=neighborhood.average)
+            xcp <- quickCPCA(samples[cis[,i]],data.type=data.type,k=k,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale,neighborhood.average=neighborhood.average)
           } else if(space=='JNMF') {
-            xcp <- quickJNMF(samples[cis[,i]],n.comps=ncomps,n.odgenes=n.odgenes,var.scale=var.scale,verbose=FALSE,max.iter=3e3,neighborhood.average=neighborhood.average)
+            xcp <- quickJNMF(samples[cis[,i]],data.type=data.type,n.comps=ncomps,n.odgenes=n.odgenes,var.scale=var.scale,verbose=FALSE,max.iter=3e3,neighborhood.average=neighborhood.average)
           } else if (space == 'genes') {
-            xcp <- quickNULL(p2.objs = samples[cis[,i]], n.odgenes = n.odgenes, var.scale = var.scale, verbose = FALSE, neighborhood.average=neighborhood.average);
+            xcp <- quickNULL(p2.objs = samples[cis[,i]], data.type=data.type, n.odgenes=n.odgenes, var.scale = var.scale, verbose = FALSE, neighborhood.average=neighborhood.average);
           } else if (space == 'PCA') {
-            xcp <- quickPlainPCA(samples[cis[,i]],k=k,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale,neighborhood.average=neighborhood.average)
+            xcp <- quickPlainPCA(samples[cis[,i]], data.type=data.type, k=k,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale,neighborhood.average=neighborhood.average)
           }
           if(verbose) cat('.')
           xcp
@@ -186,7 +186,7 @@ Conos <- setRefClass(
       return(invisible(cis))
     },
 
-    buildGraph=function(k=30, k.self=10, k.self.weight=0.1, space='CPCA', matching.method='mNN', metric='angular', l2.sigma=1e5, var.scale =TRUE, ncomps=50, n.odgenes=1000, return.details=T,neighborhood.average=FALSE,neighborhood.average.k=10, exclude.pairs=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE) {
+    buildGraph=function(k=30, k.self=10, k.self.weight=0.1, space='CPCA', matching.method='mNN', metric='angular', data.type='counts', l2.sigma=1e5, var.scale =TRUE, ncomps=50, n.odgenes=1000, return.details=T,neighborhood.average=FALSE,neighborhood.average.k=10, exclude.pairs=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE) {
 
       supported.spaces <- c("CPCA","JNMF","genes","PCA")
       if(!space %in% supported.spaces) {
@@ -203,10 +203,8 @@ Conos <- setRefClass(
         stop(paste0("only the following distance metrics are currently supported: [",paste(supported.metrics,collapse=' '),"]"))
       }
 
-
       # calculate or update pairwise alignments
       cis <- updatePairs(space=space,ncomps=ncomps,n.odgenes=n.odgenes,verbose=verbose,var.scale=var.scale,neighborhood.average=neighborhood.average,neighborhood.average.k=10,exclude.pairs=exclude.pairs,exclude.samples=exclude.samples)
-
 
       # determine inter-sample mapping
       if(verbose) cat('inter-sample links using ',matching.method,' ');
@@ -225,8 +223,7 @@ Conos <- setRefClass(
           #return(data.frame('mA.lab'=rownames(xl[[i]]$rot1)[mnn@i+1],'mB.lab'=rownames(xl[[i]]$rot2)[mnn@j+1],'w'=1/pmax(1,log(mnn@x)),stringsAsFactors=F))
 
         } else if (space %in% c("CPCA","GSVD","PCA")) {
-          # W: get counts
-          common.genes <- Reduce(intersect,lapply(r.ns,function(x) colnames(x$counts)))
+          common.genes <- Reduce(intersect,lapply(r.ns, getGenes))
           if(!is.null(xl[[i]]$CPC)) {
             # CPCA or PCA
             odgenes <- intersect(rownames(xl[[i]]$CPC),common.genes)
@@ -246,23 +243,9 @@ Conos <- setRefClass(
             rot <- rot[,1:ncomps,drop=F]
           }
 
-          if (var.scale) {
-            # W: get variance scaling
-            cgsf <- varScaleFactor(r.ns, odgenes)
-          }
           # create matrices, adjust variance
-          cproj <- lapply(r.ns,function(r) {
-            x <- r$counts[,odgenes];
-            if(var.scale) {
-              x@x <- x@x*rep(cgsf,diff(x@p))
-            }
-            if(neighborhood.average) {
-              # W: get neighborhood averaging matrix
-              xk <- edgeMat(r)$mat
-              x <- t(xk) %*% x
-            }
-            x
-          })
+          cproj <- scaledMatrices(r.ns, data.type=data.type, od.genes=odgenes, var.scale=var.scale,
+                                  neighborhood.average=neighborhood.average)
           if(common.centering) {
             ncells <- unlist(lapply(cproj,nrow));
             centering <- colSums(do.call(rbind,lapply(cproj,colMeans))*ncells)/sum(ncells)
@@ -296,12 +279,12 @@ Conos <- setRefClass(
       if(k.self>0) {
         if(verbose) cat('local pairs ')
         x <- data.frame(do.call(rbind,papply(samples,function(x) {
-          # W: get PCA reduction
-          xk <- n2Knn(x$reductions$PCA,k.self+1,1,FALSE) # +1 accounts for self-edges that will be removed in the next line
+          pca <- getPca(x)
+          xk <- n2Knn(pca,k.self+1,1,FALSE) # +1 accounts for self-edges that will be removed in the next line
           diag(xk) <- 0; # no self-edges
           xk <- as(xk,'dgTMatrix')
           cat(".")
-          return(data.frame('mA.lab'=rownames(x$reductions$PCA)[xk@i+1],'mB.lab'=rownames(x$reductions$PCA)[xk@j+1],'w'=pmax(1-xk@x,0),stringsAsFactors=F))
+          return(data.frame('mA.lab'=rownames(pca)[xk@i+1],'mB.lab'=rownames(pca)[xk@j+1],'w'=pmax(1-xk@x,0),stringsAsFactors=F))
         },n.cores=n.cores)),stringsAsFactors = F)
         x$w <- k.self.weight
         x$type <- 0;
@@ -389,7 +372,7 @@ Conos <- setRefClass(
         if(color.by == 'cluster') {
           groups <- getClusteringGroups(clusters, clustering)
         } else if(color.by == 'sample') {
-          cl <- lapply(samples, function(x) rownames(x$counts))
+          cl <- lapply(samples, getCellNames)
           groups <- rep(names(cl), sapply(cl, length)) %>% stats::setNames(unlist(cl)) %>% as.factor()
         } else {
           stop('supported values of color.by are ("cluster" and "sample")')
