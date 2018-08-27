@@ -205,8 +205,8 @@ color_nodes <- function (x=NULL,labels_mapping=NULL,hc=NULL,leafContent=NULL,map
 ##' @param minbreadth minimum allowed breadth of a branch (measured as normalized entropy)
 ##' @export
 runShinyApp <- function(con=NULL, N=NULL, leaf.labels=NULL, minsize=0, minbreadth=0) {
-  .GlobalEnv$.con <- con
-  greedy.modularity.cut.result <- conos::greedy.modularity.cut(wt=.con$clusters$walktrap$result, N=N, leaf.labels=leaf.labels, minsize=minsize, minbreadth=minbreadth)
+  #.GlobalEnv$con <- con
+  greedy.modularity.cut.result <- conos::greedy.modularity.cut(wt=con$clusters$walktrap$result, N=N, leaf.labels=leaf.labels, minsize=minsize, minbreadth=minbreadth)
   leafContent <- greedy.modularity.cut.result$leafContent
   hc <- greedy.modularity.cut.result$hc
   dend <- as.dendrogram(hc)
@@ -372,44 +372,45 @@ runShinyApp <- function(con=NULL, N=NULL, leaf.labels=NULL, minsize=0, minbreadt
     output$treePlot5 <- renderPlot({
       memb <- dataInput()$memb
       colors <- dataInput()$colors  
-      .con$plotPanel(groups=memb, adjust.func = function(gg) gg + scale_color_manual(values = setNames(colors, names(colors))))
+      con$plotPanel(groups=memb, adjust.func = function(gg) gg + scale_color_manual(values = setNames(colors, names(colors))))
     },width = 1000, height = 800)
     
     output$treePlot6 <- renderPlot({
       memb <- dataInput()$memb
       colors <- dataInput()$colors 
-      .con$plotGraph(groups = memb) + scale_color_manual(values = setNames(colors, names(colors)))
+      con$plotGraph(groups = memb) + scale_color_manual(values = setNames(colors, names(colors)))
     }, height = 320)
     
     observeEvent(input$do, {
       memb <- dataInput()$memb
       gready.cut.groups <- paste("gready.cut.groups.",".clusters",sep=as.character(input$N))
       names <- names(memb)
-      .con$clusters$walktrap[[gready.cut.groups]] <- as.character(memb)
-      names(.con$clusters$walktrap[[gready.cut.groups]]) <- names
+      con$clusters$walktrap[[gready.cut.groups]] <- as.character(memb)
+      names(con$clusters$walktrap[[gready.cut.groups]]) <- names
     })
-    session$onSessionEnded(function(){return(.con)})
+    #session$onSessionEnded(function(){return(con)})
   }
   
   shinyApp(ui, server)
-  #on.exit(rm(list=".con",envir=.GlobalEnv))
-  return(.con)
+  #on.exit(rm(list="con",envir=.GlobalEnv))
+  #return(con)
 }
 
 ##' @export
-runShinyApp2 <- function(con=NULL, N=NULL, leaf.labels=NULL, minsize=0, minbreadth=0) {
+runShinyApp2 <- function(con=NULL, N=NULL, leaf.labels=NULL, minsize=0, minbreadth=0, dirName=NULL) {
   appDir <- system.file("app", package = "conos")
   if (appDir == "") {
-    stop("Could not find example directory. Try re-installing `mypackage`.", call. = FALSE)
+    stop("Could not find app directory. Try re-installing `conos`.", call. = FALSE)
   }
-  .GlobalEnv$.con <- con
+  .GlobalEnv$.local_conos_object <- con$copy()
   .GlobalEnv$.N <- N
   .GlobalEnv$.leaf.labels <- leaf.labels
   .GlobalEnv$.minsize <- minsize
   .GlobalEnv$.minbreadth <- minbreadth
+  .GlobalEnv$.dirName <- minbreadth
+  
+  on.exit(rm(list=c(".local_conos_object", ".N", ".leaf.labels", ".minsize", ".minbreadth",".dirName"),envir=.GlobalEnv))
   
   shiny::runApp(appDir, display.mode = "normal")
-  #return(.con)
-  on.exit(rm(list=c(".wt", ".N", ".leaf.labels", ".minsize", ".minbreadth", ".appDir"),envir=.GlobalEnv))
 }
 
