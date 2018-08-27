@@ -15,6 +15,9 @@ scaledMatricesP2 <- function(p2.objs, data.type, od.genes, var.scale, neighborho
     if (data.type == 'counts') {
       x <- r$counts[,od.genes];
     } else if (data.type %in% names(r$reductions)){
+      if (!all(od.genes %in% colnames(r$reductions[[data.type]]))) {
+        stop("Reduction '", data.type, "' should have columns indexed by gene, with all overdispersed genes presented")
+      }
       x <- r$reductions[[data.type]][,od.genes];
     } else {
       stop("No reduction named '", data.type, "' in pagoda")
