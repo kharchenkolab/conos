@@ -281,7 +281,7 @@ get.greedy.cut.groups <- function(no_clusters=NULL,greedy.modularity.cut.result=
 ##' @export
 runShinyApp <- function(con=NULL, N=NULL, leaf.labels=NULL, minsize=0, minbreadth=0) {
   #.GlobalEnv$con <- con
-  greedy.modularity.cut.result <- conos::greedy.modularity.cut(wt=con$clusters$walktrap$result,N=25,leaf.labels = mapping,minbreadth = 0.1)
+  greedy.modularity.cut.result <- conos::greedy.modularity.cut(wt=con$clusters$walktrap$result,N=N,leaf.labels=leaf.labels,minsize=minsize,minbreadth=minbreadth)
   
   leafContent <- greedy.modularity.cut.result$leafContent
   hc <- greedy.modularity.cut.result$hc
@@ -300,7 +300,7 @@ runShinyApp <- function(con=NULL, N=NULL, leaf.labels=NULL, minsize=0, minbreadt
   names(labels_mapping) <- rev(nodes_labels)
   
   #correspondence between cells and samples 
-  mapping <- mapping[rownames(leafContent)] 
+  mapping <- leaf.labels[rownames(leafContent)] 
   sample_names <- unique(mapping)
   
   #correspondence between elements from hclust merge matrix and precalculated breadth values 
