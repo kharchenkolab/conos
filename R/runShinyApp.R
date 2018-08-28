@@ -203,8 +203,29 @@ color_nodes <- function (x=NULL,labels_mapping=NULL,hc=NULL,leafContent=NULL,map
     x <- res$x
     parent_color <- res$parent_color
   }
-  
   return(list(x=x,parent_color=parent_color))
+}
+
+#get list of children nodes of a node
+get.list.of.descendants <- function(hc=NULL,parent.ID=NULL,list.of.descendants=list()){
+  children.ID <- hc$merge[parent.ID,]
+  if (length(list.of.descendants)>0){
+    list.of.descendants[length(list.of.descendants)+1] <- children.ID[1]
+    list.of.descendants[length(list.of.descendants)+1] <- children.ID[2]
+  }
+  else{
+    list.of.descendants[[1]] <- children.ID[1]
+    list.of.descendants[[2]] <- children.ID[2]
+  }
+  
+  if (children.ID[1] > 0){
+    list.of.descendants <- get.list.of.descendants(hc, children.ID[1], list.of.descendants)
+  }
+  
+  if (children.ID[2] > 0){
+    list.of.descendants <- get.list.of.descendants(hc, children.ID[2], list.of.descendants)
+  }
+  return(list.of.descendants)
 }
 
 ##' get memerships vector from greedy.modularity.cut function results without running shiny app 
@@ -240,7 +261,6 @@ get.greedy.cut.groups <- function(no_clusters=NULL,greedy.modularity.cut.result=
   }
 }
 
-
 ##' deploys Shiny application to visualize waltktrap tree and select cut level 
 ##'
 ##' @param con conos object with walktrap results
@@ -251,7 +271,8 @@ get.greedy.cut.groups <- function(no_clusters=NULL,greedy.modularity.cut.result=
 ##' @export
 runShinyApp <- function(con=NULL, N=NULL, leaf.labels=NULL, minsize=0, minbreadth=0) {
   #.GlobalEnv$con <- con
-  greedy.modularity.cut.result <- conos::greedy.modularity.cut(wt=con$clusters$walktrap$result, N=N, leaf.labels=leaf.labels, minsize=minsize, minbreadth=minbreadth)
+  greedy.modularity.cut.result <- conos::greedy.modularity.cut(wt=con$clusters$walktrap$result,N=25,leaf.labels = mapping,minbreadth = 0.1)
+  
   leafContent <- greedy.modularity.cut.result$leafContent
   hc <- greedy.modularity.cut.result$hc
   dend <- as.dendrogram(hc)
@@ -262,11 +283,14 @@ runShinyApp <- function(con=NULL, N=NULL, leaf.labels=NULL, minsize=0, minbreadt
     pair <- hc$merge[i,]
     nodes_labels <- c(nodes_labels,sequential.numeration(pair))
   }
+  
+  #labels_mapping <- 0:length(nodes_labels)
+  #names(labels_mapping) <- c(nrow(hc$merge),rev(nodes_labels))
   labels_mapping <- 1:length(nodes_labels)
   names(labels_mapping) <- rev(nodes_labels)
   
   #correspondence between cells and samples 
-  mapping <- leaf.labels[rownames(leafContent)] 
+  mapping <- mapping[rownames(leafContent)] 
   sample_names <- unique(mapping)
   
   #correspondence between elements from hclust merge matrix and precalculated breadth values 
@@ -275,22 +299,24 @@ runShinyApp <- function(con=NULL, N=NULL, leaf.labels=NULL, minsize=0, minbreadt
   breadth_mapping <- breadth_mapping[1:(length(breadth_mapping)-1)]
   names(breadth_mapping) <- labels_mapping[as.character(breadth_mapping_names)]
   
-  dend.colored <- color_nodes(x=dend,labels_mapping=labels_mapping,hc=hc,leafContent=leafContent,mapping=mapping,sample_names=sample_names,breadth_mapping=breadth_mapping)
+  dend.colored.source <- color_nodes(x=dend,labels_mapping=labels_mapping,hc=hc,leafContent=leafContent,mapping=mapping,sample_names=sample_names,breadth_mapping=breadth_mapping)
   
   #coordinates for drawing labels 
   xy <- get_nodes_xy(dend)
-  xy_ordered <- cbind(xy,get_nodes_attr(dend.colored$x,"ID"))
+  xy_ordered <- cbind(xy,get_nodes_attr(dend.colored.source$x,"ID"))
   xy_ordered <- xy_ordered[order(xy_ordered[,1]),]
   order_of_nodes <- xy_ordered[,3]
   
   #data for plots under a slider 
   modularities <- cumsum(greedy.modularity.cut.result$deltaM)
-  breadth <- calculate_breadth(dend=dend.colored$x,hc=hc,breadth_mapping=breadth_mapping,labels_mapping=labels_mapping)
-  resolution <- calculate_resolution(dend = dend.colored$x,hc=hc,mapping = mapping,sample_names = sample_names,labels_mapping=labels_mapping)
+  breadth <- calculate_breadth(dend=dend.colored.source$x,hc=hc,breadth_mapping=breadth_mapping,labels_mapping=labels_mapping)
+  resolution <- calculate_resolution(dend = dend.colored.source$x,hc=hc,mapping = mapping,sample_names = sample_names,labels_mapping=labels_mapping)
   
   #calculate embedding once 
   #con$embedGraph()
   
+  colors_source <- sample(rainbow(length(labels_mapping)))
+  names(colors_source) <- sample(labels_mapping)
   ui <- fluidPage(
     fluidRow(
       column(4,
@@ -305,7 +331,9 @@ runShinyApp <- function(con=NULL, N=NULL, leaf.labels=NULL, minsize=0, minbreadt
                                     value = which.max(modularities)+1,
                                     width = "94%"), width=12, 
                         tabPanel("Plot",plotOutput(outputId = "treePlot1", height = "250"),br()),
-                        actionButton("do", "Save membership")),
+                        actionButton("do", "Save membership"),
+                        #actionButton("plot_graph", "Plot the graph")),
+                        checkboxInput("plot_graph", "Plot graph", value = TRUE)),
                       div(style = "height:250;"))),
              fluidRow(
                column(12,
@@ -314,32 +342,98 @@ runShinyApp <- function(con=NULL, N=NULL, leaf.labels=NULL, minsize=0, minbreadt
       column(8,                       
              mainPanel(
                tabsetPanel(type = "tabs",
-                           tabPanel("Tree", plotOutput(outputId = "treePlot2")),
+                           tabPanel("Tree", plotOutput(outputId = "treePlot2",click = "plot_click",dblclick="plot_db_click")),
                            tabPanel("Composition similarity plot 1", d3heatmapOutput(outputId = "treePlot3", width = "1000", height = "800")),
                            tabPanel("Composition similarity plot 2", d3heatmapOutput(outputId = "treePlot4", width = "1000", height = "800")),
                            tabPanel("tSNE plots", plotOutput(outputId = "treePlot5")))),div(style = "height:800;"))))
   
   
-  server <- function(input, output,session) { #plots under a slider 
+  server <- function(input, output) { #plots under a slider 
+    click_value <- reactiveVal(NULL)
+    observeEvent(input$plot_click,{click_value(input$plot_click)})
+    observeEvent(input$N,{click_value(NULL)})
+    
+    db_click_value <- reactiveVal(NULL)
+    observeEvent(input$plot_db_click,{db_click_value(input$plot_db_click)})
+    observeEvent(input$N,{db_click_value(NULL)})
+    
+    observeEvent(input$plot_click,{db_click_value(NULL)})
+    observeEvent(input$plot_db_click,{click_value(NULL)})
+    
+    current_cut_saved <- reactiveVal(NULL)
+    observeEvent(input$N,{current_cut_saved(NULL)})
+    changed <- reactiveVal(FALSE)
+    observeEvent(input$N,{changed(TRUE)})
     
     dataInput <- reactive({  
+      if (changed()){
+        current_cut <- NULL
+        current_cut <- labels_mapping[1:((input$N-1)*2)] 
+        current_cut <- current_cut[!(names(current_cut) %in% as.character((nrow(hc$merge):1)[1:(input$N-1)]))]
+        isolate(current_cut_saved(current_cut))
+        changed(FALSE)
+      }
+      else{
+        current_cut <- isolate(current_cut_saved())
+      }
       
-      current_cut <- labels_mapping[1:((input$N-1)*2)] 
-      current_cut <- current_cut[!(names(current_cut) %in% as.character((nrow(hc$merge):1)[1:(input$N-1)]))]
+      if (!is.null(click_value())){
+        euc_dist <- (xy_ordered[,1]-click_value()$x)^2 + (xy_ordered[,2]-click_value()$y)^2 
+        ID <- xy_ordered[which(euc_dist==min(euc_dist)),3]
+        if (ID > 0){
+          merge_mtrx_ID <- names(labels_mapping[labels_mapping==ID])
+          num_ID <- as.numeric(merge_mtrx_ID)
+          if (num_ID > 0){ 
+            if (!(any(labels_mapping[as.character(unlist(get.list.of.descendants(hc,num_ID)))] %in% current_cut)) & (ID %in% current_cut)){
+              current_cut <- current_cut[current_cut!=ID]
+              child1 <- hc$merge[num_ID,1]
+              child2 <- hc$merge[num_ID,2]
+              current_cut_names <- c(names(current_cut),c(child1,child2))
+              current_cut <- c(current_cut,c(labels_mapping[as.character(child1)],labels_mapping[as.character(child2)]))
+              names(current_cut) <- current_cut_names
+              isolate(current_cut_saved(current_cut))
+            }
+          }
+        }    
+      }
+      
+      if (!is.null(db_click_value())){
+        euc_dist <- (xy_ordered[,1]-db_click_value()$x)^2 + (xy_ordered[,2]-db_click_value()$y)^2 
+        ID <- xy_ordered[which(euc_dist==min(euc_dist)),3]
+        if (ID > 0){
+          merge_mtrx_ID <- names(labels_mapping[labels_mapping==ID])
+          num_ID <- as.numeric(merge_mtrx_ID)
+          if (num_ID > 0){ 
+            array_of_parents <- as.numeric(names(labels_mapping[labels_mapping %in% current_cut]))
+            array_of_parents <- array_of_parents[array_of_parents > 0]
+            array_of_children <- unlist(sapply(array_of_parents,function(num_ID){labels_mapping[as.character(unlist(get.list.of.descendants(hc,num_ID)))]}))
+            array_of_children <- array_of_children[as.numeric(names(array_of_children)) > 0]
+            if (!(ID %in% array_of_children)){
+              current_cut <- current_cut[!(current_cut %in% labels_mapping[as.character(unlist(get.list.of.descendants(hc,num_ID)))])]
+              current_cut_names <- c(names(current_cut),as.character(num_ID))
+              current_cut <- c(current_cut,ID)
+              names(current_cut) <- current_cut_names
+              isolate(current_cut_saved(current_cut))
+            }
+          }
+        }
+      }
+      
       cut_order_match <- match(current_cut,order_of_nodes)
       cut_order_match <- cut_order_match[order(cut_order_match)]
-      current_cut_ordered <- order_of_nodes[cut_order_match] #
+      current_cut_ordered <- order_of_nodes[cut_order_match]
       
-      colors <- rainbow(input$N)
-      names(colors) <-  current_cut_ordered 
+      #colors <- rainbow(length(current_cut))
+      #names(colors) <-  sample(current_cut)
+      colors <- colors_source[names(colors_source) %in% current_cut]
       mask <- xy_ordered[,3] %in% current_cut
-      dend.colored <- color_nodes(x=dend.colored$x,labels_mapping=labels_mapping,hc=hc,leafContent=leafContent,mapping=mapping,sample_names=sample_names,current_cut=current_cut,colors=colors,breadth_mapping=breadth_mapping)
+      dend.colored <- color_nodes(x=dend.colored.source$x,labels_mapping=labels_mapping,hc=hc,leafContent=leafContent,mapping=mapping,sample_names=sample_names,current_cut=current_cut,colors=colors,breadth_mapping=breadth_mapping)
       
       structure_vectors <- get_structure_vectors(dend.colored$x,current_cut_ordered)
       
       heights <- get_nodes_attr(dend.colored$x,"height")
       IDs <- get_nodes_attr(dend.colored$x,"ID")
-      plot(dend.colored$x)
+      #plot(dend.colored$x)
       
       height_mask <- (heights > 0) & (IDs %in% current_cut)
       
@@ -352,9 +446,7 @@ runShinyApp <- function(con=NULL, N=NULL, leaf.labels=NULL, minsize=0, minbreadt
       labels(dend.cut) <- current_cut_ordered
       
       memb <- get_memberhip(dend=dend.colored$x,current_cut=current_cut)
-
-      
-      return(list(dend.colored=dend.colored, mask=mask,structure_vectors=structure_vectors,dend.cut=dend.cut,memb=memb,colors=colors))
+      return(list(dend.colored=dend.colored, mask=mask,structure_vectors=structure_vectors,dend.cut=dend.cut,memb=memb,colors=colors,current_cut=current_cut))
     })
     
     #regulation of number of digits at y ticks 
@@ -396,9 +488,12 @@ runShinyApp <- function(con=NULL, N=NULL, leaf.labels=NULL, minsize=0, minbreadt
     },height = 250)
     output$treePlot2 <- renderPlot({ #draw colored tree 
       #color the tree and plot it with labels 
+      #plot(value())
       dend.colored.local <- dataInput()$dend.colored
       labels(dend.colored.local$x) <- rep(NA,attr(dend.colored.local$x,"members"))
       mask <- dataInput()$mask
+      
+      
       plot(dend.colored.local$x)
       text(xy_ordered[mask,1]+0.5, xy_ordered[mask,2]+0.5, labels=xy_ordered[mask,3], col="black",cex = 0.8)
       
@@ -406,34 +501,59 @@ runShinyApp <- function(con=NULL, N=NULL, leaf.labels=NULL, minsize=0, minbreadt
     
     output$treePlot3 <- renderD3heatmap({ #
       struct_similarity <- dataInput()$structure_vectors
-      Rowv <- dataInput()$dend.cut
-      d3heatmap(t(struct_similarity),colors = Reds(10),Rowv=Rowv, dendrogram = "column" )})#,
+      if (is.null(click_value()) & is.null(db_click_value())){
+        Rowv <- dataInput()$dend.cut
+        d3heatmap(t(struct_similarity),colors = Reds(10),Rowv=Rowv, dendrogram = "column" )}
+      else{
+        d3heatmap(t(struct_similarity),colors = Reds(10), dendrogram = "column" )}
+    })
     
     output$treePlot4 <- renderD3heatmap({
       struct_similarity <- dataInput()$structure_vectors
-      Rowv <- dataInput()$dend.cut
       dists <- dist(t(struct_similarity))
-      d3heatmap(dists,colors = rev(Reds((max(dists))%/%0.1)),Rowv=Rowv,Colv=Rowv)}) #,
+      if (is.null(click_value()) & is.null(db_click_value())){
+        Rowv <- dataInput()$dend.cut
+        d3heatmap(dists,colors = rev(Reds((max(dists))%/%0.1)),Rowv=Rowv,Colv=Rowv)}
+      else{
+        d3heatmap(dists,colors = rev(Reds((max(dists))%/%0.1)),dendrogram = "none")
+      }
+    })
     
     output$treePlot5 <- renderPlot({
+      #plot(input$plot_graph)
+      #if (plot_graph()){
       memb <- dataInput()$memb
       colors <- dataInput()$colors  
-      con$plotPanel(groups=memb, adjust.func = function(gg) gg + scale_color_manual(values = setNames(colors, names(colors))))
+      con$plotPanel(groups=memb, adjust.func = function(gg) gg + scale_color_manual(values = colors))
+      
     },width = 1000, height = 800)
     
     output$treePlot6 <- renderPlot({
-      memb <- dataInput()$memb
-      colors <- dataInput()$colors 
-      con$plotGraph(groups = memb) + scale_color_manual(values = setNames(colors, names(colors)))
+      if (input$plot_graph){
+        #if (plot_graph()){
+        memb <- dataInput()$memb
+        colors <- dataInput()$colors
+        con$plotGraph(groups = memb) + scale_color_manual(values = colors)
+        #}
+      }
     }, height = 320)
     
     observeEvent(input$do, {
       memb <- dataInput()$memb
-      gready.cut.groups <- paste("gready.cut.groups.",".clusters",sep=as.character(input$N))
-      names <- names(memb)
+      
+      if (is.null(click_value()) & is.null(db_click_value())){
+        gready.cut.groups <- paste("gready.cut.groups.",".clusters",sep=as.character(input$N))
+        names <- names(memb)
+      }
+      else{
+        current_cut <- dataInput()$current_cut
+        gready.cut.groups <- paste(paste("gready.cut.groups.",".clusters",sep=as.character(length(current_cut))),paste(current_cut,collapse="_"),sep="_")
+        names <- names(memb)
+      }
       con$clusters$walktrap[[gready.cut.groups]] <- as.character(memb)
       names(con$clusters$walktrap[[gready.cut.groups]]) <- names
     })
+    
   }
   
   shinyApp(ui, server)
