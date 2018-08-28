@@ -119,8 +119,7 @@ color_node <- function(x=NULL,labels_mapping=NULL,hc=NULL,leafContent=NULL,mappi
     }
     
   }
-  
-  if (is.null(attr(x, "entropy"))){
+  if (is.null(mapping)){ #just index and get memberships
     labs <- labels(x)
     if (length(labs)>1){
       memb <- rowSums(leafContent[,labs])
@@ -129,48 +128,60 @@ color_node <- function(x=NULL,labels_mapping=NULL,hc=NULL,leafContent=NULL,mappi
       memb <- leafContent[,labs]
     }
     attr(x, "membership") <- memb*attr(x, "ID")
-    structure_vector <- rep(0,length(sample_names))
-    names(structure_vector) <- sample_names
-    number_of_cells <- sum(memb)
-    attr(x, "number_of_cells") <- number_of_cells
-    
-    structure_tab <- table(mapping[as.logical(memb)])
-    for (name in names(structure_tab)){
-      structure_vector[name] <- structure_tab[name]
+  }
+  else{
+    if (is.null(attr(x, "entropy"))){
+      labs <- labels(x)
+      if (length(labs)>1){
+        memb <- rowSums(leafContent[,labs])
+      }
+      else{
+        memb <- leafContent[,labs]
+      }
+      attr(x, "membership") <- memb*attr(x, "ID")
+      structure_vector <- rep(0,length(sample_names))
+      names(structure_vector) <- sample_names
+      number_of_cells <- sum(memb)
+      attr(x, "number_of_cells") <- number_of_cells
+      
+      structure_tab <- table(mapping[as.logical(memb)])
+      for (name in names(structure_tab)){
+        structure_vector[name] <- structure_tab[name]
+      }
+      structure_vector <- structure_vector/sum(structure_vector)
+      attr(x, "structure_vector") <- structure_vector
+      #entropy_measure <- entropy(structure_vector,unit = "log2")/log(length(sample_names),base = 2) + 1/length(sample_names)
+      entropy_measure <- as.numeric(breadth_mapping[as.character(attr(x,"ID"))]) + 1/length(sample_names)
+      attr(x, "entropy") <- entropy_measure  #/length(sample_names)
     }
-    structure_vector <- structure_vector/sum(structure_vector)
-    attr(x, "structure_vector") <- structure_vector
-    #entropy_measure <- entropy(structure_vector,unit = "log2")/log(length(sample_names),base = 2) + 1/length(sample_names)
-    entropy_measure <- as.numeric(breadth_mapping[as.character(attr(x,"ID"))]) + 1/length(sample_names)
-    attr(x, "entropy") <- entropy_measure  #/length(sample_names)
-  }
-  else{
-    number_of_cells <- attr(x, "number_of_cells")
-    entropy_measure <- attr(x, "entropy")
-  }
-  if (attr(x,"ID") %in% current_cut){
-    x <- x %>% 
-      assign_values_to_nodes_nodePar(value = 19, nodePar = "pch") %>% 
-      assign_values_to_nodes_nodePar(value = number_of_cells/1000, nodePar = "cex")  %>% 
-      set("branches_lty", 1) %>%
-      set("branches_lwd", entropy_measure*5)# %>%
-    parent_color <- as.character(colors[as.character(attr(x,"ID"))])
-    x <- assign_values_to_nodes_nodePar(dend = x, value = rep(parent_color,attr(x,"members")), nodePar = "col")
-    x <- assign_values_to_branches_edgePar(dend = x, value = rep(parent_color,attr(x,"members")), edgePar = "col")
-  }
-  else{
-    x <- x %>% 
-      assign_values_to_nodes_nodePar(value = NA, nodePar = "pch") %>% 
-      assign_values_to_nodes_nodePar(value = NA, nodePar = "cex")  %>% 
-      assign_values_to_nodes_nodePar(value = NA, nodePar = "col")  %>%
-      set("branches_lty", 1) %>%
-      set("branches_lwd", entropy_measure*5) #%>%
-    
-    if (!is.leaf(x) & !(is.null(parent_color))){
+    else{
+      number_of_cells <- attr(x, "number_of_cells")
+      entropy_measure <- attr(x, "entropy")
+    }
+    if (attr(x,"ID") %in% current_cut){
+      x <- x %>% 
+        assign_values_to_nodes_nodePar(value = 19, nodePar = "pch") %>% 
+        assign_values_to_nodes_nodePar(value = number_of_cells/1000, nodePar = "cex")  %>% 
+        set("branches_lty", 1) %>%
+        set("branches_lwd", entropy_measure*5)# %>%
+      parent_color <- as.character(colors[as.character(attr(x,"ID"))])
+      x <- assign_values_to_nodes_nodePar(dend = x, value = rep(parent_color,attr(x,"members")), nodePar = "col")
       x <- assign_values_to_branches_edgePar(dend = x, value = rep(parent_color,attr(x,"members")), edgePar = "col")
     }
-    if (is.null(parent_color)){
-      x <- x %>% set("branches_col", "grey80")
+    else{
+      x <- x %>% 
+        assign_values_to_nodes_nodePar(value = NA, nodePar = "pch") %>% 
+        assign_values_to_nodes_nodePar(value = NA, nodePar = "cex")  %>% 
+        assign_values_to_nodes_nodePar(value = NA, nodePar = "col")  %>%
+        set("branches_lty", 1) %>%
+        set("branches_lwd", entropy_measure*5) #%>%
+      
+      if (!is.leaf(x) & !(is.null(parent_color))){
+        x <- assign_values_to_branches_edgePar(dend = x, value = rep(parent_color,attr(x,"members")), edgePar = "col")
+      }
+      if (is.null(parent_color)){
+        x <- x %>% set("branches_col", "grey80")
+      }
     }
   }
   return(list(x=x,parent_color=parent_color))
@@ -195,6 +206,40 @@ color_nodes <- function (x=NULL,labels_mapping=NULL,hc=NULL,leafContent=NULL,map
   
   return(list(x=x,parent_color=parent_color))
 }
+
+##' get memerships vector from greedy.modularity.cut function results without running shiny app 
+##'
+##' @param no_clusters number of clusters less or equal to N + 1 number of splits in greedy.modularity.cut results
+##' @param greedy.modularity.cut.result greedy.modularity.cut function results 
+##' @export
+get.greedy.cut.groups <- function(no_clusters=NULL,greedy.modularity.cut.result=NULL){
+  hc <- greedy.modularity.cut.result$hc
+  dend <- as.dendrogram(hc)
+  leafContent <- greedy.modularity.cut.result$leafContent
+  max_no_clusters <- attr(dend,"members")
+  if (no_clusters <= max_no_clusters){
+    nodes_labels <- c()
+    
+    for (i in 1:nrow(hc$merge)){
+      pair <- hc$merge[i,]
+      nodes_labels <- c(nodes_labels,sequential.numeration(pair))
+    }
+    labels_mapping <- 1:length(nodes_labels)
+    names(labels_mapping) <- rev(nodes_labels)
+    
+    dend.indexed <- color_nodes(x=dend,labels_mapping=labels_mapping,hc=hc,leafContent=leafContent)
+    
+    current_cut <- labels_mapping[1:((no_clusters-1)*2)] 
+    current_cut <- current_cut[!(names(current_cut) %in% as.character((nrow(hc$merge):1)[1:(no_clusters-1)]))]
+    
+    memb <- get_memberhip(dend=dend.indexed$x,current_cut=current_cut)
+    return(memb)
+  }
+  else{
+    stop("no_clusters exceeds a maximum number of clusters in greedy.modularity.cut results (N + 1)")
+  }
+}
+
 
 ##' deploys Shiny application to visualize waltktrap tree and select cut level 
 ##'
@@ -307,6 +352,7 @@ runShinyApp <- function(con=NULL, N=NULL, leaf.labels=NULL, minsize=0, minbreadt
       labels(dend.cut) <- current_cut_ordered
       
       memb <- get_memberhip(dend=dend.colored$x,current_cut=current_cut)
+
       
       return(list(dend.colored=dend.colored, mask=mask,structure_vectors=structure_vectors,dend.cut=dend.cut,memb=memb,colors=colors))
     })
@@ -388,12 +434,9 @@ runShinyApp <- function(con=NULL, N=NULL, leaf.labels=NULL, minsize=0, minbreadt
       con$clusters$walktrap[[gready.cut.groups]] <- as.character(memb)
       names(con$clusters$walktrap[[gready.cut.groups]]) <- names
     })
-    #session$onSessionEnded(function(){return(con)})
   }
   
   shinyApp(ui, server)
-  #on.exit(rm(list="con",envir=.GlobalEnv))
-  #return(con)
 }
 
 ##' @export
@@ -413,4 +456,6 @@ runShinyApp2 <- function(con=NULL, N=NULL, leaf.labels=NULL, minsize=0, minbread
   
   shiny::runApp(appDir, display.mode = "normal")
 }
+
+
 
