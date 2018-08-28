@@ -8,6 +8,16 @@
 #' @import entropy
 #' @import ramify
 
+require(markdown)
+require(shiny)
+require(gridExtra)
+require(dendextend)
+require(heatmaply)
+require(d3heatmap)
+require(largeVis)
+require(entropy)
+require(ramify)
+
 #' Perform ordering of merge matrix values by rows 
 sequential.numeration <- function(pair){
   if ((pair[1] < 0) & (pair[2] < 0)){
