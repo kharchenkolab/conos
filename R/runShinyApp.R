@@ -559,23 +559,5 @@ runShinyApp <- function(con=NULL, N=NULL, leaf.labels=NULL, minsize=0, minbreadt
   shinyApp(ui, server)
 }
 
-##' @export
-runShinyApp2 <- function(con=NULL, N=NULL, leaf.labels=NULL, minsize=0, minbreadth=0, dirName=NULL) {
-  appDir <- system.file("app", package = "conos")
-  if (appDir == "") {
-    stop("Could not find app directory. Try re-installing `conos`.", call. = FALSE)
-  }
-  .GlobalEnv$.local_conos_object <- con$copy()
-  .GlobalEnv$.N <- N
-  .GlobalEnv$.leaf.labels <- leaf.labels
-  .GlobalEnv$.minsize <- minsize
-  .GlobalEnv$.minbreadth <- minbreadth
-  .GlobalEnv$.dirName <- minbreadth
-  
-  on.exit(rm(list=c(".local_conos_object", ".N", ".leaf.labels", ".minsize", ".minbreadth",".dirName"),envir=.GlobalEnv))
-  
-  shiny::runApp(appDir, display.mode = "normal")
-}
-
 
 
