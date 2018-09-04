@@ -546,33 +546,34 @@ Rcpp::List maxStableClusters(arma::imat& merges, arma::vec& thresholds, double m
     } else { // current node is too small
       maxthreshold[i]=0;
     }
+#ifdef DEBUG
+    //cout<<i<<":["<<(merges(i,0)-nleafs)<<","<<(merges(i,1)-nleafs)<<"] lc="<<lc<<" th="<<thresholds[i]<<" mth="<<maxthreshold[i]<<endl;
+#endif
   }
 #ifdef DEBUG
   cout<<"done"<<endl;
   cout<<"determining max clusters ... ";
 #endif
   
-  // phase II: walk downwards, continuing if the both branches are above threshold
+  // phase II: walk downwards
   arma::uvec x=find(maxthreshold>=minthreshold); 
   vector<int> terminalnodes; terminalnodes.reserve(x.n_elem);
   stack<int> s; s.push(merges.n_rows-1 + nleafs); // start with the top merge
   while(!s.empty()) {
     int j=s.top(); s.pop();
     if(j>=nleafs) { // internal node
-      // check if both have maxthreshold above
+      // check if branch if we should continue
+      bool added=false;
       for(int i=0;i<2;i++) {
         int ni=merges(j-nleafs,i); 
-        if(ni>=nleafs) {
-          ct[i]=maxthreshold[ni-nleafs];
-        } else {
-          ct[i]=0;
-        }
+        if(ni>=nleafs) { // internal
+          if(maxthreshold[ni-nleafs]  >= minthreshold) {
+             s.push(ni); // will try to split this node in the future
+             added=true;  
+          }
+        } 
       }
-      if(ct[0]>=minthreshold && ct[1]>=minthreshold) {
-        // split curent node
-        s.push(merges(j-nleafs,0)); s.push(merges(j-nleafs,1));
-      } else {
-        // add to terminal nodes
+      if(!added) { // push  as a terminal node
         terminalnodes.push_back(j);
       }
     }
