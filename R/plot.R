@@ -265,18 +265,24 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
 #' @param type one of 'counts' or 'proportions' to select type of plot
 #' @param clustering name of clustering in the current object
 #' @return a ggplot object 
-plotClusterBarplots <- function(conosObjs, type='counts',clustering=NULL) {
+plotClusterBarplots <- function(conosObjs, type='counts',clustering=NULL, groups=NULL) {
     ## param checking
-    if(is.null(clustering)) clustering <- 'multi level'
+    #if(is.null(clustering)) clustering <- 'multi level'
     if(!type %in% c('counts','proportions')) stop('argument type must be either counts or proportions')
     ## main function
-    groups <- as.factor(conosObjs$clusters[[clustering]]$groups)
+    if(!is.null(clustering)) {
+        if(clustering %in% names(conosObjs$clusters)) stop('Specified clustering doesn\'t exist')
+        groups <- as.factor(conosObjs$clusters[[clustering]]$groups)
+    } else {
+        if (is.null(groups)) stop('One of clustering or groups needs to be specified')
+        groups <- as.factor(groups)
+    }
     plot.df <- do.call(rbind,lapply(names(conosObjs$samples), function(n) {
         o <- conosObjs$samples[[n]]
         grps1 <- groups[intersect(names(groups), rownames(o$counts))]
         tbl1 <- data.frame(
             clname=levels(grps1),
-            val=tabulate(grps1),
+            val=as.numeric(table(grps1)),
             sample=c(n),
             stringsAsFactors = FALSE
         )
