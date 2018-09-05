@@ -294,3 +294,88 @@ plotClusterBarplots <- function(conosObjs, type='counts',clustering=NULL) {
     gg <- gg + scale_x_discrete(name='cluster')
     gg
 }     
+
+
+#' Generate boxplot per cluster of the proportion of cells in each celltype
+#' @param conosObjs conos object
+#' @param clustering name of the clustering to use
+#' @param apptypes a factor specifying how to group the samples
+#' @param return.details if TRUE return a list with the plot and the summary data.frame
+plotClusterBoxPlotsByAppType <- function(conosObjs, clustering=NULL, apptypes=NULL, return.details=FALSE) {
+    type <- 'proportions'
+    ## param checking
+    if(is.null(clustering)) clustering <- 'multi level'
+    if(is.null(apptypes)) stop('apptypes must be spectified')
+    if(!is.factor(apptypes)) stop('apptypes must be a factor')
+    if(!type %in% c('counts','proportions')) stop('argument type must be either counts or proportions')
+    ## main function
+    groups <- as.factor(conosObjs$clusters[[clustering]]$groups)
+    plot.df <- do.call(rbind,lapply(names(conosObjs$samples), function(n) {
+        o <- conosObjs$samples[[n]]
+        grps1 <- groups[intersect(names(groups), rownames(o$counts))]
+        tbl1 <- data.frame(
+            clname=levels(grps1),
+            val=tabulate(grps1),
+            sample=c(n),
+            stringsAsFactors = FALSE
+        )
+        if(type=='proportions') {
+            tbl1$val <- tbl1$val / sum(tbl1$val)
+        }
+        tbl1
+    }))
+    ## append app type
+    plot.df$apptype <- apptypes[plot.df$sample]
+    ## Make the plot
+    gg <- ggplot(plot.df, aes(x=apptype,y=val,fill=clname)) + facet <- wrap(~clname) + geom <- boxplot()
+    if (type == 'counts') {
+        gg <- gg + scale <- y <- continuous(name='counts')
+    } else {
+        gg <- gg + scale <- y <- continuous(name='% of sample')
+    }
+    gg <- gg + scale <- x <- discrete(name='cluster')
+    ## return
+    if(return.details) {
+        list(plot=gg,data=plot.df)
+    } else {
+        gg
+    }
+}
+
+
+#' Get markers for global clusters
+#' @param conosObjs conos object
+#' @param clustering name of the clustering to use
+#' @param min.samples.expressing minimum number of samples that must have the genes upregulated in the respective cluster
+#' @param min.percent.samples.expression minumum percent of samples that must have the gene upregulated
+getGlobalClusterMarkers <- function(conosObjs, clustering='multi level',
+                                    min.samples.expressing=0,min.percent.samples.expressing=0){
+    ## get the groups from the clusters
+    groups <- as.factor(conosObjs$clusters[[clustering]]$groups)
+    ## de lists
+    delists <- lapply(conosObjs$samples, function(p2) {
+        cells <- rownames(p2$counts)
+        groups.p2 <- groups[cells]
+        de <- p2$getDifferentialGenes(groups=groups.p2)
+        de
+    })
+    ## get de genes per app
+    z <- lapply(namedLevels(groups), function(l) {
+        lapply(delists, function(x) {
+            res <- x[[l]]
+            rownames(res[res$Z > 0,])
+        })
+    })
+    ## get consistent genes for each cluster
+    zp <- lapply(z, function(k) {
+        k <- lapply(k, unique)
+        gns <- factor(unlist(unname(k)))
+        t.gns <- tabulate(gns)
+        names(t.gns) <- levels(gns)
+        t.gns.pc <- t.gns / length(k)
+        ## consistent genes
+        names(t.gns[t.gns >= min.samples.expressing & t.gns.pc >= min.percent.samples.expressing])
+    })
+    ## return consistent genes
+    zp
+}        
