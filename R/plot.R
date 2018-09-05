@@ -258,3 +258,39 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
 
   return(gg)
 }
+
+#' Plots barplots per sample of composition of each pagoda2 application based on
+#' selected clustering
+#' @param conosObjs A conos objects
+#' @param type one of 'counts' or 'proportions' to select type of plot
+#' @param clustering name of clustering in the current object
+#' @return a ggplot object 
+plotClusterBarplots <- function(conosObjs, type='counts',clustering=NULL) {
+    ## param checking
+    if(is.null(clustering)) clustering <- 'multi level'
+    if(!type %in% c('counts','proportions')) stop('argument type must be either counts or proportions')
+    ## main function
+    groups <- as.factor(conosObjs$clusters[[clustering]]$groups)
+    plot.df <- do.call(rbind,lapply(names(conosObjs$samples), function(n) {
+        o <- conosObjs$samples[[n]]
+        grps1 <- groups[intersect(names(groups), rownames(o$counts))]
+        tbl1 <- data.frame(
+            clname=levels(grps1),
+            val=tabulate(grps1),
+            sample=c(n),
+            stringsAsFactors = FALSE
+        )
+        if(type=='proportions') {
+            tbl1$val <- tbl1$val / sum(tbl1$val)
+        }
+        tbl1
+    }))
+    gg <- ggplot(plot.df, aes(x=clname,y=val,fill=clname)) + geom_bar(stat='identity') + facet_wrap(~sample)
+    if (type == 'counts') {
+        gg <- gg + scale_y_continuous(name='counts')
+    } else {
+        gg <- gg + scale_y_continuous(name='% of sample')
+    }
+    gg <- gg + scale_x_discrete(name='cluster')
+    gg
+}     
