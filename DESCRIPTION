@@ -28,9 +28,7 @@ Imports:
   dendextend,
   heatmaply,
   d3heatmap,
-  largeVis,
   entropy,
-  ramify
 Suggests: 
   ggrastr,
   knitr,

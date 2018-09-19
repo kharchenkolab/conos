@@ -4,9 +4,10 @@
 #' @import dendextend
 #' @import heatmaply
 #' @import d3heatmap
-#' @import largeVis
 #' @import entropy
-#' @import ramify
+#' @import ggplot2
+
+NULL
 
 #' Perform ordering of merge matrix values by rows 
 sequential.numeration <- function(pair){
@@ -269,7 +270,15 @@ get.greedy.cut.groups <- function(no_clusters=NULL,greedy.modularity.cut.result=
 ##' @param minsize minimum size of the branch (in number of leafs) 
 ##' @param minbreadth minimum allowed breadth of a branch (measured as normalized entropy)
 ##' @export
-runShinyApp <- function(con=NULL, N=NULL, leaf.labels=NULL, minsize=0, minbreadth=0) {
+runShinyApp <- function(con, N=10, leaf.labels=NULL, minsize=0, minbreadth=0) {
+  
+  if(is.null(con$clusters$walktrap)) stop("please run findCommunities(method=walktrap.communities) to calculate walktrap clustering first")
+  if(is.null(leaf.labels)) {
+    # get sample labels for cells
+    cl <- lapply(con$samples,function(x) rownames(x$counts))
+    leaf.labels <- as.factor(setNames(rep(1:length(cl),unlist(lapply(cl,length))),unlist(cl)))
+  }
+  
   #.GlobalEnv$con <- con
   greedy.modularity.cut.result <- conos::greedy.modularity.cut(wt=con$clusters$walktrap$result,N=N,leaf.labels=leaf.labels,minsize=minsize,minbreadth=minbreadth)
   

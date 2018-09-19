@@ -463,9 +463,10 @@ bestClusterThresholds <- function(res,clusters) {
 ##' @param leaf.labels leaf sample label factor, for breadth calculations - must be a named factor containing all wt$names, or if wt$names is null, a factor listing cells in the same order as wt leafs
 ##' @param minsize minimum size of the branch (in number of leafs) 
 ##' @param minbreadth minimum allowed breadth of a branch (measured as normalized entropy)
+##' @param flat.cut whether to simply take a flat cut (i.e. follow provided tree; default=FALSE). Does no observe minsize/minbreadth restrictions
 ##' @return list(hclust - hclust structure of the derived tree, leafContent - binary matrix with rows corresponding to old leaves, columns to new ones, deltaM - modularity increments)
 ##' @export
-greedy.modularity.cut <- function(wt,N,leaf.labels=NULL,minsize=0,minbreadth=0) {
+greedy.modularity.cut <- function(wt,N,leaf.labels=NULL,minsize=0,minbreadth=0,flat.cut=FALSE) {
   # prepare labels
   nleafs <- nrow(wt$merges)+1;
   if(is.null(leaf.labels)) {
@@ -480,7 +481,7 @@ greedy.modularity.cut <- function(wt,N,leaf.labels=NULL,minsize=0,minbreadth=0) 
       ll <- as.integer(as.factor(leaf.labels[wt$names]))-1L;
     }
   }
-  x <- conos:::greedyModularityCut(wt$merges-1L,-1*diff(wt$modularity),N,minsize,ll,minbreadth)
+  x <- conos:::greedyModularityCut(wt$merges-1L,-1*diff(wt$modularity),N,minsize,ll,minbreadth,flat.cut)
   if(length(x$splitsequence)<1) { 
     stop("unable to make a single split using specified size/breadth restrictions")
   }
