@@ -269,8 +269,9 @@ get.greedy.cut.groups <- function(no_clusters=NULL,greedy.modularity.cut.result=
 ##' @param leaf.labels leaf sample label factor, for breadth calculations - must be a named factor containing all wt$names, or if wt$names is null, a factor listing cells in the same order as wt leafs
 ##' @param minsize minimum size of the branch (in number of leafs) 
 ##' @param minbreadth minimum allowed breadth of a branch (measured as normalized entropy)
+##' @param flat.cut
 ##' @export
-runShinyApp <- function(con, N=10, leaf.labels=NULL, minsize=0, minbreadth=0) {
+runShinyApp <- function(con, N=10, leaf.labels=NULL, minsize=0, minbreadth=0, flat.cut=FALSE) {
   
   if(is.null(con$clusters$walktrap)) stop("please run findCommunities(method=walktrap.communities) to calculate walktrap clustering first")
   if(is.null(leaf.labels)) {
@@ -280,7 +281,7 @@ runShinyApp <- function(con, N=10, leaf.labels=NULL, minsize=0, minbreadth=0) {
   }
   
   #.GlobalEnv$con <- con
-  greedy.modularity.cut.result <- conos::greedy.modularity.cut(wt=con$clusters$walktrap$result,N=N,leaf.labels=leaf.labels,minsize=minsize,minbreadth=minbreadth)
+  greedy.modularity.cut.result <- conos::greedy.modularity.cut(wt=con$clusters$walktrap$result,N=N,leaf.labels=leaf.labels,minsize=minsize,minbreadth=minbreadth,flat.cut=flat.cut)
   
   leafContent <- greedy.modularity.cut.result$leafContent
   hc <- greedy.modularity.cut.result$hc
@@ -326,7 +327,8 @@ runShinyApp <- function(con, N=10, leaf.labels=NULL, minsize=0, minbreadth=0) {
   
   colors_source <- sample(rainbow(length(labels_mapping)))
   names(colors_source) <- sample(labels_mapping)
-  ui <- fluidPage(
+  ui <- fillPage(
+    tags$style(type="text/css", "body { overflow-y: scroll; }"),
     fluidRow(
       column(4,
              fluidRow(
@@ -339,25 +341,37 @@ runShinyApp <- function(con, N=10, leaf.labels=NULL, minsize=0, minbreadth=0) {
                                     max = attr(dend,"members"),
                                     value = which.max(modularities)+1,
                                     width = "94%"), width=12, 
-                        tabPanel("Plot",plotOutput(outputId = "treePlot1", height = "250"),br()),
-                        actionButton("do", "Save membership"),
-                        #actionButton("plot_graph", "Plot the graph")),
-                        checkboxInput("plot_graph", "Plot graph", value = TRUE)),
-                      div(style = "height:250;"))),
+                        tabPanel("Plot",plotOutput(outputId = "treePlot1",height = 'auto'),br()),
+                        actionButton("do", "Save membership")),
+                      #actionButton("plot_graph", "Plot the graph")),
+                      #checkboxInput("plot_graph", "Plot graph", value = TRUE)),
+                      div(style = "height: 100%;"))),
              fluidRow(
                column(12,
                       tabPanel("Plot",plotOutput(outputId = "treePlot6")),
-                      div(style = "height:500;")))),
+                      div(style = "height: 100%;")))),
       column(8,                       
              mainPanel(
                tabsetPanel(type = "tabs",
-                           tabPanel("Tree", plotOutput(outputId = "treePlot2",click = "plot_click",dblclick="plot_db_click")),
-                           tabPanel("Composition similarity plot 1", d3heatmapOutput(outputId = "treePlot3", width = "1000", height = "800")),
-                           tabPanel("Composition similarity plot 2", d3heatmapOutput(outputId = "treePlot4", width = "1000", height = "800")),
-                           tabPanel("tSNE plots", plotOutput(outputId = "treePlot5")))),div(style = "height:800;"))))
+                           tabPanel("Tree", withSpinner(plotOutput(outputId = "treePlot2",click = "plot_click",dblclick="plot_db_click"))),
+                           tabPanel("Composition of clusters", withSpinner(uiOutput(outputId = "treePlot3"))),
+                           tabPanel("Composition similarity", withSpinner(uiOutput(outputId = "treePlot4"))),
+                           tabPanel("tSNE plots", withSpinner(plotOutput(outputId = "treePlot5")))), 
+               tags$head(tags$script('
+                                     var dimension = [0, 0];
+                                     $(document).on("shiny:connected", function(e) {
+                                     dimension[0] = window.innerWidth;
+                                     dimension[1] = window.innerHeight;
+                                     Shiny.onInputChange("dimension", dimension);
+                                     });
+                                     $(window).resize(function(e) {
+                                     dimension[0] = window.innerWidth;
+                                     dimension[1] = window.innerHeight;
+                                     Shiny.onInputChange("dimension", dimension);
+                                     });'))),div(style = "width: 70%; height: 100%;"))))
   
   
-  server <- function(input, output) { #plots under a slider 
+  server <- function(input, output, session) { #plots under a slider 
     click_value <- reactiveVal(NULL)
     observeEvent(input$plot_click,{click_value(input$plot_click)})
     observeEvent(input$N,{click_value(NULL)})
@@ -442,7 +456,6 @@ runShinyApp <- function(con, N=10, leaf.labels=NULL, minsize=0, minbreadth=0) {
       
       heights <- get_nodes_attr(dend.colored$x,"height")
       IDs <- get_nodes_attr(dend.colored$x,"ID")
-      #plot(dend.colored$x)
       
       height_mask <- (heights > 0) & (IDs %in% current_cut)
       
@@ -494,21 +507,18 @@ runShinyApp <- function(con, N=10, leaf.labels=NULL, minsize=0, minbreadth=0) {
       glist <- list(g1,g2,g3)
       grid.arrange(grobs=glist,nrow=length(glist))
       
-    },height = 250)
+    },height = 300)
     output$treePlot2 <- renderPlot({ #draw colored tree 
       #color the tree and plot it with labels 
-      #plot(value())
       dend.colored.local <- dataInput()$dend.colored
       labels(dend.colored.local$x) <- rep(NA,attr(dend.colored.local$x,"members"))
       mask <- dataInput()$mask
-      
-      
-      plot(dend.colored.local$x)
+      plot(dend.colored.local$x,axes=FALSE)
       text(xy_ordered[mask,1]+0.5, xy_ordered[mask,2]+0.5, labels=xy_ordered[mask,3], col="black",cex = 0.8)
-      
-    },width = 1000, height = 800)
+    },width = reactive(input$dimension[1]*2/3), height = reactive(input$dimension[2]))
     
-    output$treePlot3 <- renderD3heatmap({ #
+    
+    output$heatmap1 <- renderD3heatmap({
       struct_similarity <- dataInput()$structure_vectors
       if (is.null(click_value()) & is.null(db_click_value())){
         Rowv <- dataInput()$dend.cut
@@ -517,7 +527,11 @@ runShinyApp <- function(con, N=10, leaf.labels=NULL, minsize=0, minbreadth=0) {
         d3heatmap(t(struct_similarity),colors = Reds(10), dendrogram = "column" )}
     })
     
-    output$treePlot4 <- renderD3heatmap({
+    output$treePlot3 <- renderUI({
+      d3heatmapOutput("heatmap1", height = paste0(as.character(input$dimension[2]*0.9), "px"), width = paste0(as.character(input$dimension[1]*2/3), "px"))
+    })
+    
+    output$heatmap2 <- renderD3heatmap({
       struct_similarity <- dataInput()$structure_vectors
       dists <- dist(t(struct_similarity))
       if (is.null(click_value()) & is.null(db_click_value())){
@@ -528,25 +542,22 @@ runShinyApp <- function(con, N=10, leaf.labels=NULL, minsize=0, minbreadth=0) {
       }
     })
     
+    output$treePlot4 <- renderUI({
+      d3heatmapOutput("heatmap2", height = paste0(input$dimension[2]*0.9, "px"), width = paste0(input$dimension[1]*2/3, "px"))
+    })
+    
     output$treePlot5 <- renderPlot({
-      #plot(input$plot_graph)
-      #if (plot_graph()){
       memb <- dataInput()$memb
       colors <- dataInput()$colors  
-      con$plotPanel(groups=memb, adjust.func = function(gg) gg + scale_color_manual(values = colors))
+      suppressMessages(con$plotPanel(groups=memb, adjust.func = function(gg) gg + scale_color_manual(values = colors)))
       
-    },width = 1000, height = 800)
+    }, height = function() {session$clientData$output_treePlot5_width*1.2})
     
     output$treePlot6 <- renderPlot({
-      if (input$plot_graph){
-        #if (plot_graph()){
-        memb <- dataInput()$memb
-        colors <- dataInput()$colors
-        con$plotGraph(groups = memb) + scale_color_manual(values = colors)
-        #}
-      }
-    }, height = 320)
-    
+      memb <- dataInput()$memb
+      colors <- dataInput()$colors
+      suppressMessages((con$plotGraph(groups = memb) + scale_color_manual(values = colors)))
+    }, height = function() {session$clientData$output_treePlot6_width*0.5})
     observeEvent(input$do, {
       memb <- dataInput()$memb
       
