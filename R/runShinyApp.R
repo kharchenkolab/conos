@@ -6,6 +6,7 @@
 #' @import d3heatmap
 #' @import entropy
 #' @import ggplot2
+#' @import shinycssloaders
 
 NULL
 
@@ -262,7 +263,7 @@ get.greedy.cut.groups <- function(no_clusters=NULL,greedy.modularity.cut.result=
   }
 }
 
-##' deploys Shiny application to visualize waltktrap tree and select cut level 
+##' runs Shiny application to visualize waltktrap tree and select cut level 
 ##'
 ##' @param con conos object with walktrap results
 ##' @param N number of top greedy splits to take
