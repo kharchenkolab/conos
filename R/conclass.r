@@ -413,21 +413,28 @@ Conos <- setRefClass(
     propagateLabels=function(labels, max.iters=15, return.distribution=TRUE, verbose=TRUE) {
     "Estimate labeling distribution for each vertex, based on provided labels.\n
      Params:\n
-     - labels: vector of character labels, named by cell names\n
+     - labels: vector of factor or character labels, named by cell names\n
      - max.iters: maximal number of iterations. Default: 15.\n
      - return.distribution: return distribution of labeling, but not single label for each vertex. Default: TRUE.\n
      - verbose: verbose mode. Default: TRUE.\n
      \n
      Return: matrix with distribution of label probabilities for each vertex by rows.
     "
+      if (is.factor(labels)) {
+        labels <- as.character(labels) %>% setNames(names(labels))
+      }
       edges <- igraph::as_edgelist(graph)
       edge.weights <- igraph::edge.attributes(graph)$weight
+      labels <- labels[intersect(names(labels), igraph::vertex.attributes(graph)$name)]
+
       label.distribution <- propagate_labels(edges, edge.weights, vert_labels=labels, max_n_iters=max.iters, verbose=verbose)
       if (return.distribution) {
         return(label.distribution)
       }
 
-      return(colnames(label.distribution)[apply(label.distribution, 1, which.max)])
+      label.distribution <- colnames(label.distribution)[apply(label.distribution, 1, which.max)] %>%
+        setNames(rownames(label.distribution))
+      return(label.distribution)
     }
   )
 );

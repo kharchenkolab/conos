@@ -44,7 +44,7 @@ The class encompasses sample collections, providing methods for calculating and 
 
      Params:
 
-     - labels: vector of character labels, named by cell names
+     - labels: vector of factor or character labels, named by cell names
 
      - max.iters: maximal number of iterations. Default: 15.
 
