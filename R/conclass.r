@@ -410,7 +410,7 @@ Conos <- setRefClass(
       return(invisible(expression.adj[[name]] <<- cm))
     },
 
-    propagateLabels=function(labels, max.iters=15, return.distribution=TRUE, verbose=TRUE) {
+    propagateLabels=function(labels, max.iters=15, method=1, diffusion.fading=1.0, diffusion.fading.const=0.05, tol=1e-3, return.distribution=TRUE, verbose=TRUE) {
     "Estimate labeling distribution for each vertex, based on provided labels.\n
      Params:\n
      - labels: vector of factor or character labels, named by cell names\n
@@ -427,7 +427,9 @@ Conos <- setRefClass(
       edge.weights <- igraph::edge.attributes(graph)$weight
       labels <- labels[intersect(names(labels), igraph::vertex.attributes(graph)$name)]
 
-      label.distribution <- propagate_labels(edges, edge.weights, vert_labels=labels, max_n_iters=max.iters, verbose=verbose)
+      label.distribution <- propagate_labels(edges, edge.weights, vert_labels=labels, max_n_iters=max.iters, verbose=verbose,
+                                             method=method, diffusion_fading=diffusion.fading, diffusion_fading_const=diffusion.fading.const,
+                                             tol=tol)
       if (return.distribution) {
         return(label.distribution)
       }

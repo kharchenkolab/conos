@@ -177,8 +177,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // propagate_labels
-Rcpp::NumericMatrix propagate_labels(const Rcpp::StringMatrix& edge_verts, const std::vector<double>& edge_weights, const Rcpp::StringVector& vert_labels, int max_n_iters, bool verbose);
-RcppExport SEXP _conos_propagate_labels(SEXP edge_vertsSEXP, SEXP edge_weightsSEXP, SEXP vert_labelsSEXP, SEXP max_n_itersSEXP, SEXP verboseSEXP) {
+Rcpp::NumericMatrix propagate_labels(const Rcpp::StringMatrix& edge_verts, const std::vector<double>& edge_weights, const Rcpp::StringVector& vert_labels, int max_n_iters, bool verbose, int method, double diffusion_fading, double diffusion_fading_const, double tol);
+RcppExport SEXP _conos_propagate_labels(SEXP edge_vertsSEXP, SEXP edge_weightsSEXP, SEXP vert_labelsSEXP, SEXP max_n_itersSEXP, SEXP verboseSEXP, SEXP methodSEXP, SEXP diffusion_fadingSEXP, SEXP diffusion_fading_constSEXP, SEXP tolSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -187,7 +187,11 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const Rcpp::StringVector& >::type vert_labels(vert_labelsSEXP);
     Rcpp::traits::input_parameter< int >::type max_n_iters(max_n_itersSEXP);
     Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
-    rcpp_result_gen = Rcpp::wrap(propagate_labels(edge_verts, edge_weights, vert_labels, max_n_iters, verbose));
+    Rcpp::traits::input_parameter< int >::type method(methodSEXP);
+    Rcpp::traits::input_parameter< double >::type diffusion_fading(diffusion_fadingSEXP);
+    Rcpp::traits::input_parameter< double >::type diffusion_fading_const(diffusion_fading_constSEXP);
+    Rcpp::traits::input_parameter< double >::type tol(tolSEXP);
+    rcpp_result_gen = Rcpp::wrap(propagate_labels(edge_verts, edge_weights, vert_labels, max_n_iters, verbose, method, diffusion_fading, diffusion_fading_const, tol));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -257,7 +261,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_conos_sgd", (DL_FUNC) &_conos_sgd, 15},
     {"_conos_n2Knn", (DL_FUNC) &_conos_n2Knn, 7},
     {"_conos_n2CrossKnn", (DL_FUNC) &_conos_n2CrossKnn, 8},
-    {"_conos_propagate_labels", (DL_FUNC) &_conos_propagate_labels, 5},
+    {"_conos_propagate_labels", (DL_FUNC) &_conos_propagate_labels, 9},
     {"_conos_smooth_count_matrix", (DL_FUNC) &_conos_smooth_count_matrix, 8},
     {"_conos_adjacent_vertices", (DL_FUNC) &_conos_adjacent_vertices, 1},
     {"_conos_adjacent_vertex_weights", (DL_FUNC) &_conos_adjacent_vertex_weights, 2},
