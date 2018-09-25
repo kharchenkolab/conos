@@ -82,6 +82,7 @@ quickJNMF <- function(p2.objs = NULL, n.comps = 30, n.odgenes=NULL, var.scale=TR
 }
 
 cpcaFast <- function(covl,ncells,ncomp=10,maxit=1000,tol=1e-6,use.irlba=TRUE,verbose=F) {
+  ncomp <- min(c(nrow(covl)-1,ncol(covl)-1,ncomp));
   if(use.irlba) {
     # irlba initialization
     p <- nrow(covl[[1]]);
@@ -232,7 +233,7 @@ quickPlainPCA <- function(r.n,k=30,ncomps=30,n.odgenes=NULL,var.scale=TRUE,verbo
     }
     x <- x
     cm <- Matrix::colMeans(x);
-    pcs <- irlba::irlba(x, nv=ncomps, nu =0, center=cm, right_only = F, reorth = T);
+    pcs <- irlba::irlba(x, nv=min(c(nrow(x)-1,ncol(x)-1,ncomps)), nu =0, center=cm, right_only = F, reorth = T);
     #rownames(pcs$v) <- colnames(x);
     pcs$v
   })
@@ -258,6 +259,9 @@ papply <- function(...,n.cores=parallel::detectCores(), mc.preschedule=FALSE) {
       # It should never happen because parallel is specified in Imports
       res <- BiocParallel::bplapply(... , BPPARAM = BiocParallel::MulticoreParam(workers = n.cores))
     }
+  } else {
+    # fall back on lapply
+    res <- lapply(...)
   }
 
   is.error <- (sapply(res, class) == "try-error")
@@ -265,8 +269,7 @@ papply <- function(...,n.cores=parallel::detectCores(), mc.preschedule=FALSE) {
     stop(paste("Errors in papply:", res[is.error]))
   }
 
-  # fall back on lapply
-  lapply(...)
+  return(res)
 }
 
 ##################################
