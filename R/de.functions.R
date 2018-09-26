@@ -52,7 +52,7 @@ getPerCellTypeDE <- function(conObj, groups=NULL, sampleGroups=NULL, cooksCutoff
     aggr2 <- t(do.call(rbind, aggr2))
     rm(raw.mats); gc()
     ## For every cell type get differential expression results
-    de.res <- mclapply(namedLevels(groups), function(l) {
+    de.res <- parallel::mclapply(namedLevels(groups), function(l) {
         try({
             ## Get count matrix
             cm <- aggr2[,strpart(colnames(aggr2),cluster.sep.chr,2,fixed=TRUE) == l]
@@ -67,9 +67,9 @@ getPerCellTypeDE <- function(conObj, groups=NULL, sampleGroups=NULL, cooksCutoff
             meta$group <- relevel(meta$group, ref=reflevel)
             if (length(unique(as.character(meta$group))) < 2)
                 stop('The cluster is not present in both conditions')
-            dds1 <- DESeqDataSetFromMatrix(cm,meta,design=~group)
-            dds1 <- DESeq(dds1)
-            res1 <- results(dds1, cooksCutoff = cooksCutoff, independentFiltering = independentFiltering)
+            dds1 <- DESeq2::DESeqDataSetFromMatrix(cm,meta,design=~group)
+            dds1 <- DESeq2::DESeq(dds1)
+            res1 <- DESeq2::results(dds1, cooksCutoff = cooksCutoff, independentFiltering = independentFiltering)
             ##
             if(return.details) {
                 list(res=res1, cm=cm, sampleGroups=sampleGroups)
@@ -213,7 +213,7 @@ getPerCellTypeDECorrected <- function(conObj, groups=NULL, sampleGroups=NULL, co
     aggr2 <- t(do.call(rbind, aggr2))
     rm(raw.mats); gc()
     ## For every cell type get differential expression results
-    de.res <- mclapply(namedLevels(groups), function(l) {
+    de.res <- parallel::mclapply(namedLevels(groups), function(l) {
         try({
             ## Get count matrix
             cm <- aggr2[,strpart(colnames(aggr2),cluster.sep.chr,2,fixed=TRUE) == l]
@@ -229,8 +229,8 @@ getPerCellTypeDECorrected <- function(conObj, groups=NULL, sampleGroups=NULL, co
             if (length(unique(as.character(meta$group))) < 2)
                 stop('The cluster is not present in both conditions')
             library(DESeq2)
-            dds1 <- DESeqDataSetFromMatrix(cm,meta,design=~group)
-            dds1 <- estimateSizeFactors(dds1)
+            dds1 <- DESeq2::DESeqDataSetFromMatrix(cm,meta,design=~group)
+            dds1 <- DESeq2::estimateSizeFactors(dds1)
             sf <- sizeFactors(dds1)
             if(!(all(rownames(cm) %in% names(correction)) & all(names(correction) %in% rownames(cm))))
                 stop('incompatible matrices')
@@ -251,8 +251,8 @@ getPerCellTypeDECorrected <- function(conObj, groups=NULL, sampleGroups=NULL, co
             nf.tmp <- nf.tmp * x
             x2 <- plyr::aaply(nf.tmp, 1, function(x) {x / exp(mean(log(x)))})
             normalizationFactors(dds1) <- x2
-            dds1 <- DESeq(dds1)
-            res1 <- results(dds1, cooksCutoff = cooksCutoff, independentFiltering = independentFiltering)
+            dds1 <- DESeq2::DESeq(dds1)
+            res1 <- DESeq2::results(dds1, cooksCutoff = cooksCutoff, independentFiltering = independentFiltering)
             if (return.details) {
                 list(res=res1,cm=cm,sampleGroups=sampleGroups)
             } else {
