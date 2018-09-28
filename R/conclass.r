@@ -186,7 +186,7 @@ Conos <- setRefClass(
       return(invisible(cis))
     },
 
-    buildGraph=function(k=30, k.self=10, k.self.weight=0.1, space='CPCA', matching.method='mNN', metric='angular', data.type='counts', l2.sigma=1e5, var.scale =TRUE, ncomps=50, n.odgenes=1000, return.details=T,neighborhood.average=FALSE,neighborhood.average.k=10, exclude.pairs=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE) {
+    buildGraph=function(k=30, k.self=10, k.self.weight=0.5, space='CPCA', matching.method='mNN', metric='angular', data.type='counts', l2.sigma=1e5, var.scale =TRUE, ncomps=50, n.odgenes=1000, return.details=T,neighborhood.average=FALSE,neighborhood.average.k=10, exclude.pairs=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE, const.inner.weights=FALSE) {
 
       supported.spaces <- c("CPCA","JNMF","genes","PCA")
       if(!space %in% supported.spaces) {
@@ -260,7 +260,7 @@ Conos <- setRefClass(
           n1 <- cis[1,j]; n2 <- cis[2,j]
           if(verbose) cat(".")
 
-          mnn <- get.neighbor.matrix(cpproj[[n1]],cpproj[[n2]],k,matching=matching.method,metric=metric,l2.sigma=l2.sigma)
+          mnn <- get.neighbor.matrix(cpproj[[n1]], cpproj[[n2]], k, matching=matching.method, metric=metric, l2.sigma=l2.sigma)
           return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=mnn@x,stringsAsFactors=F))
 
         } else if (space=='genes') {
@@ -286,12 +286,18 @@ Conos <- setRefClass(
           cat(".")
           return(data.frame('mA.lab'=rownames(pca)[xk@i+1],'mB.lab'=rownames(pca)[xk@j+1],'w'=pmax(1-xk@x,0),stringsAsFactors=F))
         },n.cores=n.cores)),stringsAsFactors = F)
-        x$w <- k.self.weight
+
+        if (const.inner.weights) {
+          x$w <- k.self.weight
+        } else {
+          x$w <- x$w * k.self.weight
+        }
+
         x$type <- 0;
         cat(' done\n')
         el <- rbind(el,x)
       }
-      # TODO: add edge labels to distinguish inter and intra-sample edges
+
       g  <- graph_from_edgelist(as.matrix(el[,c(1,2)]), directed =FALSE)
       E(g)$weight <- el[,3]
       E(g)$type <- el[,4]
