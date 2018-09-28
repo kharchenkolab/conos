@@ -39,12 +39,13 @@ The class encompasses sample collections, providing methods for calculating and 
        - verbose: verbose mode. Default: TRUE.
       }
 
-\item{\code{propagateLabels(labels, max.iters = 15, return.distribution = TRUE,
+\item{\code{propagateLabels(labels, max.iters = 15, method = 1, diffusion_fading = 1,
+  diffusion_fading_const = 0.05, tol = 0.001, return.distribution = TRUE,
   verbose = TRUE)}}{Estimate labeling distribution for each vertex, based on provided labels.
 
      Params:
 
-     - labels: vector of character labels, named by cell names
+     - labels: vector of factor or character labels, named by cell names
 
      - max.iters: maximal number of iterations. Default: 15.
 

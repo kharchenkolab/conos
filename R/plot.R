@@ -49,6 +49,10 @@ plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow
     nrow <- ceiling(n.plots / ncol)
   }
 
+  if (is.null(names(embeddings))) {
+    names(embeddings) <- paste(1:length(embeddings))
+  }
+
   plot.list <- lapply(names(embeddings), function(n)
     embeddingPlot(embeddings[[n]], groups=groups, colors=colors, raster=raster,
                   raster.width=panel.size[1] / nrow, raster.height=panel.size[2] / ncol, ...) +
