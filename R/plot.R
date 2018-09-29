@@ -92,8 +92,13 @@ plotPagodas <- function(pagoda.samples, groups=NULL, colors=NULL, gene=NULL, emb
   }
 
   if (!is.null(gene)) {
-    colors <- Reduce(c, sapply(pagoda.samples, function(d)
-      if(gene %in% colnames(d$counts)) d$counts[,gene] else stats::setNames(rep(NA,nrow(d$counts)), rownames(d$counts))))
+      colors <- unlist(unname(lapply(con$samples, function(d) {
+          if(gene %in% colnames(d$counts)) {
+              d$counts[,gene]
+          }  else {
+              stats::setNames(rep(NA,nrow(d$counts)))
+          }
+      })))
   }
 
   return(plotEmbeddings(embeddings, groups=groups, colors=colors, ...))
