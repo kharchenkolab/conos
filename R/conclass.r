@@ -223,10 +223,11 @@ Conos <- setRefClass(
           #return(data.frame('mA.lab'=rownames(xl[[i]]$rot1)[mnn@i+1],'mB.lab'=rownames(xl[[i]]$rot2)[mnn@j+1],'w'=1/pmax(1,log(mnn@x)),stringsAsFactors=F))
 
         } else if (space %in% c("CPCA","GSVD","PCA")) {
-          common.genes <- Reduce(intersect,lapply(r.ns, getGenes))
+          #common.genes <- Reduce(intersect,lapply(r.ns, getGenes))
           if(!is.null(xl[[i]]$CPC)) {
             # CPCA or PCA
-            odgenes <- intersect(rownames(xl[[i]]$CPC),common.genes)
+            #odgenes <- intersect(rownames(xl[[i]]$CPC),common.genes)
+            odgenes <- rownames(xl[[i]]$CPC);
             rot <- xl[[i]]$CPC[odgenes,];
           } else if(!is.null(xl[[i]]$o$Q)) {
             # GSVD
@@ -244,8 +245,7 @@ Conos <- setRefClass(
           }
 
           # create matrices, adjust variance
-          cproj <- scaledMatrices(r.ns, data.type=data.type, od.genes=odgenes, var.scale=var.scale,
-                                  neighborhood.average=neighborhood.average)
+          cproj <- scaledMatrices(r.ns, data.type=data.type, od.genes=odgenes, var.scale=var.scale, neighborhood.average=neighborhood.average)
           if(common.centering) {
             ncells <- unlist(lapply(cproj,nrow));
             centering <- colSums(do.call(rbind,lapply(cproj,colMeans))*ncells)/sum(ncells)

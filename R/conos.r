@@ -7,8 +7,8 @@ NULL
 scaledMatricesP2 <- function(p2.objs, data.type, od.genes, var.scale, neighborhood.average) {
   ## Common variance scaling
   if (var.scale) {
-    cgsf <- do.call(cbind, lapply(p2.objs,function(x) x$misc$varinfo[od.genes,]$gsf)) %>%
-      log() %>% rowMeans() %>% exp()
+    #cgsf <- do.call(cbind, lapply(p2.objs,function(x) x$misc$varinfo[od.genes,]$gsf)) %>%  log() %>% rowMeans() %>% exp()
+    cgsf <- do.call(cbind, lapply(p2.objs,function(x) x$misc$varinfo[od.genes,]$gsf)) %>% rowMeans()
   }
   ## Prepare the matrices
   cproj <- lapply(p2.objs,function(r) {
@@ -67,7 +67,7 @@ scaledMatrices <- function(samples, data.type, od.genes, var.scale, neighborhood
 }
 
 commonOverdispersedGenes <- function(samples, n.odgenes, verbose) {
-  od.genes <- table(unlist(lapply(samples, getOverdispersedGenes, n.odgenes)))
+  od.genes <- sort(table(unlist(lapply(samples, getOverdispersedGenes, n.odgenes))),decreasing=T)
   od.genes <- od.genes[names(od.genes) %in% Reduce(intersect, lapply(samples, getGenes))]
 
   if(verbose) cat("using",length(od.genes),"od genes\n")
