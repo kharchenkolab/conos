@@ -136,7 +136,7 @@ Conos <- setRefClass(
       if(!is.null(exclude.samples)) {
         mi <- snam %in% exclude.samples;
         if(verbose) { cat("excluded",sum(mi),"out of",length(snam),"samples, based on supplied exclude.samples\n") }
-        snam <- snam[!vi];
+        snam <- snam[!mi];
       }
       cis <- combn(names(samples),2);
       # TODO: add random subsampling for very large panels
