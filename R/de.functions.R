@@ -52,7 +52,7 @@ getPerCellTypeDE <- function(conObj, groups=NULL, sampleGroups=NULL, cooksCutoff
     aggr2 <- t(do.call(rbind, aggr2))
     rm(raw.mats); gc()
     ## For every cell type get differential expression results
-    de.res <- parallel::mclapply(namedLevels(groups), function(l) {
+    de.res <- parallel::mclapply(nbHelpers::namedLevels(groups), function(l) {
         try({
             ## Get count matrix
             cm <- aggr2[,strpart(colnames(aggr2),cluster.sep.chr,2,fixed=TRUE) == l]
@@ -213,7 +213,7 @@ getPerCellTypeDECorrected <- function(conObj, groups=NULL, sampleGroups=NULL, co
     aggr2 <- t(do.call(rbind, aggr2))
     rm(raw.mats); gc()
     ## For every cell type get differential expression results
-    de.res <- parallel::mclapply(namedLevels(groups), function(l) {
+    de.res <- parallel::mclapply(nbHelpers::namedLevels(groups), function(l) {
         try({
             ## Get count matrix
             cm <- aggr2[,strpart(colnames(aggr2),cluster.sep.chr,2,fixed=TRUE) == l]
