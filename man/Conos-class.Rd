@@ -39,8 +39,8 @@ The class encompasses sample collections, providing methods for calculating and 
        - verbose: verbose mode. Default: TRUE.
       }
 
-\item{\code{propagateLabels(labels, max.iters = 15, method = 1, diffusion_fading = 1,
-  diffusion_fading_const = 0.05, tol = 0.001, return.distribution = TRUE,
+\item{\code{propagateLabels(labels, max.iters = 15, method = 1, diffusion.fading = 1,
+  diffusion.fading.const = 0.05, tol = 0.001, return.distribution = TRUE,
   verbose = TRUE)}}{Estimate labeling distribution for each vertex, based on provided labels.
 
      Params:
