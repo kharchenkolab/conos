@@ -17,6 +17,12 @@ Conos is robust to heterogeneity of samples within collection, as well as noise.
 * What do I need to run it?
 Conos is an R package. Currently, it supports analysis of sample collections analyzed using [pagoda2](https://github.com/hms-dbmi/pagoda2). We will add support for Seurat collections shortly.
 
+## Installation
+
+```r
+devtools::install_github("hms-dbmi/conos")
+```
+
 ## Usage example
 Please see [walkthrough](http://pklab.med.harvard.edu/peterk/conos/walkthrough.nb.html) for an example of Conos analysis.
 
