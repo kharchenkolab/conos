@@ -8,7 +8,7 @@
 #' @param cluster.sep.chr character string of length 1 specifying a delimiter to separate cluster and app names
 #' @param return.details return detals
 #' @export getPerCellTypeDE
-getPerCellTypeDE <- function(conObj, groups=NULL, sampleGroups=NULL, cooksCutoff = FALSE, reflevel = NULL,
+getPerCellTypeDE <- function(conObj, groups=NULL, sampleGroups=NULL, cooksCutoff = FALSE, reflevel = NULL, min.cell.count = 10,
                              independentFiltering = FALSE, n.cores=1,cluster.sep.chr = '+',return.details=TRUE) {
     ## Check arguments
     if ( class(conObj) != 'Conos') stop('conObj must be a conos object')
@@ -41,7 +41,16 @@ getPerCellTypeDE <- function(conObj, groups=NULL, sampleGroups=NULL, cooksCutoff
     raw.mats <- lapply(raw.mats, function(x) {x[,common.genes]})
     aggr2 <- lapply(raw.mats, function(x) {
         g1 <- groups[intersect(names(groups), rownames(x))]
+        t1 <- as.numeric(table(g1))
+        names(t1) <- levels(g1);
+        droplevels <- names(t1)[t1 < min.cell.count]
+        g1.n <- names(g1)
+        g1 <- as.character(g1)
+        names(g1) <- g1.n
+        g1[g1 %in% droplevels] <- NA
+        g1 <- as.factor(g1)
         aggr <- Matrix.utils::aggregate.Matrix(x, g1)
+        aggr <- aggr[rownames(aggr) != "NA",]
         aggr
     })
     aggr2 <- lapply(names(aggr2), function(n) {
@@ -64,6 +73,8 @@ getPerCellTypeDE <- function(conObj, groups=NULL, sampleGroups=NULL, cooksCutoff
                     names(sampleGroups)[unlist(lapply(sampleGroups,function(x) any(x %in% y)))]
                 })))
             )
+            if (!reflevel %in% levels(meta$group))
+                stop('The reference level is absent in this comparison')
             meta$group <- relevel(meta$group, ref=reflevel)
             if (length(unique(as.character(meta$group))) < 2)
                 stop('The cluster is not present in both conditions')
