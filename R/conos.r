@@ -7,8 +7,8 @@ NULL
 scaledMatricesP2 <- function(p2.objs, data.type, od.genes, var.scale, neighborhood.average) {
   ## Common variance scaling
   if (var.scale) {
-    #cgsf <- do.call(cbind, lapply(p2.objs,function(x) x$misc$varinfo[od.genes,]$gsf)) %>%  log() %>% rowMeans() %>% exp()
-    cgsf <- do.call(cbind, lapply(p2.objs,function(x) x$misc$varinfo[od.genes,]$gsf)) %>% rowMeans()
+    cgsf <- do.call(cbind, lapply(p2.objs,function(x) x$misc$varinfo[od.genes,]$gsf)) %>%  log() %>% rowMeans() %>% exp()
+    #cgsf <- do.call(cbind, lapply(p2.objs,function(x) x$misc$varinfo[od.genes,]$gsf)) %>% rowMeans()
   }
   ## Prepare the matrices
   cproj <- lapply(p2.objs,function(r) {
@@ -134,7 +134,7 @@ cpcaFast <- function(covl,ncells,ncomp=10,maxit=1000,tol=1e-6,use.irlba=TRUE,ver
 #' @param verbose whether to be verbose
 #' @param neighborhood.average use neighborhood average values
 #' @param n.cores number of cores to use
-quickCPCA <- function(r.n,data.type='counts',k=30,ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=TRUE,neighborhood.average=FALSE,n.cores=30) {
+quickCPCA <- function(r.n,data.type='counts',k=30,ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=TRUE,neighborhood.average=FALSE) {
   od.genes <- commonOverdispersedGenes(r.n, n.odgenes, verbose=verbose)
 
   ncomps <- min(ncomps, length(od.genes) - 1)
