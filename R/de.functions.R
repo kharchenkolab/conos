@@ -81,6 +81,8 @@ getPerCellTypeDE <- function(conObj, groups=NULL, sampleGroups=NULL, cooksCutoff
             dds1 <- DESeq2::DESeqDataSetFromMatrix(cm,meta,design=~group)
             dds1 <- DESeq2::DESeq(dds1)
             res1 <- DESeq2::results(dds1, cooksCutoff = cooksCutoff, independentFiltering = independentFiltering)
+            res1 <- as.data.frame(res1)
+            res1 <- res1[order(res1$padj,decreasing = FALSE),]
             ##
             if(return.details) {
                 list(res=res1, cm=cm, sampleGroups=sampleGroups)
@@ -264,6 +266,8 @@ getPerCellTypeDECorrected <- function(conObj, groups=NULL, sampleGroups=NULL, co
             normalizationFactors(dds1) <- x2
             dds1 <- DESeq2::DESeq(dds1)
             res1 <- DESeq2::results(dds1, cooksCutoff = cooksCutoff, independentFiltering = independentFiltering)
+            res1 <- as.data.frame(res1)
+            res1 <- res1[order(res1$padj,decreasing = FALSE),]
             if (return.details) {
                 list(res=res1,cm=cm,sampleGroups=sampleGroups)
             } else {
@@ -304,12 +308,14 @@ saveDEasCSV <- function(de.results=NULL,saveprefix=NULL,gene.metadata=NULL) {
         res.table$Za[is.na(res.table$Za)] <- 0
         res.table$Z <- res.table$Z  * sign(res.table$log2FoldChange)
         res.table$Za <- res.table$Za  * sign(res.table$log2FoldChange)
-        ## match order to metadata table
-        mo <- match(as.character(gene.metadata$geneid),as.character(res.table$gene))
-        ## drop gene id column
-        keep.cols <- colnames(gene.metadata)[colnames(gene.metadata) != 'geneid']
-        names(keep.cols) <- keep.cols
-        res.table <- cbind(res.table, gene.metadata[mo,keep.cols,drop=FALSE])
+        if(!is.null(gene.metadata)) {
+            ## match order to metadata table
+            mo <- match(as.character(gene.metadata$geneid),as.character(res.table$gene))
+            ## drop gene id column
+            keep.cols <- colnames(gene.metadata)[colnames(gene.metadata) != 'geneid']
+            names(keep.cols) <- keep.cols
+            res.table <- cbind(res.table, gene.metadata[mo,keep.cols,drop=FALSE])
+        }
         file <- paste0(saveprefix,make.names(ncc),'.csv')
         write.table(x=res.table,file=file)
         res.table
@@ -355,11 +361,13 @@ saveDEasJSON <- function(de.results = NULL, saveprefix = NULL, gene.metadata = N
         res.table$Z <- res.table$Z  * sign(res.table$log2FoldChange)
         res.table$Za <- res.table$Za  * sign(res.table$log2FoldChange)
         res.table$rowid <- 1:nrow(res.table)
-        ## match order to metadata table
-        mo <- match(as.character(gene.metadata$geneid),as.character(res.table$gene))
-        ## drop gene id column
-        keep.cols <- colnames(gene.metadata)[colnames(gene.metadata) != 'geneid']
-        names(keep.cols) <- keep.cols
+        if (!is.null(gene.metadata)) {
+            ## match order to metadata table
+            mo <- match(as.character(gene.metadata$geneid),as.character(res.table$gene))
+            ## drop gene id column
+            keep.cols <- colnames(gene.metadata)[colnames(gene.metadata) != 'geneid']
+            names(keep.cols) <- keep.cols
+        }
         res.table <- cbind(res.table, gene.metadata[mo,keep.cols,drop=FALSE])
         ## get names of all the genes
         all.genes <- rownames(res.table)
