@@ -82,7 +82,8 @@ calculate_resolution <- function(dend=NULL,hc=NULL,mapping=NULL,sample_names=NUL
 }
 
 #' Color node and adjacent branches based on label of cluster, number of cells and breadth
-color_node <- function(x=NULL,labels_mapping=NULL,hc=NULL,leafContent=NULL,mapping=NULL,sample_names=NULL,current_cut=NULL,colors=NULL,parent_color=NULL,breadth_mapping=NULL){
+color_node <- function(x=NULL,labels_mapping=NULL,hc=NULL,leafContent=NULL,mapping=NULL,sample_names=NULL,current_cut=NULL,
+                       colors=NULL,parent_color=NULL,breadth_mapping=NULL,binar_mapping=NULL,binar_mapping2=NULL,binar_mapping3=NULL){
   if (is.null(attr(x, "merge_ID"))){
     if (attr(x[[1]],"height") > attr(x[[2]],"height")) {
       attr(x[[1]],"merge_ID") = max(hc$merge[nrow(hc$merge),])
@@ -146,15 +147,25 @@ color_node <- function(x=NULL,labels_mapping=NULL,hc=NULL,leafContent=NULL,mappi
       number_of_cells <- sum(memb)
       attr(x, "number_of_cells") <- number_of_cells
       
+      local_binar_mapping <- binar_mapping[as.logical(memb)]
+      attr(x, "cell_type_ratio1") <- sum(as.double(local_binar_mapping))/length(local_binar_mapping)
+      
+      local_binar_mapping2 <- binar_mapping2[as.logical(memb)]
+      attr(x, "cell_type_ratio2") <- sum(as.double(local_binar_mapping2))/length(local_binar_mapping2)
+      
+      if (!(is.null(binar_mapping3))){
+        local_binar_mapping3 <- binar_mapping3[as.logical(memb)]
+        attr(x, "cell_type_ratio3") <- sum(as.double(local_binar_mapping3))/length(local_binar_mapping3)
+      }
       structure_tab <- table(mapping[as.logical(memb)])
+      
       for (name in names(structure_tab)){
         structure_vector[name] <- structure_tab[name]
       }
       structure_vector <- structure_vector/sum(structure_vector)
       attr(x, "structure_vector") <- structure_vector
-      #entropy_measure <- entropy(structure_vector,unit = "log2")/log(length(sample_names),base = 2) + 1/length(sample_names)
       entropy_measure <- as.numeric(breadth_mapping[as.character(attr(x,"ID"))]) + 1/length(sample_names)
-      attr(x, "entropy") <- entropy_measure  #/length(sample_names)
+      attr(x, "entropy") <- entropy_measure  
     }
     else{
       number_of_cells <- attr(x, "number_of_cells")
@@ -163,7 +174,7 @@ color_node <- function(x=NULL,labels_mapping=NULL,hc=NULL,leafContent=NULL,mappi
     if (attr(x,"ID") %in% current_cut){
       x <- x %>% 
         assign_values_to_nodes_nodePar(value = 19, nodePar = "pch") %>% 
-        assign_values_to_nodes_nodePar(value = number_of_cells/1000, nodePar = "cex")  %>% 
+        assign_values_to_nodes_nodePar(value = 2, nodePar = "cex")  %>% 
         set("branches_lty", 1) %>%
         set("branches_lwd", entropy_measure*5)# %>%
       parent_color <- as.character(colors[as.character(attr(x,"ID"))])
@@ -190,24 +201,69 @@ color_node <- function(x=NULL,labels_mapping=NULL,hc=NULL,leafContent=NULL,mappi
 }
 
 #' Apply color_node function for the entire tree
-color_nodes <- function (x=NULL,labels_mapping=NULL,hc=NULL,leafContent=NULL,mapping=NULL,sample_names=NULL,current_cut=NULL,colors=NULL,parent_color=NULL,breadth_mapping=NULL){
+color_nodes <- function (x=NULL,labels_mapping=NULL,hc=NULL,leafContent=NULL,mapping=NULL,sample_names=NULL,current_cut=NULL,colors=NULL,parent_color=NULL,breadth_mapping=NULL,binar_mapping=NULL,binar_mapping2=NULL,binar_mapping3=NULL){
   if (!is.leaf(x)){
-    res <- color_node(x=x,labels_mapping=labels_mapping,hc=hc,leafContent=leafContent,mapping=mapping,sample_names=sample_names,current_cut=current_cut,colors=colors,parent_color=parent_color,breadth_mapping=breadth_mapping)
+    res <- color_node(x=x,labels_mapping=labels_mapping,hc=hc,leafContent=leafContent,mapping=mapping,sample_names=sample_names,current_cut=current_cut,colors=colors,parent_color=parent_color,breadth_mapping=breadth_mapping,binar_mapping=binar_mapping,binar_mapping2=binar_mapping2,binar_mapping3=binar_mapping3)
     x <- res$x
     parent_color <- res$parent_color
     for (j in 1:2){
-      res <- color_nodes(x=x[[j]],labels_mapping=labels_mapping,hc=hc,leafContent=leafContent,mapping=mapping,sample_names=sample_names,current_cut=current_cut,colors=colors,parent_color=parent_color,breadth_mapping=breadth_mapping)
+      res <- color_nodes(x=x[[j]],labels_mapping=labels_mapping,hc=hc,leafContent=leafContent,mapping=mapping,sample_names=sample_names,current_cut=current_cut,colors=colors,parent_color=parent_color,breadth_mapping=breadth_mapping,binar_mapping=binar_mapping,binar_mapping2=binar_mapping2,binar_mapping3=binar_mapping3)
       x[[j]] <- res$x
     }
   }
   else{
-    res <- color_node(x=x,labels_mapping=labels_mapping,hc=hc,leafContent=leafContent,mapping=mapping,sample_names=sample_names,current_cut=current_cut,colors=colors,parent_color=parent_color,breadth_mapping=breadth_mapping)
+    res <- color_node(x=x,labels_mapping=labels_mapping,hc=hc,leafContent=leafContent,mapping=mapping,sample_names=sample_names,current_cut=current_cut,colors=colors,parent_color=parent_color,breadth_mapping=breadth_mapping,binar_mapping=binar_mapping,binar_mapping2=binar_mapping2,binar_mapping3=binar_mapping3)
     x <- res$x
     parent_color <- res$parent_color
   }
   return(list(x=x,parent_color=parent_color))
 }
 
+color_node_by_ct <- function(x=NULL,palette=NULL,current_cut=NULL){
+  entropy_measure <- attr(x, "entropy")
+  cell_type_ratio1 <- attr(x, "cell_type_ratio1")
+  cell_type_ratio2 <- attr(x, "cell_type_ratio2")
+  if (!(is.null(attr(x, "cell_type_ratio3")))){
+    cell_type_ratio3 <- attr(x, "cell_type_ratio3")
+  }
+  number_of_cells <- attr(x, "number_of_cells") 
+  if (attr(x,"ID") %in% current_cut){
+    x <- x %>% 
+      assign_values_to_nodes_nodePar(value = 19, nodePar = "pch") %>% 
+      assign_values_to_nodes_nodePar(value = number_of_cells/1000, nodePar = "cex")  
+  }
+  else{
+    x <- x %>% 
+      assign_values_to_nodes_nodePar(value = NA, nodePar = "pch") %>% 
+      assign_values_to_nodes_nodePar(value = NA, nodePar = "cex") 
+  }
+  x <- x %>% 
+    set("branches_lty", 1) %>%
+    set("branches_lwd", entropy_measure*5)# %>%
+  if (!(is.null(attr(x, "cell_type_ratio3")))){col <- rgb(cell_type_ratio1,cell_type_ratio2,cell_type_ratio3)}
+  else{col <- rgb(cell_type_ratio1,0,cell_type_ratio2)}
+  attr(x, "ct_color") <- col 
+  x <- assign_values_to_branches_edgePar(dend = x, value = rep(col,attr(x,"members")), edgePar = "col")
+  
+  return(list(x=x))
+}
+
+color_nodes_by_ct <- function (x=NULL,parent_color=NULL,palette=NULL,current_cut=NULL){
+  if (!is.leaf(x)){
+    
+    res <- color_node_by_ct(x=x,palette=palette,current_cut=current_cut)
+    x <- res$x
+    for (j in 1:2){
+      res <- color_nodes_by_ct(x=x[[j]],palette=palette,current_cut=current_cut)
+      x[[j]] <- res$x
+    }
+  }
+  else{
+    res <- color_node_by_ct(x=x,palette=palette,current_cut=current_cut)
+    x <- res$x
+  }
+  return(list(x=x))
+}
 #get list of children nodes of a node
 get.list.of.descendants <- function(hc=NULL,parent.ID=NULL,list.of.descendants=list()){
   children.ID <- hc$merge[parent.ID,]
@@ -272,7 +328,7 @@ get.greedy.cut.groups <- function(no_clusters=NULL,greedy.modularity.cut.result=
 ##' @param minbreadth minimum allowed breadth of a branch (measured as normalized entropy)
 ##' @param flat.cut
 ##' @export
-runShinyApp <- function(con, N=10, leaf.labels=NULL, minsize=0, minbreadth=0, flat.cut=FALSE) {
+runShinyApp <- function(con, N=10, leaf.labels=NULL, tissue_mapping=NULL, tissue_factors=NULL, minsize=0, minbreadth=0, flat.cut=FALSE) {
   
   if(is.null(con$clusters$walktrap)) stop("please run findCommunities(method=walktrap.communities) to calculate walktrap clustering first")
   if(is.null(leaf.labels)) {
@@ -295,8 +351,6 @@ runShinyApp <- function(con, N=10, leaf.labels=NULL, minsize=0, minbreadth=0, fl
     nodes_labels <- c(nodes_labels,sequential.numeration(pair))
   }
   
-  #labels_mapping <- 0:length(nodes_labels)
-  #names(labels_mapping) <- c(nrow(hc$merge),rev(nodes_labels))
   labels_mapping <- 1:length(nodes_labels)
   names(labels_mapping) <- rev(nodes_labels)
   
@@ -310,7 +364,57 @@ runShinyApp <- function(con, N=10, leaf.labels=NULL, minsize=0, minbreadth=0, fl
   breadth_mapping <- breadth_mapping[1:(length(breadth_mapping)-1)]
   names(breadth_mapping) <- labels_mapping[as.character(breadth_mapping_names)]
   
-  dend.colored.source <- color_nodes(x=dend,labels_mapping=labels_mapping,hc=hc,leafContent=leafContent,mapping=mapping,sample_names=sample_names,breadth_mapping=breadth_mapping)
+  if (!is.null(tissue_factors)){
+    if (!is.null(tissue_mapping)){
+      if ((length(tissue_factors) == 2) & all(tissue_factors %in% unique(tissue_mapping))){
+        binar_mapping1 <- tissue_mapping
+        binar_mapping1[binar_mapping1==tissue_factors[1]] = 1
+        binar_mapping1[binar_mapping1!="1"] = 0
+        binar_mapping1 <- as.numeric(binar_mapping1)
+        names(binar_mapping1) <- names(tissue_mapping)
+        
+        binar_mapping2 <- tissue_mapping
+        binar_mapping2[binar_mapping2==tissue_factors[2]] = 1
+        binar_mapping2[binar_mapping2!="1"] = 0
+        binar_mapping2 <- as.numeric(binar_mapping2)
+        names(binar_mapping2) <- names(tissue_mapping)
+        
+        binar_mapping1 <- binar_mapping1[rownames(leafContent)] 
+        binar_mapping2 <- binar_mapping2[rownames(leafContent)] 
+        binar_mapping3 <- NULL
+      }
+      else if ((length(tissue_factors) == 3) & all(tissue_factors %in% unique(tissue_mapping))){
+        binar_mapping1 <- tissue_mapping
+        binar_mapping1[binar_mapping1==tissue_factors[1]] = 1
+        binar_mapping1[binar_mapping1!="1"] = 0
+        binar_mapping1 <- as.numeric(binar_mapping1)
+        names(binar_mapping1) <- names(tissue_mapping)
+        
+        binar_mapping2 <- tissue_mapping
+        binar_mapping2[binar_mapping2==tissue_factors[2]] = 1
+        binar_mapping2[binar_mapping2!="1"] = 0
+        binar_mapping2 <- as.numeric(binar_mapping2)
+        names(binar_mapping2) <- names(tissue_mapping)
+        
+        binar_mapping3 <- tissue_mapping
+        binar_mapping3[binar_mapping3==tissue_factors[3]] = 1
+        binar_mapping3[binar_mapping3!="1"] = 0
+        binar_mapping3 <- as.numeric(binar_mapping3)
+        names(binar_mapping3) <- names(tissue_mapping)
+        
+        binar_mapping1 <- binar_mapping1[rownames(leafContent)] 
+        binar_mapping2 <- binar_mapping2[rownames(leafContent)] 
+        binar_mapping3 <- binar_mapping3[rownames(leafContent)] 
+      }
+      else{stop("Length of tissue_factors is not 2 or 3 or factors are not in tissue_mapping")}}
+    else{stop("Lengh of tissue_mapping is zero")}
+  }
+  else{
+    binar_mapping1 <- NULL
+    binar_mapping2 <- NULL 
+    binar_mapping3 <- NULL
+  }
+  dend.colored.source <- color_nodes(x=dend,labels_mapping=labels_mapping,hc=hc,leafContent=leafContent,mapping=mapping,sample_names=sample_names,breadth_mapping=breadth_mapping,binar_mapping=binar_mapping1,binar_mapping2=binar_mapping2,binar_mapping3=binar_mapping3)
   
   #coordinates for drawing labels 
   xy <- get_nodes_xy(dend)
@@ -328,6 +432,11 @@ runShinyApp <- function(con, N=10, leaf.labels=NULL, minsize=0, minbreadth=0, fl
   
   colors_source <- sample(rainbow(length(labels_mapping)))
   names(colors_source) <- sample(labels_mapping)
+  
+  number_of_cells_mapping <- get_nodes_attr(dend.colored.source$x,"number_of_cells")
+  names(number_of_cells_mapping) <- as.character(get_nodes_attr(dend.colored.source$x,"ID"))
+  
+  entropy
   ui <- fillPage(
     tags$style(type="text/css", "body { overflow-y: scroll; }"),
     fluidRow(
@@ -343,18 +452,16 @@ runShinyApp <- function(con, N=10, leaf.labels=NULL, minsize=0, minbreadth=0, fl
                                     value = which.max(modularities)+1,
                                     width = "94%"), width=12, 
                         tabPanel("Plot",plotOutput(outputId = "treePlot1",height = 'auto'),br()),
-                        actionButton("do", "Save membership")),
-                      #actionButton("plot_graph", "Plot the graph")),
-                      #checkboxInput("plot_graph", "Plot graph", value = TRUE)),
+                        fluidRow(column(6,actionButton("do", HTML("Save<br/>membership"))),column(6,checkboxInput("color_by_ct", HTML("Gradient<br/>tissue coloring"), value = FALSE)))),
                       div(style = "height: 100%;"))),
              fluidRow(
                column(12,
-                      tabPanel("Plot",plotOutput(outputId = "treePlot6")),
+                      tabPanel("Plot",align="center",plotOutput(outputId = "treePlot6")),
                       div(style = "height: 100%;")))),
       column(8,                       
              mainPanel(
-               tabsetPanel(type = "tabs",
-                           tabPanel("Tree", withSpinner(plotOutput(outputId = "treePlot2",click = "plot_click",dblclick="plot_db_click"))),
+               tabsetPanel(type = "tabs", 
+                           tabPanel("Tree", br(),verbatimTextOutput("txt"),withSpinner(plotOutput(outputId = "treePlot2",click = "plot_click",dblclick="plot_db_click",hover = "plot_hover"))),
                            tabPanel("Composition of clusters", withSpinner(uiOutput(outputId = "treePlot3"))),
                            tabPanel("Composition similarity", withSpinner(uiOutput(outputId = "treePlot4"))),
                            tabPanel("tSNE plots", withSpinner(plotOutput(outputId = "treePlot5")))), 
@@ -447,11 +554,18 @@ runShinyApp <- function(con, N=10, leaf.labels=NULL, minsize=0, minbreadth=0, fl
       cut_order_match <- cut_order_match[order(cut_order_match)]
       current_cut_ordered <- order_of_nodes[cut_order_match]
       
-      #colors <- rainbow(length(current_cut))
-      #names(colors) <-  sample(current_cut)
       colors <- colors_source[names(colors_source) %in% current_cut]
       mask <- xy_ordered[,3] %in% current_cut
-      dend.colored <- color_nodes(x=dend.colored.source$x,labels_mapping=labels_mapping,hc=hc,leafContent=leafContent,mapping=mapping,sample_names=sample_names,current_cut=current_cut,colors=colors,breadth_mapping=breadth_mapping)
+      ct_mapping <- NULL
+      if (!input$color_by_ct){
+        dend.colored <- color_nodes(x=dend.colored.source$x,labels_mapping=labels_mapping,hc=hc,leafContent=leafContent,mapping=mapping,sample_names=sample_names,current_cut=current_cut,colors=colors,breadth_mapping=breadth_mapping,binar_mapping=binar_mapping1,binar_mapping2=binar_mapping2,binar_mapping3=binar_mapping3)
+      }
+      else{
+        pal <- rev(viridis(11))
+        dend.colored <- color_nodes_by_ct(x=dend.colored.source$x,palette=pal,current_cut=current_cut)
+        ct_mapping <- get_nodes_attr(dend.colored$x,"ct_color")
+        names(ct_mapping) <- as.character(get_nodes_attr(dend.colored$x,"ID"))
+      }
       
       structure_vectors <- get_structure_vectors(dend.colored$x,current_cut_ordered)
       
@@ -469,7 +583,7 @@ runShinyApp <- function(con, N=10, leaf.labels=NULL, minsize=0, minbreadth=0, fl
       labels(dend.cut) <- current_cut_ordered
       
       memb <- get_memberhip(dend=dend.colored$x,current_cut=current_cut)
-      return(list(dend.colored=dend.colored, mask=mask,structure_vectors=structure_vectors,dend.cut=dend.cut,memb=memb,colors=colors,current_cut=current_cut))
+      return(list(dend.colored=dend.colored, mask=mask,structure_vectors=structure_vectors,dend.cut=dend.cut,memb=memb,colors=colors,current_cut=current_cut,ct_mapping=ct_mapping,height=height))
     })
     
     #regulation of number of digits at y ticks 
@@ -508,15 +622,19 @@ runShinyApp <- function(con, N=10, leaf.labels=NULL, minsize=0, minbreadth=0, fl
       glist <- list(g1,g2,g3)
       grid.arrange(grobs=glist,nrow=length(glist))
       
-    },height = 300)
+    },height = 280)
+    
     output$treePlot2 <- renderPlot({ #draw colored tree 
       #color the tree and plot it with labels 
+      height <- dataInput()$height
       dend.colored.local <- dataInput()$dend.colored
       labels(dend.colored.local$x) <- rep(NA,attr(dend.colored.local$x,"members"))
       mask <- dataInput()$mask
+      par(mar = c(0,0,0,1))
       plot(dend.colored.local$x,axes=FALSE)
+      abline(h = height+0.25, col = 2, lty = 2)
       text(xy_ordered[mask,1]+0.5, xy_ordered[mask,2]+0.5, labels=xy_ordered[mask,3], col="black",cex = 0.8)
-    },width = reactive(input$dimension[1]*2/3), height = reactive(input$dimension[2]))
+    },width = reactive(input$dimension[1]*2/3), height = reactive(input$dimension[2]*0.80)) #0.85
     
     
     output$heatmap1 <- renderD3heatmap({
@@ -557,8 +675,13 @@ runShinyApp <- function(con, N=10, leaf.labels=NULL, minsize=0, minbreadth=0, fl
     output$treePlot6 <- renderPlot({
       memb <- dataInput()$memb
       colors <- dataInput()$colors
+      if (input$color_by_ct){
+        ct_mapping <- dataInput()$ct_mapping
+        colors <- ct_mapping[names(colors)]
+      }
       suppressMessages((con$plotGraph(groups = memb) + scale_color_manual(values = colors)))
-    }, height = function() {session$clientData$output_treePlot6_width*0.5})
+    }, height = function() {session$clientData$output_treePlot6_width*0.5}, width = function() {session$clientData$output_treePlot6_width*0.91} )
+    
     observeEvent(input$do, {
       memb <- dataInput()$memb
       
@@ -575,10 +698,17 @@ runShinyApp <- function(con, N=10, leaf.labels=NULL, minsize=0, minbreadth=0, fl
       names(con$clusters$walktrap[[gready.cut.groups]]) <- names
     })
     
+    output$txt <- renderText({
+      if(is.null(input$plot_hover)){ return("Hover a cluster\n")}
+      else{
+        euc_dist <- (xy_ordered[,1]-input$plot_hover$x)^2 + (xy_ordered[,2]-input$plot_hover$y)^2 
+        ID <- xy_ordered[which(euc_dist==min(euc_dist)),3]
+        n_of_cells <- number_of_cells_mapping[as.character(ID)]
+        paste(ID," cluster: ",n_of_cells," cells")
+      }
+    })
   }
-  
   shinyApp(ui, server)
 }
-
 
 
