@@ -38,6 +38,8 @@ devtools::install_github("hms-dbmi/conos")
 ## Usage example
 Please see [walkthrough](http://pklab.med.harvard.edu/peterk/conos/walkthrough.nb.html) for an example of Conos analysis.
 
+A more comprehensive tutorial is available [here](vignettes/Conos_Walkthrough.Rmd)
+
 Given a list of individual processed samples (`pl`), Conos processing can be as simple as this:
 ```r
 # construct conos object, where pl is a list of pagoda2 objects 
