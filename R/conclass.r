@@ -369,9 +369,20 @@ Conos <- setRefClass(
       return(invisible(embedding))
     },
 
-    plotGraph=function(color.by='cluster', clustering=NULL, groups=NULL, colors=NULL, plot.theme=NULL, ...) {
+    plotGraph=function(color.by='cluster', clustering=NULL, groups=NULL, colors=NULL, gene=NULL, plot.theme=NULL, ...) {
       if(class(embedding)[1] == "uninitializedField") {
         embedGraph();
+      }
+
+      if (!is.null(gene)) {
+        colors <- unlist(unname(lapply(samples, function(d) {
+          if(gene %in% colnames(d$counts)) {
+            d$counts[,gene]
+          }  else {
+            stats::setNames(rep(NA,nrow(d$counts)),rownames(d$counts))
+          }
+        })))
+        if(all(is.na(colors))) warning(paste("gene",gene,"is not found in any of the samples"))
       }
 
       if(is.null(groups) && is.null(colors)) {

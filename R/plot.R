@@ -92,11 +92,11 @@ plotPagodas <- function(pagoda.samples, groups=NULL, colors=NULL, gene=NULL, emb
   }
 
   if (!is.null(gene)) {
-      colors <- unlist(unname(lapply(con$samples, function(d) {
+      colors <- unlist(unname(lapply(pagoda.samples, function(d) {
           if(gene %in% colnames(d$counts)) {
-              d$counts[,gene]
+            d$counts[,gene]
           }  else {
-              stats::setNames(rep(NA,nrow(d$counts)))
+            stats::setNames(rep(NA,nrow(d$counts)),rownames(d$counts))
           }
       })))
   }

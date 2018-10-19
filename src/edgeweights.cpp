@@ -147,7 +147,7 @@ public:
 arma::sp_mat referenceWij(const arma::ivec& i,
 			  const arma::ivec& j,
 			  arma::vec& d,
-			  Rcpp::Nullable<Rcpp::NumericVector> threads,
+			  Rcpp::Nullable<Rcpp::IntegerVector> threads,
 			  double perplexity) {
 #ifdef DEBUG
 	Rcout << "\n\nIN REF WIJ";

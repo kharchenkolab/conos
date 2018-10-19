@@ -5,9 +5,9 @@
 using namespace Rcpp;
 
 #ifdef _OPENMP
-void checkCRAN(Rcpp::Nullable<Rcpp::NumericVector> threads) {
+void checkCRAN(Rcpp::Nullable<Rcpp::IntegerVector> threads) {
 	if (threads.isNotNull()) {
-		int nthreads = NumericVector(threads)[0];
+		int nthreads = IntegerVector(threads)[0];
 		if (nthreads > 0) omp_set_num_threads(nthreads);
 	}
 }

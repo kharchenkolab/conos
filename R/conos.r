@@ -445,7 +445,7 @@ greedy.modularity.cut <- function(wt,N,leaf.labels=NULL,minsize=0,minbreadth=0) 
     ll <- integer(nleafs);
   } else {
     if(is.null(wt$names)) {
-    # assume that leaf.labels are provided in the correct order
+      # assume that leaf.labels are provided in the correct order
       if(length(leaf.labels)!=nleafs) stop("leaf.labels is of incorrct length and wt$names is NULL")
       ll <- as.integer(as.factor(leaf.labels))-1L;
     } else {

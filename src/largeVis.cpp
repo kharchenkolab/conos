@@ -218,10 +218,10 @@ arma::mat sgd(arma::mat& coords,
               const Rcpp::Nullable<Rcpp::NumericVector> momentum,
               const bool& useDegree,
               const Rcpp::Nullable<Rcpp::NumericVector> seed,
-              const Rcpp::Nullable<Rcpp::NumericVector> threads,
+              const Rcpp::Nullable<Rcpp::IntegerVector> threads,
               const bool verbose) {
 #ifdef _OPENMP
-	checkCRAN(threads);
+  checkCRAN(threads);
 #endif
 	Progress progress(n_samples, verbose);
 	const dimidxtype D = coords.n_rows;
@@ -263,7 +263,7 @@ arma::mat sgd(arma::mat& coords,
 	const unsigned int batchSize = 8192;
 	const iterationtype barrier = (n_samples * .99 < n_samples - coords.n_cols) ? n_samples * .99 : n_samples - coords.n_cols;
 #ifdef _OPENMP
-#pragma omp parallel for schedule(static)
+#pragma omp parallel for schedule(static) 
 #endif
 	for (iterationtype eIdx = 0; eIdx < barrier; eIdx += batchSize) if (progress.increment(batchSize)) {
 		(*v)(eIdx, batchSize);
