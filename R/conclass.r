@@ -599,6 +599,71 @@ multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=F),
 }
 
 
+##' mutlilevel+multilevel communities
+##'
+##' Constructrs a two-step clustering, first running multilevel.communities, and then walktrap.communities within each
+##' These are combined into an overall hierarchy
+##' @param graph graph
+##' @param n.cores number of cores to use
+##' @param hclust.link link function to use when clustering multilevel communities (based on collapsed graph connectivity)
+##' @param min.community.size minimal community size parameter for the walktrap communities .. communities smaller than that will be merged
+##' @param verbose whether to output progress messages
+##' @param level what level of multitrap clustering to use in the starting step. By default, uses the top level. An integer can be specified for a lower level (i.e. 1).
+##' @param ... passed to walktrap
+##' @return a fakeCommunities object that has methods membership() and as.dendrogram() to mimic regular igraph returns
+##' @export
+multimulti.community <- function(graph, n.cores=parallel::detectCores(logical=F), hclust.link='single', min.community.size=10, verbose=FALSE, level=NULL, ...) {
+  if(verbose) cat("running multilevel 1 ... ");
+  mt <- multilevel.community(graph);
+  
+  if(is.null(level)) {
+    # get higest level (to avoid oversplitting at the initial step)
+    mem <- membership(mt);
+  } else {
+    # get the specified level
+    mem <- mt$memberships[level,]; names(mem) <- mt$names;
+  }
+  
+  if(verbose) cat("found",length(unique(mem)),"communities\nrunning multilevel 2 ... ")
+  
+  # calculate hierarchy on the multilevel clusters
+  cgraph <- get.cluster.graph(graph,mem)
+  chwt <- walktrap.community(cgraph,steps=8)
+  d <- as.dendrogram(chwt);
+  
+  
+  wtl <- conos:::papply(sn(unique(mem)), function(cluster) {
+    cn <- names(mem)[which(mem==cluster)]
+    sg <- induced.subgraph(graph,cn)
+    multilevel.community(induced.subgraph(graph,cn))
+  },n.cores=n.cores)
+  
+  mbl <- lapply(wtl,membership);
+  # correct small communities
+  mbl <- lapply(mbl,function(x) {
+    tx <- table(x)
+    ivn <- names(tx)[tx<min.community.size]
+    if(length(ivn)>1) {
+      x[x %in% ivn] <- as.integer(ivn[1]); # collapse into one group
+    }
+    x
+  })
+  
+  if(verbose) cat("found",sum(unlist(lapply(mbl,function(x) length(unique(x))))),"communities\nmerging ... ")
+  
+  # combined clustering factor
+  fv <- unlist(lapply(sn(names(wtl)),function(cn) {
+    paste(cn,as.character(mbl[[cn]]),sep='-')
+  }))
+  names(fv) <- unlist(lapply(mbl,names))
+  
+  # enclose in a masquerading class
+  res <- list(membership=fv,dendrogram=NULL,algorithm='multimulti');
+  class(res) <- rev("fakeCommunities");
+  return(res);
+  
+}
+
 ##' returns pre-calculated dendrogram
 ##'
 ##' @param obj fakeCommunities object
