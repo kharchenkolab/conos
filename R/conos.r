@@ -116,6 +116,7 @@ cpcaFast <- function(covl,ncells,ncomp=10,maxit=1000,tol=1e-6,use.irlba=TRUE,ver
     for(i in 1:length(covl)) {
       S <- S + (ncells[i] / sum(ncells)) * covl[[i]]
     }
+    ncomp <- min(c(nrow(S)-1,ncol(S)-1,ncomp));
     ev <- irlba::irlba(S, ncomp, maxit=10000)
     cc <- abind::abind(covl,along=3)
     cpcaF(cc,ncells,ncomp,maxit,tol,eigenvR=ev$v,verbose)
@@ -196,6 +197,7 @@ quickPlainPCA <- function(r.n,data.type='counts',k=30,ncomps=30,n.odgenes=NULL,v
                         neighborhood.average=neighborhood.average) %>%
     lapply(function(x) {
       cm <- Matrix::colMeans(x);
+      ncomps <- min(c(nrow(cm)-1,ncol(cm)-1,ncomps));
       pcs <- irlba::irlba(x, nv=ncomps, nu =0, center=cm, right_only = F, reorth = T);
       #rownames(pcs$v) <- colnames(x);
       pcs$v
