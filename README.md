@@ -25,12 +25,12 @@ The fastest and most efficient way to get Conos on a mac or windows system is th
 ```
 docker run -p 8787:8787 docker.io/barkasn/pagoda2
 ```
-The first time you run the command it will download several images so make sure that you have fast internet access setup. You can then point your browser to http://localhost:8787/ to get an Rstudio environment with pagoda2 and conos installed. Explore the docker (--mount option)[https://docs.docker.com/storage/volumes/] to allow access of the docker image to your local files.
+The first time you run the command it will download several images so make sure that you have fast internet access setup. You can then point your browser to http://localhost:8787/ to get an Rstudio environment with pagoda2 and conos installed. Explore the docker [--mount option]([https://docs.docker.com/storage/volumes/) to allow access of the docker image to your local files.
 
 
 ### Native
 
-(Install pagoda2 and it's dependencies)[https://github.com/hms-dbmi/pagoda2]
+[Install pagoda2 and it's dependencies](https://github.com/hms-dbmi/pagoda2)
 ```r
 devtools::install_github("hms-dbmi/conos")
 ```
