@@ -5,8 +5,9 @@
 \title{Do differential expression for each cell type in a conos object between the specified subsets of apps}
 \usage{
 getPerCellTypeDE(conObj, groups = NULL, sampleGroups = NULL,
-  cooksCutoff = FALSE, reflevel = NULL, independentFiltering = FALSE,
-  n.cores = 1, cluster.sep.chr = "+", return.details = TRUE)
+  cooksCutoff = FALSE, reflevel = NULL, min.cell.count = 10,
+  independentFiltering = FALSE, n.cores = 1, cluster.sep.chr = "+",
+  return.details = TRUE)
 }
 \arguments{
 \item{conObj}{conos object}

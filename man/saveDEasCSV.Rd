@@ -4,7 +4,8 @@
 \alias{saveDEasCSV}
 \title{Save differential expression as CSV table}
 \usage{
-saveDEasCSV(de.results = NULL, saveprefix = NULL, gene.metadata = NULL)
+saveDEasCSV(de.results = NULL, saveprefix = NULL,
+  gene.metadata = NULL)
 }
 \arguments{
 \item{de.results}{output of differential expression results, corrected or uncorrected}
