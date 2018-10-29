@@ -58,7 +58,7 @@ con$plotPanel(clustering="multilevel", use.local.clusters=T, title.size=6)
 
 Next we will build the graph emcompasses all the samples. We do that by pairwise projecting samples onto a common space and establishing KNN of mNN pairs between the samples. We then append iwthin sample KNN neighbours to the graph to ensure that all the cell are included in the graph.
 ```{r}
-con$buildGraph(k=30, k.self=10, k.self.weight=0.1, space='CPCA', matching.method='mNN', metric='angular', data.type='counts', l2.sigma=1e5, var.scale =TRUE, ncomps=50, n.odgenes=1000, return.details=T,neighborhood.average=FALSE,neighborhood.average.k=10, exclude.pairs=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE)
+con$buildGraph(k=30, k.self=10, k.self.weight=0.1, space='PCA', matching.method='mNN', metric='angular', data.type='counts', l2.sigma=1e5, var.scale =TRUE, ncomps=50, n.odgenes=1000, return.details=T,neighborhood.average=FALSE,neighborhood.average.k=10, exclude.pairs=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE)
 ```
 
 We next use the graph we identified to get global clusters. Here we use mutlievel to obtain clusters.
@@ -152,7 +152,7 @@ samplegroups <- list(
 
 We can then run differential expression between cells in these groups
 ```{r}
-de.multilevel <- getPerCellTypeDE(con, groups=as.factor(new.annot),sampleGroups = samplegroups, reflevel='bm', n.cores=1)
+de.multilevel <- getPerCellTypeDE(con, groups=as.factor(new.annot),sampleGroups = samplegroups, reflevel='bm', n.cores=4)
 ```
 
 ...and examine the output
@@ -174,13 +174,14 @@ In certain cases we observe that differential expression will result in the simi
 
 ```{r}
 ## Calculate correction
-fc.correction <- conos:::getCorrectionVector(con, groups=as.factor(new.annot),sampleGroups = samplegroups, reflevel='bm', n.cores=2,correction.method='varianceweighted')
+fc.correction <- getCorrectionVector(con, groups=as.factor(new.annot),sampleGroups = samplegroups, reflevel='bm', n.cores=4,correction.method='varianceweighted')
+fc.correction[is.na(fc.correction)] <- 0
 
 ## Use corrected version
-de.multilevel.corrected <- conos:::getPerCellTypeDECorrected(con, groups=as.factor(new.annot),sampleGroups = samplegroups, reflevel='bm', n.cores=2, correction = fc.correction)
+de.multilevel.corrected <- getPerCellTypeDECorrected(con, groups=as.factor(new.annot),sampleGroups = samplegroups, reflevel='bm', n.cores=4, correction = fc.correction)
 ```
 
 ```{r}
-res <- as.data.frame(de.multilevel.corrected[['Bcells']]$res)
+res <- as.data.frame(de.multilevel.corrected[['Mono']]$res)
 head(res[order(res$padj,decreasing = FALSE),])
 ```
