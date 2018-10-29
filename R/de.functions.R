@@ -429,9 +429,10 @@ saveDEasJSON <- function(de.results = NULL, saveprefix = NULL, gene.metadata = N
 #' @param independentFiltering independentFiltering parameter for DESeq2
 #' @param cluster.sep.chr character string of length 1 specifying a delimiter to separate cluster and app names
 #' @param return.details logical, return detailed results
+#' @param only.paired only keep samples that that both cell types above the min.cell.count threshold
 #' @export getBetweenCellTypeDE
-getBetweenCellTypeDE <- function(conObj, sampleGroups = NULL, groups=NULL, cooksCutoff = FALSE, refgroup = NULL, altgroup = NULL, min.cell.count = 10,
-                                 independentFiltering = FALSE, cluster.sep.chr = '+',return.details=FALSE) {
+getBetweenCellTypeDE <- function(conObj, groups=NULL, cooksCutoff = FALSE, refgroup = NULL, altgroup = NULL, min.cell.count = 10,
+                                 independentFiltering = FALSE, cluster.sep.chr = '+',return.details=TRUE, only.paired=TRUE) {
   ## Check arguments
   if ( class(conObj) != 'Conos') stop('conObj must be a conos object')
   if ( is.null(groups) ) stop('groups must be specified');
@@ -491,6 +492,12 @@ getBetweenCellTypeDE <- function(conObj, sampleGroups = NULL, groups=NULL, cooks
   )
   ## summarize and subset the datasets
   aggr2.meta <- subset(aggr2.meta, celltype %in% c(refgroup,altgroup))
+  ## Get the samples that have both cell types only
+  if (only.paired) {
+    complete.obs <- names(which(apply(reshape2::acast(aggr2.meta, library ~ celltype),1,function(x){sum(is.na(x))}) == 0, useNames = TRUE))
+    aggr2.meta <- aggr2.meta[aggr2.meta$library %in% complete.obs,]
+  }
+  ## Select the desired samples only
   aggr2.meta$celltype <- relevel(aggr2.meta$celltype, ref = refgroup)
   aggr2 <- aggr2[,rownames(aggr2.meta)]
   ## Generate DESeq2 comparison
