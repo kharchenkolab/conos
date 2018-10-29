@@ -108,8 +108,6 @@ getPerCellTypeDE <- function(conObj, groups=NULL, sampleGroups=NULL, cooksCutoff
 #' @param correction.method 'varianceweighted' or 'mean' specifies way to merge the fold changes from different cell types
 #' @export getCorrectionVector
 getCorrectionVector <- function(conObj, groups=NULL, sampleGroups=NULL, cooksCutoff=FALSE, independentFiltering = FALSE, n.cores=1, cluster.sep.chr = '+', return.details=FALSE,de.init=NULL,exclude.celltypes=c(),correction.method='varianceweighted',reflevel=NULL) {
-    ## conObj <- con; sampleGroups <- sampleGroupsTvsW; cooksCutoff<-F; independentFiltering <- F; n.cores <- 1; cluster.sep.chr <- '+'
-    ## groups <- as.factor(jcl3.coarse)
     ## Check arguments
     if ( class(conObj) != 'Conos') stop('conObj must be a conos object')
     if ( is.null(groups) ) stop('groups must be specified');
