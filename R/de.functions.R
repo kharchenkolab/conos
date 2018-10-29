@@ -161,6 +161,7 @@ getCorrectionVector <- function(conObj, groups=NULL, sampleGroups=NULL, cooksCut
     } else {
         error(paste0('unknown correction method: ', correction.method))
     }
+    correction[is.na(correction)] <- 0
     ## return
     if (!return.details) {
         correction
