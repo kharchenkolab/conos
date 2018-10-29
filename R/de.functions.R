@@ -173,7 +173,7 @@ getCorrectionVector <- function(conObj, groups=NULL, sampleGroups=NULL, cooksCut
 #' applying the specified correction vector
 #' @param conObj conos object
 #' @param groups factor specifying cell types
-#' @param sampleGroups a list of two character vector specifying the app groups to compare
+#' @param sampleGroups a named list of two character vectors specifying the app groups to compare
 #' @param cookscutoff cookscugoff for DESeq2
 #' @param independentFiltering independentFiltering for DESeq2
 #' @param n.cores number of cores
@@ -414,4 +414,94 @@ saveDEasJSON <- function(de.results = NULL, saveprefix = NULL, gene.metadata = N
         NULL
     })
     invisible(NULL)
+}
+
+
+
+#' Compare two cell types across the entire panel
+#' @param conObj conos object 
+#' @param groups factor describing cell grouping
+#' @param sampleGroups a named list of two character vectors specifying the app groups to compare
+#' @param cooksCutoff cooksCutoff parameter for DESeq2
+#' @param refgroup cell type to compare to be used as reference
+#' @param altgroup cell type to compare to
+#' @param min.cell.count minimum number of cells per celltype/sample combination to keep
+#' @param independentFiltering independentFiltering parameter for DESeq2
+#' @param cluster.sep.chr character string of length 1 specifying a delimiter to separate cluster and app names
+#' @param return.details logical, return detailed results
+#' @export getBetweenCellTypeDE
+getBetweenCellTypeDE <- function(conObj, sampleGroups = NULL, groups=NULL, cooksCutoff = FALSE, refgroup = NULL, altgroup = NULL, min.cell.count = 10,
+                                 independentFiltering = FALSE, cluster.sep.chr = '+',return.details=FALSE) {
+  ## Check arguments
+  if ( class(conObj) != 'Conos') stop('conObj must be a conos object')
+  if ( is.null(groups) ) stop('groups must be specified');
+  if ( is.null(sampleGroups) ) stop('sampleGroups must be specified')
+  if ( class(sampleGroups) != 'list' ) stop('sampleGroups must be a list');
+  #if ( length(sampleGroups) != 2 ) stop('sampleGroups must be of length 2');
+  if ( ! all(unlist(lapply(sampleGroups, function(x) class(x) == 'character'))) )
+    stop('sampleGroups must be a list of character vectors');
+  if ( ! all(unlist(lapply(sampleGroups, function(x) length(x) > 0))) )
+    stop('sampleGroups entries must be on length greater or equal to 1')
+  if ( ! all(unlist(lapply(sampleGroups, function(x) {all(x %in% names(conObj$samples))}))) )
+    stop('sampleGroups entries must be names of samples in the conos object')
+  if ( is.null(refgroup) ) stop('reference group is not defined')
+  if ( is.null(altgroup) ) stop('reference group is not defined')
+  ## todo: check samplegrousp are named
+  if(is.null(names(sampleGroups))) stop('sampleGroups must be named')
+  if(class(groups) != 'factor') stop('groups must be a factor')
+  if(any(grepl(cluster.sep.chr, names(conObj$samples),fixed=TRUE)))
+    stop('cluster.sep.chr must not be part of any sample name')
+  if(any(grepl(cluster.sep.chr,levels(groups),fixed=TRUE))) 
+    stop('cluster.sep.chr must not be part of any cluster name')
+  ## Get the samples from the panel to use in this comparison
+  samples.used <- unlist(sampleGroups)
+  ## Generate an aggregated matrix
+  raw.mats <- lapply(conObj$samples[samples.used], function(p2) {
+    p2$misc$rawCounts
+  })
+  common.genes <- Reduce(intersect,lapply(raw.mats, colnames))
+  raw.mats <- lapply(raw.mats, function(x) {x[,common.genes]})
+  aggr2 <- lapply(raw.mats, function(x) {
+    g1 <- groups[intersect(names(groups), rownames(x))]
+    t1 <- as.numeric(table(g1))
+    names(t1) <- levels(g1);
+    droplevels <- names(t1)[t1 < min.cell.count]
+    g1.n <- names(g1)
+    g1 <- as.character(g1)
+    names(g1) <- g1.n
+    g1[g1 %in% droplevels] <- NA
+    g1 <- as.factor(g1)
+    aggr <- Matrix.utils::aggregate.Matrix(x, g1)
+    aggr <- aggr[rownames(aggr) != "NA",]
+    aggr
+  })
+  aggr2 <- lapply(names(aggr2), function(n) {
+    x <- aggr2[[n]]
+    rownames(x) <- paste0(n,cluster.sep.chr,rownames(aggr2[[n]]))
+    x
+  })
+  aggr2 <- t(do.call(rbind, aggr2))
+  rm(raw.mats); gc()
+  ## generate metadata
+  aggr2.meta <- data.frame(
+    row.names = colnames(aggr2),
+    sample=colnames(aggr2),
+    library=strpart(colnames(aggr2),cluster.sep.chr,1,fixed=T),
+    celltype = strpart(colnames(aggr2),cluster.sep.chr,2,fixed=T)
+  )
+  ## summarize and subset the datasets
+  aggr2.meta <- subset(aggr2.meta, celltype %in% c(refgroup,altgroup))
+  aggr2.meta$celltype <- relevel(aggr2.meta$celltype, ref = refgroup)
+  aggr2 <- aggr2[,rownames(aggr2.meta)]
+  ## Generate DESeq2 comparison
+  dds1 <- DESeq2::DESeqDataSetFromMatrix(aggr2, aggr2.meta, design = ~ library + celltype)
+  dds1 <- DESeq2::DESeq(dds1)
+  res1 <- DESeq2::results(dds1, cooksCutoff = cooksCutoff, independentFiltering = independentFiltering)
+  res1 <- res1[order(res1$padj,decreasing = FALSE),]
+  ## Return
+  if(return.details) {
+    list(res=res1, cm=aggr2, meta = aggr2.meta, refgroup = refgroup, altgroup = altgroup, sampleGroups=sampleGroups)
+  } else {
+    res1
+  }
 }
