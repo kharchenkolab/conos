@@ -22,7 +22,9 @@ Imports:
   stats,
   utils,
   abind,
-  ggrepel
+  ggrepel,
+  Matrix.utils,
+  DESeq2
 Suggests: 
   ggrastr,
   knitr,
