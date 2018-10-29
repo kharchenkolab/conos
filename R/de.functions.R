@@ -107,7 +107,9 @@ getPerCellTypeDE <- function(conObj, groups=NULL, sampleGroups=NULL, cooksCutoff
 #' @param exclude.celltypes names of cell types to exclude from the generation of the vecotr
 #' @param correction.method 'varianceweighted' or 'mean' specifies way to merge the fold changes from different cell types
 #' @export getCorrectionVector
-getCorrectionVector <- function(conObj, groups=NULL, sampleGroups=NULL, cooksCutoff=FALSE, independentFiltering = FALSE, n.cores=1, cluster.sep.chr = '+', return.details=FALSE,de.init=NULL,exclude.celltypes=c(),correction.method='varianceweighted',reflevel=NULL) {
+getCorrectionVector <- function(conObj, groups=NULL, sampleGroups=NULL, cooksCutoff=FALSE, independentFiltering = FALSE, 
+                                n.cores=1, cluster.sep.chr = '+', return.details=FALSE,de.init=NULL,exclude.celltypes=c(),
+                                correction.method='varianceweighted',reflevel=NULL) {
     ## Check arguments
     if ( class(conObj) != 'Conos') stop('conObj must be a conos object')
     if ( is.null(groups) ) stop('groups must be specified');
@@ -276,7 +278,6 @@ getPerCellTypeDECorrected <- function(conObj, groups=NULL, sampleGroups=NULL, co
     de.res
 }
 
-
 #' Save differential expression as CSV table
 #' @param de.results output of differential expression results, corrected or uncorrected
 #' @param saveprefix prefix for output file
@@ -413,8 +414,6 @@ saveDEasJSON <- function(de.results = NULL, saveprefix = NULL, gene.metadata = N
     })
     invisible(NULL)
 }
-
-
 
 #' Compare two cell types across the entire panel
 #' @param conObj conos object 
