@@ -428,7 +428,7 @@ saveDEasJSON <- function(de.results = NULL, saveprefix = NULL, gene.metadata = N
 #' @param return.details logical, return detailed results
 #' @param only.paired only keep samples that that both cell types above the min.cell.count threshold
 #' @export getBetweenCellTypeDE
-getBetweenCellTypeDE <- function(conObj, groups=NULL, cooksCutoff = FALSE, refgroup = NULL, altgroup = NULL, min.cell.count = 10,
+getBetweenCellTypeDE <- function(conObj, sampleGroups =  NULL, groups=NULL, cooksCutoff = FALSE, refgroup = NULL, altgroup = NULL, min.cell.count = 10,
                                  independentFiltering = FALSE, cluster.sep.chr = '+',return.details=TRUE, only.paired=TRUE) {
   ## Check arguments
   if ( class(conObj) != 'Conos') stop('conObj must be a conos object')
