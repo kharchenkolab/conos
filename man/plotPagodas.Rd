@@ -4,8 +4,8 @@
 \alias{plotPagodas}
 \title{Plot panel of specified embeddings, extracting them from pagoda2 objects}
 \usage{
-plotPagodas(pagoda.samples, groups = NULL, colors = NULL, gene = NULL,
-  embedding.type = "tSNE", ...)
+plotPagodas(pagoda.samples, groups = NULL, colors = NULL,
+  gene = NULL, embedding.type = "tSNE", ...)
 }
 \arguments{
 \item{pagoda.samples}{list of pagoda2 objects}
