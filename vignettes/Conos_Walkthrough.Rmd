@@ -117,7 +117,7 @@ Next we plot our panel with the annotations we made. This is to verify that the 
 con$plotPanel(groups = cellannot)
 ```
 
-Next let's propagaes the labels from the one annotated sample to the other samples.
+Next let's propagate the labels from the one annotated sample to the other samples.
 ```{r}
 tmp.names <- names(cellannot)
 cellannot.c <- as.character(cellannot)
