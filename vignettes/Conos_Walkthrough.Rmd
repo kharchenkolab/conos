@@ -1,8 +1,6 @@
 ---
 title: "Conos Walkthrough"
-output:
-  html_document:
-    df_print: paged
+output: rmarkdown::github_document
 ---
 
 In this tutorial we will go over the analysis of a panel of samples using conos. Conos objects can be used to identify clusters of corresponding cells across panels of samples from similar or dissimilar sources, with different degrees of cell type overlap. Here we will identify corresponding clusters accorss a panel of bone marrow (BM) and cord blood (CB) by generating a joint graph with the cells from all the samples. We will use the graph to propagate labels from a single labelled sample to other samples and finally perform differential expression between BM and CM samples.
@@ -19,7 +17,7 @@ library(nbHelpers)
 #Loading the data
 Next we will load a previously prepared panel of samples. This panel is made up of 16 cord blood and bone marrow samples. It has already been quality controlled so we don't need to worry about that. All samples have been subset to exactly 3000 cells.
 ```{r}
-panel <- readRDS('~/Desktop/data/panel.rds')
+panel <- readRDS(file.path(find.package('conos'),'extdata','panel.rds'))
 ```
 
 Let's take a look at the panel. The panel is a named list of sparse matrices (type dgCMatrix).
@@ -35,7 +33,7 @@ head(colnames(panel[[1]]))
 Next we will subset the panel to just 4 samples. Conos has been tested with 10s of samples, however larger panel sizes increase running time considerably. For brevity we will only use 2 CB and 2 BM samples. After subsetting we will generate pagoda2 apps for these four samples using the basicP2proc function.
 ```{r}
 panel <- panel[c('MantonBM1_HiSeq_1','MantonBM2_HiSeq_1','MantonCB1_HiSeq_1','MantonCB2_HiSeq_1')]
-panel.p2 <- lapply(panel, basicP2proc, n.cores=2)
+panel.p2 <- lapply(panel, basicP2proc, n.cores=4, min.cells.per.gene=0)
 ```
 
 Let's look at the output of our processing. We now have a named list of pagoda2 objects, which is the starting point for the analysis with Conos.
@@ -45,7 +43,7 @@ str(panel.p2,1)
 #Processing with Conos
 We will now construct a Conos object for this panel of samples. At this point we haven't calculated anything. We have just generated an object that contains the samples. Note that at this step we also set the n.cores parameter. The graph generation with Conos can take advantage of parallel processing, so use as many physical cores as you have available here.
 ```{r}
-con <- Conos$new(panel.p2,n.cores=2)
+con <- Conos$new(panel.p2,n.cores=4)
 ```
 
 Our original pagoda2 apps are now saved in the conos object (if you are short of memory you can go ahead and delete the originals).
@@ -63,7 +61,7 @@ Next we will build the graph emcompasses all the samples. We do that by pairwise
 con$buildGraph(k=30, k.self=10, k.self.weight=0.1, space='CPCA', matching.method='mNN', metric='angular', data.type='counts', l2.sigma=1e5, var.scale =TRUE, ncomps=50, n.odgenes=1000, return.details=T,neighborhood.average=FALSE,neighborhood.average.k=10, exclude.pairs=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE)
 ```
 
-We next use the graph we identified to get global clusters. Here we use mutlevel to obtain clusters.
+We next use the graph we identified to get global clusters. Here we use mutlievel to obtain clusters.
 ```{r}
 con$findCommunities(method=multilevel.community, min.group.size=0)
 ```
@@ -91,7 +89,7 @@ con$plotGraph(color.by='sample',mark.groups=F,alpha=0.1,show.legend=T)
 
 Other community detection methods can provide a more sensitive and hierarchical view of the subpopulation structure. Here we run walktrap community detection method on the same joint graph:
 ```{r}
-con$findCommunities(method = igraph::walktrap.community, steps=8)
+con$findCommunities(method = igraph::walktrap.community, steps=4)
 ```
 
 Visualize new clusters:
@@ -109,7 +107,7 @@ One of the uses of this graph is to propagate labels. For example in some cases 
 
 Load cell annotation for one of the samples. Here we are loading annotations we generated with the pagoda2 web tool. We first load the annotations, but because we made the with the lasso tool there is no guarantee that some cells are not included in multiple selctions. For this reason we use removeSelectionOverlaps before conversing the selections to a factor that we can use downstream.
 ```{r}
-cellannot <- readPagoda2SelectionFile('~/Downloads/web_cell_annotation')
+cellannot <- readPagoda2SelectionFile(file.path(find.package('conos'),'extdata','selections.txt'))
 cellannot <- removeSelectionOverlaps(cellannot)
 cellannot <- factorFromP2Selection(cellannot)
 ```
@@ -121,6 +119,9 @@ con$plotPanel(groups = cellannot)
 
 Next let's propagaes the labels from the one annotated sample to the other samples.
 ```{r}
+tmp.names <- names(cellannot)
+cellannot.c <- as.character(cellannot)
+names(cellannot.c) <- tmp.names
 new.label.probabilities <- con$propagateLabels(labels = cellannot,verbose = T)
 ```
 
