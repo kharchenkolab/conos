@@ -244,7 +244,7 @@ getPerCellTypeDECorrected <- function(conObj, groups=NULL, sampleGroups=NULL, co
             library(DESeq2)
             dds1 <- DESeq2::DESeqDataSetFromMatrix(cm,meta,design=~group)
             dds1 <- DESeq2::estimateSizeFactors(dds1)
-            sf <- sizeFactors(dds1)
+            sf <- DESeq2::sizeFactors(dds1)
             if(!(all(rownames(cm) %in% names(correction)) & all(names(correction) %in% rownames(cm))))
                 stop('incompatible matrices')
             nf.tmp <- matrix(rep(sf, nrow(cm)),nrow=nrow(cm),byrow=TRUE)
