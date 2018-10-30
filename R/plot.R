@@ -31,7 +31,8 @@ getClusteringGroups <- function(clusters, clustering) {
 ##' @param panel.size vector with two numbers, which specified (width, height) of the panel in inches. Ignored if raster == FALSE.
 ##' @param adjust.func function to adjust plots before combining them to single panel. Can be used, for example, to provide color pallette of guides of the plots.
 ##' @return ggplot2 object with the panel of plots
-plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow=NULL, raster=FALSE, panel.size=NULL, adjust.func=NULL, title.size=6, ...) {
+plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow=NULL, raster=FALSE, panel.size=NULL, adjust.func=NULL, title.size=6,
+                           raster.width=NULL, raster.height=NULL, ...) {
   if (is.null(panel.size)) {
     panel.size <- dev.size(units="in")
   } else if (length(panel.size) == 1) {
@@ -53,9 +54,17 @@ plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow
     names(embeddings) <- paste(1:length(embeddings))
   }
 
+  if (is.null(raster.width)) {
+    raster.width <- panel.size[1] / nrow
+  }
+
+  if (is.null(raster.height)) {
+    raster.height <- panel.size[2] / ncol
+  }
+
   plot.list <- lapply(names(embeddings), function(n)
     embeddingPlot(embeddings[[n]], groups=groups, colors=colors, raster=raster,
-                  raster.width=panel.size[1] / nrow, raster.height=panel.size[2] / ncol, ...) +
+                  raster.width=raster.width, raster.height=raster.height, ...) +
       ggplot2::geom_label(data=data.frame(x=-Inf, y=Inf, label=n), mapping=ggplot2::aes(x=x, y=y, label=label),
                           fill=ggplot2::alpha("white", 0.6), hjust=0, vjust=1, size=title.size,
                           label.padding=ggplot2::unit(title.size / 4, "pt"), label.size = NA)
@@ -268,7 +277,7 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
 #' @param conosObjs A conos objects
 #' @param type one of 'counts' or 'proportions' to select type of plot
 #' @param clustering name of clustering in the current object
-#' @return a ggplot object 
+#' @return a ggplot object
 plotClusterBarplots <- function(conosObjs, type='counts',clustering=NULL, groups=NULL) {
     ## param checking
     #if(is.null(clustering)) clustering <- 'multi level'
@@ -303,7 +312,7 @@ plotClusterBarplots <- function(conosObjs, type='counts',clustering=NULL, groups
     }
     gg <- gg + scale_x_discrete(name='cluster')
     gg
-}     
+}
 
 
 #' Generate boxplot per cluster of the proportion of cells in each celltype
@@ -388,4 +397,4 @@ getGlobalClusterMarkers <- function(conosObjs, clustering='multi level',
     })
     ## return consistent genes
     zp
-}        
+}

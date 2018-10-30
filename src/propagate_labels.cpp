@@ -46,7 +46,7 @@ public:
   {}
 };
 
-void smooth_count_matrix(const std::vector<Edge> &edges, Mat &count_matrix, int max_n_iters, double diffusion_fading, double diffusion_fading_const, double tol, bool verbose);
+void smooth_count_matrix(const std::vector<Edge> &edges, Mat &count_matrix, int max_n_iters, double diffusion_fading, double diffusion_fading_const, double tol, bool verbose, bool normalize);
 
 si_map_t order_strings(const s_vec_t &vec) {
   si_map_t nums;
@@ -104,7 +104,7 @@ void propagate_labels(const std::vector<Edge> &edges, std::vector<Vertex> &verti
 
 // [[Rcpp::export]]
 Rcpp::NumericMatrix propagate_labels(const Rcpp::StringMatrix &edge_verts, const std::vector<double> &edge_weights, const Rcpp::StringVector &vert_labels, int max_n_iters=10, bool verbose=true,
-                                     int method=1, double diffusion_fading=1.0, double diffusion_fading_const=1e-2, double tol=1e-3) {
+                                     int method=1, double diffusion_fading=10, double diffusion_fading_const=0.5, double tol=5e-3) {
   if (edge_verts.nrow() != edge_weights.size() || edge_verts.ncol() != 2)
     Rcpp::stop("Incorrect dimension of input vectors");
 
@@ -131,7 +131,7 @@ Rcpp::NumericMatrix propagate_labels(const Rcpp::StringMatrix &edge_verts, const
   if (method == 1) {
     propagate_labels(edges, vertices, max_n_iters, verbose);
   } else {
-    smooth_count_matrix(edges, label_probs, max_n_iters, diffusion_fading, diffusion_fading_const, tol, verbose);
+    smooth_count_matrix(edges, label_probs, max_n_iters, diffusion_fading, diffusion_fading_const, tol, verbose, true);
   }
 
 
@@ -167,7 +167,7 @@ Rcpp::NumericMatrix propagate_labels(const Rcpp::StringMatrix &edge_verts, const
 
 // Smooth count matrix
 
-void smooth_count_matrix(const std::vector<Edge> &edges, Mat &count_matrix, int max_n_iters, double diffusion_fading, double diffusion_fading_const, double tol, bool verbose) {
+void smooth_count_matrix(const std::vector<Edge> &edges, Mat &count_matrix, int max_n_iters, double diffusion_fading, double diffusion_fading_const, double tol, bool verbose, bool normalize) {
   std::vector<double> sum_weights(count_matrix.rows(), 1);
   Progress p(max_n_iters * edges.size(), verbose);
   double min_weight = 1e10, max_weight = 0;
@@ -192,9 +192,11 @@ void smooth_count_matrix(const std::vector<Edge> &edges, Mat &count_matrix, int 
       p.increment();
     }
 
-    for (size_t row_id = 0; row_id < cm_new.rows(); ++row_id) {
-      cm_new.row(row_id) /= sum_weights.at(row_id);
-      sum_weights.at(row_id) = 1;
+    if (normalize) {
+      for (size_t row_id = 0; row_id < cm_new.rows(); ++row_id) {
+        cm_new.row(row_id) /= sum_weights.at(row_id);
+        sum_weights.at(row_id) = 1;
+      }
     }
 
     inf_norm = (cm_new - count_matrix).array().abs().matrix().lpNorm<Eigen::Infinity>();
@@ -214,7 +216,8 @@ void smooth_count_matrix(const std::vector<Edge> &edges, Mat &count_matrix, int 
 
 // [[Rcpp::export]]
 SEXP smooth_count_matrix(const Rcpp::StringMatrix &edge_verts, const std::vector<double> &edge_weights, const Rcpp::NumericMatrix &count_matrix,
-                         int max_n_iters=10, double diffusion_fading=1.0, double diffusion_fading_const=0.1, double tol=1e-3, bool verbose=true) {
+                         int max_n_iters=10, double diffusion_fading=1.0, double diffusion_fading_const=0.1, double tol=1e-3, bool verbose=true,
+                         bool normalize=false) {
   // Parse data
   Mat cm_eigen(Rcpp::as<Mat>(count_matrix));
 
@@ -224,7 +227,7 @@ SEXP smooth_count_matrix(const Rcpp::StringMatrix &edge_verts, const std::vector
   parse_edges(edge_verts, edge_weights, edges, cell_names);
 
   // Process data
-  smooth_count_matrix(edges, cm_eigen, max_n_iters, diffusion_fading, diffusion_fading_const, tol, verbose);
+  smooth_count_matrix(edges, cm_eigen, max_n_iters, diffusion_fading, diffusion_fading_const, tol, verbose, normalize);
 
   // Convert result back to R
   Rcpp::NumericMatrix cm_res = Rcpp::wrap(cm_eigen);
