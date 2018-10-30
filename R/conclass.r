@@ -369,7 +369,7 @@ Conos <- setRefClass(
       return(invisible(embedding))
     },
 
-    plotGraph=function(color.by='cluster', clustering=NULL, groups=NULL, colors=NULL, gene=NULL, plot.theme=NULL, ...) {
+    plotGraph=function(color.by='cluster', clustering=NULL, groups=NULL, colors=NULL, gradient.range.quantile=1, gene=NULL, plot.theme=NULL, ...) {
       if(class(embedding)[1] == "uninitializedField") {
         embedGraph();
       }
@@ -383,6 +383,16 @@ Conos <- setRefClass(
           }
         })))
         if(all(is.na(colors))) warning(paste("gene",gene,"is not found in any of the samples"))
+      }
+      
+      if(is.numeric(colors) && gradient.range.quantile<1) {
+        x <- colors;
+        zlim <- as.numeric(quantile(x,p=c(1-gradient.range.quantile,gradient.range.quantile),na.rm=TRUE))
+        if(diff(zlim)==0) {
+          zlim <- as.numeric(range(x))
+        }
+        x[x<zlim[1]] <- zlim[1]; x[x>zlim[2]] <- zlim[2];
+        colors <- x;
       }
 
       if(is.null(groups) && is.null(colors)) {

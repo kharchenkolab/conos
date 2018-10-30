@@ -74,8 +74,9 @@ plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow
 ##' @param pagoda.samples list of pagoda2 objects
 ##' @param gene gene name. If this parameter is provided, points are colored by expression of this gene.
 ##' @param embedding.type type of pagoda2 embedding
+##' @param gradient.range.quantile Winsorization quantile for the numeric colors and gene gradient
 ##' @return ggplot2 object with the panel of plots
-plotPagodas <- function(pagoda.samples, groups=NULL, colors=NULL, gene=NULL, embedding.type='tSNE', ...) {
+plotPagodas <- function(pagoda.samples, groups=NULL, colors=NULL, gene=NULL, gradient.range.quantile=1, embedding.type='tSNE', ...) {
   if (!is.null(groups)) {
     groups <- as.factor(groups)
   }
@@ -92,13 +93,23 @@ plotPagodas <- function(pagoda.samples, groups=NULL, colors=NULL, gene=NULL, emb
   }
 
   if (!is.null(gene)) {
-      colors <- unlist(unname(lapply(pagoda.samples, function(d) {
+      colors <- as.numeric(unlist(unname(lapply(pagoda.samples, function(d) {
           if(gene %in% colnames(d$counts)) {
             d$counts[,gene]
           }  else {
             stats::setNames(rep(NA,nrow(d$counts)),rownames(d$counts))
           }
-      })))
+      }))))
+  }
+  
+  if(is.numeric(colors) && gradient.range.quantile<1) {
+    x <- colors;
+    zlim <- as.numeric(quantile(x,p=c(1-gradient.range.quantile,gradient.range.quantile),na.rm=TRUE))
+    if(diff(zlim)==0) {
+      zlim <- as.numeric(range(x))
+    }
+    x[x<zlim[1]] <- zlim[1]; x[x>zlim[2]] <- zlim[2];
+    colors <- x;
   }
 
   return(plotEmbeddings(embeddings, groups=groups, colors=colors, ...))
