@@ -24,7 +24,7 @@ typedef unsigned int dimidxtype;
 typedef unsigned int kidxtype;
 
 #ifdef _OPENMP
-void checkCRAN(Rcpp::Nullable<Rcpp::NumericVector> threads);
+void checkCRAN(Rcpp::Nullable<Rcpp::IntegerVector> threads);
 #endif
 
 #endif

@@ -22,12 +22,14 @@ Imports:
   stats,
   utils,
   abind,
-  ggrepel
+  ggrepel,
+  Matrix.utils,
+  DESeq2
 Suggests: 
   ggrastr,
   knitr,
   rmarkdown
 VignetteBuilder: knitr
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.0
 LinkingTo: Rcpp, RcppArmadillo, RcppEigen, RcppProgress
 NeedsCompilation: yes

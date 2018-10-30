@@ -136,7 +136,7 @@ Conos <- setRefClass(
       if(!is.null(exclude.samples)) {
         mi <- snam %in% exclude.samples;
         if(verbose) { cat("excluded",sum(mi),"out of",length(snam),"samples, based on supplied exclude.samples\n") }
-        snam <- snam[!vi];
+        snam <- snam[!mi];
       }
       cis <- combn(names(samples),2);
       # TODO: add random subsampling for very large panels
@@ -186,7 +186,7 @@ Conos <- setRefClass(
       return(invisible(cis))
     },
 
-    buildGraph=function(k=30, k.self=10, k.self.weight=0.5, space='CPCA', matching.method='mNN', metric='angular', data.type='counts', l2.sigma=1e5, var.scale =TRUE, ncomps=50, n.odgenes=1000, return.details=T,neighborhood.average=FALSE,neighborhood.average.k=10, exclude.pairs=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE, const.inner.weights=FALSE) {
+    buildGraph=function(k=30, k.self=10, k.self.weight=0.5, space='CPCA', matching.method='mNN', metric='angular', data.type='counts', l2.sigma=1e5, var.scale =TRUE, ncomps=40, n.odgenes=2000, return.details=T,neighborhood.average=FALSE,neighborhood.average.k=10, exclude.pairs=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE, const.inner.weights=FALSE) {
 
       supported.spaces <- c("CPCA","JNMF","genes","PCA")
       if(!space %in% supported.spaces) {
@@ -223,10 +223,11 @@ Conos <- setRefClass(
           #return(data.frame('mA.lab'=rownames(xl[[i]]$rot1)[mnn@i+1],'mB.lab'=rownames(xl[[i]]$rot2)[mnn@j+1],'w'=1/pmax(1,log(mnn@x)),stringsAsFactors=F))
 
         } else if (space %in% c("CPCA","GSVD","PCA")) {
-          common.genes <- Reduce(intersect,lapply(r.ns, getGenes))
+          #common.genes <- Reduce(intersect,lapply(r.ns, getGenes))
           if(!is.null(xl[[i]]$CPC)) {
             # CPCA or PCA
-            odgenes <- intersect(rownames(xl[[i]]$CPC),common.genes)
+            #odgenes <- intersect(rownames(xl[[i]]$CPC),common.genes)
+            odgenes <- rownames(xl[[i]]$CPC);
             rot <- xl[[i]]$CPC[odgenes,];
           } else if(!is.null(xl[[i]]$o$Q)) {
             # GSVD
@@ -244,8 +245,7 @@ Conos <- setRefClass(
           }
 
           # create matrices, adjust variance
-          cproj <- scaledMatrices(r.ns, data.type=data.type, od.genes=odgenes, var.scale=var.scale,
-                                  neighborhood.average=neighborhood.average)
+          cproj <- scaledMatrices(r.ns, data.type=data.type, od.genes=odgenes, var.scale=var.scale, neighborhood.average=neighborhood.average)
           if(common.centering) {
             ncells <- unlist(lapply(cproj,nrow));
             centering <- colSums(do.call(rbind,lapply(cproj,colMeans))*ncells)/sum(ncells)
@@ -369,9 +369,30 @@ Conos <- setRefClass(
       return(invisible(embedding))
     },
 
-    plotGraph=function(color.by='cluster', clustering=NULL, groups=NULL, colors=NULL, plot.theme=NULL, ...) {
+    plotGraph=function(color.by='cluster', clustering=NULL, groups=NULL, colors=NULL, gradient.range.quantile=1, gene=NULL, plot.theme=NULL, ...) {
       if(class(embedding)[1] == "uninitializedField") {
         embedGraph();
+      }
+
+      if (!is.null(gene)) {
+        colors <- unlist(unname(lapply(samples, function(d) {
+          if(gene %in% colnames(d$counts)) {
+            d$counts[,gene]
+          }  else {
+            stats::setNames(rep(NA,nrow(d$counts)),rownames(d$counts))
+          }
+        })))
+        if(all(is.na(colors))) warning(paste("gene",gene,"is not found in any of the samples"))
+      }
+      
+      if(is.numeric(colors) && gradient.range.quantile<1) {
+        x <- colors;
+        zlim <- as.numeric(quantile(x,p=c(1-gradient.range.quantile,gradient.range.quantile),na.rm=TRUE))
+        if(diff(zlim)==0) {
+          zlim <- as.numeric(range(x))
+        }
+        x[x<zlim[1]] <- zlim[1]; x[x>zlim[2]] <- zlim[2];
+        colors <- x;
       }
 
       if(is.null(groups) && is.null(colors)) {
@@ -592,6 +613,71 @@ multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=F),
 
 }
 
+
+##' mutlilevel+multilevel communities
+##'
+##' Constructrs a two-step clustering, first running multilevel.communities, and then walktrap.communities within each
+##' These are combined into an overall hierarchy
+##' @param graph graph
+##' @param n.cores number of cores to use
+##' @param hclust.link link function to use when clustering multilevel communities (based on collapsed graph connectivity)
+##' @param min.community.size minimal community size parameter for the walktrap communities .. communities smaller than that will be merged
+##' @param verbose whether to output progress messages
+##' @param level what level of multitrap clustering to use in the starting step. By default, uses the top level. An integer can be specified for a lower level (i.e. 1).
+##' @param ... passed to walktrap
+##' @return a fakeCommunities object that has methods membership() and as.dendrogram() to mimic regular igraph returns
+##' @export
+multimulti.community <- function(graph, n.cores=parallel::detectCores(logical=F), hclust.link='single', min.community.size=10, verbose=FALSE, level=NULL, ...) {
+  if(verbose) cat("running multilevel 1 ... ");
+  mt <- multilevel.community(graph);
+  
+  if(is.null(level)) {
+    # get higest level (to avoid oversplitting at the initial step)
+    mem <- membership(mt);
+  } else {
+    # get the specified level
+    mem <- mt$memberships[level,]; names(mem) <- mt$names;
+  }
+  
+  if(verbose) cat("found",length(unique(mem)),"communities\nrunning multilevel 2 ... ")
+  
+  # calculate hierarchy on the multilevel clusters
+  cgraph <- get.cluster.graph(graph,mem)
+  chwt <- walktrap.community(cgraph,steps=8)
+  d <- as.dendrogram(chwt);
+  
+  
+  wtl <- conos:::papply(sn(unique(mem)), function(cluster) {
+    cn <- names(mem)[which(mem==cluster)]
+    sg <- induced.subgraph(graph,cn)
+    multilevel.community(induced.subgraph(graph,cn))
+  },n.cores=n.cores)
+  
+  mbl <- lapply(wtl,membership);
+  # correct small communities
+  mbl <- lapply(mbl,function(x) {
+    tx <- table(x)
+    ivn <- names(tx)[tx<min.community.size]
+    if(length(ivn)>1) {
+      x[x %in% ivn] <- as.integer(ivn[1]); # collapse into one group
+    }
+    x
+  })
+  
+  if(verbose) cat("found",sum(unlist(lapply(mbl,function(x) length(unique(x))))),"communities\nmerging ... ")
+  
+  # combined clustering factor
+  fv <- unlist(lapply(sn(names(wtl)),function(cn) {
+    paste(cn,as.character(mbl[[cn]]),sep='-')
+  }))
+  names(fv) <- unlist(lapply(mbl,names))
+  
+  # enclose in a masquerading class
+  res <- list(membership=fv,dendrogram=NULL,algorithm='multimulti');
+  class(res) <- rev("fakeCommunities");
+  return(res);
+  
+}
 
 ##' returns pre-calculated dendrogram
 ##'

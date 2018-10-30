@@ -15,7 +15,7 @@ getPerCellTypeDECorrected(conObj, groups = NULL, sampleGroups = NULL,
 
 \item{groups}{factor specifying cell types}
 
-\item{sampleGroups}{a list of two character vector specifying the app groups to compare}
+\item{sampleGroups}{a named list of two character vectors specifying the app groups to compare}
 
 \item{independentFiltering}{independentFiltering for DESeq2}
 

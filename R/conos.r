@@ -7,8 +7,8 @@ NULL
 scaledMatricesP2 <- function(p2.objs, data.type, od.genes, var.scale, neighborhood.average) {
   ## Common variance scaling
   if (var.scale) {
-    cgsf <- do.call(cbind, lapply(p2.objs,function(x) x$misc$varinfo[od.genes,]$gsf)) %>%
-      log() %>% rowMeans() %>% exp()
+    cgsf <- do.call(cbind, lapply(p2.objs,function(x) x$misc$varinfo[od.genes,]$gsf)) %>%  log() %>% rowMeans() %>% exp()
+    #cgsf <- do.call(cbind, lapply(p2.objs,function(x) x$misc$varinfo[od.genes,]$gsf)) %>% rowMeans()
   }
   ## Prepare the matrices
   cproj <- lapply(p2.objs,function(r) {
@@ -67,7 +67,7 @@ scaledMatrices <- function(samples, data.type, od.genes, var.scale, neighborhood
 }
 
 commonOverdispersedGenes <- function(samples, n.odgenes, verbose) {
-  od.genes <- table(unlist(lapply(samples, getOverdispersedGenes, n.odgenes)))
+  od.genes <- sort(table(unlist(lapply(samples, getOverdispersedGenes, n.odgenes))),decreasing=T)
   od.genes <- od.genes[names(od.genes) %in% Reduce(intersect, lapply(samples, getGenes))]
 
   if(verbose) cat("using",length(od.genes),"od genes\n")
@@ -116,6 +116,7 @@ cpcaFast <- function(covl,ncells,ncomp=10,maxit=1000,tol=1e-6,use.irlba=TRUE,ver
     for(i in 1:length(covl)) {
       S <- S + (ncells[i] / sum(ncells)) * covl[[i]]
     }
+    ncomp <- min(c(nrow(S)-1,ncol(S)-1,ncomp));
     ev <- irlba::irlba(S, ncomp, maxit=10000)
     cc <- abind::abind(covl,along=3)
     cpcaF(cc,ncells,ncomp,maxit,tol,eigenvR=ev$v,verbose)
@@ -134,7 +135,7 @@ cpcaFast <- function(covl,ncells,ncomp=10,maxit=1000,tol=1e-6,use.irlba=TRUE,ver
 #' @param verbose whether to be verbose
 #' @param neighborhood.average use neighborhood average values
 #' @param n.cores number of cores to use
-quickCPCA <- function(r.n,data.type='counts',k=30,ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=TRUE,neighborhood.average=FALSE,n.cores=30) {
+quickCPCA <- function(r.n,data.type='counts',k=30,ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=TRUE,neighborhood.average=FALSE) {
   od.genes <- commonOverdispersedGenes(r.n, n.odgenes, verbose=verbose)
 
   ncomps <- min(ncomps, length(od.genes) - 1)
@@ -196,6 +197,7 @@ quickPlainPCA <- function(r.n,data.type='counts',k=30,ncomps=30,n.odgenes=NULL,v
                         neighborhood.average=neighborhood.average) %>%
     lapply(function(x) {
       cm <- Matrix::colMeans(x);
+      ncomps <- min(c(nrow(cm)-1,ncol(cm)-1,ncomps));
       pcs <- irlba::irlba(x, nv=ncomps, nu =0, center=cm, right_only = F, reorth = T);
       #rownames(pcs$v) <- colnames(x);
       pcs$v
@@ -445,7 +447,7 @@ greedy.modularity.cut <- function(wt,N,leaf.labels=NULL,minsize=0,minbreadth=0) 
     ll <- integer(nleafs);
   } else {
     if(is.null(wt$names)) {
-    # assume that leaf.labels are provided in the correct order
+      # assume that leaf.labels are provided in the correct order
       if(length(leaf.labels)!=nleafs) stop("leaf.labels is of incorrct length and wt$names is NULL")
       ll <- as.integer(as.factor(leaf.labels))-1L;
     } else {
