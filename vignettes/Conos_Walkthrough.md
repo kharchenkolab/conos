@@ -316,7 +316,7 @@ samplegroups <- list(
 We can then run differential expression between cells in these groups
 
 ``` r
-de.multilevel <- getPerCellTypeDE(con, groups=as.factor(new.annot),sampleGroups = samplegroups, reflevel='bm', n.cores=4)
+de.multilevel <- getPerCellTypeDE(con, groups=as.factor(new.annot),sample.groups = samplegroups, ref.level='bm', n.cores=4)
 ```
 
 ...and examine the output
@@ -329,15 +329,15 @@ str(de.multilevel[1:3], 2)
     ##  $ Bcells:List of 3
     ##   ..$ res         :'data.frame': 15032 obs. of  6 variables:
     ##   ..$ cm          :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-    ##   ..$ sampleGroups:List of 2
+    ##   ..$ sample.groups:List of 2
     ##  $ Mono  :List of 3
     ##   ..$ res         :'data.frame': 15032 obs. of  6 variables:
     ##   ..$ cm          :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-    ##   ..$ sampleGroups:List of 2
+    ##   ..$ sample.groups:List of 2
     ##  $ Tcyto :List of 3
     ##   ..$ res         :'data.frame': 15032 obs. of  6 variables:
     ##   ..$ cm          :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-    ##   ..$ sampleGroups:List of 2
+    ##   ..$ sample.groups:List of 2
 
 Let's look at the results for the Bcells
 
@@ -368,11 +368,11 @@ In certain cases we observe that differential expression will result in the simi
 
 ``` r
 ## Calculate correction
-fc.correction <- getCorrectionVector(con, groups=as.factor(new.annot),sampleGroups = samplegroups, reflevel='bm', n.cores=4,correction.method='varianceweighted')
+fc.correction <- getCorrectionVector(con, groups=as.factor(new.annot),sample.groups = samplegroups, ref.level='bm', n.cores=4,correction.method='varianceweighted')
 fc.correction[is.na(fc.correction)] <- 0
 
 ## Use corrected version
-de.multilevel.corrected <- getPerCellTypeDECorrected(con, groups=as.factor(new.annot),sampleGroups = samplegroups, reflevel='bm', n.cores=4, correction = fc.correction)
+de.multilevel.corrected <- getPerCellTypeDECorrected(con, groups=as.factor(new.annot),sample.groups = samplegroups, ref.level='bm', n.cores=4, correction = fc.correction)
 ```
 
 ``` r

@@ -152,7 +152,7 @@ samplegroups <- list(
 
 We can then run differential expression between cells in these groups
 ```{r}
-de.multilevel <- getPerCellTypeDE(con, groups=as.factor(new.annot),sampleGroups = samplegroups, reflevel='bm', n.cores=4)
+de.multilevel <- getPerCellTypeDE(con, groups=as.factor(new.annot),sample.groups = samplegroups, ref.level='bm', n.cores=4)
 ```
 
 ...and examine the output
@@ -174,11 +174,11 @@ In certain cases we observe that differential expression will result in the simi
 
 ```{r}
 ## Calculate correction
-fc.correction <- getCorrectionVector(con, groups=as.factor(new.annot),sampleGroups = samplegroups, reflevel='bm', n.cores=4,correction.method='varianceweighted')
+fc.correction <- getCorrectionVector(con, groups=as.factor(new.annot),sample.groups = samplegroups, ref.level='bm', n.cores=4,correction.method='varianceweighted')
 fc.correction[is.na(fc.correction)] <- 0
 
 ## Use corrected version
-de.multilevel.corrected <- getPerCellTypeDECorrected(con, groups=as.factor(new.annot),sampleGroups = samplegroups, reflevel='bm', n.cores=4, correction = fc.correction)
+de.multilevel.corrected <- getPerCellTypeDECorrected(con, groups=as.factor(new.annot),sample.groups = samplegroups, ref.level='bm', n.cores=4, correction = fc.correction)
 ```
 
 ```{r}
