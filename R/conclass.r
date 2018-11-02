@@ -335,15 +335,14 @@ Conos <- setRefClass(
 
     },
 
-    plotPanel=function(clustering=NULL, groups=NULL, colors=NULL, gene=NULL, embedding.type='tSNE', ncol=NULL, nrow=NULL, raster=FALSE, panel.size=NULL,
-                       adjust.func=NULL, use.local.clusters=FALSE, plot.theme=NULL, ...) {
+    plotPanel=function(clustering=NULL, groups=NULL, colors=NULL, gene=NULL, use.local.clusters=FALSE, plot.theme=NULL, ...) {
       # W: clusters and plots
       if (use.local.clusters) {
-        if (is.null(clustering)) {
+        if (is.null(clustering) && !("seurat" %in% class(samples[[1]]))) {
           stop("You have to provide 'clustering' parameter to be able to use local clusters")
         }
 
-        groups <- Reduce(c, lapply(samples, function(x) x$clusters$PCA[[clustering]]))
+        groups <- Reduce(c, lapply(samples, getClustering, clustering))
         if (is.null(groups)) {
           stop(paste0("No clustering '", clustering, "' presented in the samples"))
         }
@@ -352,8 +351,8 @@ Conos <- setRefClass(
         groups <- getClusteringGroups(clusters, clustering)
       }
 
-      gg <- plotPagodas(samples, groups=groups, colors=colors, gene=gene, embedding.type=embedding.type, ncol=ncol, nrow=nrow, raster=raster,
-                        panel.size=panel.size, adjust.func=adjust.func, plot.theme=adjustTheme(plot.theme), ...)
+      gg <- plotSamples(samples, groups=groups, colors=colors, gene=gene, plot.theme=adjustTheme(plot.theme), ...)
+
       return(gg)
     },
 
@@ -384,7 +383,7 @@ Conos <- setRefClass(
         })))
         if(all(is.na(colors))) warning(paste("gene",gene,"is not found in any of the samples"))
       }
-      
+
       if(is.numeric(colors) && gradient.range.quantile<1) {
         x <- colors;
         zlim <- as.numeric(quantile(x,p=c(1-gradient.range.quantile,gradient.range.quantile),na.rm=TRUE))
@@ -630,7 +629,7 @@ multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=F),
 multimulti.community <- function(graph, n.cores=parallel::detectCores(logical=F), hclust.link='single', min.community.size=10, verbose=FALSE, level=NULL, ...) {
   if(verbose) cat("running multilevel 1 ... ");
   mt <- multilevel.community(graph);
-  
+
   if(is.null(level)) {
     # get higest level (to avoid oversplitting at the initial step)
     mem <- membership(mt);
@@ -638,21 +637,21 @@ multimulti.community <- function(graph, n.cores=parallel::detectCores(logical=F)
     # get the specified level
     mem <- mt$memberships[level,]; names(mem) <- mt$names;
   }
-  
+
   if(verbose) cat("found",length(unique(mem)),"communities\nrunning multilevel 2 ... ")
-  
+
   # calculate hierarchy on the multilevel clusters
   cgraph <- get.cluster.graph(graph,mem)
   chwt <- walktrap.community(cgraph,steps=8)
   d <- as.dendrogram(chwt);
-  
-  
+
+
   wtl <- conos:::papply(sn(unique(mem)), function(cluster) {
     cn <- names(mem)[which(mem==cluster)]
     sg <- induced.subgraph(graph,cn)
     multilevel.community(induced.subgraph(graph,cn))
   },n.cores=n.cores)
-  
+
   mbl <- lapply(wtl,membership);
   # correct small communities
   mbl <- lapply(mbl,function(x) {
@@ -663,20 +662,20 @@ multimulti.community <- function(graph, n.cores=parallel::detectCores(logical=F)
     }
     x
   })
-  
+
   if(verbose) cat("found",sum(unlist(lapply(mbl,function(x) length(unique(x))))),"communities\nmerging ... ")
-  
+
   # combined clustering factor
   fv <- unlist(lapply(sn(names(wtl)),function(cn) {
     paste(cn,as.character(mbl[[cn]]),sep='-')
   }))
   names(fv) <- unlist(lapply(mbl,names))
-  
+
   # enclose in a masquerading class
   res <- list(membership=fv,dendrogram=NULL,algorithm='multimulti');
   class(res) <- rev("fakeCommunities");
   return(res);
-  
+
 }
 
 ##' returns pre-calculated dendrogram

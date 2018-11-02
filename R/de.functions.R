@@ -22,21 +22,20 @@ getPerCellTypeDE <- function(conObj, groups=NULL, sampleGroups=NULL, cooksCutoff
         stop('sampleGroups entries must be on length greater or equal to 1')
     if ( ! all(unlist(lapply(sampleGroups, function(x) {all(x %in% names(conObj$samples))}))) )
         stop('sampleGroups entries must be names of samples in the conos object')
+
     if ( is.null(reflevel) ) stop('reference level is not defined')
     ## todo: check samplegrousp are named
     if(is.null(names(sampleGroups))) stop('sampleGroups must be named')
     if(class(groups) != 'factor') stop('groups must be a factor')
     if(any(grepl(cluster.sep.chr, names(conObj$samples),fixed=TRUE)))
         stop('cluster.sep.chr must not be part of any sample name')
-    if(any(grepl(cluster.sep.chr,levels(groups),fixed=TRUE))) 
+    if(any(grepl(cluster.sep.chr,levels(groups),fixed=TRUE)))
         stop('cluster.sep.chr must not be part of any cluster name')
     ## Generate a summary dataset collapsing the cells of the same type in each sample
     ## and merging everything in one matrix
     samples.used <- unlist(sampleGroups)
     ## Generate an aggregated matrix
-    raw.mats <- lapply(conObj$samples[samples.used], function(p2) {
-        p2$misc$rawCounts
-    })
+    raw.mats <- lapply(conObj$samples[samples.used], getRawCountMatrix, transposed=T)
     common.genes <- Reduce(intersect,lapply(raw.mats, colnames))
     raw.mats <- lapply(raw.mats, function(x) {x[,common.genes]})
     aggr2 <- lapply(raw.mats, function(x) {
@@ -107,7 +106,7 @@ getPerCellTypeDE <- function(conObj, groups=NULL, sampleGroups=NULL, cooksCutoff
 #' @param exclude.celltypes names of cell types to exclude from the generation of the vecotr
 #' @param correction.method 'varianceweighted' or 'mean' specifies way to merge the fold changes from different cell types
 #' @export getCorrectionVector
-getCorrectionVector <- function(conObj, groups=NULL, sampleGroups=NULL, cooksCutoff=FALSE, independentFiltering = FALSE, 
+getCorrectionVector <- function(conObj, groups=NULL, sampleGroups=NULL, cooksCutoff=FALSE, independentFiltering = FALSE,
                                 n.cores=1, cluster.sep.chr = '+', return.details=FALSE,de.init=NULL,exclude.celltypes=c(),
                                 correction.method='varianceweighted',reflevel=NULL) {
     ## Check arguments
@@ -127,7 +126,7 @@ getCorrectionVector <- function(conObj, groups=NULL, sampleGroups=NULL, cooksCut
     if(class(groups) != 'factor') stop('groups must be a factor')
     if(any(grepl(cluster.sep.chr, names(conObj$samples),fixed=TRUE)))
         stop('cluster.sep.chr must not be part of any sample name')
-    if(any(grepl(cluster.sep.chr,levels(groups),fixed=TRUE))) 
+    if(any(grepl(cluster.sep.chr,levels(groups),fixed=TRUE)))
         stop('cluster.sep.chr must not be part of any cluster name')
     if(is.null(reflevel)) stop('reference level is not defined')
     ## Main function
@@ -167,7 +166,7 @@ getCorrectionVector <- function(conObj, groups=NULL, sampleGroups=NULL, cooksCut
         correction
     } else {
         list(correction.vector=correction,de.init=de.init)
-    }        
+    }
 }
 
 #' Do differential expression for each cell type in a conos object between the specified subsets of apps
@@ -203,15 +202,13 @@ getPerCellTypeDECorrected <- function(conObj, groups=NULL, sampleGroups=NULL, co
     if(class(groups) != 'factor') stop('groups must be a factor')
     if(any(grepl(cluster.sep.chr, names(conObj$samples),fixed=TRUE)))
         stop('cluster.sep.chr must not be part of any sample name')
-    if(any(grepl(cluster.sep.chr,levels(groups),fixed=TRUE))) 
+    if(any(grepl(cluster.sep.chr,levels(groups),fixed=TRUE)))
         stop('cluster.sep.chr must not be part of any cluster name')
     ## Generate a summary dataset collapsing the cells of the same type in each sample
     ## and merging everything in one matrix
     samples.used <- unlist(sampleGroups)
     ## Generate an aggregated matrix
-    raw.mats <- lapply(conObj$samples[samples.used], function(p2) {
-        p2$misc$rawCounts
-    })
+    raw.mats <- lapply(conObj$samples[samples.used], getRawCountMatrix, transposed=T)
     common.genes <- Reduce(intersect,lapply(raw.mats, colnames))
     raw.mats <- lapply(raw.mats, function(x) {x[,common.genes]})
     aggr2 <- lapply(raw.mats, function(x) {
@@ -292,7 +289,7 @@ saveDEasCSV <- function(de.results=NULL,saveprefix=NULL,gene.metadata=NULL) {
     if(n.error > 0)
         cat("Warning: ", n.error, " of ", length(de.results), ' results have returned an error; ignoring...\n')
     de.results <- de.results[!unlist(lapply(de.results,is.error))]
-    ## 
+    ##
     x <- lapply(namedNames(de.results), function(ncc) {
         res.celltype <- de.results[[ncc]]
         res.table <- as.data.frame(res.celltype$res)
@@ -300,7 +297,7 @@ saveDEasCSV <- function(de.results=NULL,saveprefix=NULL,gene.metadata=NULL) {
         res.table$gene <- rownames(res.table)
         ## append singificance
         res.table$significant <- res.table$padj < 0.05
-        res.table$log2FoldChange[is.na(res.table$log2FoldChange)] <- 0 
+        res.table$log2FoldChange[is.na(res.table$log2FoldChange)] <- 0
         ## Append Z scores and rowid
         res.table$Z <- qnorm(1 - (res.table$pval/2))
         res.table$Z[is.na(res.table$Z)] <- 0
@@ -352,7 +349,7 @@ saveDEasJSON <- function(de.results = NULL, saveprefix = NULL, gene.metadata = N
         res.table$gene <- rownames(res.table)
         ## append singificance
         res.table$significant <- res.table$padj < 0.05
-        res.table$log2FoldChange[is.na(res.table$log2FoldChange)] <- 0 
+        res.table$log2FoldChange[is.na(res.table$log2FoldChange)] <- 0
         ## Append Z scores and rowid
         res.table$Z <- qnorm(1 - (res.table$pval/2))
         res.table$Z[is.na(res.table$Z)] <- 0
@@ -388,7 +385,7 @@ saveDEasJSON <- function(de.results = NULL, saveprefix = NULL, gene.metadata = N
             ## calculate cpm
             cpm <- sweep(cm.tmp, 2, apply(cm.tmp,2, sum), FUN='/')
             cpm <- log10(cpm * 1e6 + 1)
-            ## 
+            ##
             snames1 <- colnames(cpm)
             ## Put genes in order
             cpm <- cpm[all.genes,]
@@ -407,7 +404,7 @@ saveDEasJSON <- function(de.results = NULL, saveprefix = NULL, gene.metadata = N
             snames = snames
         )
         y <- jsonlite::toJSON(tojson)
-        ## File to save to 
+        ## File to save to
         file <- paste0(saveprefix,make.names(ncc),'.json')
         ## create the json file
         write(y,file)
@@ -417,7 +414,7 @@ saveDEasJSON <- function(de.results = NULL, saveprefix = NULL, gene.metadata = N
 }
 
 #' Compare two cell types across the entire panel
-#' @param conObj conos object 
+#' @param conObj conos object
 #' @param groups factor describing cell grouping
 #' @param sampleGroups a named list of two character vectors specifying the app groups to compare
 #' @param cooksCutoff cooksCutoff parameter for DESeq2
@@ -450,14 +447,12 @@ getBetweenCellTypeDE <- function(conObj, sampleGroups =  NULL, groups=NULL, cook
   if(class(groups) != 'factor') stop('groups must be a factor')
   if(any(grepl(cluster.sep.chr, names(conObj$samples),fixed=TRUE)))
     stop('cluster.sep.chr must not be part of any sample name')
-  if(any(grepl(cluster.sep.chr,levels(groups),fixed=TRUE))) 
+  if(any(grepl(cluster.sep.chr,levels(groups),fixed=TRUE)))
     stop('cluster.sep.chr must not be part of any cluster name')
   ## Get the samples from the panel to use in this comparison
   samples.used <- unlist(sampleGroups)
   ## Generate an aggregated matrix
-  raw.mats <- lapply(conObj$samples[samples.used], function(p2) {
-    p2$misc$rawCounts
-  })
+  raw.mats <- lapply(conObj$samples[samples.used], getRawCountMatrix, transposed=T)
   common.genes <- Reduce(intersect,lapply(raw.mats, colnames))
   raw.mats <- lapply(raw.mats, function(x) {x[,common.genes]})
   aggr2 <- lapply(raw.mats, function(x) {
@@ -514,7 +509,7 @@ getBetweenCellTypeDE <- function(conObj, sampleGroups =  NULL, groups=NULL, cook
 
 
 #' Compare two cell types across the entire panel
-#' @param conObj conos object 
+#' @param conObj conos object
 #' @param sampleGroups a named list of two character vectors specifying the app groups to compare
 #' @param groups factor describing cell grouping
 #' @param cooksCutoff cooksCutoff parameter for DESeq2
@@ -550,14 +545,12 @@ getBetweenCellTypeCorrectedDE <- function(conObj, sampleGroups =  NULL, groups=N
   if(class(groups) != 'factor') stop('groups must be a factor')
   if(any(grepl(cluster.sep.chr, names(conObj$samples),fixed=TRUE)))
     stop('cluster.sep.chr must not be part of any sample name')
-  if(any(grepl(cluster.sep.chr,levels(groups),fixed=TRUE))) 
+  if(any(grepl(cluster.sep.chr,levels(groups),fixed=TRUE)))
     stop('cluster.sep.chr must not be part of any cluster name')
   ## Get the samples from the panel to use in this comparison
   samples.used <- unlist(sampleGroups)
   ## Generate an aggregated matrix
-  raw.mats <- lapply(conObj$samples[samples.used], function(p2) {
-    p2$misc$rawCounts
-  })
+  raw.mats <- lapply(conObj$samples[samples.used], getRawCountMatrix, transposed=T)
   common.genes <- Reduce(intersect,lapply(raw.mats, colnames))
   raw.mats <- lapply(raw.mats, function(x) {x[,common.genes]})
   aggr2 <- lapply(raw.mats, function(x) {

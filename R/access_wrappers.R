@@ -22,3 +22,19 @@ setMethod("edgeMat<-", signature("seurat"), function(sample, value) {sample@misc
 setGeneric("edgeMat", function(sample, value) standardGeneric("edgeMat"))
 setMethod("edgeMat", signature("Pagoda2"), function(sample) sample$misc$edgeMat)
 setMethod("edgeMat", signature("seurat"), function(sample) sample@misc$edgeMat)
+
+setGeneric("getCountMatrix", function(sample) standardGeneric("getCountMatrix"))
+setMethod("getCountMatrix", signature("Pagoda2"), function(sample) t(sample$counts))
+setMethod("getCountMatrix", signature("seurat"), function(sample) sample@data)
+
+setGeneric("getRawCountMatrix", function(sample, transposed=F) standardGeneric("getRawCountMatrix"))
+setMethod("getRawCountMatrix", signature("Pagoda2"), function(sample, transposed=F) if (transposed) sample$misc$rawCounts else t(sample$misc$rawCounts))
+setMethod("getRawCountMatrix", signature("seurat"), function(sample, transposed=F) if (transposed) t(sample@raw.data) else sample@raw.data)
+
+setGeneric("getEmbedding", function(sample, type) standardGeneric("getEmbedding"))
+setMethod("getEmbedding", signature("Pagoda2"), function(sample, type) sample$embeddings$PCA[[type]])
+setMethod("getEmbedding", signature("seurat"), function(sample, type) if (is.null(sample@dr[[type]])) NULL else as.data.frame(sample@dr[[type]]@cell.embeddings))
+
+setGeneric("getClustering", function(sample, type) standardGeneric("getClustering"))
+setMethod("getClustering", signature("Pagoda2"), function(sample, type) sample$clusters$PCA[[type]])
+setMethod("getClustering", signature("seurat"), function(sample, type) {if (!is.null(type)) warning("Seurat support only single type of clustering"); sample@ident})
