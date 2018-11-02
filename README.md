@@ -15,12 +15,20 @@ In essense, Conos will take a large, potentially heterogeneous panel of samples 
 Conos is robust to heterogeneity of samples within collection, as well as noise. The ability to resolve finer subpopulation structure improves as the size of the panel increases.
 
 * What do I need to run it?
-Conos is an R package. Currently, it supports analysis of sample collections analyzed using [pagoda2](https://github.com/hms-dbmi/pagoda2). We will add support for Seurat collections shortly.
+Conos is an R package. Currently, it supports pre-processing (filtering, normalization, etc.) of the individual datasets using [pagoda2](https://github.com/hms-dbmi/pagoda2) or [Seurat](https://satijalab.org/seurat/).
 
 ## Installation
 
+
+### Native installation
+Please make sure devtools package is installed (use `install.packages("devtools")` to install it if needed).
+Then install [pagoda2](https://github.com/hms-dbmi/pagoda2) (or Seurat), then install conos:
+```r
+devtools::install_github("hms-dbmi/conos")
+```
+
 ## Installing Conos as Docker Container
-The fastest and most efficient way to get Conos on a mac or windows system is through a docker container. The docker distribution is current as of October 2018 and also includes the (Pagoda2 package)[https://github.com/hms-dbmi/pagoda2]. To start a docker container, first [install docker](https://docs.docker.com/install/) on your platform and then start the pagoda container with the following command in the shell:
+If your system configuration is making it difficult to install Conos natively, an alternative way to get Conos running is through a docker container. The docker distribution is current as of October 2018 and also includes the (Pagoda2 package)[https://github.com/hms-dbmi/pagoda2]. To start a docker container, first [install docker](https://docs.docker.com/install/) on your platform and then start the pagoda container with the following command in the shell:
 
 ```
 docker run -p 8787:8787 docker.io/barkasn/pagoda2
@@ -28,17 +36,8 @@ docker run -p 8787:8787 docker.io/barkasn/pagoda2
 The first time you run the command it will download several images so make sure that you have fast internet access setup. You can then point your browser to http://localhost:8787/ to get an Rstudio environment with pagoda2 and conos installed. Explore the docker [--mount option]([https://docs.docker.com/storage/volumes/) to allow access of the docker image to your local files.
 
 
-### Native
-
-[Install pagoda2 and it's dependencies](https://github.com/hms-dbmi/pagoda2)
-```r
-devtools::install_github("hms-dbmi/conos")
-```
-
 ## Usage example
-Please see [walkthrough](http://pklab.med.harvard.edu/peterk/conos/walkthrough.nb.html) for an example of Conos analysis.
-
-A newer and more comprehensive tutorial is available [here](vignettes/Conos_Walkthrough.md), as well as slightly adjusted [version](https://github.com/hms-dbmi/conos/blob/dev/vignettes/Conos_Walkthrough.md) for Seurat.
+Please see [Conos tutorial](vignettes/walkthrough.md) for detailed usage.
 
 Given a list of individual processed samples (`pl`), Conos processing can be as simple as this:
 ```r
@@ -46,7 +45,7 @@ Given a list of individual processed samples (`pl`), Conos processing can be as 
 con <- Conos$new(pl)
 
 # build graph
-con$buildGraph(verbose=T)
+con$buildGraph()
 
 # find communities
 con$findCommunities()
