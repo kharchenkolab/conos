@@ -212,6 +212,93 @@ quickPlainPCA <- function(r.n,data.type='counts',k=30,ncomps=30,n.odgenes=NULL,v
 }
 
 
+# dendrogram modification functions
+#' Set dendrogram node width by breadth of the provided factor
+#' @param d dendrogram
+#' @param fac across cells
+#' @param leafContent $leafContent output of greedy.modularity.cut() providing information about which cells map to which dendrogram leafs
+#' @param min.width minimum line width
+#' @param max.width maximum line width
+#' @export
+dend.set.width.by.breadth <- function(d,fac,leafContent,min.width=1,max.width=4) {
+  cc2width <- function(cc) {
+    ent <- entropy::entropy(cc[-1],method='MM',unit='log2')/log2(length(levels(fac)))
+    min.width+ent*(max.width-min.width)
+  }
+  
+  cbm <- function(d,fac) {
+    if(is.leaf(d)) {
+      lc <- fac[leafContent[[attr(d,'label')]]]
+      cc <- c(sum(is.na(lc)),table(lc));
+      lwd <- cc2width(cc)
+      attr(d,"edgePar") <- c(attr(d,"edgePar"),list(lwd=lwd))
+      attr(d,'cc') <- cc;
+      return(d);
+    } else {
+      oa <- attributes(d);
+      d <- lapply(d,cbm,fac=fac);
+      attributes(d) <- oa;
+      cc <- attr(d[[1]],'cc')+attr(d[[2]],'cc')
+      lwd <- cc2width(cc)
+      attr(d,"edgePar") <- c(attr(d,"edgePar"),list(lwd=lwd))
+      attr(d,'cc') <- cc;
+      return(d);
+    }
+  }
+  cbm(d,fac);
+}
+
+#' Set dendrogram colors according to a 2- or 3-level factor mixture
+#' @param d dendrogram
+#' @param fac across cells
+#' @param leafContent $leafContent output of greedy.modularity.cut() providing information about which cells map to which dendrogram leafs
+#' @export
+dend.set.color.by.mixture <- function(d,fac,leafContent) {
+  fac <- as.factor(fac);
+  if(length(levels(fac))>3) stop("factor with more than 3 levels are not supported")
+  if(length(levels(fac))<2) stop("factor with less than 2 levels are not supported")
+  
+  cc2col <- function(cc,base=0.1) {
+    if(sum(cc)==0) {
+      cc <- rep(1,length(cc))
+    } else {
+      cc <- cc/sum(cc)
+    }
+    
+    if(length(cc)==3) { # 2-color
+      cv <- c(cc[2],0,cc[3])+base; cv <- cv/max(cv) * (1-base)
+      #rgb(base+cc[2],base,base+cc[3],1)
+      rgb(cv[1],cv[2],cv[3],1)
+    } else if(length(cc)==4) { # 3-color
+      cv <- c(cc[2],cc[3],cc[4])+base; cv <- cv/max(cv) * (1-base);
+      #rgb(base+cc[2],base+cc[3],base+cc[4],1)
+      rgb(cv[1],cv[2],cv[3],1)
+      
+    }
+  }
+  
+  cbm <- function(d,fac) {
+    if(is.leaf(d)) {
+      lc <- fac[leafContent[[attr(d,'label')]]]
+      cc <- c(sum(is.na(lc)),table(lc));
+      col <- cc2col(cc)
+      attr(d,"edgePar") <- c(attr(d,"edgePar"),list(col=col))
+      attr(d,'cc') <- cc;
+      return(d);
+    } else {
+      oa <- attributes(d);
+      d <- lapply(d,cbm,fac=fac);
+      attributes(d) <- oa;
+      cc <- attr(d[[1]],'cc')+attr(d[[2]],'cc')
+      col <- cc2col(cc)
+      attr(d,"edgePar") <- c(attr(d,"edgePar"),list(col=col))
+      attr(d,'cc') <- cc;
+      return(d);
+    }
+  }
+  cbm(d,fac);
+}
+
 # other functions
 
 # use mclapply if available, fall back on BiocParallel, but use regular
@@ -437,10 +524,10 @@ bestClusterThresholds <- function(res,clusters) {
 ##' @param leaf.labels leaf sample label factor, for breadth calculations - must be a named factor containing all wt$names, or if wt$names is null, a factor listing cells in the same order as wt leafs
 ##' @param minsize minimum size of the branch (in number of leafs)
 ##' @param minbreadth minimum allowed breadth of a branch (measured as normalized entropy)
-##' @param flat.cut whether to simply take a flat cut (i.e. follow provided tree; default=FALSE). Does no observe minsize/minbreadth restrictions
+##' @param flat.cut whether to simply take a flat cut (i.e. follow provided tree; default=TRUE). Does no observe minsize/minbreadth restrictions
 ##' @return list(hclust - hclust structure of the derived tree, leafContent - binary matrix with rows corresponding to old leaves, columns to new ones, deltaM - modularity increments)
 ##' @export
-greedy.modularity.cut <- function(wt,N,leaf.labels=NULL,minsize=0,minbreadth=0,flat.cut=FALSE) {
+greedy.modularity.cut <- function(wt,N,leaf.labels=NULL,minsize=0,minbreadth=0,flat.cut=TRUE) {
   # prepare labels
   nleafs <- nrow(wt$merges)+1;
   if(is.null(leaf.labels)) {
@@ -465,7 +552,9 @@ greedy.modularity.cut <- function(wt,N,leaf.labels=NULL,minsize=0,minbreadth=0,f
   hc <- list(merge=m,height=1:nrow(m),labels=c(1:nleafs),order=c(1:nleafs)); class(hc) <- 'hclust'
   # fix the ordering so that edges don't intersects
   hc$order <- order.dendrogram(as.dendrogram(hc))
-  return(list(hc=hc,leafContent=x$leafContent,deltaM=x$deltaM,breadth=as.vector(x$breadth),splits=x$splitsequence))
+  leafContentCollapsed <- apply(x$leafContent,2,function(z)rownames(x$leafContent)[which(z>0)])
+  clfac <- as.factor(apply(x$leafContent,1,which.max))
+  return(list(hc=hc,groups=clfac,leafContentArray=x$leafContent,leafContent=leafContentCollapsed,deltaM=x$deltaM,breadth=as.vector(x$breadth),splits=x$splitsequence))
 }
 
 ##' determine number of detectable clusters given a reference walktrap and a bunch of permuted walktraps

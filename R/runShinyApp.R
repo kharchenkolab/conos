@@ -294,7 +294,7 @@ get.list.of.descendants <- function(hc=NULL,parent.ID=NULL,list.of.descendants=l
 get.greedy.cut.groups <- function(no_clusters=NULL,greedy.modularity.cut.result=NULL){
   hc <- greedy.modularity.cut.result$hc
   dend <- as.dendrogram(hc)
-  leafContent <- greedy.modularity.cut.result$leafContent
+  leafContent <- greedy.modularity.cut.result$leafContentArray
   max_no_clusters <- attr(dend,"members")
   if (no_clusters <= max_no_clusters){
     nodes_labels <- c()
@@ -340,7 +340,7 @@ conosShinyApp <- function(con, N=30, leaf.labels=NULL, tissue_mapping=NULL, tiss
   #.GlobalEnv$con <- con
   greedy.modularity.cut.result <- conos::greedy.modularity.cut(wt=con$clusters$walktrap$result,N=N,leaf.labels=leaf.labels,minsize=minsize,minbreadth=minbreadth,flat.cut=flat.cut)
   
-  leafContent <- greedy.modularity.cut.result$leafContent
+  leafContent <- greedy.modularity.cut.result$leafContentArray
   hc <- greedy.modularity.cut.result$hc
   dend <- as.dendrogram(hc)
   

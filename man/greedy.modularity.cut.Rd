@@ -5,7 +5,7 @@
 \title{performs a greedy top-down selective cut to optmize modularity}
 \usage{
 greedy.modularity.cut(wt, N, leaf.labels = NULL, minsize = 0,
-  minbreadth = 0, flat.cut = FALSE)
+  minbreadth = 0, flat.cut = TRUE)
 }
 \arguments{
 \item{wt}{walktrap rsult}
@@ -18,7 +18,7 @@ greedy.modularity.cut(wt, N, leaf.labels = NULL, minsize = 0,
 
 \item{minbreadth}{minimum allowed breadth of a branch (measured as normalized entropy)}
 
-\item{flat.cut}{whether to simply take a flat cut (i.e. follow provided tree; default=FALSE). Does no observe minsize/minbreadth restrictions}
+\item{flat.cut}{whether to simply take a flat cut (i.e. follow provided tree; default=TRUE). Does no observe minsize/minbreadth restrictions}
 }
 \value{
 list(hclust - hclust structure of the derived tree, leafContent - binary matrix with rows corresponding to old leaves, columns to new ones, deltaM - modularity increments)

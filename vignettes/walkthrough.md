@@ -270,7 +270,72 @@ con$plotGraph(clustering='walktrap')
 Exploring hierarchical community structure
 ==========================================
 
-Walktrap clustering generates a hierarchical community structure. It also allows to visualize tissue or
+Walktrap clustering generates a hierarchical community structure.
+
+We can get a cut of the top dendrogram and visualize it. Here we'll cut to get 40 top clusters.
+
+``` r
+fc <- greedy.modularity.cut(con$clusters$walktrap$result,40);
+```
+
+The cut determines a finer clustering (likely overclustering) of the dataset on its leafs:
+
+``` r
+con$plotGraph(groups=fc$groups)
+```
+
+![](walkthrough_files/figure-markdown_github/unnamed-chunk-23-1.png)
+
+Let's look at the hierarchical structure of these clusters:
+
+``` r
+# fc$hc is an hclust structure ... here we will convert it to a dendrogram
+dend <- as.dendrogram(fc$hc)
+plot(dend)
+```
+
+![](walkthrough_files/figure-markdown_github/unnamed-chunk-24-1.png)
+
+We can modify the dendrogram to show various properties. For instance, alter the width of the edges to reflect how many samples are contributing to it (normalized entropy). To do so, let's first define a factor specifying which samples different samples came from:
+
+``` r
+samf <- lapply(panel,colnames)
+samf <- as.factor(setNames(rep(names(samf),unlist(lapply(samf,length))),unlist(samf)))
+str(samf)
+```
+
+    ##  Factor w/ 4 levels "MantonBM1_HiSeq_1",..: 1 1 1 1 1 1 1 1 1 1 ...
+    ##  - attr(*, "names")= chr [1:12000] "MantonBM1_HiSeq_1-TCTATTGGTCTCTCGT-1" "MantonBM1_HiSeq_1-GAATAAGTCACGCATA-1" "MantonBM1_HiSeq_1-ACACCGGTCTAACTTC-1" "MantonBM1_HiSeq_1-TCATTTGGTACGCTGC-1" ...
+
+Now we'll use `dend.set.width.by.breadth()` function to calculate the entropies of each edge and set the width accordingly:
+
+``` r
+dend <- dend.set.width.by.breadth(dend,samf,fc$leafContent, min.width=1, max.width=4)
+plot(dend)
+```
+
+![](walkthrough_files/figure-markdown_github/unnamed-chunk-26-1.png)
+
+Similarly, we can finde a factor that labels cells by the tissue they are from (in this case BM or CB). To define the factor for this simple dataset, we'll simply parse the cell names:
+
+``` r
+tissue.factor <- as.factor(setNames( ifelse(grepl('BM',names(samf)),'BM','CB'), names(samf)))
+str(tissue.factor)
+```
+
+    ##  Factor w/ 2 levels "BM","CB": 1 1 1 1 1 1 1 1 1 1 ...
+    ##  - attr(*, "names")= chr [1:12000] "MantonBM1_HiSeq_1-TCTATTGGTCTCTCGT-1" "MantonBM1_HiSeq_1-GAATAAGTCACGCATA-1" "MantonBM1_HiSeq_1-ACACCGGTCTAACTTC-1" "MantonBM1_HiSeq_1-TCATTTGGTACGCTGC-1" ...
+
+Now, let's color the edges according to the tissue mixture:
+
+``` r
+dend <- dend.set.color.by.mixture(dend,tissue.factor,fc$leafContent)
+plot(dend)
+```
+
+![](walkthrough_files/figure-markdown_github/unnamed-chunk-28-1.png)
+
+An alternative way to explore this the hierarchical community structure using an interactive app. The app also allows to visualize tissue composition and sample similarities:
 
 ``` r
 conosShinyApp(con,N=30)
@@ -292,7 +357,7 @@ Next we plot our panel with the annotations we made. This is to verify that the 
 con$plotPanel(groups = cellannot)
 ```
 
-![](walkthrough_files/figure-markdown_github/unnamed-chunk-24-1.png)
+![](walkthrough_files/figure-markdown_github/unnamed-chunk-31-1.png)
 
 Next let's propagaes the labels from the one annotated sample to the other samples.
 
@@ -320,7 +385,7 @@ We not see that all our samples have been labelled automagically!
 con$plotPanel(groups = new.annot)
 ```
 
-![](walkthrough_files/figure-markdown_github/unnamed-chunk-27-1.png)
+![](walkthrough_files/figure-markdown_github/unnamed-chunk-34-1.png)
 
 Differential expression
 =======================
@@ -370,19 +435,19 @@ head(res[order(res$padj,decreasing = FALSE),])
 ```
 
     ##                baseMean log2FoldChange     lfcSE       stat       pvalue
-    ## IGHA1         1988.6809      -9.721541 0.7002776 -13.882411 8.097357e-44
-    ## IGKC          8634.0787      -4.029124 0.4951806  -8.136676 4.062775e-16
-    ## IGHG1          293.8465      -9.831735 1.4256675  -6.896233 5.339965e-12
-    ## RP11-386I14.4  469.0104       2.672992 0.4015934   6.655966 2.814446e-11
-    ## JCHAIN         916.4606      -4.187943 0.6414906  -6.528457 6.645071e-11
-    ## CD69           573.3816       2.408595 0.4055050   5.939742 2.854706e-09
+    ## IGHA1         1983.0691      -9.715248 0.7054260 -13.772171 3.747792e-43
+    ## IGKC          9015.2853      -4.106465 0.4946872  -8.301135 1.031214e-16
+    ## IGHG1          301.3243      -9.860699 1.4277712  -6.906358 4.972546e-12
+    ## RP11-386I14.4  465.7815       2.699831 0.4086164   6.607251 3.915228e-11
+    ## JCHAIN         927.3518      -4.046878 0.6669304  -6.067916 1.295804e-09
+    ## CD69           560.8288       2.386281 0.4073316   5.858325 4.675599e-09
     ##                       padj
-    ## IGHA1         1.199704e-39
-    ## IGKC          3.009704e-12
-    ## IGHG1         2.637231e-08
-    ## RP11-386I14.4 1.042471e-07
-    ## JCHAIN        1.969067e-07
-    ## CD69          7.049220e-06
+    ## IGHA1         5.554603e-39
+    ## IGKC          7.641809e-13
+    ## IGHG1         2.456603e-08
+    ## RP11-386I14.4 1.450690e-07
+    ## JCHAIN        3.841022e-06
+    ## CD69          1.154951e-05
 
 With correction
 ---------------
@@ -402,17 +467,17 @@ res <- as.data.frame(de.multilevel.corrected[['Mono']]$res)
 head(res[order(res$padj,decreasing = FALSE),])
 ```
 
-    ##         baseMean log2FoldChange     lfcSE      stat       pvalue
-    ## IGLC2 3525.05605      -3.869276 0.5481036 -7.059387 1.672384e-12
-    ## HBG2  3054.79282      13.903245 2.1882380  6.353626 2.102984e-10
-    ## IGHG1  134.08108      -7.790745 1.4873106 -5.238142 1.622011e-07
-    ## KCNH2   25.03435      -4.064320 1.0897455 -3.729605 1.917803e-04
-    ## HBG1   474.99775      12.528324 3.4989321  3.580614 3.427883e-04
-    ## ACRBP   25.50719       3.212743 0.8901956  3.609031 3.073434e-04
-    ##               padj
-    ## IGLC2 2.481650e-08
-    ## HBG2  1.560309e-06
-    ## IGHG1 8.023008e-04
-    ## KCNH2 7.114570e-01
-    ## HBG1  8.477726e-01
-    ## ACRBP 8.477726e-01
+    ##                   baseMean log2FoldChange     lfcSE        stat
+    ## IGLC2         3582.7145285    -4.07099665 0.5533496 -7.35700684
+    ## HBG2          3070.8646470    13.91015978 2.1620896  6.43366484
+    ## IGHG1          133.8947183    -7.81967152 1.4867852 -5.25944928
+    ## FO538757.2      38.1706469    -0.23447476 0.6854665 -0.34206595
+    ## AP006222.2       3.3886806     0.11810345 1.8258020  0.06468580
+    ## RP4-669L17.10    0.3601977     0.09915826 4.7822660  0.02073458
+    ##                     pvalue         padj
+    ## IGLC2         1.880797e-13 2.790915e-09
+    ## HBG2          1.245634e-10 9.241979e-07
+    ## IGHG1         1.444875e-07 7.146832e-04
+    ## FO538757.2    7.323013e-01 9.999930e-01
+    ## AP006222.2    9.484242e-01 9.999930e-01
+    ## RP4-669L17.10 9.834574e-01 9.999930e-01
