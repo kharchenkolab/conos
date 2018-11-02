@@ -5,7 +5,7 @@
 \title{Plot panel of specified embeddings, extracting them from pagoda2 objects}
 \usage{
 plotPagodas(pagoda.samples, groups = NULL, colors = NULL, gene = NULL,
-  embedding.type = "tSNE", ...)
+  gradient.range.quantile = 1, embedding.type = "tSNE", ...)
 }
 \arguments{
 \item{pagoda.samples}{list of pagoda2 objects}
@@ -15,6 +15,8 @@ plotPagodas(pagoda.samples, groups = NULL, colors = NULL, gene = NULL,
 \item{colors}{vector of numbers, which must be shouwn with point colors, names contain cell names. This argument is ignored if groups are provided.}
 
 \item{gene}{gene name. If this parameter is provided, points are colored by expression of this gene.}
+
+\item{gradient.range.quantile}{Winsorization quantile for the numeric colors and gene gradient}
 
 \item{embedding.type}{type of pagoda2 embedding}
 }

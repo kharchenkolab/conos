@@ -27,19 +27,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// findBestClusterThreshold
-Rcpp::List findBestClusterThreshold(arma::imat& merges, arma::ivec& clusters, arma::ivec& clusterTotals);
-RcppExport SEXP _conos_findBestClusterThreshold(SEXP mergesSEXP, SEXP clustersSEXP, SEXP clusterTotalsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::imat& >::type merges(mergesSEXP);
-    Rcpp::traits::input_parameter< arma::ivec& >::type clusters(clustersSEXP);
-    Rcpp::traits::input_parameter< arma::ivec& >::type clusterTotals(clusterTotalsSEXP);
-    rcpp_result_gen = Rcpp::wrap(findBestClusterThreshold(merges, clusters, clusterTotals));
-    return rcpp_result_gen;
-END_RCPP
-}
 // cpcaF
 Rcpp::List cpcaF(const arma::cube& cov, const arma::vec& ng, int ncomp, int maxit, double tol, Nullable<NumericMatrix> eigenvR, bool verbose);
 RcppExport SEXP _conos_cpcaF(SEXP covSEXP, SEXP ngSEXP, SEXP ncompSEXP, SEXP maxitSEXP, SEXP tolSEXP, SEXP eigenvRSEXP, SEXP verboseSEXP) {
@@ -74,8 +61,49 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// findBestClusterThreshold
+Rcpp::List findBestClusterThreshold(arma::imat& merges, arma::ivec& clusters, arma::ivec& clusterTotals);
+RcppExport SEXP _conos_findBestClusterThreshold(SEXP mergesSEXP, SEXP clustersSEXP, SEXP clusterTotalsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::imat& >::type merges(mergesSEXP);
+    Rcpp::traits::input_parameter< arma::ivec& >::type clusters(clustersSEXP);
+    Rcpp::traits::input_parameter< arma::ivec& >::type clusterTotals(clusterTotalsSEXP);
+    rcpp_result_gen = Rcpp::wrap(findBestClusterThreshold(merges, clusters, clusterTotals));
+    return rcpp_result_gen;
+END_RCPP
+}
+// scoreTreeConsistency
+Rcpp::List scoreTreeConsistency(arma::imat& test, arma::imat& ref, arma::ivec& leafidmap, int minsize);
+RcppExport SEXP _conos_scoreTreeConsistency(SEXP testSEXP, SEXP refSEXP, SEXP leafidmapSEXP, SEXP minsizeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::imat& >::type test(testSEXP);
+    Rcpp::traits::input_parameter< arma::imat& >::type ref(refSEXP);
+    Rcpp::traits::input_parameter< arma::ivec& >::type leafidmap(leafidmapSEXP);
+    Rcpp::traits::input_parameter< int >::type minsize(minsizeSEXP);
+    rcpp_result_gen = Rcpp::wrap(scoreTreeConsistency(test, ref, leafidmap, minsize));
+    return rcpp_result_gen;
+END_RCPP
+}
+// maxStableClusters
+Rcpp::List maxStableClusters(arma::imat& merges, arma::vec& thresholds, double minthreshold, int minsize);
+RcppExport SEXP _conos_maxStableClusters(SEXP mergesSEXP, SEXP thresholdsSEXP, SEXP minthresholdSEXP, SEXP minsizeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::imat& >::type merges(mergesSEXP);
+    Rcpp::traits::input_parameter< arma::vec& >::type thresholds(thresholdsSEXP);
+    Rcpp::traits::input_parameter< double >::type minthreshold(minthresholdSEXP);
+    Rcpp::traits::input_parameter< int >::type minsize(minsizeSEXP);
+    rcpp_result_gen = Rcpp::wrap(maxStableClusters(merges, thresholds, minthreshold, minsize));
+    return rcpp_result_gen;
+END_RCPP
+}
 // referenceWij
-arma::sp_mat referenceWij(const arma::ivec& i, const arma::ivec& j, arma::vec& d, Rcpp::Nullable<Rcpp::NumericVector> threads, double perplexity);
+arma::sp_mat referenceWij(const arma::ivec& i, const arma::ivec& j, arma::vec& d, Rcpp::Nullable<Rcpp::IntegerVector> threads, double perplexity);
 RcppExport SEXP _conos_referenceWij(SEXP iSEXP, SEXP jSEXP, SEXP dSEXP, SEXP threadsSEXP, SEXP perplexitySEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -83,14 +111,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::ivec& >::type i(iSEXP);
     Rcpp::traits::input_parameter< const arma::ivec& >::type j(jSEXP);
     Rcpp::traits::input_parameter< arma::vec& >::type d(dSEXP);
-    Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::NumericVector> >::type threads(threadsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::IntegerVector> >::type threads(threadsSEXP);
     Rcpp::traits::input_parameter< double >::type perplexity(perplexitySEXP);
     rcpp_result_gen = Rcpp::wrap(referenceWij(i, j, d, threads, perplexity));
     return rcpp_result_gen;
 END_RCPP
 }
 // sgd
-arma::mat sgd(arma::mat& coords, arma::ivec& targets_i, arma::ivec& sources_j, arma::ivec& ps, arma::vec& weights, const double& gamma, const double& rho, const arma::uword& n_samples, const int& M, const double& alpha, const Rcpp::Nullable<Rcpp::NumericVector> momentum, const bool& useDegree, const Rcpp::Nullable<Rcpp::NumericVector> seed, const Rcpp::Nullable<Rcpp::NumericVector> threads, const bool verbose);
+arma::mat sgd(arma::mat& coords, arma::ivec& targets_i, arma::ivec& sources_j, arma::ivec& ps, arma::vec& weights, const double& gamma, const double& rho, const arma::uword& n_samples, const int& M, const double& alpha, const Rcpp::Nullable<Rcpp::NumericVector> momentum, const bool& useDegree, const Rcpp::Nullable<Rcpp::NumericVector> seed, const Rcpp::Nullable<Rcpp::IntegerVector> threads, const bool verbose);
 RcppExport SEXP _conos_sgd(SEXP coordsSEXP, SEXP targets_iSEXP, SEXP sources_jSEXP, SEXP psSEXP, SEXP weightsSEXP, SEXP gammaSEXP, SEXP rhoSEXP, SEXP n_samplesSEXP, SEXP MSEXP, SEXP alphaSEXP, SEXP momentumSEXP, SEXP useDegreeSEXP, SEXP seedSEXP, SEXP threadsSEXP, SEXP verboseSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -108,7 +136,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const Rcpp::Nullable<Rcpp::NumericVector> >::type momentum(momentumSEXP);
     Rcpp::traits::input_parameter< const bool& >::type useDegree(useDegreeSEXP);
     Rcpp::traits::input_parameter< const Rcpp::Nullable<Rcpp::NumericVector> >::type seed(seedSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::Nullable<Rcpp::NumericVector> >::type threads(threadsSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::Nullable<Rcpp::IntegerVector> >::type threads(threadsSEXP);
     Rcpp::traits::input_parameter< const bool >::type verbose(verboseSEXP);
     rcpp_result_gen = Rcpp::wrap(sgd(coords, targets_i, sources_j, ps, weights, gamma, rho, n_samples, M, alpha, momentum, useDegree, seed, threads, verbose));
     return rcpp_result_gen;
@@ -150,8 +178,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // propagate_labels
-Rcpp::NumericMatrix propagate_labels(const Rcpp::StringMatrix& edge_verts, const std::vector<double>& edge_weights, const Rcpp::StringVector& vert_labels, int max_n_iters, bool verbose);
-RcppExport SEXP _conos_propagate_labels(SEXP edge_vertsSEXP, SEXP edge_weightsSEXP, SEXP vert_labelsSEXP, SEXP max_n_itersSEXP, SEXP verboseSEXP) {
+Rcpp::NumericMatrix propagate_labels(const Rcpp::StringMatrix& edge_verts, const std::vector<double>& edge_weights, const Rcpp::StringVector& vert_labels, int max_n_iters, bool verbose, int method, double diffusion_fading, double diffusion_fading_const, double tol);
+RcppExport SEXP _conos_propagate_labels(SEXP edge_vertsSEXP, SEXP edge_weightsSEXP, SEXP vert_labelsSEXP, SEXP max_n_itersSEXP, SEXP verboseSEXP, SEXP methodSEXP, SEXP diffusion_fadingSEXP, SEXP diffusion_fading_constSEXP, SEXP tolSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -160,7 +188,11 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const Rcpp::StringVector& >::type vert_labels(vert_labelsSEXP);
     Rcpp::traits::input_parameter< int >::type max_n_iters(max_n_itersSEXP);
     Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
-    rcpp_result_gen = Rcpp::wrap(propagate_labels(edge_verts, edge_weights, vert_labels, max_n_iters, verbose));
+    Rcpp::traits::input_parameter< int >::type method(methodSEXP);
+    Rcpp::traits::input_parameter< double >::type diffusion_fading(diffusion_fadingSEXP);
+    Rcpp::traits::input_parameter< double >::type diffusion_fading_const(diffusion_fading_constSEXP);
+    Rcpp::traits::input_parameter< double >::type tol(tolSEXP);
+    rcpp_result_gen = Rcpp::wrap(propagate_labels(edge_verts, edge_weights, vert_labels, max_n_iters, verbose, method, diffusion_fading, diffusion_fading_const, tol));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -221,14 +253,16 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_conos_checkBits", (DL_FUNC) &_conos_checkBits, 0},
     {"_conos_checkOpenMP", (DL_FUNC) &_conos_checkOpenMP, 0},
-    {"_conos_findBestClusterThreshold", (DL_FUNC) &_conos_findBestClusterThreshold, 3},
     {"_conos_cpcaF", (DL_FUNC) &_conos_cpcaF, 7},
     {"_conos_greedyModularityCut", (DL_FUNC) &_conos_greedyModularityCut, 7},
+    {"_conos_findBestClusterThreshold", (DL_FUNC) &_conos_findBestClusterThreshold, 3},
+    {"_conos_scoreTreeConsistency", (DL_FUNC) &_conos_scoreTreeConsistency, 4},
+    {"_conos_maxStableClusters", (DL_FUNC) &_conos_maxStableClusters, 4},
     {"_conos_referenceWij", (DL_FUNC) &_conos_referenceWij, 5},
     {"_conos_sgd", (DL_FUNC) &_conos_sgd, 15},
     {"_conos_n2Knn", (DL_FUNC) &_conos_n2Knn, 7},
     {"_conos_n2CrossKnn", (DL_FUNC) &_conos_n2CrossKnn, 8},
-    {"_conos_propagate_labels", (DL_FUNC) &_conos_propagate_labels, 5},
+    {"_conos_propagate_labels", (DL_FUNC) &_conos_propagate_labels, 9},
     {"_conos_smooth_count_matrix", (DL_FUNC) &_conos_smooth_count_matrix, 8},
     {"_conos_adjacent_vertices", (DL_FUNC) &_conos_adjacent_vertices, 1},
     {"_conos_adjacent_vertex_weights", (DL_FUNC) &_conos_adjacent_vertex_weights, 2},

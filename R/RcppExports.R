@@ -9,16 +9,24 @@ checkOpenMP <- function() {
     .Call('_conos_checkOpenMP', PACKAGE = 'conos')
 }
 
-findBestClusterThreshold <- function(merges, clusters, clusterTotals) {
-    .Call('_conos_findBestClusterThreshold', PACKAGE = 'conos', merges, clusters, clusterTotals)
-}
-
 cpcaF <- function(cov, ng, ncomp = 10L, maxit = 1000L, tol = 1e-6, eigenvR = NULL, verbose = TRUE) {
     .Call('_conos_cpcaF', PACKAGE = 'conos', cov, ng, ncomp, maxit, tol, eigenvR, verbose)
 }
 
 greedyModularityCut <- function(merges, deltaM, N, minsize, labels, minbreadth, flatCut) {
     .Call('_conos_greedyModularityCut', PACKAGE = 'conos', merges, deltaM, N, minsize, labels, minbreadth, flatCut)
+}
+
+findBestClusterThreshold <- function(merges, clusters, clusterTotals) {
+    .Call('_conos_findBestClusterThreshold', PACKAGE = 'conos', merges, clusters, clusterTotals)
+}
+
+scoreTreeConsistency <- function(test, ref, leafidmap, minsize = 10L) {
+    .Call('_conos_scoreTreeConsistency', PACKAGE = 'conos', test, ref, leafidmap, minsize)
+}
+
+maxStableClusters <- function(merges, thresholds, minthreshold = 0.8, minsize = 10L) {
+    .Call('_conos_maxStableClusters', PACKAGE = 'conos', merges, thresholds, minthreshold, minsize)
 }
 
 referenceWij <- function(i, j, d, threads, perplexity) {
@@ -37,8 +45,8 @@ n2CrossKnn <- function(mA, mB, k, nThreads = 10L, verbose = TRUE, indexType = "a
     .Call('_conos_n2CrossKnn', PACKAGE = 'conos', mA, mB, k, nThreads, verbose, indexType, M, MaxM0)
 }
 
-propagate_labels <- function(edge_verts, edge_weights, vert_labels, max_n_iters = 10L, verbose = TRUE) {
-    .Call('_conos_propagate_labels', PACKAGE = 'conos', edge_verts, edge_weights, vert_labels, max_n_iters, verbose)
+propagate_labels <- function(edge_verts, edge_weights, vert_labels, max_n_iters = 10L, verbose = TRUE, method = 1L, diffusion_fading = 1.0, diffusion_fading_const = 1e-2, tol = 1e-3) {
+    .Call('_conos_propagate_labels', PACKAGE = 'conos', edge_verts, edge_weights, vert_labels, max_n_iters, verbose, method, diffusion_fading, diffusion_fading_const, tol)
 }
 
 smooth_count_matrix <- function(edge_verts, edge_weights, count_matrix, max_n_iters = 10L, diffusion_fading = 1.0, diffusion_fading_const = 0.1, tol = 1e-3, verbose = TRUE) {

@@ -49,6 +49,10 @@ plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow
     nrow <- ceiling(n.plots / ncol)
   }
 
+  if (is.null(names(embeddings))) {
+    names(embeddings) <- paste(1:length(embeddings))
+  }
+
   plot.list <- lapply(names(embeddings), function(n)
     embeddingPlot(embeddings[[n]], groups=groups, colors=colors, raster=raster,
                   raster.width=panel.size[1] / nrow, raster.height=panel.size[2] / ncol, ...) +
@@ -70,8 +74,9 @@ plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow
 ##' @param pagoda.samples list of pagoda2 objects
 ##' @param gene gene name. If this parameter is provided, points are colored by expression of this gene.
 ##' @param embedding.type type of pagoda2 embedding
+##' @param gradient.range.quantile Winsorization quantile for the numeric colors and gene gradient
 ##' @return ggplot2 object with the panel of plots
-plotPagodas <- function(pagoda.samples, groups=NULL, colors=NULL, gene=NULL, embedding.type='tSNE', ...) {
+plotPagodas <- function(pagoda.samples, groups=NULL, colors=NULL, gene=NULL, gradient.range.quantile=1, embedding.type='tSNE', ...) {
   if (!is.null(groups)) {
     groups <- as.factor(groups)
   }
@@ -88,8 +93,23 @@ plotPagodas <- function(pagoda.samples, groups=NULL, colors=NULL, gene=NULL, emb
   }
 
   if (!is.null(gene)) {
-    colors <- Reduce(c, sapply(pagoda.samples, function(d)
-      if(gene %in% colnames(d$counts)) d$counts[,gene] else stats::setNames(rep(NA,nrow(d$counts)), rownames(d$counts))))
+      colors <- stats::setNames(as.numeric(unlist(unname(lapply(pagoda.samples, function(d) {
+          if(gene %in% colnames(d$counts)) {
+            d$counts[,gene]
+          }  else {
+            rep(NA,nrow(d$counts))
+          }
+      })))),unlist(lapply(pagoda.samples,function(d) rownames(d$counts))))
+  }
+  
+  if(is.numeric(colors) && gradient.range.quantile<1) {
+    x <- colors;
+    zlim <- as.numeric(quantile(x,p=c(1-gradient.range.quantile,gradient.range.quantile),na.rm=TRUE))
+    if(diff(zlim)==0) {
+      zlim <- as.numeric(range(x))
+    }
+    x[x<zlim[1]] <- zlim[1]; x[x>zlim[2]] <- zlim[2];
+    colors <- x;
   }
 
   return(plotEmbeddings(embeddings, groups=groups, colors=colors, ...))
@@ -258,3 +278,130 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
 
   return(gg)
 }
+
+#' Plots barplots per sample of composition of each pagoda2 application based on
+#' selected clustering
+#' @param conosObjs A conos objects
+#' @param type one of 'counts' or 'proportions' to select type of plot
+#' @param clustering name of clustering in the current object
+#' @return a ggplot object 
+plotClusterBarplots <- function(conosObjs, type='counts',clustering=NULL, groups=NULL) {
+    ## param checking
+    #if(is.null(clustering)) clustering <- 'multi level'
+    if(!type %in% c('counts','proportions')) stop('argument type must be either counts or proportions')
+    ## main function
+    if(!is.null(clustering)) {
+        if(clustering %in% names(conosObjs$clusters)) stop('Specified clustering doesn\'t exist')
+        groups <- as.factor(conosObjs$clusters[[clustering]]$groups)
+    } else {
+        if (is.null(groups)) stop('One of clustering or groups needs to be specified')
+        groups <- as.factor(groups)
+    }
+    plot.df <- do.call(rbind,lapply(names(conosObjs$samples), function(n) {
+        o <- conosObjs$samples[[n]]
+        grps1 <- groups[intersect(names(groups), rownames(o$counts))]
+        tbl1 <- data.frame(
+            clname=levels(grps1),
+            val=as.numeric(table(grps1)),
+            sample=c(n),
+            stringsAsFactors = FALSE
+        )
+        if(type=='proportions') {
+            tbl1$val <- tbl1$val / sum(tbl1$val)
+        }
+        tbl1
+    }))
+    gg <- ggplot(plot.df, aes(x=clname,y=val,fill=clname)) + geom_bar(stat='identity') + facet_wrap(~sample)
+    if (type == 'counts') {
+        gg <- gg + scale_y_continuous(name='counts')
+    } else {
+        gg <- gg + scale_y_continuous(name='% of sample')
+    }
+    gg <- gg + scale_x_discrete(name='cluster')
+    gg
+}     
+
+
+#' Generate boxplot per cluster of the proportion of cells in each celltype
+#' @param conosObjs conos object
+#' @param clustering name of the clustering to use
+#' @param apptypes a factor specifying how to group the samples
+#' @param return.details if TRUE return a list with the plot and the summary data.frame
+plotClusterBoxPlotsByAppType <- function(conosObjs, clustering=NULL, apptypes=NULL, return.details=FALSE) {
+    type <- 'proportions'
+    ## param checking
+    if(is.null(clustering)) clustering <- 'multi level'
+    if(is.null(apptypes)) stop('apptypes must be spectified')
+    if(!is.factor(apptypes)) stop('apptypes must be a factor')
+    if(!type %in% c('counts','proportions')) stop('argument type must be either counts or proportions')
+    ## main function
+    groups <- as.factor(conosObjs$clusters[[clustering]]$groups)
+    plot.df <- do.call(rbind,lapply(names(conosObjs$samples), function(n) {
+        o <- conosObjs$samples[[n]]
+        grps1 <- groups[intersect(names(groups), rownames(o$counts))]
+        tbl1 <- data.frame(
+            clname=levels(grps1),
+            val=tabulate(grps1),
+            sample=c(n),
+            stringsAsFactors = FALSE
+        )
+        if(type=='proportions') {
+            tbl1$val <- tbl1$val / sum(tbl1$val)
+        }
+        tbl1
+    }))
+    ## append app type
+    plot.df$apptype <- apptypes[plot.df$sample]
+    ## Make the plot
+    gg <- ggplot(plot.df, aes(x=apptype,y=val,fill=clname)) + facet <- wrap(~clname) + geom <- boxplot()
+    if (type == 'counts') {
+        gg <- gg + scale <- y <- continuous(name='counts')
+    } else {
+        gg <- gg + scale <- y <- continuous(name='% of sample')
+    }
+    gg <- gg + scale <- x <- discrete(name='cluster')
+    ## return
+    if(return.details) {
+        list(plot=gg,data=plot.df)
+    } else {
+        gg
+    }
+}
+
+
+#' Get markers for global clusters
+#' @param conosObjs conos object
+#' @param clustering name of the clustering to use
+#' @param min.samples.expressing minimum number of samples that must have the genes upregulated in the respective cluster
+#' @param min.percent.samples.expression minumum percent of samples that must have the gene upregulated
+getGlobalClusterMarkers <- function(conosObjs, clustering='multi level',
+                                    min.samples.expressing=0,min.percent.samples.expressing=0){
+    ## get the groups from the clusters
+    groups <- as.factor(conosObjs$clusters[[clustering]]$groups)
+    ## de lists
+    delists <- lapply(conosObjs$samples, function(p2) {
+        cells <- rownames(p2$counts)
+        groups.p2 <- groups[cells]
+        de <- p2$getDifferentialGenes(groups=groups.p2)
+        de
+    })
+    ## get de genes per app
+    z <- lapply(namedLevels(groups), function(l) {
+        lapply(delists, function(x) {
+            res <- x[[l]]
+            rownames(res[res$Z > 0,])
+        })
+    })
+    ## get consistent genes for each cluster
+    zp <- lapply(z, function(k) {
+        k <- lapply(k, unique)
+        gns <- factor(unlist(unname(k)))
+        t.gns <- tabulate(gns)
+        names(t.gns) <- levels(gns)
+        t.gns.pc <- t.gns / length(k)
+        ## consistent genes
+        names(t.gns[t.gns >= min.samples.expressing & t.gns.pc >= min.percent.samples.expressing])
+    })
+    ## return consistent genes
+    zp
+}        

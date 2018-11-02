@@ -290,3 +290,312 @@ Rcpp::List greedyModularityCut(arma::imat& merges, arma::vec& deltaM, int N, int
 		      Named("splitsequence")=splitsequence,Named("breadth")=nbreadth);
 		   
 }
+
+
+
+// merges - merge matrix from walktrap -1, clusters - cluster assignment per cell (0:n.clusters-1), clusterTotals - number of cells per cluster
+// [[Rcpp::export]]
+Rcpp::List findBestClusterThreshold(arma::imat& merges, arma::ivec& clusters, arma::ivec& clusterTotals) {
+  int nleafs=merges.n_rows; // number of leafs
+  int nclusters=clusterTotals.n_elem;
+  
+  // allocate answer matrices
+  arma::imat tpn(nclusters,nleafs,arma::fill::zeros); // true positive counts
+  arma::imat tnn(nclusters,nleafs,arma::fill::zeros); // true negative counts
+  arma::mat ot(nclusters,nleafs); // optimal specificity/sensitivity threshold
+  arma::imat oti(nclusters,nleafs); // optimal threshold node id
+  
+  // temp matrices
+  arma::ivec onecol=ones<ivec>(nclusters);
+  arma::mat tot2(nclusters,2); // temp ot-like matrix for calculating optimal thresholds per node
+  
+  // iterate through the merge matrix
+  for(int i=0;i<merges.n_rows;i++) {
+    arma::mat tot(nclusters,3,arma::fill::zeros); // temp ot-like matrix for comparing optimal threshold between nodes
+    arma::imat toti(nclusters,3,arma::fill::zeros); // temp oti-like matrix 
+    for(int j=0;j<2;j++) {
+      int ni= merges(i,j)-nleafs-1;
+      // update count matrices
+      if(ni<0) { // leaf node
+        // adjust tnn: add ones to all entries except for the correct class
+        tnn.col(i)+=onecol;
+        int ci=clusters[merges(i,j)];
+        if(ci>=0) { // not an NA value
+          tnn(ci,i)--;
+          tpn(ci,i)++;
+          tot(ci,j)=1.0/clusterTotals[ci]; // limited by sensitivity (specificity=1)
+          toti(ci,j)=merges(i,j);
+        }
+      } else { // internal node - simply transfer values
+        tnn.col(i)+=tnn.col(ni);
+        tpn.col(i)+=tpn.col(ni);
+        tot.col(j)=ot.col(ni);
+        toti.col(j)=oti.col(ni);
+      }
+    }
+    // recalculate specificity/sensitivity for the merged nodes
+    tot2.col(0)=conv_to<vec>::from(tpn.col(i))/clusterTotals; // sensitivity
+    tot2.col(1)=1.0-conv_to<vec>::from(tnn.col(i))/clusterTotals; // specificity
+    tot.col(2)=min(tot2,1); // report minimal of the sensitivity or specificity achieved
+    toti.col(2).fill(i);
+    uvec mi=index_max(tot,1); // report maximum threshold achieved between leafs and internal nodes
+    // record threshold value and index according to the best threshold
+    for(int j=0;j<mi.n_elem;j++) { 
+      ot(j,i)=tot(j,mi[j]);
+      oti(j,i)=toti(j,mi[j]);
+    }
+  }
+  return List::create(Named("threshold")=ot.col(merges.n_rows-1), Named("node")=oti.col(merges.n_rows-1));
+  //Named("tpn")=tpn,Named("tnn")=tnn,Named("ot")=ot,Named("oti")=oti);
+}
+
+
+// CODE FOR TREE vs. TREE SCORING
+typedef std::unordered_map<int, vector<int> > IIVM;
+
+// a quick helper function to fetch cells from vlabs, looking up membership of missing nodes if needed
+vector<int> get_membership_indices(int node, arma::imat& merges, IIVM& vlabs) {
+  vector<int> labs;
+  int nleafs=merges.n_rows+1; // number of leafs in the tree
+  auto labit=vlabs.find(node);
+  if(labit==vlabs.end()) { // construct
+    //cout<<"fetching memberships for "<<node<<endl;
+    labs=get_leafs_nr(merges,node);
+  } else { 
+    labs=labit->second;
+  }
+  return(labs);
+}
+
+// test - merge matrix from walktrap -1, ref - similar merges matrix for the reference against which to compare
+// idmap - a vector of id mappings from ref to test ids (of the same length as the number of leafs in ref; 0-based); those that do not appear should be negative
+// [[Rcpp::export]]
+Rcpp::List scoreTreeConsistency(arma::imat& test, arma::imat& ref, arma::ivec& leafidmap, int minsize=10) {
+  
+  IIVM vlabs; // a place to store calculated (cell) memberships for each node
+#ifdef DEBUG
+  cout<<"phase I ... "<<flush;
+#endif
+  // phase I: walk up ref tree to form independent clusters of >=mincells
+  int nleafs=ref.n_rows+1; // number of leafs
+  arma::ivec leafcount(ref.n_rows,arma::fill::zeros); // a vector to count number of leafs under each merge
+  arma::ivec lastmerge(ref.n_rows,arma::fill::zeros); // marking whether the node was the last merge
+  for(int i=0;i<ref.n_rows;i++) {
+    bool domerge=false;
+    bool unmerged_child=false;
+    // we will merge 
+    int lc=0;
+    for(int j=0;j<2;j++) {
+      int ni= ref(i,j)-nleafs;
+      // update count matrices
+      if(ni<0) { // leaf node
+        domerge=true;
+        lc++;
+      } else { // inner node
+        if(leafcount[ni] < minsize) {
+          domerge=true;
+        }
+        if(lastmerge[ni]==0) { unmerged_child=true;}
+        lc+=leafcount[ni];
+      }
+    }
+    leafcount[i]=lc;
+    domerge=domerge && !unmerged_child;
+    if(domerge) {
+      for(int j=0;j<2;j++) {
+        int ni= ref(i,j)-nleafs;
+        // update count matrices
+        if(ni>=0) { // leaf node
+          lastmerge[ni]=0;
+        }
+      }
+      lastmerge[i]=1;
+    }
+  }
+#ifdef DEBUG
+  cout<<"done."<<endl;
+#endif
+  arma::ivec factor(test.n_rows+1); 
+  arma::vec thresholds(ref.n_rows,arma::fill::zeros); // a vector to keep final thresholds in
+  bool hadmerges=true;
+  int step=0; // to count interations
+  // phase II: iterative score/merge (iterate between part 1/2 below)
+  // part 1: score with current ref cut
+  while(hadmerges) {
+    // current cut
+    arma::uvec currentCut=find(lastmerge);
+#ifdef DEBUG
+    cout<<"step "<<step<<": "<<currentCut.n_elem<<" clusters. constructing factor ... "<<flush;
+#endif
+    factor.fill(-1); // by default, cells are left unclassified
+    // make up a factor
+    arma::ivec factorTotals(currentCut.n_elem,arma::fill::zeros);
+    for(int i=0;i<currentCut.n_elem;i++) {
+      vector<int> v=get_membership_indices(currentCut[i]+nleafs,ref,vlabs);
+      //if(i<10) cout<<"i="<<i<<" ("<<v.size()<<"):"<<flush;
+      int realsize=0;
+      for(auto j: v) { 
+        if(j>=leafidmap.n_elem) throw std::range_error("requesting out of range node in leafidmap");
+        int ni=leafidmap[j];
+        if(ni> ((int)test.n_rows)) {
+          cout<<"idmap violation at j="<<j<<" ("<<ni<<"); test.n_rows="<<test.n_rows<<' '<<(ni>test.n_rows)<<endl<<flush;
+          throw std::range_error("out of range value in leafidmap "+j); 
+        }
+        //if(i<10) cout<<j<<"="<<ni<<' '<<flush;
+        //if(ni>=0 && factor[ni]>=0) { cout<<"overriding factor["<<ni<<"]="<<(factor[ni])<<" with "<<i<<endl; }
+        
+        if(ni>=0) { factor[ ni ]=i; realsize++; }
+      }
+      factorTotals[i]=realsize;
+      //if(i<10) cout<<endl;
+    }
+#ifdef DEBUG
+    cout<<"done; ";
+    
+    cout<<"scoring ... "<<flush;
+#endif
+    // score current cut
+    Rcpp::List a=findBestClusterThreshold(test, factor, factorTotals);
+    arma::vec currentThresholds = as<arma::vec>(a["threshold"]);
+    
+    
+    // persist thresholds
+    for(int i=0;i<currentCut.n_elem;i++) {
+      thresholds[currentCut[i]]=max(thresholds[currentCut[i]],currentThresholds[i]);
+    }
+    
+    
+    
+#ifdef DEBUG
+    cout<<"merging ... ";
+#endif
+    
+    // step 2: walk up ref tree to merge all independent clusters (i.e. not hitting previously merged nodes, and not merging with unprocesssed nodes)
+    hadmerges=false;
+    int nmerges=0;
+    arma::ivec justmerged(ref.n_rows,arma::fill::zeros);
+    for(int i=0;i<ref.n_rows;i++) {
+      if(lastmerge[i]) continue;
+      int cmerged=0;
+      int cleafs=0;
+      for(int j=0;j<2;j++) {
+        int ni= ref(i,j)-nleafs;
+        if(ni<0) {
+          cleafs++;
+        } else {
+          if(lastmerge[ni] && !justmerged[ni]) cmerged++;
+        }
+      }
+      // merge if one child is a merged node, and
+      //   - the other child is a leaf
+      //   - the other child is another merged node (that wasn't just merged)
+      if(cmerged==2 || (cmerged==1 && cleafs==1)) {
+        // merge
+        for(int j=0;j<2;j++) {
+          int ni= ref(i,j)-nleafs;
+          // update count matrices
+          if(ni>=0) { // inner node
+            lastmerge[ni]=0;
+          }
+        }
+        lastmerge[i]=1;
+        justmerged[i]=1;
+        nmerges++;
+      }
+    }
+#ifdef DEBUG
+    cout<<nmerges<<" merges"<<endl;
+#endif
+    if(nmerges>0) hadmerges=true;
+    step++;
+    if(step>100) break;
+  }
+  
+  return List::create(Named("thresholds")=thresholds,
+                      Named("leafcount")=leafcount);
+  
+}
+
+// given per-merge thresholds, determine max number of independent stable clusters
+// [[Rcpp::export]]
+Rcpp::List maxStableClusters(arma::imat& merges, arma::vec& thresholds, double minthreshold=0.8, int minsize=10) {
+  
+  // phase I: propagate max subtree thresholds up
+  arma::vec maxthreshold(merges.n_rows,arma::fill::zeros);
+  arma::ivec leafcount(merges.n_rows,arma::fill::zeros); // a vector to count number of leafs under each merge
+  arma::ivec wheresmax(merges.n_rows,arma::fill::zeros); //0 - self; 1- right; 2-left;
+  int nleafs=merges.n_rows+1; // number of leafs
+  arma::vec ct(2);
+#ifdef DEBUG
+  cout<<"propagating maxthreshold ... "<<flush;
+#endif
+  for(int i=0;i<merges.n_rows;i++) {
+    int lc=0;
+    for(int j=0;j<2;j++) {
+      int ni= merges(i,j)-nleafs;
+      if(ni<0) { // leaf node
+        lc++;
+        ct[j]=0;
+      } else { // inner node
+        if(leafcount[ni] < minsize) {
+          ct[j]=0;
+        } else {
+          ct[j]=maxthreshold[ni];
+        }
+        lc+=leafcount[ni];
+      }
+    }
+    leafcount[i]=lc;
+    if(lc>=minsize) { 
+      double mct=max(ct);
+      if(thresholds[i]<mct) { // record where the maximum was
+        wheresmax[i]=(ct[1]>ct[0])+1;
+        maxthreshold[i]=mct;
+      } else {
+        maxthreshold[i]=thresholds[i];
+      }
+    } else { // current node is too small
+      maxthreshold[i]=0;
+    }
+#ifdef DEBUG
+    //cout<<i<<":["<<(merges(i,0)-nleafs)<<","<<(merges(i,1)-nleafs)<<"] lc="<<lc<<" th="<<thresholds[i]<<" mth="<<maxthreshold[i]<<endl;
+#endif
+  }
+#ifdef DEBUG
+  cout<<"done"<<endl;
+  cout<<"determining max clusters ... ";
+#endif
+  
+  // phase II: walk downwards
+  arma::uvec x=find(maxthreshold>=minthreshold); 
+  vector<int> terminalnodes; terminalnodes.reserve(x.n_elem);
+  stack<int> s; s.push(merges.n_rows-1 + nleafs); // start with the top merge
+  while(!s.empty()) {
+    int j=s.top(); s.pop();
+    if(j>=nleafs) { // internal node
+      // check if branch if we should continue
+      bool added=false;
+      for(int i=0;i<2;i++) {
+        int ni=merges(j-nleafs,i); 
+        if(ni>=nleafs) { // internal
+          if(maxthreshold[ni-nleafs]  >= minthreshold) {
+             s.push(ni); // will try to split this node in the future
+             added=true;  
+          }
+        } 
+      }
+      if(!added) { // push  as a terminal node
+        terminalnodes.push_back(j);
+      }
+    }
+  }
+#ifdef DEBUG
+  cout<<"done ("<<terminalnodes.size()<<" clusters)"<<endl;
+#endif
+  terminalnodes.shrink_to_fit();
+  
+  return List::create(Named("terminalnodes")=terminalnodes,
+                      Named("maxthreshold")=maxthreshold,
+                      Named("wheresmax")=wheresmax);
+}
+

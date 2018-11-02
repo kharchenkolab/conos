@@ -46,6 +46,8 @@ public:
   {}
 };
 
+void smooth_count_matrix(const std::vector<Edge> &edges, Mat &count_matrix, int max_n_iters, double diffusion_fading, double diffusion_fading_const, double tol, bool verbose);
+
 si_map_t order_strings(const s_vec_t &vec) {
   si_map_t nums;
   for (auto const &s : vec) {
@@ -101,7 +103,8 @@ void propagate_labels(const std::vector<Edge> &edges, std::vector<Vertex> &verti
 }
 
 // [[Rcpp::export]]
-Rcpp::NumericMatrix propagate_labels(const Rcpp::StringMatrix &edge_verts, const std::vector<double> &edge_weights, const Rcpp::StringVector &vert_labels, int max_n_iters=10, bool verbose=true) {
+Rcpp::NumericMatrix propagate_labels(const Rcpp::StringMatrix &edge_verts, const std::vector<double> &edge_weights, const Rcpp::StringVector &vert_labels, int max_n_iters=10, bool verbose=true,
+                                     int method=1, double diffusion_fading=1.0, double diffusion_fading_const=1e-2, double tol=1e-3) {
   if (edge_verts.nrow() != edge_weights.size() || edge_verts.ncol() != 2)
     Rcpp::stop("Incorrect dimension of input vectors");
 
@@ -115,20 +118,32 @@ Rcpp::NumericMatrix propagate_labels(const Rcpp::StringMatrix &edge_verts, const
     vertices.emplace_back(p.first, label_ids.size());
   }
 
+  Mat label_probs = Mat::Zero(vertices.size(), label_ids.size());
   for (size_t i = 0; i < vert_labels.size(); ++i) {
     size_t label_id = label_ids.at(Rcpp::as<std::string>(vert_labels.at(i)));
     size_t vert_id = vertex_ids.at(Rcpp::as<std::string>(Rcpp::as<Rcpp::StringVector>(vert_labels.names()).at(i)));
-    vertices.at(vert_id).label_weights.at(label_id) += 1;
+    vertices.at(vert_id).label_weights.at(label_id) = 1;
+    label_probs(vert_id, label_id) = 1;
   }
 
   // Process data
-  propagate_labels(edges, vertices, max_n_iters, verbose);
+
+  if (method == 1) {
+    propagate_labels(edges, vertices, max_n_iters, verbose);
+  } else {
+    smooth_count_matrix(edges, label_probs, max_n_iters, diffusion_fading, diffusion_fading_const, tol, verbose);
+  }
+
 
   // Convert result back to R
   Rcpp::NumericMatrix res(vertices.size(), label_ids.size());
   for (int v_id = 0; v_id < vertices.size(); ++v_id) {
     for (int l_id = 0; l_id < label_ids.size(); ++l_id) {
-      res(v_id, l_id) = vertices.at(v_id).label_weights.at(l_id);
+      if (method == 1) {
+        res(v_id, l_id) = vertices.at(v_id).label_weights.at(l_id);
+      } else {
+        res(v_id, l_id) = label_probs(v_id, l_id);
+      }
     }
 
     res(v_id, Rcpp::_) = res(v_id, Rcpp::_) / Rcpp::sum(res(v_id, Rcpp::_));

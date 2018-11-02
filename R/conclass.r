@@ -68,10 +68,10 @@ Conos <- setRefClass(
             stop("x is not a list of pagoda2 or Seurat objects")
           }
 
-          if (class(x[[1]]) == 'Pagoda2') { # Pagoda2
+          if (class(x[[1]]) %in% c('Pagoda2', 'seurat')) {
             addSamples(x);
           } else {
-            stop("only pagoda2 result lists are currently supported");
+            stop("only Pagoda2 or Seurat result lists are currently supported");
           }
         }
       }
@@ -111,24 +111,23 @@ Conos <- setRefClass(
       samples <<- c(samples,x);
     },
 
-    updatePairs=function(space='CPCA',ncomps=50,n.odgenes=1e3,var.scale=TRUE,neighborhood.average=FALSE,neighborhood.average.k=10, exclude.pairs=NULL, exclude.samples=NULL, verbose=FALSE) {
+    updatePairs=function(space='CPCA',data.type='counts',ncomps=50,n.odgenes=1e3,var.scale=TRUE,neighborhood.average=FALSE,neighborhood.average.k=10, exclude.pairs=NULL, exclude.samples=NULL, verbose=FALSE) {
       if(neighborhood.average) {
         # pre-calculate averaging matrices for each sample
         if(verbose)  cat("calculating local averaging neighborhoods ")
-        lapply(samples,function(r) {
-          # W: get PCA reduction
-          if(is.null(r$misc$edgeMat$quickCPCA) || r$misc$edgeMat$quickCPCAk != neighborhood.average.k) {
-            xk <- n2Knn(r$reductions$PCA[rownames(r$counts),],neighborhood.average.k,n.cores,FALSE)
-            xk@x <- pmax(1-xk@x,0);
-            diag(xk) <- 1;
-            xk <- t(t(xk)/colSums(xk))
-            colnames(xk) <- rownames(xk) <- rownames(r$counts)
-            # W: store averaging neighborhoods
-            r$misc$edgeMat$quickCPCA <- xk;
-            r$misc$edgeMat$quickCPCAk <- neighborhood.average.k;
-            if(verbose) cat(".")
-          }
-        })
+        for (n in names(samples)) {
+          r <- samples[[n]]
+          if(!is.null(edgeMat(r)$mat) && edgeMat(r)$k != neighborhood.average.k)
+            next
+
+          xk <- n2Knn(getPca(r)[getCellNames(r),],neighborhood.average.k,n.cores,FALSE)
+          xk@x <- pmax(1-xk@x,0);
+          diag(xk) <- 1;
+          xk <- t(t(xk)/colSums(xk))
+          colnames(xk) <- rownames(xk) <- getCellNames(r)
+          edgeMat(samples[[n]]) <<- list(mat=xk, k=neighborhood.average.k)
+          if(verbose) cat(".")
+        }
         if(verbose) cat(" done\n")
       }
 
@@ -137,7 +136,7 @@ Conos <- setRefClass(
       if(!is.null(exclude.samples)) {
         mi <- snam %in% exclude.samples;
         if(verbose) { cat("excluded",sum(mi),"out of",length(snam),"samples, based on supplied exclude.samples\n") }
-        snam <- snam[!vi];
+        snam <- snam[!mi];
       }
       cis <- combn(names(samples),2);
       # TODO: add random subsampling for very large panels
@@ -160,13 +159,13 @@ Conos <- setRefClass(
         if(verbose) cat('running',sum(is.na(mi)),'additional',space,' space pairs ')
         xl2 <- papply(which(is.na(mi)), function(i) {
           if(space=='CPCA') {
-            xcp <- quickCPCA(samples[cis[,i]],k=k,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale,neighborhood.average=neighborhood.average)
+            xcp <- quickCPCA(samples[cis[,i]],data.type=data.type,k=k,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale,neighborhood.average=neighborhood.average)
           } else if(space=='JNMF') {
-            xcp <- quickJNMF(samples[cis[,i]],n.comps=ncomps,n.odgenes=n.odgenes,var.scale=var.scale,verbose=FALSE,max.iter=3e3,neighborhood.average=neighborhood.average)
+            xcp <- quickJNMF(samples[cis[,i]],data.type=data.type,n.comps=ncomps,n.odgenes=n.odgenes,var.scale=var.scale,verbose=FALSE,max.iter=3e3,neighborhood.average=neighborhood.average)
           } else if (space == 'genes') {
-            xcp <- quickNULL(p2.objs = samples[cis[,i]], n.odgenes = n.odgenes, var.scale = var.scale, verbose = FALSE, neighborhood.average=neighborhood.average);
+            xcp <- quickNULL(p2.objs = samples[cis[,i]], data.type=data.type, n.odgenes=n.odgenes, var.scale = var.scale, verbose = FALSE, neighborhood.average=neighborhood.average);
           } else if (space == 'PCA') {
-            xcp <- quickPlainPCA(samples[cis[,i]],k=k,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale,neighborhood.average=neighborhood.average)
+            xcp <- quickPlainPCA(samples[cis[,i]], data.type=data.type, k=k,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale,neighborhood.average=neighborhood.average)
           }
           if(verbose) cat('.')
           xcp
@@ -187,7 +186,7 @@ Conos <- setRefClass(
       return(invisible(cis))
     },
 
-    buildGraph=function(k=30, k.self=10, k.self.weight=0.1, space='CPCA', matching.method='mNN', metric='angular', l2.sigma=1e5, var.scale =TRUE, ncomps=50, n.odgenes=1000, return.details=T,neighborhood.average=FALSE,neighborhood.average.k=10, exclude.pairs=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE) {
+    buildGraph=function(k=15, k.self=10, k.self.weight=0.1, space='CPCA', matching.method='mNN', metric='angular', data.type='counts', l2.sigma=1e5, var.scale =TRUE, ncomps=40, n.odgenes=2000, return.details=T,neighborhood.average=FALSE,neighborhood.average.k=10, exclude.pairs=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE, const.inner.weights=FALSE) {
 
       supported.spaces <- c("CPCA","JNMF","genes","PCA")
       if(!space %in% supported.spaces) {
@@ -204,10 +203,8 @@ Conos <- setRefClass(
         stop(paste0("only the following distance metrics are currently supported: [",paste(supported.metrics,collapse=' '),"]"))
       }
 
-
       # calculate or update pairwise alignments
       cis <- updatePairs(space=space,ncomps=ncomps,n.odgenes=n.odgenes,verbose=verbose,var.scale=var.scale,neighborhood.average=neighborhood.average,neighborhood.average.k=10,exclude.pairs=exclude.pairs,exclude.samples=exclude.samples)
-
 
       # determine inter-sample mapping
       if(verbose) cat('inter-sample links using ',matching.method,' ');
@@ -218,7 +215,7 @@ Conos <- setRefClass(
         i <- match(paste(cis[,j],collapse='.vs.'),names(xl));
         if(is.na(i)) { i <- match(paste(rev(cis[,j]),collapse='.vs.'),names(xl)) }
         if(is.na(i)) { stop(paste("unable to find alignment for pair",paste(cis[,j],collapse='.vs.'))) }
-        
+
         if(space=='JNMF') {
           mnn <- get.neighbor.matrix(xl[[i]]$rot1,xl[[i]]$rot2,k,matching=matching.method,metric=metric,l2.sigma=l2.sigma)
           if(verbose) cat(".")
@@ -226,11 +223,11 @@ Conos <- setRefClass(
           #return(data.frame('mA.lab'=rownames(xl[[i]]$rot1)[mnn@i+1],'mB.lab'=rownames(xl[[i]]$rot2)[mnn@j+1],'w'=1/pmax(1,log(mnn@x)),stringsAsFactors=F))
 
         } else if (space %in% c("CPCA","GSVD","PCA")) {
-          # W: get counts
-          common.genes <- Reduce(intersect,lapply(r.ns,function(x) colnames(x$counts)))
+          #common.genes <- Reduce(intersect,lapply(r.ns, getGenes))
           if(!is.null(xl[[i]]$CPC)) {
             # CPCA or PCA
-            odgenes <- intersect(rownames(xl[[i]]$CPC),common.genes)
+            #odgenes <- intersect(rownames(xl[[i]]$CPC),common.genes)
+            odgenes <- rownames(xl[[i]]$CPC);
             rot <- xl[[i]]$CPC[odgenes,];
           } else if(!is.null(xl[[i]]$o$Q)) {
             # GSVD
@@ -239,31 +236,16 @@ Conos <- setRefClass(
           } else {
             stop("unknown reduction provided")
           }
+
           # TODO: a more careful analysis of parameters used to calculate the cached version
           if(ncomps>ncol(rot)) {
             warning(paste0("specified ncomps (",ncomps,") is greater than the cached version (",ncol(rot),")"))
           } else {
             rot <- rot[,1:ncomps,drop=F]
           }
-          
-          if (var.scale) {
-            # W: get variance scaling
-            cgsf <- do.call(cbind,lapply(r.ns,function(x) x$misc$varinfo[odgenes,]$gsf))
-            cgsf <- exp(rowMeans(log(cgsf)))
-          }
+
           # create matrices, adjust variance
-          cproj <- lapply(r.ns,function(r) {
-            x <- r$counts[,odgenes];
-            if(var.scale) {
-              x@x <- x@x*rep(cgsf,diff(x@p))
-            }
-            if(neighborhood.average) {
-              # W: get neighborhood averaging matrix
-              xk <- r$misc$edgeMat$quickCPCA;
-              x <- t(xk) %*% x
-            }
-            x
-          })
+          cproj <- scaledMatrices(r.ns, data.type=data.type, od.genes=odgenes, var.scale=var.scale, neighborhood.average=neighborhood.average)
           if(common.centering) {
             ncells <- unlist(lapply(cproj,nrow));
             centering <- colSums(do.call(rbind,lapply(cproj,colMeans))*ncells)/sum(ncells)
@@ -278,7 +260,7 @@ Conos <- setRefClass(
           n1 <- cis[1,j]; n2 <- cis[2,j]
           if(verbose) cat(".")
 
-          mnn <- get.neighbor.matrix(cpproj[[n1]],cpproj[[n2]],k,matching=matching.method,metric=metric,l2.sigma=l2.sigma)
+          mnn <- get.neighbor.matrix(cpproj[[n1]], cpproj[[n2]], k, matching=matching.method, metric=metric, l2.sigma=l2.sigma)
           return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=mnn@x,stringsAsFactors=F))
 
         } else if (space=='genes') {
@@ -297,19 +279,25 @@ Conos <- setRefClass(
       if(k.self>0) {
         if(verbose) cat('local pairs ')
         x <- data.frame(do.call(rbind,papply(samples,function(x) {
-          # W: get PCA reduction
-          xk <- n2Knn(x$reductions$PCA,k.self+1,1,FALSE) # +1 accounts for self-edges that will be removed in the next line
+          pca <- getPca(x)
+          xk <- n2Knn(pca,k.self+1,1,FALSE) # +1 accounts for self-edges that will be removed in the next line
           diag(xk) <- 0; # no self-edges
           xk <- as(xk,'dgTMatrix')
           cat(".")
-          return(data.frame('mA.lab'=rownames(x$reductions$PCA)[xk@i+1],'mB.lab'=rownames(x$reductions$PCA)[xk@j+1],'w'=pmax(1-xk@x,0),stringsAsFactors=F))
+          return(data.frame('mA.lab'=rownames(pca)[xk@i+1],'mB.lab'=rownames(pca)[xk@j+1],'w'=pmax(1-xk@x,0),stringsAsFactors=F))
         },n.cores=n.cores)),stringsAsFactors = F)
-        x$w <- k.self.weight
+
+        if (const.inner.weights) {
+          x$w <- k.self.weight
+        } else {
+          x$w <- x$w * k.self.weight
+        }
+
         x$type <- 0;
         cat(' done\n')
         el <- rbind(el,x)
       }
-      # TODO: add edge labels to distinguish inter and intra-sample edges
+
       g  <- graph_from_edgelist(as.matrix(el[,c(1,2)]), directed =FALSE)
       E(g)$weight <- el[,3]
       E(g)$type <- el[,4]
@@ -349,6 +337,7 @@ Conos <- setRefClass(
 
     plotPanel=function(clustering=NULL, groups=NULL, colors=NULL, gene=NULL, embedding.type='tSNE', ncol=NULL, nrow=NULL, raster=FALSE, panel.size=NULL,
                        adjust.func=NULL, use.local.clusters=FALSE, plot.theme=NULL, ...) {
+      # W: clusters and plots
       if (use.local.clusters) {
         if (is.null(clustering)) {
           stop("You have to provide 'clustering' parameter to be able to use local clusters")
@@ -380,16 +369,38 @@ Conos <- setRefClass(
       return(invisible(embedding))
     },
 
-    plotGraph=function(color.by='cluster', clustering=NULL, groups=NULL, colors=NULL, plot.theme=NULL, ...) {
+    plotGraph=function(color.by='cluster', clustering=NULL, groups=NULL, colors=NULL, gradient.range.quantile=1, gene=NULL, plot.theme=NULL, ...) {
       if(class(embedding)[1] == "uninitializedField") {
         embedGraph();
+      }
+
+      if (!is.null(gene)) {
+        colors <- stats::setNames(as.numeric(unlist(unname(lapply(samples, function(d) {
+          if(gene %in% colnames(d$counts)) {
+            d$counts[,gene]
+          }  else {
+            rep(NA,nrow(d$counts))
+          }
+        })))),unlist(lapply(samples,function(d) rownames(d$counts))))
+        
+        if(all(is.na(colors))) warning(paste("gene",gene,"is not found in any of the samples"))
+      }
+      
+      if(is.numeric(colors) && gradient.range.quantile<1) {
+        x <- colors;
+        zlim <- as.numeric(quantile(x,p=c(1-gradient.range.quantile,gradient.range.quantile),na.rm=TRUE))
+        if(diff(zlim)==0) {
+          zlim <- as.numeric(range(x))
+        }
+        x[x<zlim[1]] <- zlim[1]; x[x>zlim[2]] <- zlim[2];
+        colors <- x;
       }
 
       if(is.null(groups) && is.null(colors)) {
         if(color.by == 'cluster') {
           groups <- getClusteringGroups(clusters, clustering)
         } else if(color.by == 'sample') {
-          cl <- lapply(samples, function(x) rownames(x$counts))
+          cl <- lapply(samples, getCellNames)
           groups <- rep(names(cl), sapply(cl, length)) %>% stats::setNames(unlist(cl)) %>% as.factor()
         } else {
           stop('supported values of color.by are ("cluster" and "sample")')
@@ -427,24 +438,33 @@ Conos <- setRefClass(
       return(invisible(expression.adj[[name]] <<- cm))
     },
 
-    propagateLabels=function(labels, max.iters=15, return.distribution=TRUE, verbose=TRUE) {
+    propagateLabels=function(labels, max.iters=15, method=1, diffusion.fading=1.0, diffusion.fading.const=0.05, tol=1e-3, return.distribution=TRUE, verbose=TRUE) {
     "Estimate labeling distribution for each vertex, based on provided labels.\n
      Params:\n
-     - labels: vector of character labels, named by cell names\n
+     - labels: vector of factor or character labels, named by cell names\n
      - max.iters: maximal number of iterations. Default: 15.\n
      - return.distribution: return distribution of labeling, but not single label for each vertex. Default: TRUE.\n
      - verbose: verbose mode. Default: TRUE.\n
      \n
      Return: matrix with distribution of label probabilities for each vertex by rows.
     "
+      if (is.factor(labels)) {
+        labels <- as.character(labels) %>% setNames(names(labels))
+      }
       edges <- igraph::as_edgelist(graph)
       edge.weights <- igraph::edge.attributes(graph)$weight
-      label.distribution <- propagate_labels(edges, edge.weights, vert_labels=labels, max_n_iters=max.iters, verbose=verbose)
+      labels <- labels[intersect(names(labels), igraph::vertex.attributes(graph)$name)]
+
+      label.distribution <- propagate_labels(edges, edge.weights, vert_labels=labels, max_n_iters=max.iters, verbose=verbose,
+                                             method=method, diffusion_fading=diffusion.fading, diffusion_fading_const=diffusion.fading.const,
+                                             tol=tol)
       if (return.distribution) {
         return(label.distribution)
       }
 
-      return(colnames(label.distribution)[apply(label.distribution, 1, which.max)])
+      label.distribution <- colnames(label.distribution)[apply(label.distribution, 1, which.max)] %>%
+        setNames(rownames(label.distribution))
+      return(label.distribution)
     }
   )
 );
@@ -510,7 +530,7 @@ multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=F),
     # get the specified level
     mem <- mt$memberships[level,]; names(mem) <- mt$names;
   }
-    
+
   if(verbose) cat("found",length(unique(mem)),"communities\nrunning walktraps ... ")
 
   # calculate hierarchy on the multilevel clusters
@@ -589,6 +609,71 @@ multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=F),
 
 }
 
+
+##' mutlilevel+multilevel communities
+##'
+##' Constructrs a two-step clustering, first running multilevel.communities, and then walktrap.communities within each
+##' These are combined into an overall hierarchy
+##' @param graph graph
+##' @param n.cores number of cores to use
+##' @param hclust.link link function to use when clustering multilevel communities (based on collapsed graph connectivity)
+##' @param min.community.size minimal community size parameter for the walktrap communities .. communities smaller than that will be merged
+##' @param verbose whether to output progress messages
+##' @param level what level of multitrap clustering to use in the starting step. By default, uses the top level. An integer can be specified for a lower level (i.e. 1).
+##' @param ... passed to walktrap
+##' @return a fakeCommunities object that has methods membership() and as.dendrogram() to mimic regular igraph returns
+##' @export
+multimulti.community <- function(graph, n.cores=parallel::detectCores(logical=F), hclust.link='single', min.community.size=10, verbose=FALSE, level=NULL, ...) {
+  if(verbose) cat("running multilevel 1 ... ");
+  mt <- multilevel.community(graph);
+  
+  if(is.null(level)) {
+    # get higest level (to avoid oversplitting at the initial step)
+    mem <- membership(mt);
+  } else {
+    # get the specified level
+    mem <- mt$memberships[level,]; names(mem) <- mt$names;
+  }
+  
+  if(verbose) cat("found",length(unique(mem)),"communities\nrunning multilevel 2 ... ")
+  
+  # calculate hierarchy on the multilevel clusters
+  cgraph <- get.cluster.graph(graph,mem)
+  chwt <- walktrap.community(cgraph,steps=8)
+  d <- as.dendrogram(chwt);
+  
+  
+  wtl <- conos:::papply(sn(unique(mem)), function(cluster) {
+    cn <- names(mem)[which(mem==cluster)]
+    sg <- induced.subgraph(graph,cn)
+    multilevel.community(induced.subgraph(graph,cn))
+  },n.cores=n.cores)
+  
+  mbl <- lapply(wtl,membership);
+  # correct small communities
+  mbl <- lapply(mbl,function(x) {
+    tx <- table(x)
+    ivn <- names(tx)[tx<min.community.size]
+    if(length(ivn)>1) {
+      x[x %in% ivn] <- as.integer(ivn[1]); # collapse into one group
+    }
+    x
+  })
+  
+  if(verbose) cat("found",sum(unlist(lapply(mbl,function(x) length(unique(x))))),"communities\nmerging ... ")
+  
+  # combined clustering factor
+  fv <- unlist(lapply(sn(names(wtl)),function(cn) {
+    paste(cn,as.character(mbl[[cn]]),sep='-')
+  }))
+  names(fv) <- unlist(lapply(mbl,names))
+  
+  # enclose in a masquerading class
+  res <- list(membership=fv,dendrogram=NULL,algorithm='multimulti');
+  class(res) <- rev("fakeCommunities");
+  return(res);
+  
+}
 
 ##' returns pre-calculated dendrogram
 ##'

@@ -4,8 +4,8 @@
 \alias{quickPlainPCA}
 \title{Use space of combined sample-specific PCAs as a space}
 \usage{
-quickPlainPCA(r.n, k = 30, ncomps = 30, n.odgenes = NULL,
-  var.scale = TRUE, verbose = TRUE, cgsf = NULL,
+quickPlainPCA(r.n, data.type = "counts", k = 30, ncomps = 30,
+  n.odgenes = NULL, var.scale = TRUE, verbose = TRUE,
   neighborhood.average = FALSE, n.cores = 30)
 }
 \arguments{
@@ -21,11 +21,11 @@ quickPlainPCA(r.n, k = 30, ncomps = 30, n.odgenes = NULL,
 
 \item{verbose}{whether to be verbose}
 
-\item{cgsf}{an optional set of common genes to align on}
-
 \item{neighborhood.average}{use neighborhood average values}
 
 \item{n.cores}{number of cores to use}
+
+\item{cgsf}{an optional set of common genes to align on}
 }
 \description{
 Use space of combined sample-specific PCAs as a space

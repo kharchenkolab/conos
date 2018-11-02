@@ -4,9 +4,9 @@
 \alias{quickCPCA}
 \title{Perform cpca on two samples}
 \usage{
-quickCPCA(r.n, k = 30, ncomps = 100, n.odgenes = NULL, var.scale = TRUE,
-  verbose = TRUE, cgsf = NULL, neighborhood.average = FALSE,
-  n.cores = 30)
+quickCPCA(r.n, data.type = "counts", k = 30, ncomps = 100,
+  n.odgenes = NULL, var.scale = TRUE, verbose = TRUE,
+  neighborhood.average = FALSE)
 }
 \arguments{
 \item{r.n}{list of p2 objects}
@@ -20,8 +20,6 @@ quickCPCA(r.n, k = 30, ncomps = 100, n.odgenes = NULL, var.scale = TRUE,
 \item{var.scale}{whether to scale variance (default=TRUE)}
 
 \item{verbose}{whether to be verbose}
-
-\item{cgsf}{an optional set of common genes to align on}
 
 \item{neighborhood.average}{use neighborhood average values}
 

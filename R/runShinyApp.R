@@ -326,9 +326,9 @@ get.greedy.cut.groups <- function(no_clusters=NULL,greedy.modularity.cut.result=
 ##' @param leaf.labels leaf sample label factor, for breadth calculations - must be a named factor containing all wt$names, or if wt$names is null, a factor listing cells in the same order as wt leafs
 ##' @param minsize minimum size of the branch (in number of leafs) 
 ##' @param minbreadth minimum allowed breadth of a branch (measured as normalized entropy)
-##' @param flat.cut
+##' @param flat.cut whether to use a flat cut instead of a dynamic one
 ##' @export
-runShinyApp <- function(con, N=10, leaf.labels=NULL, tissue_mapping=NULL, tissue_factors=NULL, minsize=0, minbreadth=0, flat.cut=FALSE) {
+runShinyApp <- function(con, N=10, leaf.labels=NULL, tissue_mapping=NULL, tissue_factors=NULL, minsize=0, minbreadth=0, flat.cut=TRUE) {
   
   if(is.null(con$clusters$walktrap)) stop("please run findCommunities(method=walktrap.communities) to calculate walktrap clustering first")
   if(is.null(leaf.labels)) {
