@@ -1,4 +1,4 @@
-Conos Walkthrough
+Conos Walkthrough using Seurat
 ================
 
 In this tutorial we will go over the analysis of a panel of samples using conos. Conos objects can be used to identify clusters of corresponding cells across panels of samples from similar or dissimilar sources, with different degrees of cell type overlap. Here we will identify corresponding clusters accorss a panel of bone marrow (BM) and cord blood (CB) by generating a joint graph with the cells from all the samples. We will use the graph to propagate labels from a single labelled sample to other samples and finally perform differential expression between BM and CM samples.
@@ -6,58 +6,14 @@ In this tutorial we will go over the analysis of a panel of samples using conos.
 Preliminary
 ===========
 
-First of all we need to load the libraries we will use, we will need pagoda2, conos and some helper libraries.
+First of all we need to load the libraries we will use, we will need Seurat, conos and some helper libraries.
 
 ``` r
-library(pagoda2)
-```
-
-    ## 
-
-    ## Warning: replacing previous import 'igraph::%>%' by 'magrittr::%>%' when
-    ## loading 'pagoda2'
-
-``` r
+library(Seurat)
 library(conos)
-```
-
-    ## Loading required package: Matrix
-
-    ## Warning: replacing previous import 'igraph::%>%' by 'dplyr::%>%' when
-    ## loading 'conos'
-
-    ## 
-    ## Attaching package: 'conos'
-
-    ## The following objects are masked from 'package:pagoda2':
-    ## 
-    ##     buildWijMatrix, projectKNNs
-
-``` r
 library(igraph)
-```
-
-    ## 
-    ## Attaching package: 'igraph'
-
-    ## The following objects are masked from 'package:stats':
-    ## 
-    ##     decompose, spectrum
-
-    ## The following object is masked from 'package:base':
-    ## 
-    ##     union
-
-``` r
 library(nbHelpers)
 ```
-
-    ## 
-    ## Attaching package: 'nbHelpers'
-
-    ## The following object is masked from 'package:pagoda2':
-    ## 
-    ##     namedNames
 
 Loading the data
 ================
@@ -97,49 +53,34 @@ head(colnames(panel[[1]]))
     ## [5] "MantonBM1_HiSeq_1-TATTACCCAAAGGAAG-1"
     ## [6] "MantonBM1_HiSeq_1-CGCCAAGCATCTGGTA-1"
 
-Next we will subset the panel to just 4 samples. Conos has been tested with 10s of samples, however larger panel sizes increase running time considerably. For brevity we will only use 2 CB and 2 BM samples. After subsetting we will generate pagoda2 apps for these four samples using the basicP2proc function.
+Next we will subset the panel to just 4 samples. Conos has been tested with 10s of samples, however larger panel sizes increase running time considerably. For brevity we will only use 2 CB and 2 BM samples. After subsetting we will generate Seurat objects for these four samples using the basicSeuratProc function.
 
 ``` r
 panel <- panel[c('MantonBM1_HiSeq_1','MantonBM2_HiSeq_1','MantonCB1_HiSeq_1','MantonCB2_HiSeq_1')]
-panel.p2 <- lapply(panel, basicP2proc, n.cores=4, min.cells.per.gene=0)
+panel.seurat <- lapply(panel, basicSeuratProc)
 ```
 
-    ## 3000 cells, 18535 genes; normalizing ... using plain model winsorizing ... log scale ... done.
-    ## calculating variance fit ... using gam 171 overdispersed genes ... 171 persisting ... done.
-    ## running PCA using 3000 OD genes .... done
-    ## Estimating embeddings.
-    ## running tSNE using 4 cores:
-    ## 3000 cells, 17720 genes; normalizing ... using plain model winsorizing ... log scale ... done.
-    ## calculating variance fit ... using gam 159 overdispersed genes ... 159 persisting ... done.
-    ## running PCA using 3000 OD genes .... done
-    ## Estimating embeddings.
-    ## running tSNE using 4 cores:
-    ## 3000 cells, 18672 genes; normalizing ... using plain model winsorizing ... log scale ... done.
-    ## calculating variance fit ... using gam 248 overdispersed genes ... 248 persisting ... done.
-    ## running PCA using 3000 OD genes .... done
-    ## Estimating embeddings.
-    ## running tSNE using 4 cores:
-    ## 3000 cells, 17530 genes; normalizing ... using plain model winsorizing ... log scale ... done.
-    ## calculating variance fit ... using gam 166 overdispersed genes ... 166 persisting ... done.
-    ## running PCA using 3000 OD genes .... done
-    ## Estimating embeddings.
-    ## running tSNE using 4 cores:
+    ## Scaling data matrix
+    ## Scaling data matrix
+    ## Scaling data matrix
 
-Let's look at the output of our processing. We now have a named list of pagoda2 objects, which is the starting point for the analysis with Conos.
+    ## 1 singletons identified. 5 final clusters.
+
+    ## Scaling data matrix
+
+    ## 2 singletons identified. 7 final clusters.
+
+Let's look at the output of our processing. We now have a named list of Seurat objects, which is the starting point for the analysis with Conos.
 
 ``` r
-str(panel.p2,1)
+str(panel.seurat, 1)
 ```
 
     ## List of 4
-    ##  $ MantonBM1_HiSeq_1:Reference class 'Pagoda2' [package "pagoda2"] with 16 fields
-    ##   ..and 34 methods, of which 20 are  possibly relevant
-    ##  $ MantonBM2_HiSeq_1:Reference class 'Pagoda2' [package "pagoda2"] with 16 fields
-    ##   ..and 34 methods, of which 20 are  possibly relevant
-    ##  $ MantonCB1_HiSeq_1:Reference class 'Pagoda2' [package "pagoda2"] with 16 fields
-    ##   ..and 34 methods, of which 20 are  possibly relevant
-    ##  $ MantonCB2_HiSeq_1:Reference class 'Pagoda2' [package "pagoda2"] with 16 fields
-    ##   ..and 34 methods, of which 20 are  possibly relevant
+    ##  $ MantonBM1_HiSeq_1:Formal class 'seurat' [package "Seurat"] with 20 slots
+    ##  $ MantonBM2_HiSeq_1:Formal class 'seurat' [package "Seurat"] with 20 slots
+    ##  $ MantonCB1_HiSeq_1:Formal class 'seurat' [package "Seurat"] with 20 slots
+    ##  $ MantonCB2_HiSeq_1:Formal class 'seurat' [package "Seurat"] with 20 slots
 
 Processing with Conos
 =====================
@@ -147,24 +88,20 @@ Processing with Conos
 We will now construct a Conos object for this panel of samples. At this point we haven't calculated anything. We have just generated an object that contains the samples. Note that at this step we also set the n.cores parameter. The graph generation with Conos can take advantage of parallel processing, so use as many physical cores as you have available here.
 
 ``` r
-con <- Conos$new(panel.p2,n.cores=4)
+con <- Conos$new(panel.seurat,n.cores=1)
 ```
 
-Our original pagoda2 apps are now saved in the conos object (if you are short of memory you can go ahead and delete the originals).
+Our original Seurat objects are now saved in the conos object (if you are short of memory you can go ahead and delete the originals).
 
 ``` r
 str(con$samples,1)
 ```
 
     ## List of 4
-    ##  $ MantonBM1_HiSeq_1:Reference class 'Pagoda2' [package "pagoda2"] with 16 fields
-    ##   ..and 34 methods, of which 20 are  possibly relevant
-    ##  $ MantonBM2_HiSeq_1:Reference class 'Pagoda2' [package "pagoda2"] with 16 fields
-    ##   ..and 34 methods, of which 20 are  possibly relevant
-    ##  $ MantonCB1_HiSeq_1:Reference class 'Pagoda2' [package "pagoda2"] with 16 fields
-    ##   ..and 34 methods, of which 20 are  possibly relevant
-    ##  $ MantonCB2_HiSeq_1:Reference class 'Pagoda2' [package "pagoda2"] with 16 fields
-    ##   ..and 34 methods, of which 20 are  possibly relevant
+    ##  $ MantonBM1_HiSeq_1:Formal class 'seurat' [package "Seurat"] with 20 slots
+    ##  $ MantonBM2_HiSeq_1:Formal class 'seurat' [package "Seurat"] with 20 slots
+    ##  $ MantonCB1_HiSeq_1:Formal class 'seurat' [package "Seurat"] with 20 slots
+    ##  $ MantonCB2_HiSeq_1:Formal class 'seurat' [package "Seurat"] with 20 slots
 
 We can now plot a panel of these samples using the clusters we identified by examining each sample on its own. We note that each sample has an independent set of clusters that bears no relationship to clusters in other sample (for example note cluster 9).
 
@@ -172,17 +109,28 @@ We can now plot a panel of these samples using the clusters we identified by exa
 con$plotPanel(clustering="multilevel", use.local.clusters=T, title.size=6)
 ```
 
-![](Conos_Walkthrough_files/figure-markdown_github/unnamed-chunk-9-1.png)
+    ## Warning in FUN(X[[i]], ...): Seurat support only single type of clustering
+
+    ## Warning in FUN(X[[i]], ...): Seurat support only single type of clustering
+
+    ## Warning in FUN(X[[i]], ...): Seurat support only single type of clustering
+
+    ## Warning in FUN(X[[i]], ...): Seurat support only single type of clustering
+
+![](Conos_Walkthrough_Seurat_files/figure-markdown_github/unnamed-chunk-9-1.png)
 
 Next we will build the graph emcompasses all the samples. We do that by pairwise projecting samples onto a common space and establishing KNN of mNN pairs between the samples. We then append iwthin sample KNN neighbours to the graph to ensure that all the cell are included in the graph.
 
 ``` r
-con$buildGraph(k=30, k.self=10, k.self.weight=0.1, space='PCA', matching.method='mNN', metric='angular', data.type='counts', l2.sigma=1e5, var.scale =TRUE, ncomps=50, n.odgenes=1000, return.details=T,neighborhood.average=FALSE,neighborhood.average.k=10, exclude.pairs=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE)
+con$buildGraph(k=30, k.self=10, k.self.weight=0.1, space='PCA', matching.method='mNN', metric='angular', 
+               data.type='counts', l2.sigma=1e5, var.scale=FALSE, ncomps=50, n.odgenes=1000, return.details=T,
+               neighborhood.average=FALSE,neighborhood.average.k=10, exclude.pairs=NULL, exclude.samples=NULL, 
+               common.centering=TRUE , verbose=TRUE)
 ```
 
-    ## found 0 out of 6 cached PCA  space pairs ... running 6 additional PCA  space pairs  done
-    ## inter-sample links using  mNN   done
-    ## local pairs  done
+    ## found 0 out of 6 cached PCA  space pairs ... running 6 additional PCA  space pairs ...... done
+    ## inter-sample links using  mNN  ...... done
+    ## local pairs .... done
 
 We next use the graph we identified to get global clusters. Here we use mutlievel to obtain clusters.
 
@@ -196,7 +144,7 @@ We can now plot the clusters we obtained. Note that the cluster numbers between 
 con$plotPanel(font.size=4)
 ```
 
-![](Conos_Walkthrough_files/figure-markdown_github/unnamed-chunk-12-1.png)
+![](Conos_Walkthrough_Seurat_files/figure-markdown_github/unnamed-chunk-12-1.png)
 
 Check an expression pattern of a specific gene across all the individual embeddings.
 
@@ -204,7 +152,7 @@ Check an expression pattern of a specific gene across all the individual embeddi
 con$plotPanel(gene = 'GZMK')
 ```
 
-![](Conos_Walkthrough_files/figure-markdown_github/unnamed-chunk-13-1.png)
+![](Conos_Walkthrough_Seurat_files/figure-markdown_github/unnamed-chunk-13-1.png)
 
 Next we embed and visualize the complete joint graph:
 
@@ -214,7 +162,7 @@ con$plotGraph()
 
     ## Estimating embeddings.
 
-![](Conos_Walkthrough_files/figure-markdown_github/unnamed-chunk-14-1.png)
+![](Conos_Walkthrough_Seurat_files/figure-markdown_github/unnamed-chunk-14-1.png)
 
 We note that the graph captures the population structure irrespecively of the sample of origin of each cell.
 
@@ -222,7 +170,7 @@ We note that the graph captures the population structure irrespecively of the sa
 con$plotGraph(color.by='sample',mark.groups=F,alpha=0.1,show.legend=T)
 ```
 
-![](Conos_Walkthrough_files/figure-markdown_github/unnamed-chunk-15-1.png)
+![](Conos_Walkthrough_Seurat_files/figure-markdown_github/unnamed-chunk-15-1.png)
 
 Other community detection methods can provide a more sensitive and hierarchical view of the subpopulation structure. Here we run walktrap community detection method on the same joint graph:
 
@@ -236,7 +184,7 @@ Visualize new clusters:
 con$plotPanel(clustering='walktrap',font.size=4)
 ```
 
-![](Conos_Walkthrough_files/figure-markdown_github/unnamed-chunk-17-1.png)
+![](Conos_Walkthrough_Seurat_files/figure-markdown_github/unnamed-chunk-17-1.png)
 
 New clustering, as viewed on a joint graph:
 
@@ -244,7 +192,7 @@ New clustering, as viewed on a joint graph:
 con$plotGraph(clustering='walktrap')
 ```
 
-![](Conos_Walkthrough_files/figure-markdown_github/unnamed-chunk-18-1.png)
+![](Conos_Walkthrough_Seurat_files/figure-markdown_github/unnamed-chunk-18-1.png)
 
 Label propagation
 =================
@@ -252,6 +200,23 @@ Label propagation
 One of the uses of this graph is to propagate labels. For example in some cases we will only have information about the cell types in one of the samples and we want to automatically label the other samples.
 
 Load cell annotation for one of the samples. Here we are loading annotations we generated with the pagoda2 web tool. We first load the annotations, but because we made the with the lasso tool there is no guarantee that some cells are not included in multiple selctions. For this reason we use removeSelectionOverlaps before conversing the selections to a factor that we can use downstream.
+
+``` r
+library(pagoda2)
+```
+
+    ## 
+
+    ## 
+    ## Attaching package: 'pagoda2'
+
+    ## The following object is masked from 'package:nbHelpers':
+    ## 
+    ##     namedNames
+
+    ## The following objects are masked from 'package:conos':
+    ## 
+    ##     buildWijMatrix, projectKNNs
 
 ``` r
 cellannot <- readPagoda2SelectionFile(file.path(find.package('conos'),'extdata','selections.txt'))
@@ -265,7 +230,7 @@ Next we plot our panel with the annotations we made. This is to verify that the 
 con$plotPanel(groups = cellannot)
 ```
 
-![](Conos_Walkthrough_files/figure-markdown_github/unnamed-chunk-20-1.png)
+![](Conos_Walkthrough_Seurat_files/figure-markdown_github/unnamed-chunk-20-1.png)
 
 Next let's propagaes the labels from the one annotated sample to the other samples.
 
@@ -284,11 +249,11 @@ names(new.annot) <- rownames(new.label.probabilities)
 head(new.annot)
 ```
 
-    ## MantonBM1_HiSeq_1-AGGGATGCAGGTGCCT-1 MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 
+    ## MantonBM1_HiSeq_1-ATAGACCCAAAGTCAA-1 MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 
     ##                              "Tcyto"                              "Tcyto" 
-    ## MantonBM1_HiSeq_1-GTAACTGCAGATCCAT-1 MantonBM1_HiSeq_1-CAAGATCTCTGAGTGT-1 
+    ## MantonBM1_HiSeq_1-GGTGTTACAAATACAG-1 MantonBM2_HiSeq_1-GGAAAGCCAGACGCCT-1 
     ##                              "Tcyto"                              "Tcyto" 
-    ## MantonBM2_HiSeq_1-GGAAAGCCAGACGCCT-1 MantonBM1_HiSeq_1-ACACCGGAGTAACCCT-1 
+    ## MantonBM1_HiSeq_1-ACACCGGAGTAACCCT-1 MantonBM1_HiSeq_1-AAAGTAGAGTTAGGTA-1 
     ##                              "Tcyto"                              "Tcyto"
 
 We not see that all our samples have been labelled automagically!
@@ -297,7 +262,7 @@ We not see that all our samples have been labelled automagically!
 con$plotPanel(groups = new.annot)
 ```
 
-![](Conos_Walkthrough_files/figure-markdown_github/unnamed-chunk-23-1.png)
+![](Conos_Walkthrough_Seurat_files/figure-markdown_github/unnamed-chunk-23-1.png)
 
 Differential expression
 =======================
@@ -327,15 +292,15 @@ str(de.multilevel[1:3], 2)
 
     ## List of 3
     ##  $ Bcells:List of 3
-    ##   ..$ res         :'data.frame': 15032 obs. of  6 variables:
+    ##   ..$ res         :'data.frame': 33694 obs. of  6 variables:
     ##   ..$ cm          :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
     ##   ..$ sample.groups:List of 2
     ##  $ Mono  :List of 3
-    ##   ..$ res         :'data.frame': 15032 obs. of  6 variables:
+    ##   ..$ res         :'data.frame': 33694 obs. of  6 variables:
     ##   ..$ cm          :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
     ##   ..$ sample.groups:List of 2
     ##  $ Tcyto :List of 3
-    ##   ..$ res         :'data.frame': 15032 obs. of  6 variables:
+    ##   ..$ res         :'data.frame': 33694 obs. of  6 variables:
     ##   ..$ cm          :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
     ##   ..$ sample.groups:List of 2
 
@@ -346,20 +311,20 @@ res <- de.multilevel[['Bcells']]$res
 head(res[order(res$padj,decreasing = FALSE),])
 ```
 
-    ##                baseMean log2FoldChange     lfcSE       stat       pvalue
-    ## JCHAIN         767.7050      -4.663820 0.4321216 -10.792842 3.721025e-27
-    ## IGKC          6221.7068      -3.565991 0.4312053  -8.269820 1.341612e-16
-    ## IGHA1         1797.2574     -13.915045 1.9554493  -7.116034 1.110765e-12
-    ## HBG2          4343.2021      11.461933 1.6753089   6.841683 7.826815e-12
-    ## IGHG1          328.2118     -10.051699 1.4653478  -6.859600 6.905386e-12
-    ## RP11-386I14.4  464.4805       2.670045 0.4179233   6.388839 1.671497e-10
-    ##                       padj
-    ## JCHAIN        5.535025e-23
-    ## IGKC          9.978242e-13
-    ## IGHA1         5.507545e-09
-    ## HBG2          2.328477e-08
-    ## IGHG1         2.328477e-08
-    ## RP11-386I14.4 4.143920e-07
+    ##         baseMean log2FoldChange     lfcSE       stat       pvalue
+    ## IGHA1  2094.8248      -8.141678 0.5234152 -15.554912 1.473570e-54
+    ## JCHAIN  760.1903      -4.299006 0.3848416 -11.170846 5.663874e-29
+    ## IGKC   8705.8679      -3.645077 0.3820065  -9.541923 1.402074e-21
+    ## HBG1    318.6680       5.524080 0.5938488   9.302167 1.376123e-20
+    ## IGHG2   163.2012      -5.116896 0.5847507  -8.750560 2.122964e-18
+    ## IGHG3   173.6593      -5.218898 0.5993574  -8.707489 3.106810e-18
+    ##                padj
+    ## IGHA1  2.631944e-50
+    ## JCHAIN 5.058123e-25
+    ## IGKC   8.347479e-18
+    ## HBG1   6.144734e-17
+    ## IGHG2  7.583653e-15
+    ## IGHG3  9.248456e-15
 
 With correction
 ---------------
@@ -380,17 +345,17 @@ res <- as.data.frame(de.multilevel.corrected[['Mono']]$res)
 head(res[order(res$padj,decreasing = FALSE),])
 ```
 
-    ##        baseMean log2FoldChange     lfcSE      stat       pvalue
-    ## APOC1  47.74995      -8.773700 1.5279227 -5.742240 9.343201e-09
-    ## MPO    25.56018      -4.927059 1.0865772 -4.534477 5.774648e-06
-    ## CDC20  17.45361      -5.509215 1.2398522 -4.443445 8.852984e-06
-    ## CCNA2  16.47920      -4.542436 1.1499688 -3.950051 7.813448e-05
-    ## CDK1   15.39750      -4.370825 1.1978772 -3.648809 2.634588e-04
-    ## AKR1C3 24.39723      -3.503196 0.9838868 -3.560568 3.700540e-04
-    ##               padj
-    ## APOC1  0.000138214
-    ## MPO    0.042712181
-    ## CDC20  0.043654066
-    ## CCNA2  0.288960828
-    ## CDK1   0.779469268
-    ## AKR1C3 0.782029897
+    ##                  baseMean log2FoldChange     lfcSE       stat       pvalue
+    ## IGHG1         382.7984835    -2.62652709 0.3505273 -7.4930751 6.727838e-14
+    ## MPO            55.2243158    -2.15591128 0.3505292 -6.1504466 7.726509e-10
+    ## VPREB1         45.2781660    -2.07043323 0.3499366 -5.9165961 3.286725e-09
+    ## HBG2         6414.9274842     1.60130163 0.3360086  4.7656560 1.882402e-06
+    ## RP11-34P13.7    0.4297812    -0.03504064 0.1094168 -0.3202491 7.487795e-01
+    ## FO538757.2     32.4788075    -0.05625917 0.3503150 -0.1605959 8.724117e-01
+    ##                      padj
+    ## IGHG1        1.203543e-09
+    ## MPO          6.910976e-06
+    ## VPREB1       1.959874e-05
+    ## HBG2         8.418572e-03
+    ## RP11-34P13.7 9.999965e-01
+    ## FO538757.2   9.999965e-01

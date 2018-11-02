@@ -38,7 +38,7 @@ devtools::install_github("hms-dbmi/conos")
 ## Usage example
 Please see [walkthrough](http://pklab.med.harvard.edu/peterk/conos/walkthrough.nb.html) for an example of Conos analysis.
 
-A newer and more comprehensive tutorial is available [here](vignettes/Conos_Walkthrough.md)
+A newer and more comprehensive tutorial is available [here](vignettes/Conos_Walkthrough.md), as well as slightly adjusted [version](https://github.com/hms-dbmi/conos/blob/dev/vignettes/Conos_Walkthrough.md) for Seurat.
 
 Given a list of individual processed samples (`pl`), Conos processing can be as simple as this:
 ```r

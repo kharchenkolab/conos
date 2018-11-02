@@ -45,12 +45,12 @@ n2CrossKnn <- function(mA, mB, k, nThreads = 10L, verbose = TRUE, indexType = "a
     .Call('_conos_n2CrossKnn', PACKAGE = 'conos', mA, mB, k, nThreads, verbose, indexType, M, MaxM0)
 }
 
-propagate_labels <- function(edge_verts, edge_weights, vert_labels, max_n_iters = 10L, verbose = TRUE, method = 1L, diffusion_fading = 1.0, diffusion_fading_const = 1e-2, tol = 1e-3) {
+propagate_labels <- function(edge_verts, edge_weights, vert_labels, max_n_iters = 10L, verbose = TRUE, method = 1L, diffusion_fading = 10, diffusion_fading_const = 0.5, tol = 5e-3) {
     .Call('_conos_propagate_labels', PACKAGE = 'conos', edge_verts, edge_weights, vert_labels, max_n_iters, verbose, method, diffusion_fading, diffusion_fading_const, tol)
 }
 
-smooth_count_matrix <- function(edge_verts, edge_weights, count_matrix, max_n_iters = 10L, diffusion_fading = 1.0, diffusion_fading_const = 0.1, tol = 1e-3, verbose = TRUE) {
-    .Call('_conos_smooth_count_matrix', PACKAGE = 'conos', edge_verts, edge_weights, count_matrix, max_n_iters, diffusion_fading, diffusion_fading_const, tol, verbose)
+smooth_count_matrix <- function(edge_verts, edge_weights, count_matrix, max_n_iters = 10L, diffusion_fading = 1.0, diffusion_fading_const = 0.1, tol = 1e-3, verbose = TRUE, normalize = FALSE) {
+    .Call('_conos_smooth_count_matrix', PACKAGE = 'conos', edge_verts, edge_weights, count_matrix, max_n_iters, diffusion_fading, diffusion_fading_const, tol, verbose, normalize)
 }
 
 adjacent_vertices <- function(edge_verts) {

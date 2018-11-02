@@ -22,6 +22,14 @@ getClusteringGroups <- function(clusters, clustering) {
   return(clusters[[clustering]]$groups)
 }
 
+getGeneExpression <- function(count.matrix, gene) {
+  if(gene %in% rownames(count.matrix)) {
+    return(count.matrix[gene,])
+  }
+
+  return(stats::setNames(rep(NA, ncol(count.matrix)), colnames(count.matrix)))
+}
+
 ##' Plot panel of specified embeddings
 ##'
 ##' @inheritParams embeddingPlot
@@ -31,7 +39,8 @@ getClusteringGroups <- function(clusters, clustering) {
 ##' @param panel.size vector with two numbers, which specified (width, height) of the panel in inches. Ignored if raster == FALSE.
 ##' @param adjust.func function to adjust plots before combining them to single panel. Can be used, for example, to provide color pallette of guides of the plots.
 ##' @return ggplot2 object with the panel of plots
-plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow=NULL, raster=FALSE, panel.size=NULL, adjust.func=NULL, title.size=6, ...) {
+plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow=NULL, raster=FALSE, panel.size=NULL, adjust.func=NULL, title.size=6,
+                           raster.width=NULL, raster.height=NULL, ...) {
   if (is.null(panel.size)) {
     panel.size <- dev.size(units="in")
   } else if (length(panel.size) == 1) {
@@ -53,9 +62,17 @@ plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow
     names(embeddings) <- paste(1:length(embeddings))
   }
 
+  if (is.null(raster.width)) {
+    raster.width <- panel.size[1] / nrow
+  }
+
+  if (is.null(raster.height)) {
+    raster.height <- panel.size[2] / ncol
+  }
+
   plot.list <- lapply(names(embeddings), function(n)
     embeddingPlot(embeddings[[n]], groups=groups, colors=colors, raster=raster,
-                  raster.width=panel.size[1] / nrow, raster.height=panel.size[2] / ncol, ...) +
+                  raster.width=raster.width, raster.height=raster.height, ...) +
       ggplot2::geom_label(data=data.frame(x=-Inf, y=Inf, label=n), mapping=ggplot2::aes(x=x, y=y, label=label),
                           fill=ggplot2::alpha("white", 0.6), hjust=0, vjust=1, size=title.size,
                           label.padding=ggplot2::unit(title.size / 4, "pt"), label.size = NA)
@@ -71,17 +88,20 @@ plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow
 ##' Plot panel of specified embeddings, extracting them from pagoda2 objects
 ##'
 ##' @inheritParams plotEmbeddings
-##' @param pagoda.samples list of pagoda2 objects
+##' @param samples list of pagoda2 or Seurat objects
 ##' @param gene gene name. If this parameter is provided, points are colored by expression of this gene.
-##' @param embedding.type type of pagoda2 embedding
-##' @param gradient.range.quantile Winsorization quantile for the numeric colors and gene gradient
+##' @param embedding.type type of embedding. Default: tSNE.
 ##' @return ggplot2 object with the panel of plots
-plotPagodas <- function(pagoda.samples, groups=NULL, colors=NULL, gene=NULL, gradient.range.quantile=1, embedding.type='tSNE', ...) {
+plotSamples <- function(samples, groups=NULL, colors=NULL, gene=NULL, embedding.type=NULL, ...) {
   if (!is.null(groups)) {
     groups <- as.factor(groups)
   }
 
-  embeddings <- lapply(pagoda.samples, function(s) s$embeddings$PCA[[embedding.type]])
+  if (is.null(embedding.type)) {
+    embedding.type <- if ('seurat' %in% class(samples[[1]])) "tsne" else "tSNE"
+  }
+
+  embeddings <- lapply(samples, getEmbedding, embedding.type)
   no.embedding <- sapply(embeddings, is.null)
   if (all(no.embedding)) {
     stop(paste0("No '", embedding.type, "' embedding presented in the samples"))
@@ -93,23 +113,7 @@ plotPagodas <- function(pagoda.samples, groups=NULL, colors=NULL, gene=NULL, gra
   }
 
   if (!is.null(gene)) {
-      colors <- stats::setNames(as.numeric(unlist(unname(lapply(pagoda.samples, function(d) {
-          if(gene %in% colnames(d$counts)) {
-            d$counts[,gene]
-          }  else {
-            rep(NA,nrow(d$counts))
-          }
-      })))),unlist(lapply(pagoda.samples,function(d) rownames(d$counts))))
-  }
-  
-  if(is.numeric(colors) && gradient.range.quantile<1) {
-    x <- colors;
-    zlim <- as.numeric(quantile(x,p=c(1-gradient.range.quantile,gradient.range.quantile),na.rm=TRUE))
-    if(diff(zlim)==0) {
-      zlim <- as.numeric(range(x))
-    }
-    x[x<zlim[1]] <- zlim[1]; x[x>zlim[2]] <- zlim[2];
-    colors <- x;
+    colors <- lapply(samples, getCountMatrix) %>% lapply(getGeneExpression, gene) %>% Reduce(c, .)
   }
 
   return(plotEmbeddings(embeddings, groups=groups, colors=colors, ...))
@@ -135,17 +139,30 @@ plotPagodas <- function(pagoda.samples, groups=NULL, colors=NULL, gene=NULL, gra
 ##' @param show.ticks show ticks and tick labels
 ##' @param legend.position vector with (x, y) positions of the legend
 ##' @param legend.title legend title
+##' @param gradient.range.quantile Winsorization quantile for the numeric colors and gene gradient
 ##' @param raster should layer with the points be rasterized (TRUE/ FALSE)? Setting of this argument to TRUE is useful when you need to export a plot with large number of points
 ##' @param raster.width width of the plot in inches. Ignored if raster == FALSE.
 ##' @param raster.height height of the plot in inches. Ignored if raster == FALSE.
 ##' @param raster.dpi dpi of the rasterized plot. Ignored if raster == FALSE.
+##' @param shuffle.colors shuffle colors
 ##' @return ggplot2 object
 ##' @export
 embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min.cluster.size=0, mark.groups=TRUE,
                           show.legend=FALSE, alpha=0.4, size=0.8, title=NULL, plot.theme=NULL, palette=NULL, color.range="all",
                           font.size=c(3, 7), show.ticks=FALSE, show.labels=FALSE, legend.position=NULL, legend.title=NULL,
-                          raster=FALSE, raster.width=NULL, raster.height=NULL, raster.dpi=300, shuffle.colors=FALSE,
-                         ...) {
+                          gradient.range.quantile=1, raster=FALSE, raster.width=NULL, raster.height=NULL, raster.dpi=300,
+                          shuffle.colors=FALSE,
+                          ...) {
+  if(is.numeric(colors) && gradient.range.quantile < 1) {
+    x <- colors;
+    zlim <- as.numeric(quantile(x, p=c(1 - gradient.range.quantile, gradient.range.quantile), na.rm=TRUE))
+    if(diff(zlim)==0) {
+      zlim <- as.numeric(range(x))
+    }
+    x[x<zlim[1]] <- zlim[1]; x[x>zlim[2]] <- zlim[2];
+    colors <- x;
+  }
+
   labels <- ggplot2::labs(x='Component 1', y='Component 2')
   plot.df <- tibble::rownames_to_column(as.data.frame(embedding), "CellName")
   colnames(plot.df)[2:3] <- c("x", "y")
@@ -237,8 +254,6 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
     if (!is.null(legend.title)) {
       gg <- gg + ggplot2::guides(color=ggplot2::guide_colorbar(title=legend.title))
     }
-
-
   } else {
     gg <- ggplot2::ggplot(plot.df, ggplot2::aes(x=x, y=y)) +
       geom_point_w(alpha=alpha, size=size) +
@@ -284,7 +299,7 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
 #' @param conosObjs A conos objects
 #' @param type one of 'counts' or 'proportions' to select type of plot
 #' @param clustering name of clustering in the current object
-#' @return a ggplot object 
+#' @return a ggplot object
 plotClusterBarplots <- function(conosObjs, type='counts',clustering=NULL, groups=NULL) {
     ## param checking
     #if(is.null(clustering)) clustering <- 'multi level'
@@ -319,7 +334,7 @@ plotClusterBarplots <- function(conosObjs, type='counts',clustering=NULL, groups
     }
     gg <- gg + scale_x_discrete(name='cluster')
     gg
-}     
+}
 
 
 #' Generate boxplot per cluster of the proportion of cells in each celltype
@@ -404,4 +419,4 @@ getGlobalClusterMarkers <- function(conosObjs, clustering='multi level',
     })
     ## return consistent genes
     zp
-}        
+}
