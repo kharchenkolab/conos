@@ -15,7 +15,6 @@ Imports:
   Rcpp,
   RcppArmadillo,
   RcppProgress,
-  RMTstat,
   Rtsne,
   parallel,
   stats,
