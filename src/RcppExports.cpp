@@ -45,8 +45,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // greedyModularityCut
-Rcpp::List greedyModularityCut(arma::imat& merges, arma::vec& deltaM, int N, int minsize, arma::ivec& labels, double minbreadth);
-RcppExport SEXP _conos_greedyModularityCut(SEXP mergesSEXP, SEXP deltaMSEXP, SEXP NSEXP, SEXP minsizeSEXP, SEXP labelsSEXP, SEXP minbreadthSEXP) {
+Rcpp::List greedyModularityCut(arma::imat& merges, arma::vec& deltaM, int N, int minsize, arma::ivec& labels, double minbreadth, bool flatCut);
+RcppExport SEXP _conos_greedyModularityCut(SEXP mergesSEXP, SEXP deltaMSEXP, SEXP NSEXP, SEXP minsizeSEXP, SEXP labelsSEXP, SEXP minbreadthSEXP, SEXP flatCutSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -56,7 +56,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type minsize(minsizeSEXP);
     Rcpp::traits::input_parameter< arma::ivec& >::type labels(labelsSEXP);
     Rcpp::traits::input_parameter< double >::type minbreadth(minbreadthSEXP);
-    rcpp_result_gen = Rcpp::wrap(greedyModularityCut(merges, deltaM, N, minsize, labels, minbreadth));
+    Rcpp::traits::input_parameter< bool >::type flatCut(flatCutSEXP);
+    rcpp_result_gen = Rcpp::wrap(greedyModularityCut(merges, deltaM, N, minsize, labels, minbreadth, flatCut));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -196,8 +197,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // smooth_count_matrix
-SEXP smooth_count_matrix(const Rcpp::StringMatrix& edge_verts, const std::vector<double>& edge_weights, const Rcpp::NumericMatrix& count_matrix, int max_n_iters, double diffusion_fading, double diffusion_fading_const, double tol, bool verbose);
-RcppExport SEXP _conos_smooth_count_matrix(SEXP edge_vertsSEXP, SEXP edge_weightsSEXP, SEXP count_matrixSEXP, SEXP max_n_itersSEXP, SEXP diffusion_fadingSEXP, SEXP diffusion_fading_constSEXP, SEXP tolSEXP, SEXP verboseSEXP) {
+SEXP smooth_count_matrix(const Rcpp::StringMatrix& edge_verts, const std::vector<double>& edge_weights, const Rcpp::NumericMatrix& count_matrix, int max_n_iters, double diffusion_fading, double diffusion_fading_const, double tol, bool verbose, bool normalize);
+RcppExport SEXP _conos_smooth_count_matrix(SEXP edge_vertsSEXP, SEXP edge_weightsSEXP, SEXP count_matrixSEXP, SEXP max_n_itersSEXP, SEXP diffusion_fadingSEXP, SEXP diffusion_fading_constSEXP, SEXP tolSEXP, SEXP verboseSEXP, SEXP normalizeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -209,7 +210,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type diffusion_fading_const(diffusion_fading_constSEXP);
     Rcpp::traits::input_parameter< double >::type tol(tolSEXP);
     Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
-    rcpp_result_gen = Rcpp::wrap(smooth_count_matrix(edge_verts, edge_weights, count_matrix, max_n_iters, diffusion_fading, diffusion_fading_const, tol, verbose));
+    Rcpp::traits::input_parameter< bool >::type normalize(normalizeSEXP);
+    rcpp_result_gen = Rcpp::wrap(smooth_count_matrix(edge_verts, edge_weights, count_matrix, max_n_iters, diffusion_fading, diffusion_fading_const, tol, verbose, normalize));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -253,7 +255,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_conos_checkBits", (DL_FUNC) &_conos_checkBits, 0},
     {"_conos_checkOpenMP", (DL_FUNC) &_conos_checkOpenMP, 0},
     {"_conos_cpcaF", (DL_FUNC) &_conos_cpcaF, 7},
-    {"_conos_greedyModularityCut", (DL_FUNC) &_conos_greedyModularityCut, 6},
+    {"_conos_greedyModularityCut", (DL_FUNC) &_conos_greedyModularityCut, 7},
     {"_conos_findBestClusterThreshold", (DL_FUNC) &_conos_findBestClusterThreshold, 3},
     {"_conos_scoreTreeConsistency", (DL_FUNC) &_conos_scoreTreeConsistency, 4},
     {"_conos_maxStableClusters", (DL_FUNC) &_conos_maxStableClusters, 4},
@@ -262,7 +264,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_conos_n2Knn", (DL_FUNC) &_conos_n2Knn, 7},
     {"_conos_n2CrossKnn", (DL_FUNC) &_conos_n2CrossKnn, 8},
     {"_conos_propagate_labels", (DL_FUNC) &_conos_propagate_labels, 9},
-    {"_conos_smooth_count_matrix", (DL_FUNC) &_conos_smooth_count_matrix, 8},
+    {"_conos_smooth_count_matrix", (DL_FUNC) &_conos_smooth_count_matrix, 9},
     {"_conos_adjacent_vertices", (DL_FUNC) &_conos_adjacent_vertices, 1},
     {"_conos_adjacent_vertex_weights", (DL_FUNC) &_conos_adjacent_vertex_weights, 2},
     {"_conos_spcov", (DL_FUNC) &_conos_spcov, 2},

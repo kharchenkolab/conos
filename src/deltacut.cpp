@@ -39,7 +39,7 @@ typedef std::unordered_map<int, double> IDM;
 typedef std::unordered_map<int, arma::ivec > AIVM;
 // construct a cluster membership bool vectors for each node participating in the top N splits of the tree in the results hash
 // note: currentSplit counts the index from the bottom of merges (i.e. number of splits from the top)
-arma::ivec get_top_split_membership(arma::imat& merges,AIVM& results,int N,int currentSplit=0,bool oneMore=false) {
+arma::ivec get_top_split_membership(arma::imat& merges, AIVM& results, int N, int currentSplit=0, bool oneMore=false) {
   int nleafs=merges.n_rows+1; // number of vertices is equal to the number of leafs in the tree
   arma::ivec l(nleafs,arma::fill::zeros);
   int currentRow=merges.n_rows-currentSplit-1; 
@@ -133,7 +133,7 @@ double get_breadth(int node, arma::ivec& labels, int nlabels, IDM& breadth_map, 
 
 
 // [[Rcpp::export]]
-Rcpp::List greedyModularityCut(arma::imat& merges, arma::vec& deltaM, int N, int minsize, arma::ivec& labels, double minbreadth) {
+Rcpp::List greedyModularityCut(arma::imat& merges, arma::vec& deltaM, int N, int minsize, arma::ivec& labels, double minbreadth, bool flatCut) {
   int nleafs=merges.n_rows+1; // number of leafs in the tree
   // a queue to maintain available cuts
   auto comp =[](const std::pair<int,double> &left, const std::pair<int,double> &right) {
@@ -156,62 +156,73 @@ Rcpp::List greedyModularityCut(arma::imat& merges, arma::vec& deltaM, int N, int
   vector<int> splitsequence; splitsequence.reserve(N); // sequence of chosen splits
   vector<double> deltamod; deltamod.reserve(N); // keep track of the modularity changes
 
-  // start with the top split
-  pq.push(pair<int,double>(merges.n_rows -1, deltaM[merges.n_rows -1]));
-  int nsplits=0;
-  while(!pq.empty() && nsplits<N) {
-    int split=pq.top().first; 
-    double deltam=pq.top().second;
-    pq.pop();
-#ifdef DEBUG
-    cout<<"considering split "<<split<<" ("<<(split+nleafs-2)<<"): ";
-#endif
-    // record split
-    arma::irowvec r=merges.row(split);
-    bool take=true;
-    
-    // we need to test the split first, for that we'll need to look at the children
-    for(int i=0;i<2;i++) {
-      // todo: check other requirements, such as min size, breadth, etc.
-      if(minsize>0 || minbreadth>0) {
-        arma::ivec membership=get_membership(r[i],merges,vlabs);
-        if(minsize>0 && sum(membership) < minsize) { // size restriction
-#ifdef DEBUG
-          cout<<"size "<<minsize<<" < minsize"<<endl;
-#endif
-          take=false;
-        }
-        if(take && minbreadth>0) { // check breadth restriction
-          arma::ivec cllabs=labels.elem(find(membership));
-          double breadth=normalized_entropy(cllabs,nlabels);
-          breadth_map[r[i]]=breadth;
-          if(breadth<minbreadth) { 
-#ifdef DEBUG
-            cout<<"breadth "<<breadth<<" < minbreadth"<<endl;
-#endif
-            take=false; 
-          }
-        }
-      }
+  if(flatCut) {
+    // simply take first N splits
+    int n=merges.n_rows-N-1; if(n<0) { n=0; }
+    for(int i=merges.n_rows-1; i>n; i--) {
+      splitsequence.push_back(i+nleafs);
+      deltamod.push_back(deltaM[i]);
     }
-    
-    if(take) {  // take the split
+  } else {
+    // greedy cut
+    // start with the top split
+    pq.push(pair<int,double>(merges.n_rows -1, deltaM[merges.n_rows -1]));
+    int nsplits=0;
+    while(!pq.empty() && nsplits<N) {
+      int split=pq.top().first; 
+      double deltam=pq.top().second;
+      pq.pop();
 #ifdef DEBUG
-      cout<<"accepting"<<endl;
+      cout<<"considering split "<<split<<" ("<<(split+nleafs-2)<<"): ";
 #endif
-      splitsequence.push_back(split+nleafs);
-      leafNodes.erase(split+nleafs); // splitting the node, so it's not a leaf
-      deltamod.push_back(deltam); 
-      // add children to the queue, without checking anything other the fact that they're not leafs
+      // record split
+      arma::irowvec r=merges.row(split);
+      bool take=true;
+    
+      // we need to test the split first, for that we'll need to look at the children
       for(int i=0;i<2;i++) {
-        leafNodes.insert(r[i]);
-        if(r[i]>=nleafs) {
-          pq.push(pair<int,double>(r[i]-nleafs,deltaM[ r[i]-nleafs ]));
-        }
+	// todo: check other requirements, such as min size, breadth, etc.
+	if(minsize>0 || minbreadth>0) {
+	  arma::ivec membership=get_membership(r[i],merges,vlabs);
+	  if(minsize>0 && sum(membership) < minsize) { // size restriction
+#ifdef DEBUG
+	    cout<<"size "<<minsize<<" < minsize"<<endl;
+#endif
+	    take=false;
+	  }
+	  if(take && minbreadth>0) { // check breadth restriction
+	    arma::ivec cllabs=labels.elem(find(membership));
+	    double breadth=normalized_entropy(cllabs,nlabels);
+	    breadth_map[r[i]]=breadth;
+	    if(breadth<minbreadth) { 
+#ifdef DEBUG
+	      cout<<"breadth "<<breadth<<" < minbreadth"<<endl;
+#endif
+	      take=false; 
+	    }
+	  }
+	}
       }
-      nsplits++;
+    
+      if(take) {  // take the split
+#ifdef DEBUG
+	cout<<"accepting"<<endl;
+#endif
+	splitsequence.push_back(split+nleafs);
+	leafNodes.erase(split+nleafs); // splitting the node, so it's not a leaf
+	deltamod.push_back(deltam); 
+	// add children to the queue, without checking anything other the fact that they're not leafs
+	for(int i=0;i<2;i++) {
+	  leafNodes.insert(r[i]);
+	  if(r[i]>=nleafs) {
+	    pq.push(pair<int,double>(r[i]-nleafs,deltaM[ r[i]-nleafs ]));
+	  }
+	}
+	nsplits++;
+      }
     }
   }
+
   if(splitsequence.empty()) {
 #ifdef DEBUG
     cout<<"returning empty sequence"<<endl;

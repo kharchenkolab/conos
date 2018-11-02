@@ -186,7 +186,7 @@ Conos <- setRefClass(
       return(invisible(cis))
     },
 
-    buildGraph=function(k=30, k.self=10, k.self.weight=0.5, space='CPCA', matching.method='mNN', metric='angular', data.type='counts', l2.sigma=1e5, var.scale =TRUE, ncomps=40, n.odgenes=2000, return.details=T,neighborhood.average=FALSE,neighborhood.average.k=10, exclude.pairs=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE, const.inner.weights=FALSE) {
+    buildGraph=function(k=15, k.self=10, k.self.weight=0.1, space='CPCA', matching.method='mNN', metric='angular', data.type='counts', l2.sigma=1e5, var.scale =TRUE, ncomps=40, n.odgenes=2000, return.details=T,neighborhood.average=FALSE,neighborhood.average.k=10, exclude.pairs=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE, const.inner.weights=FALSE) {
 
       supported.spaces <- c("CPCA","JNMF","genes","PCA")
       if(!space %in% supported.spaces) {
@@ -335,15 +335,14 @@ Conos <- setRefClass(
 
     },
 
-    plotPanel=function(clustering=NULL, groups=NULL, colors=NULL, gene=NULL, embedding.type='tSNE', ncol=NULL, nrow=NULL, raster=FALSE, panel.size=NULL,
-                       adjust.func=NULL, use.local.clusters=FALSE, plot.theme=NULL, ...) {
+    plotPanel=function(clustering=NULL, groups=NULL, colors=NULL, gene=NULL, use.local.clusters=FALSE, plot.theme=NULL, ...) {
       # W: clusters and plots
       if (use.local.clusters) {
-        if (is.null(clustering)) {
+        if (is.null(clustering) && !("seurat" %in% class(samples[[1]]))) {
           stop("You have to provide 'clustering' parameter to be able to use local clusters")
         }
 
-        groups <- Reduce(c, lapply(samples, function(x) x$clusters$PCA[[clustering]]))
+        groups <- Reduce(c, lapply(samples, getClustering, clustering))
         if (is.null(groups)) {
           stop(paste0("No clustering '", clustering, "' presented in the samples"))
         }
@@ -352,8 +351,8 @@ Conos <- setRefClass(
         groups <- getClusteringGroups(clusters, clustering)
       }
 
-      gg <- plotPagodas(samples, groups=groups, colors=colors, gene=gene, embedding.type=embedding.type, ncol=ncol, nrow=nrow, raster=raster,
-                        panel.size=panel.size, adjust.func=adjust.func, plot.theme=adjustTheme(plot.theme), ...)
+      gg <- plotSamples(samples, groups=groups, colors=colors, gene=gene, plot.theme=adjustTheme(plot.theme), ...)
+
       return(gg)
     },
 
@@ -375,13 +374,7 @@ Conos <- setRefClass(
       }
 
       if (!is.null(gene)) {
-        colors <- unlist(unname(lapply(samples, function(d) {
-          if(gene %in% colnames(d$counts)) {
-            d$counts[,gene]
-          }  else {
-            stats::setNames(rep(NA,nrow(d$counts)),rownames(d$counts))
-          }
-        })))
+        colors <- lapply(samples, getCountMatrix) %>% lapply(getGeneExpression, gene) %>% Reduce(c, .)
         if(all(is.na(colors))) warning(paste("gene",gene,"is not found in any of the samples"))
       }
 
@@ -399,39 +392,44 @@ Conos <- setRefClass(
       return(embeddingPlot(t(embedding), groups=groups, colors=colors, plot.theme=adjustTheme(plot.theme), ...))
     },
 
-    correctGenes=function(genes=NULL, n.od.genes=500, fading=1.0, fading.const=0.05, max.iters=15, tol=1e-3, name='diffusion', verbose=TRUE) {
+    correctGenes=function(genes=NULL, n.od.genes=500, fading=10.0, fading.const=0.5, max.iters=15, tol=5e-3, name='diffusion', verbose=TRUE, count.matrix=NULL, normalize=TRUE) {
       "Smooth expression of genes, so they better represent structure of the graph.\n
        Use diffusion of expression on graph with the equation dv = exp(-a * (v + b))\n
        Params:\n
        - genes: list of genes for smoothing\n
        - n.od.genes: if 'genes' is NULL, top n.od.genes of overdispersed genes are taken across all samples. Default: 500.\n
-       - fading: level of fading of expression change from distance on the graph (parameter 'a' of the equation). Default: 1.0.\n
-       - fading.const: minimal penalty for each new edge during diffusion (parameter 'b' of the equation). Default: 0.05.\n
+       - fading: level of fading of expression change from distance on the graph (parameter 'a' of the equation). Default: 10.\n
+       - fading.const: minimal penalty for each new edge during diffusion (parameter 'b' of the equation). Default: 0.5.\n
        - max.iters: maximal number of diffusion iterations. Default: 15.\n
-       - tol: tolerance after which the diffusion stops. Default: 1e-3.\n
+       - tol: tolerance after which the diffusion stops. Default: 5e-3.\n
        - name: name to save the correction. Default: diffusion.\n
        - verbose: verbose mode. Default: TRUE.
+       - count.matrix: alternative gene count matrix to correct. Default: joint count matrix for all datasets.
       "
-      if (is.null(genes)) {
-        genes <- getOdGenesUniformly(samples, n.genes=n.od.genes)
-      }
-
       edges <- igraph::as_edgelist(graph)
       edge.weights <- igraph::edge.attributes(graph)$weight
 
-      cms <- lapply(samples, `[[`, "counts")
-      genes <- Reduce(intersect, lapply(cms, colnames)) %>% intersect(genes)
-      cm <- Reduce(rbind, lapply(cms, function(x) x[, genes])) %>% as.matrix()
+      if (is.null(count.matrix)) {
+        if (is.null(genes)) {
+          genes <- getOdGenesUniformly(samples, n.genes=n.od.genes)
+        }
 
-      cm <- smooth_count_matrix(edges, edge.weights, cm, max_n_iters=max.iters, diffusion_fading=fading, diffusion_fading_const=fading.const, verbose=verbose)
+        cms <- lapply(samples, `[[`, "counts")
+        genes <- Reduce(intersect, lapply(cms, colnames)) %>% intersect(genes)
+        count.matrix <- Reduce(rbind, lapply(cms, function(x) x[, genes])) %>% as.matrix()
+      } else {
+        count.matrix <- t(count.matrix)
+      }
+
+      cm <- smooth_count_matrix(edges, edge.weights, count.matrix, max_n_iters=max.iters, diffusion_fading=fading, diffusion_fading_const=fading.const, verbose=verbose, normalize=normalize)
       return(invisible(expression.adj[[name]] <<- cm))
     },
 
-    propagateLabels=function(labels, max.iters=15, method=1, diffusion.fading=1.0, diffusion.fading.const=0.05, tol=1e-3, return.distribution=TRUE, verbose=TRUE) {
+    propagateLabels=function(labels, max.iters=50, method=2, diffusion.fading=10.0, diffusion.fading.const=0.5, tol=5e-3, return.distribution=TRUE, verbose=TRUE) {
     "Estimate labeling distribution for each vertex, based on provided labels.\n
      Params:\n
      - labels: vector of factor or character labels, named by cell names\n
-     - max.iters: maximal number of iterations. Default: 15.\n
+     - max.iters: maximal number of iterations. Default: 50.\n
      - return.distribution: return distribution of labeling, but not single label for each vertex. Default: TRUE.\n
      - verbose: verbose mode. Default: TRUE.\n
      \n
@@ -615,7 +613,7 @@ multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=F),
 multimulti.community <- function(graph, n.cores=parallel::detectCores(logical=F), hclust.link='single', min.community.size=10, verbose=FALSE, level=NULL, ...) {
   if(verbose) cat("running multilevel 1 ... ");
   mt <- multilevel.community(graph);
-  
+
   if(is.null(level)) {
     # get higest level (to avoid oversplitting at the initial step)
     mem <- membership(mt);
@@ -623,21 +621,21 @@ multimulti.community <- function(graph, n.cores=parallel::detectCores(logical=F)
     # get the specified level
     mem <- mt$memberships[level,]; names(mem) <- mt$names;
   }
-  
+
   if(verbose) cat("found",length(unique(mem)),"communities\nrunning multilevel 2 ... ")
-  
+
   # calculate hierarchy on the multilevel clusters
   cgraph <- get.cluster.graph(graph,mem)
   chwt <- walktrap.community(cgraph,steps=8)
   d <- as.dendrogram(chwt);
-  
-  
+
+
   wtl <- conos:::papply(sn(unique(mem)), function(cluster) {
     cn <- names(mem)[which(mem==cluster)]
     sg <- induced.subgraph(graph,cn)
     multilevel.community(induced.subgraph(graph,cn))
   },n.cores=n.cores)
-  
+
   mbl <- lapply(wtl,membership);
   # correct small communities
   mbl <- lapply(mbl,function(x) {
@@ -648,20 +646,20 @@ multimulti.community <- function(graph, n.cores=parallel::detectCores(logical=F)
     }
     x
   })
-  
+
   if(verbose) cat("found",sum(unlist(lapply(mbl,function(x) length(unique(x))))),"communities\nmerging ... ")
-  
+
   # combined clustering factor
   fv <- unlist(lapply(sn(names(wtl)),function(cn) {
     paste(cn,as.character(mbl[[cn]]),sep='-')
   }))
   names(fv) <- unlist(lapply(mbl,names))
-  
+
   # enclose in a masquerading class
   res <- list(membership=fv,dendrogram=NULL,algorithm='multimulti');
   class(res) <- rev("fakeCommunities");
   return(res);
-  
+
 }
 
 ##' returns pre-calculated dendrogram

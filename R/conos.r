@@ -109,6 +109,7 @@ quickJNMF <- function(p2.objs, data.type='counts', n.comps = 30, n.odgenes=NULL,
 }
 
 cpcaFast <- function(covl,ncells,ncomp=10,maxit=1000,tol=1e-6,use.irlba=TRUE,verbose=F) {
+  ncomp <- min(c(nrow(covl)-1,ncol(covl)-1,ncomp));
   if(use.irlba) {
     # irlba initialization
     p <- nrow(covl[[1]]);
@@ -193,8 +194,7 @@ quickPlainPCA <- function(r.n,data.type='counts',k=30,ncomps=30,n.odgenes=NULL,v
 
   if(verbose) cat('calculating PCs for',length(r.n),' datasets ...')
 
-  pcs <- scaledMatrices(r.n, data.type=data.type, od.genes=od.genes, var.scale=var.scale,
-                        neighborhood.average=neighborhood.average) %>%
+  pcs <- scaledMatrices(r.n, data.type=data.type, od.genes=od.genes, var.scale=var.scale, neighborhood.average=neighborhood.average) %>%
     lapply(function(x) {
       cm <- Matrix::colMeans(x);
       ncomps <- min(c(nrow(cm)-1,ncol(cm)-1,ncomps));
@@ -211,6 +211,93 @@ quickPlainPCA <- function(r.n,data.type='counts',k=30,ncomps=30,n.odgenes=NULL,v
   return(list(CPC=pcs));
 }
 
+
+# dendrogram modification functions
+#' Set dendrogram node width by breadth of the provided factor
+#' @param d dendrogram
+#' @param fac across cells
+#' @param leafContent $leafContent output of greedy.modularity.cut() providing information about which cells map to which dendrogram leafs
+#' @param min.width minimum line width
+#' @param max.width maximum line width
+#' @export
+dend.set.width.by.breadth <- function(d,fac,leafContent,min.width=1,max.width=4) {
+  cc2width <- function(cc) {
+    ent <- entropy::entropy(cc[-1],method='MM',unit='log2')/log2(length(levels(fac)))
+    min.width+ent*(max.width-min.width)
+  }
+  
+  cbm <- function(d,fac) {
+    if(is.leaf(d)) {
+      lc <- fac[leafContent[[attr(d,'label')]]]
+      cc <- c(sum(is.na(lc)),table(lc));
+      lwd <- cc2width(cc)
+      attr(d,"edgePar") <- c(attr(d,"edgePar"),list(lwd=lwd))
+      attr(d,'cc') <- cc;
+      return(d);
+    } else {
+      oa <- attributes(d);
+      d <- lapply(d,cbm,fac=fac);
+      attributes(d) <- oa;
+      cc <- attr(d[[1]],'cc')+attr(d[[2]],'cc')
+      lwd <- cc2width(cc)
+      attr(d,"edgePar") <- c(attr(d,"edgePar"),list(lwd=lwd))
+      attr(d,'cc') <- cc;
+      return(d);
+    }
+  }
+  cbm(d,fac);
+}
+
+#' Set dendrogram colors according to a 2- or 3-level factor mixture
+#' @param d dendrogram
+#' @param fac across cells
+#' @param leafContent $leafContent output of greedy.modularity.cut() providing information about which cells map to which dendrogram leafs
+#' @export
+dend.set.color.by.mixture <- function(d,fac,leafContent) {
+  fac <- as.factor(fac);
+  if(length(levels(fac))>3) stop("factor with more than 3 levels are not supported")
+  if(length(levels(fac))<2) stop("factor with less than 2 levels are not supported")
+  
+  cc2col <- function(cc,base=0.1) {
+    if(sum(cc)==0) {
+      cc <- rep(1,length(cc))
+    } else {
+      cc <- cc/sum(cc)
+    }
+    
+    if(length(cc)==3) { # 2-color
+      cv <- c(cc[2],0,cc[3])+base; cv <- cv/max(cv) * (1-base)
+      #rgb(base+cc[2],base,base+cc[3],1)
+      rgb(cv[1],cv[2],cv[3],1)
+    } else if(length(cc)==4) { # 3-color
+      cv <- c(cc[2],cc[3],cc[4])+base; cv <- cv/max(cv) * (1-base);
+      #rgb(base+cc[2],base+cc[3],base+cc[4],1)
+      rgb(cv[1],cv[2],cv[3],1)
+      
+    }
+  }
+  
+  cbm <- function(d,fac) {
+    if(is.leaf(d)) {
+      lc <- fac[leafContent[[attr(d,'label')]]]
+      cc <- c(sum(is.na(lc)),table(lc));
+      col <- cc2col(cc)
+      attr(d,"edgePar") <- c(attr(d,"edgePar"),list(col=col))
+      attr(d,'cc') <- cc;
+      return(d);
+    } else {
+      oa <- attributes(d);
+      d <- lapply(d,cbm,fac=fac);
+      attributes(d) <- oa;
+      cc <- attr(d[[1]],'cc')+attr(d[[2]],'cc')
+      col <- cc2col(cc)
+      attr(d,"edgePar") <- c(attr(d,"edgePar"),list(col=col))
+      attr(d,'cc') <- cc;
+      return(d);
+    }
+  }
+  cbm(d,fac);
+}
 
 # other functions
 
@@ -437,10 +524,10 @@ bestClusterThresholds <- function(res,clusters) {
 ##' @param leaf.labels leaf sample label factor, for breadth calculations - must be a named factor containing all wt$names, or if wt$names is null, a factor listing cells in the same order as wt leafs
 ##' @param minsize minimum size of the branch (in number of leafs)
 ##' @param minbreadth minimum allowed breadth of a branch (measured as normalized entropy)
+##' @param flat.cut whether to simply take a flat cut (i.e. follow provided tree; default=TRUE). Does no observe minsize/minbreadth restrictions
 ##' @return list(hclust - hclust structure of the derived tree, leafContent - binary matrix with rows corresponding to old leaves, columns to new ones, deltaM - modularity increments)
 ##' @export
-greedy.modularity.cut <- function(wt,N,leaf.labels=NULL,minsize=0,minbreadth=0) {
-  wt$merges <- igraph:::complete.dend(wt,FALSE)
+greedy.modularity.cut <- function(wt,N,leaf.labels=NULL,minsize=0,minbreadth=0,flat.cut=TRUE) {
   # prepare labels
   nleafs <- nrow(wt$merges)+1;
   if(is.null(leaf.labels)) {
@@ -455,8 +542,8 @@ greedy.modularity.cut <- function(wt,N,leaf.labels=NULL,minsize=0,minbreadth=0) 
       ll <- as.integer(as.factor(leaf.labels[wt$names]))-1L;
     }
   }
-  x <- conos:::greedyModularityCut(wt$merges-1L,-1*diff(wt$modularity),N,minsize,ll,minbreadth)
-  if(length(x$splitsequence)<1) {
+  x <- greedyModularityCut(wt$merges-1L,-1*diff(wt$modularity),N,minsize,ll,minbreadth,flat.cut)
+  if(length(x$splitsequence)<1) { 
     stop("unable to make a single split using specified size/breadth restrictions")
   }
   # transfer cell names for the leaf content
@@ -465,9 +552,10 @@ greedy.modularity.cut <- function(wt,N,leaf.labels=NULL,minsize=0,minbreadth=0) 
   hc <- list(merge=m,height=1:nrow(m),labels=c(1:nleafs),order=c(1:nleafs)); class(hc) <- 'hclust'
   # fix the ordering so that edges don't intersects
   hc$order <- order.dendrogram(as.dendrogram(hc))
-  return(list(hc=hc,leafContent=x$leafContent,deltaM=x$deltaM,breadth=as.vector(x$breadth),splits=x$splitsequence))
+  leafContentCollapsed <- apply(x$leafContent,2,function(z)rownames(x$leafContent)[which(z>0)])
+  clfac <- as.factor(apply(x$leafContent,1,which.max))
+  return(list(hc=hc,groups=clfac,leafContentArray=x$leafContent,leafContent=leafContentCollapsed,deltaM=x$deltaM,breadth=as.vector(x$breadth),splits=x$splitsequence))
 }
-
 
 ##' determine number of detectable clusters given a reference walktrap and a bunch of permuted walktraps
 ##'
@@ -480,7 +568,7 @@ greedy.modularity.cut <- function(wt,N,leaf.labels=NULL,minsize=0,minbreadth=0) 
 ##' @export
 stable.tree.clusters <- function(refwt,tests,min.threshold=0.8,min.size=10,n.cores=30,average.thresholds=FALSE) {
   # calculate detectability thresholds for each node against entire list of tests
-  #i<- 0; 
+  #i<- 0;
   refwt$merges <- igraph:::complete.dend(refwt,FALSE)
   for(i in 1:length(tests)) tests[[i]]$merges <- igraph:::complete.dend(tests[[i]],FALSE)
   thrs <- papply(tests,function(testwt) {
@@ -503,4 +591,40 @@ stable.tree.clusters <- function(refwt,tests,min.threshold=0.8,min.size=10,n.cor
       return(unlist(lapply(xl,function(x) length(x$terminalnodes))))
     }
   }
+}
+
+#' @description Create Seurat object from gene count matrix
+#'
+#' @param count.matrix gene count matrix
+#' @param vars.to.regress variables to regress with Seurat
+#' @param verbose verbose mode
+#' @param do.par use parallel processing for regressing out variables faster
+#' @param n.pcs number of principal components
+#' @param cluster do clustering
+#' @param tsne do tSNE embedding
+#' @return Seurat object
+#' @export
+basicSeuratProc <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do.par=TRUE, n.pcs=100, cluster=TRUE, tsne=TRUE) {
+  if (!requireNamespace("Seurat")) {
+    stop("You need to install 'Seurat' package to be able to use this function")
+  }
+
+  rownames(count.matrix) <- make.unique(rownames(count.matrix))
+
+  max.n.pcs <- min(nrow(count.matrix) - 1, ncol(count.matrix) - 1, n.pcs)
+  so <- Seurat::CreateSeuratObject(count.matrix, display.progress=verbose) %>%
+    Seurat::NormalizeData(display.progress=verbose) %>%
+    Seurat::ScaleData(vars.to.regress=vars.to.regress, display.progress=verbose, do.par=do.par) %>%
+    Seurat::FindVariableGenes(do.plot = FALSE, display.progress=verbose) %>%
+    Seurat::RunPCA(pcs.compute=max.n.pcs, do.print=FALSE)
+
+  if (cluster) {
+    so <- Seurat::FindClusters(so, n.iter=500, n.start=10, dims.use=1:n.pcs, print.output = F)
+  }
+
+  if (tsne) {
+    so <- Seurat::RunTSNE(so, dims.use=1:n.pcs)
+  }
+
+  return(so)
 }
