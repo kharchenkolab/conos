@@ -117,7 +117,7 @@ con$plotPanel(clustering="multilevel", use.local.clusters=T, title.size=6)
 
     ## Warning in FUN(X[[i]], ...): Seurat support only single type of clustering
 
-![](/tmp/RtmpMxKn3I/preview-db387c2350dd.dir/Conos_Walkthrough_Seurat_files/figure-markdown_github/unnamed-chunk-9-1.png)
+![](Conos_Walkthrough_Seurat_files/figure-markdown_github/unnamed-chunk-9-1.png)
 
 Next we will build the graph emcompasses all the samples. We do that by pairwise projecting samples onto a common space and establishing KNN of mNN pairs between the samples. We then append iwthin sample KNN neighbours to the graph to ensure that all the cell are included in the graph.
 
@@ -144,7 +144,7 @@ We can now plot the clusters we obtained. Note that the cluster numbers between 
 con$plotPanel(font.size=4)
 ```
 
-![](/tmp/RtmpMxKn3I/preview-db387c2350dd.dir/Conos_Walkthrough_Seurat_files/figure-markdown_github/unnamed-chunk-12-1.png)
+![](Conos_Walkthrough_Seurat_files/figure-markdown_github/unnamed-chunk-12-1.png)
 
 Check an expression pattern of a specific gene across all the individual embeddings.
 
@@ -152,7 +152,7 @@ Check an expression pattern of a specific gene across all the individual embeddi
 con$plotPanel(gene = 'GZMK')
 ```
 
-![](/tmp/RtmpMxKn3I/preview-db387c2350dd.dir/Conos_Walkthrough_Seurat_files/figure-markdown_github/unnamed-chunk-13-1.png)
+![](Conos_Walkthrough_Seurat_files/figure-markdown_github/unnamed-chunk-13-1.png)
 
 Next we embed and visualize the complete joint graph:
 
@@ -162,7 +162,7 @@ con$plotGraph()
 
     ## Estimating embeddings.
 
-![](/tmp/RtmpMxKn3I/preview-db387c2350dd.dir/Conos_Walkthrough_Seurat_files/figure-markdown_github/unnamed-chunk-14-1.png)
+![](Conos_Walkthrough_Seurat_files/figure-markdown_github/unnamed-chunk-14-1.png)
 
 We note that the graph captures the population structure irrespecively of the sample of origin of each cell.
 
@@ -170,7 +170,7 @@ We note that the graph captures the population structure irrespecively of the sa
 con$plotGraph(color.by='sample',mark.groups=F,alpha=0.1,show.legend=T)
 ```
 
-![](/tmp/RtmpMxKn3I/preview-db387c2350dd.dir/Conos_Walkthrough_Seurat_files/figure-markdown_github/unnamed-chunk-15-1.png)
+![](Conos_Walkthrough_Seurat_files/figure-markdown_github/unnamed-chunk-15-1.png)
 
 Other community detection methods can provide a more sensitive and hierarchical view of the subpopulation structure. Here we run walktrap community detection method on the same joint graph:
 
@@ -184,7 +184,7 @@ Visualize new clusters:
 con$plotPanel(clustering='walktrap',font.size=4)
 ```
 
-![](/tmp/RtmpMxKn3I/preview-db387c2350dd.dir/Conos_Walkthrough_Seurat_files/figure-markdown_github/unnamed-chunk-17-1.png)
+![](Conos_Walkthrough_Seurat_files/figure-markdown_github/unnamed-chunk-17-1.png)
 
 New clustering, as viewed on a joint graph:
 
@@ -192,7 +192,7 @@ New clustering, as viewed on a joint graph:
 con$plotGraph(clustering='walktrap')
 ```
 
-![](/tmp/RtmpMxKn3I/preview-db387c2350dd.dir/Conos_Walkthrough_Seurat_files/figure-markdown_github/unnamed-chunk-18-1.png)
+![](Conos_Walkthrough_Seurat_files/figure-markdown_github/unnamed-chunk-18-1.png)
 
 Label propagation
 =================
@@ -230,7 +230,7 @@ Next we plot our panel with the annotations we made. This is to verify that the 
 con$plotPanel(groups = cellannot)
 ```
 
-![](/tmp/RtmpMxKn3I/preview-db387c2350dd.dir/Conos_Walkthrough_Seurat_files/figure-markdown_github/unnamed-chunk-20-1.png)
+![](Conos_Walkthrough_Seurat_files/figure-markdown_github/unnamed-chunk-20-1.png)
 
 Next let's propagaes the labels from the one annotated sample to the other samples.
 
@@ -262,7 +262,7 @@ We not see that all our samples have been labelled automagically!
 con$plotPanel(groups = new.annot)
 ```
 
-![](/tmp/RtmpMxKn3I/preview-db387c2350dd.dir/Conos_Walkthrough_Seurat_files/figure-markdown_github/unnamed-chunk-23-1.png)
+![](Conos_Walkthrough_Seurat_files/figure-markdown_github/unnamed-chunk-23-1.png)
 
 Differential expression
 =======================
