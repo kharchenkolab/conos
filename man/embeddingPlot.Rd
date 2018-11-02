@@ -4,13 +4,15 @@
 \alias{embeddingPlot}
 \title{Plot embedding with provided labels / colors using ggplot2}
 \usage{
-embeddingPlot(embedding, groups = NULL, colors = NULL, plot.na = TRUE,
-  min.cluster.size = 0, mark.groups = TRUE, show.legend = FALSE,
-  alpha = 0.4, size = 0.8, title = NULL, plot.theme = NULL,
-  palette = NULL, color.range = "all", font.size = c(3, 7),
-  show.ticks = FALSE, show.labels = FALSE, legend.position = NULL,
-  legend.title = NULL, raster = FALSE, raster.width = NULL,
-  raster.height = NULL, raster.dpi = 300, shuffle.colors = FALSE, ...)
+embeddingPlot(embedding, groups = NULL, colors = NULL,
+  plot.na = TRUE, min.cluster.size = 0, mark.groups = TRUE,
+  show.legend = FALSE, alpha = 0.4, size = 0.8, title = NULL,
+  plot.theme = NULL, palette = NULL, color.range = "all",
+  font.size = c(3, 7), show.ticks = FALSE, show.labels = FALSE,
+  legend.position = NULL, legend.title = NULL,
+  gradient.range.quantile = 1, raster = FALSE, raster.width = NULL,
+  raster.height = NULL, raster.dpi = 300, shuffle.colors = FALSE,
+  ...)
 }
 \arguments{
 \item{embedding}{two-column matrix with x and y coordinates of the embedding, rownames contain cell names and are used to match coordinates with groups or colors}
@@ -47,6 +49,8 @@ embeddingPlot(embedding, groups = NULL, colors = NULL, plot.na = TRUE,
 
 \item{legend.title}{legend title}
 
+\item{gradient.range.quantile}{Winsorization quantile for the numeric colors and gene gradient}
+
 \item{raster}{should layer with the points be rasterized (TRUE/ FALSE)? Setting of this argument to TRUE is useful when you need to export a plot with large number of points}
 
 \item{raster.width}{width of the plot in inches. Ignored if raster == FALSE.}
@@ -54,6 +58,8 @@ embeddingPlot(embedding, groups = NULL, colors = NULL, plot.na = TRUE,
 \item{raster.height}{height of the plot in inches. Ignored if raster == FALSE.}
 
 \item{raster.dpi}{dpi of the rasterized plot. Ignored if raster == FALSE.}
+
+\item{shuffle.colors}{shuffle colors}
 
 \item{...}{Arguments passed on to \code{ggrepel::geom_label_repel}
 \describe{

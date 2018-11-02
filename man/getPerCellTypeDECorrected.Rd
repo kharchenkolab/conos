@@ -5,27 +5,27 @@
 \title{Do differential expression for each cell type in a conos object between the specified subsets of apps
 applying the specified correction vector}
 \usage{
-getPerCellTypeDECorrected(conObj, groups = NULL, sampleGroups = NULL,
-  cooksCutoff = FALSE, independentFiltering = FALSE, n.cores = 1,
+getPerCellTypeDECorrected(con.obj, groups = NULL, sample.groups = NULL,
+  cooks.cutoff = FALSE, independent.filtering = FALSE, n.cores = 1,
   cluster.sep.chr = "+", correction = NULL, return.details = TRUE,
-  reflevel = NULL)
+  ref.level = NULL)
 }
 \arguments{
-\item{conObj}{conos object}
+\item{con.obj}{conos object}
 
 \item{groups}{factor specifying cell types}
 
-\item{sampleGroups}{a named list of two character vectors specifying the app groups to compare}
+\item{sample.groups}{a named list of two character vectors specifying the app groups to compare}
 
-\item{independentFiltering}{independentFiltering for DESeq2}
+\item{cooks.cutoff}{cooksCutoff for DESeq2}
+
+\item{independent.filtering}{independentFiltering for DESeq2}
 
 \item{n.cores}{number of cores}
 
 \item{cluster.sep.chr}{character string of length 1 specifying a delimiter to separate cluster and app names}
 
 \item{correction}{correction vector obtained from getCorrectionVector}
-
-\item{cookscutoff}{cookscugoff for DESeq2}
 }
 \description{
 Do differential expression for each cell type in a conos object between the specified subsets of apps

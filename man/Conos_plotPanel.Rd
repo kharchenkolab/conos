@@ -3,9 +3,6 @@
 \name{Conos_plotPanel}
 \alias{Conos_plotPanel}
 \title{A function for quickly plotting collections and joint clustering}
-\value{
-ggplot2 object with the panel of plots
-}
 \description{
 A function for quickly plotting collections and joint clustering
 }

@@ -76,6 +76,15 @@ rbindDEMatrices <- function(mats, cluster.sep.chr) {
   return(t(do.call(rbind, mats)))
 }
 
+strpart <- function (x, split, n, fixed = FALSE) {
+  sapply(strsplit(as.character(x), split, fixed = fixed), "[",
+         n)
+}
+
+is.error <- function (x) {
+  inherits(x, c("try-error", "error"))
+}
+
 #' Do differential expression for each cell type in a conos object between the specified subsets of apps
 #' @param con.obj conos object
 #' @param groups factor specifying cell types
@@ -97,7 +106,7 @@ getPerCellTypeDE <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cut
     rbindDEMatrices(cluster.sep.chr=cluster.sep.chr)
   gc()
     ## For every cell type get differential expression results
-    de.res <- parallel::mclapply(nbHelpers::namedLevels(groups), function(l) {
+    de.res <- parallel::mclapply(sn(levels(groups)), function(l) {
         try({
             ## Get count matrix
             cm <- aggr2[,strpart(colnames(aggr2),cluster.sep.chr,2,fixed=TRUE) == l]
@@ -210,7 +219,7 @@ getPerCellTypeDECorrected <- function(con.obj, groups=NULL, sample.groups=NULL, 
     rbindDEMatrices(cluster.sep.chr=cluster.sep.chr)
   gc()
     ## For every cell type get differential expression results
-    de.res <- parallel::mclapply(nbHelpers::namedLevels(groups), function(l) {
+    de.res <- parallel::mclapply(sn(levels(groups)), function(l) {
         try({
             ## Get count matrix
             cm <- aggr2[,strpart(colnames(aggr2),cluster.sep.chr,2,fixed=TRUE) == l]

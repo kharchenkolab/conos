@@ -4,19 +4,19 @@
 \alias{getBetweenCellTypeDE}
 \title{Compare two cell types across the entire panel}
 \usage{
-getBetweenCellTypeDE(conObj, sampleGroups = NULL, groups = NULL,
-  cooksCutoff = FALSE, refgroup = NULL, altgroup = NULL,
-  min.cell.count = 10, independentFiltering = FALSE,
+getBetweenCellTypeDE(con.obj, sample.groups = NULL, groups = NULL,
+  cooks.cutoff = FALSE, refgroup = NULL, altgroup = NULL,
+  min.cell.count = 10, independent.filtering = FALSE,
   cluster.sep.chr = "+", return.details = TRUE, only.paired = TRUE)
 }
 \arguments{
-\item{conObj}{conos object}
+\item{con.obj}{conos object}
 
-\item{sampleGroups}{a named list of two character vectors specifying the app groups to compare}
+\item{sample.groups}{a named list of two character vectors specifying the app groups to compare}
 
 \item{groups}{factor describing cell grouping}
 
-\item{cooksCutoff}{cooksCutoff parameter for DESeq2}
+\item{cooks.cutoff}{cooksCutoff parameter for DESeq2}
 
 \item{refgroup}{cell type to compare to be used as reference}
 
@@ -24,7 +24,7 @@ getBetweenCellTypeDE(conObj, sampleGroups = NULL, groups = NULL,
 
 \item{min.cell.count}{minimum number of cells per celltype/sample combination to keep}
 
-\item{independentFiltering}{independentFiltering parameter for DESeq2}
+\item{independent.filtering}{independentFiltering parameter for DESeq2}
 
 \item{cluster.sep.chr}{character string of length 1 specifying a delimiter to separate cluster and app names}
 

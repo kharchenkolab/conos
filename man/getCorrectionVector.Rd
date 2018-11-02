@@ -4,22 +4,22 @@
 \alias{getCorrectionVector}
 \title{Obtain a correction vector for removing the constant effect between the same clusters of two different apps}
 \usage{
-getCorrectionVector(conObj, groups = NULL, sampleGroups = NULL,
-  cooksCutoff = FALSE, independentFiltering = FALSE, n.cores = 1,
+getCorrectionVector(con.obj, groups = NULL, sample.groups = NULL,
+  cooks.cutoff = FALSE, independent.filtering = FALSE, n.cores = 1,
   cluster.sep.chr = "+", return.details = FALSE, de.init = NULL,
   exclude.celltypes = c(), correction.method = "varianceweighted",
-  reflevel = NULL)
+  ref.level = NULL)
 }
 \arguments{
-\item{conObj}{conos object}
+\item{con.obj}{conos object}
 
 \item{groups}{a vector specifying clusters}
 
-\item{sampleGroups}{the groups of the samples}
+\item{sample.groups}{the groups of the samples}
 
-\item{cooksCutoff}{cooksCutoff distance for DESeq2}
+\item{cooks.cutoff}{cooksCutoff distance for DESeq2}
 
-\item{independentFiltering}{independentFiltering for DESeq2}
+\item{independent.filtering}{independentFiltering for DESeq2}
 
 \item{n.cores}{number of cores}
 

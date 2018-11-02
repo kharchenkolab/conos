@@ -319,7 +319,7 @@ get.greedy.cut.groups <- function(no_clusters=NULL,greedy.modularity.cut.result=
   }
 }
 
-##' runs Shiny application to visualize waltktrap tree and select cut level 
+##' runs Shiny application to visualize waltktrap tree and select cut level
 ##'
 ##' @param con conos object with walktrap results
 ##' @param N number of top greedy splits to take
@@ -328,7 +328,7 @@ get.greedy.cut.groups <- function(no_clusters=NULL,greedy.modularity.cut.result=
 ##' @param minbreadth minimum allowed breadth of a branch (measured as normalized entropy)
 ##' @param flat.cut whether to use a flat cut instead of a dynamic one
 ##' @export
-runShinyApp <- function(con, N=10, leaf.labels=NULL, tissue_mapping=NULL, tissue_factors=NULL, minsize=0, minbreadth=0, flat.cut=TRUE) {
+conosShinyApp <- function(con, N=30, leaf.labels=NULL, tissue_mapping=NULL, tissue_factors=NULL, minsize=0, minbreadth=0, flat.cut=TRUE) {
   
   if(is.null(con$clusters$walktrap)) stop("please run findCommunities(method=walktrap.communities) to calculate walktrap clustering first")
   if(is.null(leaf.labels)) {
