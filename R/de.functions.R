@@ -1,4 +1,8 @@
 validatePerCellTypeParams <- function(con.obj, groups, sample.groups, ref.level, cluster.sep.chr) {
+  if (!requireNamespace("DESeq2")) {
+    stop("You have to install DESeq2 package to use differential expression")
+  }
+
   if ( class(con.obj) != 'Conos') stop('con.obj must be a conos object')
   if ( is.null(groups) ) stop('groups must be specified');
   if ( is.null(sample.groups) ) stop('sample.groups must be specified')
@@ -21,6 +25,10 @@ validatePerCellTypeParams <- function(con.obj, groups, sample.groups, ref.level,
 }
 
 validateBetweenCellTypeParams <- function(con.obj, groups, sample.groups, refgroup, altgroup, cluster.sep.chr) {
+  if (!requireNamespace("DESeq2")) {
+    stop("You have to install DESeq2 package to use differential expression")
+  }
+
   if (class(con.obj) != 'Conos') stop('con.obj must be a conos object')
   if (is.null(groups) ) stop('groups must be specified');
   if (is.null(sample.groups) ) stop('sample.groups must be specified')
@@ -234,7 +242,7 @@ getPerCellTypeDECorrected <- function(con.obj, groups=NULL, sample.groups=NULL, 
             meta$group <- relevel(meta$group, ref=ref.level)
             if (length(unique(as.character(meta$group))) < 2)
                 stop('The cluster is not present in both conditions')
-            library(DESeq2)
+
             dds1 <- DESeq2::DESeqDataSetFromMatrix(cm,meta,design=~group)
             dds1 <- DESeq2::estimateSizeFactors(dds1)
             sf <- DESeq2::sizeFactors(dds1)
@@ -525,7 +533,7 @@ getBetweenCellTypeCorrectedDE <- function(con.obj, sample.groups =  NULL, groups
   colnames(x) <- colnames(nf.tmp)
   nf.tmp <- nf.tmp * x
   x2 <- plyr::aaply(nf.tmp, 1, function(x) {x / exp(mean(log(x)))})
-  normalizationFactors(dds1) <- x2
+  DESeq2::normalizationFactors(dds1) <- x2
   ##
   dds1 <- DESeq2::DESeq(dds1)
   res1 <- DESeq2::results(dds1, cooksCutoff = cooks.cutoff, independentFiltering = independent.filtering)
