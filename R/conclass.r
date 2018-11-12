@@ -425,13 +425,14 @@ Conos <- setRefClass(
       return(invisible(expression.adj[[name]] <<- cm))
     },
 
-    propagateLabels=function(labels, max.iters=50, method=2, diffusion.fading=10.0, diffusion.fading.const=0.5, tol=5e-3, return.distribution=TRUE, verbose=TRUE) {
+    propagateLabels=function(labels, max.iters=50, diffusion.fading=10.0, diffusion.fading.const=0.5, tol=5e-3, return.distribution=TRUE, verbose=TRUE, fixed.initial.labels=FALSE) {
     "Estimate labeling distribution for each vertex, based on provided labels.\n
      Params:\n
      - labels: vector of factor or character labels, named by cell names\n
      - max.iters: maximal number of iterations. Default: 50.\n
      - return.distribution: return distribution of labeling, but not single label for each vertex. Default: TRUE.\n
      - verbose: verbose mode. Default: TRUE.\n
+     - fixed.initial.labels: prohibit changes of initial labels during diffusion.\n
      \n
      Return: matrix with distribution of label probabilities for each vertex by rows.
     "
@@ -443,8 +444,8 @@ Conos <- setRefClass(
       labels <- labels[intersect(names(labels), igraph::vertex.attributes(graph)$name)]
 
       label.distribution <- propagate_labels(edges, edge.weights, vert_labels=labels, max_n_iters=max.iters, verbose=verbose,
-                                             method=method, diffusion_fading=diffusion.fading, diffusion_fading_const=diffusion.fading.const,
-                                             tol=tol)
+                                             diffusion_fading=diffusion.fading, diffusion_fading_const=diffusion.fading.const,
+                                             tol=tol, fixed_initial_labels=fixed.initial.labels)
       if (return.distribution) {
         return(label.distribution)
       }

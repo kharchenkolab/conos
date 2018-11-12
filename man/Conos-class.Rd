@@ -40,9 +40,9 @@ The class encompasses sample collections, providing methods for calculating and 
        - count.matrix: alternative gene count matrix to correct. Default: joint count matrix for all datasets.
       }
 
-\item{\code{propagateLabels(labels, max.iters = 50, method = 2, diffusion.fading = 10,
+\item{\code{propagateLabels(labels, max.iters = 50, diffusion.fading = 10,
   diffusion.fading.const = 0.5, tol = 0.005, return.distribution = TRUE,
-  verbose = TRUE)}}{Estimate labeling distribution for each vertex, based on provided labels.
+  verbose = TRUE, fixed_initial_labels = FALSE)}}{Estimate labeling distribution for each vertex, based on provided labels.
 
      Params:
 
@@ -53,6 +53,8 @@ The class encompasses sample collections, providing methods for calculating and 
      - return.distribution: return distribution of labeling, but not single label for each vertex. Default: TRUE.
 
      - verbose: verbose mode. Default: TRUE.
+
+     - fixed_initial_labels: prohibit changes of initial labels during diffusion.
 
      
 

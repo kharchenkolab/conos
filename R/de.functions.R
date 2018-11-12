@@ -1,5 +1,5 @@
 validatePerCellTypeParams <- function(con.obj, groups, sample.groups, ref.level, cluster.sep.chr) {
-  if (!requireNamespace("DESeq2")) {
+  if (!requireNamespace("DESeq2", quietly = TRUE)) {
     stop("You have to install DESeq2 package to use differential expression")
   }
 
@@ -25,7 +25,7 @@ validatePerCellTypeParams <- function(con.obj, groups, sample.groups, ref.level,
 }
 
 validateBetweenCellTypeParams <- function(con.obj, groups, sample.groups, refgroup, altgroup, cluster.sep.chr) {
-  if (!requireNamespace("DESeq2")) {
+  if (!requireNamespace("DESeq2", quietly = TRUE)) {
     stop("You have to install DESeq2 package to use differential expression")
   }
 

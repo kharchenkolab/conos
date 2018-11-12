@@ -11,29 +11,6 @@ using s_vec_t = std::vector<std::string>;
 using SpMat = Eigen::SparseMatrix<double>;
 using Mat = Eigen::MatrixXd;
 
-class Vertex {
-public:
-  const std::string name;
-  std::vector<double> label_weights;
-
-  Vertex(const std::string &name, size_t n_labels)
-    : name(name), label_weights(n_labels, 0)
-  {}
-
-  std::vector<double> label_probs() const {
-    std::vector<double> probs = this->label_weights;
-    double weight_sum = std::accumulate(probs.begin(), probs.end(), 0);
-    if (weight_sum < 1e-10)
-      return probs;
-
-    for (int i = 0; i < probs.size(); ++i) {
-      probs[i] /= weight_sum;
-    }
-
-    return probs;
-  }
-};
-
 class Edge {
 public:
   const size_t v_start;
@@ -46,7 +23,7 @@ public:
   {}
 };
 
-void smooth_count_matrix(const std::vector<Edge> &edges, Mat &count_matrix, int max_n_iters, double diffusion_fading, double diffusion_fading_const, double tol, bool verbose, bool normalize);
+void smooth_count_matrix(const std::vector<Edge> &edges, Mat &count_matrix, int max_n_iters, double diffusion_fading, double diffusion_fading_const, double tol, bool verbose, bool normalize, const std::vector<bool> &is_label_fixed=std::vector<bool>());
 
 si_map_t order_strings(const s_vec_t &vec) {
   si_map_t nums;
@@ -78,33 +55,9 @@ si_map_t parse_edges(const Rcpp::StringMatrix &edge_verts, const std::vector<dou
 
 // Label propogation
 
-void propagate_labels(Vertex &v1, Vertex &v2, double weight) {
-  auto probs1 = v1.label_probs();
-  auto probs2 = v2.label_probs();
-
-  for (size_t l_id = 0; l_id < probs1.size(); l_id ++) {
-    v1.label_weights[l_id] += probs2[l_id] * weight;
-    v2.label_weights[l_id] += probs1[l_id] * weight;
-  }
-}
-
-void propagate_labels(const std::vector<Edge> &edges, std::vector<Vertex> &vertices, int max_n_iters, bool verbose) {
-  Progress p(max_n_iters, verbose);
-  for (int iter = 0; iter < max_n_iters; ++iter) {
-    if (Progress::check_abort())
-      break;
-
-    for (auto const e : edges) {
-      propagate_labels(vertices.at(e.v_start), vertices.at(e.v_end), e.weight);
-    }
-
-    p.increment();
-  }
-}
-
 // [[Rcpp::export]]
 Rcpp::NumericMatrix propagate_labels(const Rcpp::StringMatrix &edge_verts, const std::vector<double> &edge_weights, const Rcpp::StringVector &vert_labels, int max_n_iters=10, bool verbose=true,
-                                     int method=1, double diffusion_fading=10, double diffusion_fading_const=0.5, double tol=5e-3) {
+                                     double diffusion_fading=10, double diffusion_fading_const=0.5, double tol=5e-3, bool fixed_initial_labels=false) {
   if (edge_verts.nrow() != edge_weights.size() || edge_verts.ncol() != 2)
     Rcpp::stop("Incorrect dimension of input vectors");
 
@@ -113,37 +66,27 @@ Rcpp::NumericMatrix propagate_labels(const Rcpp::StringMatrix &edge_verts, const
   auto const vertex_ids = parse_edges(edge_verts, edge_weights, edges);
   auto const label_ids = order_strings(Rcpp::as<s_vec_t>(vert_labels));
 
-  std::vector<Vertex> vertices;
-  for (auto const p : vertex_ids) {
-    vertices.emplace_back(p.first, label_ids.size());
-  }
+  Mat label_probs = Mat::Zero(vertex_ids.size(), label_ids.size());
+  std::vector<bool> is_fixed(vertex_ids.size(), false);
 
-  Mat label_probs = Mat::Zero(vertices.size(), label_ids.size());
   for (size_t i = 0; i < vert_labels.size(); ++i) {
     size_t label_id = label_ids.at(Rcpp::as<std::string>(vert_labels.at(i)));
     size_t vert_id = vertex_ids.at(Rcpp::as<std::string>(Rcpp::as<Rcpp::StringVector>(vert_labels.names()).at(i)));
-    vertices.at(vert_id).label_weights.at(label_id) = 1;
     label_probs(vert_id, label_id) = 1;
+
+    if (fixed_initial_labels) {
+      is_fixed.at(vert_id) = true;
+    }
   }
 
   // Process data
-
-  if (method == 1) {
-    propagate_labels(edges, vertices, max_n_iters, verbose);
-  } else {
-    smooth_count_matrix(edges, label_probs, max_n_iters, diffusion_fading, diffusion_fading_const, tol, verbose, true);
-  }
-
+  smooth_count_matrix(edges, label_probs, max_n_iters, diffusion_fading, diffusion_fading_const, tol, verbose, true, is_fixed);
 
   // Convert result back to R
-  Rcpp::NumericMatrix res(vertices.size(), label_ids.size());
-  for (int v_id = 0; v_id < vertices.size(); ++v_id) {
+  Rcpp::NumericMatrix res(vertex_ids.size(), label_ids.size());
+  for (int v_id = 0; v_id < vertex_ids.size(); ++v_id) {
     for (int l_id = 0; l_id < label_ids.size(); ++l_id) {
-      if (method == 1) {
-        res(v_id, l_id) = vertices.at(v_id).label_weights.at(l_id);
-      } else {
-        res(v_id, l_id) = label_probs(v_id, l_id);
-      }
+      res(v_id, l_id) = label_probs(v_id, l_id);
     }
 
     res(v_id, Rcpp::_) = res(v_id, Rcpp::_) / Rcpp::sum(res(v_id, Rcpp::_));
@@ -167,7 +110,8 @@ Rcpp::NumericMatrix propagate_labels(const Rcpp::StringMatrix &edge_verts, const
 
 // Smooth count matrix
 
-void smooth_count_matrix(const std::vector<Edge> &edges, Mat &count_matrix, int max_n_iters, double diffusion_fading, double diffusion_fading_const, double tol, bool verbose, bool normalize) {
+void smooth_count_matrix(const std::vector<Edge> &edges, Mat &count_matrix, int max_n_iters, double diffusion_fading, double diffusion_fading_const, double tol,
+                         bool verbose, bool normalize, const std::vector<bool> &is_label_fixed) {
   std::vector<double> sum_weights(count_matrix.rows(), 1);
   Progress p(max_n_iters * edges.size(), verbose);
   double min_weight = 1e10, max_weight = 0;
@@ -183,11 +127,21 @@ void smooth_count_matrix(const std::vector<Edge> &edges, Mat &count_matrix, int 
       min_weight = std::min(min_weight, weight);
       max_weight = std::max(max_weight, weight);
 
-      cm_new.row(e.v_start) += count_matrix.row(e.v_end) * weight;
-      cm_new.row(e.v_end) += count_matrix.row(e.v_start) * weight;
+      if (is_label_fixed.empty() || !is_label_fixed.at(e.v_start)) {
+        cm_new.row(e.v_start) += count_matrix.row(e.v_end) * weight;
 
-      sum_weights.at(e.v_start) += weight;
-      sum_weights.at(e.v_end) += weight;
+        if (normalize) {
+          sum_weights.at(e.v_start) += weight;
+        }
+      }
+
+      if (is_label_fixed.empty() || !is_label_fixed.at(e.v_end)) {
+        cm_new.row(e.v_end) += count_matrix.row(e.v_start) * weight;
+
+        if (normalize) {
+          sum_weights.at(e.v_end) += weight;
+        }
+      }
 
       p.increment();
     }
