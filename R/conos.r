@@ -68,7 +68,10 @@ scaledMatrices <- function(samples, data.type, od.genes, var.scale, neighborhood
 
 commonOverdispersedGenes <- function(samples, n.odgenes, verbose) {
   od.genes <- sort(table(unlist(lapply(samples, getOverdispersedGenes, n.odgenes))),decreasing=T)
-  od.genes <- od.genes[names(od.genes) %in% Reduce(intersect, lapply(samples, getGenes))]
+  common.genes <- Reduce(intersect, lapply(samples, getGenes));
+  if(length(common.genes)==0) { warning(paste("samples",paste(names(samples),collapse=' and '),'do not share any common genes!')) }
+  if(length(common.genes)<n.odgenes) { warning(paste("samples",paste(names(samples),collapse=' and '),'do not share enoguh common genes!')) }
+  od.genes <- od.genes[names(od.genes) %in% common.genes]
 
   if(verbose) cat("using",length(od.genes),"od genes\n")
 
@@ -80,6 +83,8 @@ quickNULL <- function(p2.objs, data.type='counts', n.odgenes = NULL, var.scale =
   if(length(p2.objs) != 2) stop('quickNULL only supports pairwise alignment');
 
   od.genes <- commonOverdispersedGenes(p2.objs, n.odgenes, verbose=verbose)
+  if(length(od.genes)<5) return(NULL);
+  
   cproj <- scaledMatrices(p2.objs, data.type=data.type, od.genes=od.genes, var.scale=var.scale,
                           neighborhood.average=neighborhood.average)
 
@@ -93,6 +98,7 @@ quickJNMF <- function(p2.objs, data.type='counts', n.comps = 30, n.odgenes=NULL,
   if (length(p2.objs) != 2) stop('quickJNMF only supports pairwise alignment');
 
   od.genes <- commonOverdispersedGenes(p2.objs, n.odgenes, verbose=verbose)
+  if(length(od.genes)<5) return(NULL);
 
   cproj <- scaledMatrices(p2.objs, data.type=data.type, od.genes=od.genes, var.scale=var.scale,
                           neighborhood.average=neighborhood.average) %>%
@@ -138,6 +144,7 @@ cpcaFast <- function(covl,ncells,ncomp=10,maxit=1000,tol=1e-6,use.irlba=TRUE,ver
 #' @param n.cores number of cores to use
 quickCPCA <- function(r.n,data.type='counts',k=30,ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=TRUE,neighborhood.average=FALSE) {
   od.genes <- commonOverdispersedGenes(r.n, n.odgenes, verbose=verbose)
+  if(length(od.genes)<5) return(NULL);
 
   ncomps <- min(ncomps, length(od.genes) - 1)
 
@@ -191,6 +198,7 @@ quickCPCA <- function(r.n,data.type='counts',k=30,ncomps=100,n.odgenes=NULL,var.
 #' @param n.cores number of cores to use
 quickPlainPCA <- function(r.n,data.type='counts',k=30,ncomps=30,n.odgenes=NULL,var.scale=TRUE,verbose=TRUE,neighborhood.average=FALSE,n.cores=30) {
   od.genes <- commonOverdispersedGenes(r.n, n.odgenes, verbose=verbose)
+  if(length(od.genes)<5) return(NULL);
 
   if(verbose) cat('calculating PCs for',length(r.n),' datasets ...')
 

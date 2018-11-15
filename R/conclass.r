@@ -169,9 +169,10 @@ Conos <- setRefClass(
           }
           if(verbose) cat('.')
           xcp
-        },n.cores=n.cores);
+        },n.cores=n.cores,mc.preschedule=(space=='PCA'));
 
         names(xl2) <- apply(cis[,which(is.na(mi)),drop=F],2,paste,collapse='.vs.');
+        xl2 <- xl2[!unlist(lapply(xl2,is.null))]
         pairs[[space]] <<- c(pairs[[space]],xl2);
       }
 
@@ -181,7 +182,10 @@ Conos <- setRefClass(
       mi[which(!is.na(nm))] <- na.omit(nm);
       nm <- match(apply(cis[c(2,1),,drop=F],2,paste,collapse='.vs.'),names(pairs[[space]]));
       mi[which(!is.na(nm))] <- na.omit(nm);
-      if(any(is.na(mi))) { stop("unable to get complete set of pair comparison results") }
+      if(any(is.na(mi))) {
+        warning("unable to get complete set of pair comparison results")
+        cis <- cis[,!is.na(mi),drop=FALSE]
+      }
       if(verbose) cat(" done\n");
       return(invisible(cis))
     },
@@ -205,6 +209,8 @@ Conos <- setRefClass(
 
       # calculate or update pairwise alignments
       cis <- updatePairs(space=space,ncomps=ncomps,n.odgenes=n.odgenes,verbose=verbose,var.scale=var.scale,neighborhood.average=neighborhood.average,neighborhood.average.k=10,exclude.pairs=exclude.pairs,exclude.samples=exclude.samples)
+
+      if(ncol(cis)<1) { stop("insufficient number of comparable pairs") }
 
       # determine inter-sample mapping
       if(verbose) cat('inter-sample links using ',matching.method,' ');
