@@ -26,11 +26,13 @@ Imports:
   dendextend,
   heatmaply,
   d3heatmap,
+  viridis,
   entropy,
-  Matrix.utils,
-  DESeq2
+  Matrix.utils
 Suggests: 
   ggrastr,
+  shinycssloaders,
+  DESeq2,
   knitr,
   rmarkdown
 VignetteBuilder: knitr
