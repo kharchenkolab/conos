@@ -37,6 +37,10 @@ sgd <- function(coords, targets_i, sources_j, ps, weights, gamma, rho, n_samples
     .Call('_conos_sgd', PACKAGE = 'conos', coords, targets_i, sources_j, ps, weights, gamma, rho, n_samples, M, alpha, momentum, useDegree, seed, threads, verbose)
 }
 
+leiden_community <- function(graph, edge_weights, resolution = 1.0, niter = 2L) {
+    .Call('_conos_leiden_community', PACKAGE = 'conos', graph, edge_weights, resolution, niter)
+}
+
 n2Knn <- function(m, k, nThreads = 10L, verbose = TRUE, indexType = "angular", M = 12L, MaxM0 = 24L) {
     .Call('_conos_n2Knn', PACKAGE = 'conos', m, k, nThreads, verbose, indexType, M, MaxM0)
 }

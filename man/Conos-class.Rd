@@ -42,7 +42,7 @@ The class encompasses sample collections, providing methods for calculating and 
 
 \item{\code{propagateLabels(labels, max.iters = 50, diffusion.fading = 10,
   diffusion.fading.const = 0.5, tol = 0.005, return.distribution = TRUE,
-  verbose = TRUE, fixed_initial_labels = FALSE)}}{Estimate labeling distribution for each vertex, based on provided labels.
+  verbose = TRUE, fixed.initial.labels = FALSE)}}{Estimate labeling distribution for each vertex, based on provided labels.
 
      Params:
 
@@ -54,7 +54,7 @@ The class encompasses sample collections, providing methods for calculating and 
 
      - verbose: verbose mode. Default: TRUE.
 
-     - fixed_initial_labels: prohibit changes of initial labels during diffusion.
+     - fixed.initial.labels: prohibit changes of initial labels during diffusion.
 
      
 

@@ -103,6 +103,7 @@ Conos <- setRefClass(
           stop("provided list contains less than 2 samples; 2 required, >3 recommended")
         }
       }
+      if(any(duplicated(names(samples)))) { stop("duplicate names found in the supplied samples") }
       if(any(names(x) %in% names(samples))) {
         stop("some of the names in the provided sample list are identical to already existing samples")
       }
@@ -275,7 +276,7 @@ Conos <- setRefClass(
           return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=mnn@x,stringsAsFactors=F))
         }
         mnnres
-      },n.cores=n.cores)
+      },n.cores=n.cores,mc.preschedule=TRUE)
       if(verbose) cat(" done\n")
       ## Merge the results into a edge table
       el <- do.call(rbind,mnnres)
@@ -307,7 +308,8 @@ Conos <- setRefClass(
       g  <- graph_from_edgelist(as.matrix(el[,c(1,2)]), directed =FALSE)
       E(g)$weight <- el[,3]
       E(g)$type <- el[,4]
-
+      # collapse duplicate edges
+      g <- simplify(g, edge.attr.comb=list(weight="sum"))
       graph <<- g;
       return(invisible(g))
     },
@@ -667,6 +669,25 @@ multimulti.community <- function(graph, n.cores=parallel::detectCores(logical=F)
   class(res) <- rev("fakeCommunities");
   return(res);
 
+}
+
+##' Leiden algorithm community detection
+##'
+##' Detect communities using Leiden algorithm (implementation copied from https://github.com/vtraag/leidenalg) 
+##' @param graph graph on which communities should be detected
+##' @param resolution resolution parameter (default=1.0) - higher numbers lead to more communities
+##' @param n.iterations number of iterations that the algorithm should be run for(default =2)
+##' @return community object
+##' @export
+leiden.community <- function(graph, resolution=1.0, n.iterations=2) {
+  
+  x <- leiden_community(graph,E(graph)$weight,resolution,n.iterations);
+
+  # enclose in a masquerading class
+  fv <- as.factor(setNames(x,V(graph)$name))
+  res <- list(membership=fv,dendrogram=NULL,algorithm='leiden',resolution=resolution,n.iter=n.iterations);
+  class(res) <- rev("fakeCommunities");
+  return(res);
 }
 
 ##' returns pre-calculated dendrogram
