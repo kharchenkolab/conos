@@ -194,7 +194,7 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
 
     if (mark.groups) {
       labels.data <- plot.df %>% dplyr::group_by(Group) %>%
-        dplyr::summarise(x=mean(x, tirm=0.4), y=mean(y, trim=0.4), Size=n())
+        dplyr::summarise(x=median(x), y=median(y), Size=n())
 
       if (length(font.size) == 1) {
         font.size <- c(font.size, font.size)
