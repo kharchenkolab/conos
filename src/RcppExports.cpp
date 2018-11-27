@@ -117,6 +117,37 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// as_factor
+Rcpp::List as_factor(const std::vector<std::string>& vals);
+RcppExport SEXP _conos_as_factor(SEXP valsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::vector<std::string>& >::type vals(valsSEXP);
+    rcpp_result_gen = Rcpp::wrap(as_factor(vals));
+    return rcpp_result_gen;
+END_RCPP
+}
+// get_nearest_neighbors
+Rcpp::List get_nearest_neighbors(const std::vector<std::vector<int>>& adjacency_list, const std::vector<std::vector<double>>& transition_probabilities, int n_verts, int n_cores, double min_prob, int min_visited_verts, double min_prob_lower, int max_hitting_nn_num, int max_commute_nn_num, bool verbose);
+RcppExport SEXP _conos_get_nearest_neighbors(SEXP adjacency_listSEXP, SEXP transition_probabilitiesSEXP, SEXP n_vertsSEXP, SEXP n_coresSEXP, SEXP min_probSEXP, SEXP min_visited_vertsSEXP, SEXP min_prob_lowerSEXP, SEXP max_hitting_nn_numSEXP, SEXP max_commute_nn_numSEXP, SEXP verboseSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::vector<std::vector<int>>& >::type adjacency_list(adjacency_listSEXP);
+    Rcpp::traits::input_parameter< const std::vector<std::vector<double>>& >::type transition_probabilities(transition_probabilitiesSEXP);
+    Rcpp::traits::input_parameter< int >::type n_verts(n_vertsSEXP);
+    Rcpp::traits::input_parameter< int >::type n_cores(n_coresSEXP);
+    Rcpp::traits::input_parameter< double >::type min_prob(min_probSEXP);
+    Rcpp::traits::input_parameter< int >::type min_visited_verts(min_visited_vertsSEXP);
+    Rcpp::traits::input_parameter< double >::type min_prob_lower(min_prob_lowerSEXP);
+    Rcpp::traits::input_parameter< int >::type max_hitting_nn_num(max_hitting_nn_numSEXP);
+    Rcpp::traits::input_parameter< int >::type max_commute_nn_num(max_commute_nn_numSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    rcpp_result_gen = Rcpp::wrap(get_nearest_neighbors(adjacency_list, transition_probabilities, n_verts, n_cores, min_prob, min_visited_verts, min_prob_lower, max_hitting_nn_num, max_commute_nn_num, verbose));
+    return rcpp_result_gen;
+END_RCPP
+}
 // sgd
 arma::mat sgd(arma::mat& coords, arma::ivec& targets_i, arma::ivec& sources_j, arma::ivec& ps, arma::vec& weights, const double& gamma, const double& rho, const arma::uword& n_samples, const int& M, const double& alpha, const Rcpp::Nullable<Rcpp::NumericVector> momentum, const bool& useDegree, const Rcpp::Nullable<Rcpp::NumericVector> seed, const Rcpp::Nullable<Rcpp::IntegerVector> threads, const bool verbose);
 RcppExport SEXP _conos_sgd(SEXP coordsSEXP, SEXP targets_iSEXP, SEXP sources_jSEXP, SEXP psSEXP, SEXP weightsSEXP, SEXP gammaSEXP, SEXP rhoSEXP, SEXP n_samplesSEXP, SEXP MSEXP, SEXP alphaSEXP, SEXP momentumSEXP, SEXP useDegreeSEXP, SEXP seedSEXP, SEXP threadsSEXP, SEXP verboseSEXP) {
@@ -274,6 +305,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_conos_scoreTreeConsistency", (DL_FUNC) &_conos_scoreTreeConsistency, 4},
     {"_conos_maxStableClusters", (DL_FUNC) &_conos_maxStableClusters, 4},
     {"_conos_referenceWij", (DL_FUNC) &_conos_referenceWij, 5},
+    {"_conos_as_factor", (DL_FUNC) &_conos_as_factor, 1},
+    {"_conos_get_nearest_neighbors", (DL_FUNC) &_conos_get_nearest_neighbors, 10},
     {"_conos_sgd", (DL_FUNC) &_conos_sgd, 15},
     {"_conos_leiden_community", (DL_FUNC) &_conos_leiden_community, 4},
     {"_conos_n2Knn", (DL_FUNC) &_conos_n2Knn, 7},

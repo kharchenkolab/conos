@@ -33,6 +33,15 @@ referenceWij <- function(i, j, d, threads, perplexity) {
     .Call('_conos_referenceWij', PACKAGE = 'conos', i, j, d, threads, perplexity)
 }
 
+as_factor <- function(vals) {
+    .Call('_conos_as_factor', PACKAGE = 'conos', vals)
+}
+
+#' @export
+get_nearest_neighbors <- function(adjacency_list, transition_probabilities, n_verts = 0L, n_cores = 1L, min_prob = 1e-3, min_visited_verts = 1000L, min_prob_lower = 1e-5, max_hitting_nn_num = 0L, max_commute_nn_num = 0L, verbose = TRUE) {
+    .Call('_conos_get_nearest_neighbors', PACKAGE = 'conos', adjacency_list, transition_probabilities, n_verts, n_cores, min_prob, min_visited_verts, min_prob_lower, max_hitting_nn_num, max_commute_nn_num, verbose)
+}
+
 sgd <- function(coords, targets_i, sources_j, ps, weights, gamma, rho, n_samples, M, alpha, momentum, useDegree, seed, threads, verbose) {
     .Call('_conos_sgd', PACKAGE = 'conos', coords, targets_i, sources_j, ps, weights, gamma, rho, n_samples, M, alpha, momentum, useDegree, seed, threads, verbose)
 }
