@@ -286,7 +286,7 @@ Conos <- setRefClass(
         if(verbose) cat('local pairs ')
         x <- data.frame(do.call(rbind,papply(samples,function(x) {
           pca <- getPca(x)
-          xk <- n2Knn(pca,k.self+1,1,FALSE) # +1 accounts for self-edges that will be removed in the next line
+          xk <- n2Knn(pca,k.self+1,1, verbose=FALSE, indexType=metric) # +1 accounts for self-edges that will be removed in the next line
           diag(xk) <- 0; # no self-edges
           xk <- as(xk,'dgTMatrix')
           cat(".")
