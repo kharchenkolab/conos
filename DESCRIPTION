@@ -37,5 +37,5 @@ Suggests:
   rmarkdown
 VignetteBuilder: knitr
 RoxygenNote: 6.1.0
-LinkingTo: Rcpp, RcppArmadillo, RcppEigen, RcppProgress
+LinkingTo: Rcpp, RcppArmadillo, RcppEigen, RcppProgress, igraph
 NeedsCompilation: yes

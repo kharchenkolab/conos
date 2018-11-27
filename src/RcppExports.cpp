@@ -142,6 +142,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// leiden_community
+std::vector<size_t> leiden_community(SEXP graph, std::vector<double>& edge_weights, double resolution, int niter);
+RcppExport SEXP _conos_leiden_community(SEXP graphSEXP, SEXP edge_weightsSEXP, SEXP resolutionSEXP, SEXP niterSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type graph(graphSEXP);
+    Rcpp::traits::input_parameter< std::vector<double>& >::type edge_weights(edge_weightsSEXP);
+    Rcpp::traits::input_parameter< double >::type resolution(resolutionSEXP);
+    Rcpp::traits::input_parameter< int >::type niter(niterSEXP);
+    rcpp_result_gen = Rcpp::wrap(leiden_community(graph, edge_weights, resolution, niter));
+    return rcpp_result_gen;
+END_RCPP
+}
 // n2Knn
 arma::sp_mat n2Knn(const NumericMatrix& m, int k, int nThreads, bool verbose, std::string indexType, int M, int MaxM0);
 RcppExport SEXP _conos_n2Knn(SEXP mSEXP, SEXP kSEXP, SEXP nThreadsSEXP, SEXP verboseSEXP, SEXP indexTypeSEXP, SEXP MSEXP, SEXP MaxM0SEXP) {
@@ -261,6 +275,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_conos_maxStableClusters", (DL_FUNC) &_conos_maxStableClusters, 4},
     {"_conos_referenceWij", (DL_FUNC) &_conos_referenceWij, 5},
     {"_conos_sgd", (DL_FUNC) &_conos_sgd, 15},
+    {"_conos_leiden_community", (DL_FUNC) &_conos_leiden_community, 4},
     {"_conos_n2Knn", (DL_FUNC) &_conos_n2Knn, 7},
     {"_conos_n2CrossKnn", (DL_FUNC) &_conos_n2CrossKnn, 8},
     {"_conos_propagate_labels", (DL_FUNC) &_conos_propagate_labels, 9},
