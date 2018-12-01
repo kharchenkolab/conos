@@ -5,8 +5,7 @@
 \title{runs Shiny application to visualize waltktrap tree and select cut level}
 \usage{
 conosShinyApp(con, N = 30, leaf.labels = NULL, tissue_mapping = NULL,
-  tissue_factors = NULL, minsize = 0, minbreadth = 0,
-  flat.cut = TRUE)
+  tissue_factors = NULL, minsize = 0, minbreadth = 0, flat.cut = TRUE)
 }
 \arguments{
 \item{con}{conos object with walktrap results}
