@@ -178,14 +178,11 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
   }
 
   if (!is.null(groups)) {
-    if (is.factor(groups)) {
-      groups <- as.character(groups) %>% setNames(names(groups))
-    }
-    plot.df$Group <- NA
-    # common.names <- intersect(names(groups), plot.df$CellName)
+    groups <- as.factor(groups)
+
+    plot.df$Group <- factor(NA, levels=levels(groups))
     arr.ids <- match(names(groups), plot.df$CellName)
     plot.df$Group[arr.ids[!is.na(arr.ids)]] <- groups[!is.na(arr.ids)]
-    plot.df$Group <- as.factor(plot.df$Group)
 
     big.clusts <- (plot.df %>% dplyr::group_by(Group) %>% dplyr::summarise(Size=n()) %>%
                      dplyr::filter(Size >= min.cluster.size))$Group %>% as.vector()
@@ -221,11 +218,11 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
       palette <- rainbow
     }
 
-    color.vals <- palette(length(levels(plot.df$Group)))
+    color.vals <- palette(length(levels(groups)))
     if (shuffle.colors) {
       color.vals <- sample(color.vals)
     }
-    gg <- gg + ggplot2::scale_color_manual(name=legend.title, values=color.vals, labels=levels(plot.df$Group), drop=F) +
+    gg <- gg + ggplot2::scale_color_manual(name=legend.title, values=color.vals, labels=levels(groups), drop=F) +
       ggplot2::guides(color=ggplot2::guide_legend(override.aes=list(alpha=1.0)))
   } else if (!is.null(colors)) {
     plot.df <- plot.df %>% dplyr::mutate(Color=colors[CellName])
