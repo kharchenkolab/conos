@@ -18,14 +18,30 @@ Conos is robust to heterogeneity of samples within collection, as well as noise.
 Conos is an R package. Currently, it supports pre-processing (filtering, normalization, etc.) of the individual datasets using [pagoda2](https://github.com/hms-dbmi/pagoda2) or [Seurat](https://satijalab.org/seurat/).
 
 ## Installation
-
-
+Native installations have been tested in Linux. Normal installation should take <10min.
 ### Native installation
 Please make sure devtools package is installed (use `install.packages("devtools")` to install it if needed).
 Then install [pagoda2](https://github.com/hms-dbmi/pagoda2) (or Seurat), then install conos:
 ```r
 devtools::install_github("hms-dbmi/conos")
 ```
+
+#### System dependencies
+The dependencies are inherited from [pagoda2](https://github.com/hms-dbmi/pagoda2):
+##### Ubuntu Dependencies
+Install system dependencies, example here provided for Ubuntu
+```sh
+sudo apt-get update
+sudo apt-get -y install build-essential cmake gsl-bin libgsl0-dev libeigen3-dev libboost-all-dev libssl-dev libcurl4-openssl-dev libssl-dev libcairo2-dev libxt-dev libgtk2.0-dev libcairo2-dev xvfb xauth xfonts-base
+```
+
+##### Red-Hat-based distributions Dependencies
+Was tested on AWS linux and Centos 7
+```sh
+yum install cairo-devel pango-devel libXt-devel openssl-devel gsl-devel boost-devel libcurl-devel
+```
+##### OS X
+It is possible to install pagoda2 and Conos on OS X, however some users have reported issues with OpenMP configuration (see [pagoda2](https://github.com/hms-dbmi/pagoda2) readme).
 
 ## Installing Conos as Docker Container
 If your system configuration is making it difficult to install Conos natively, an alternative way to get Conos running is through a docker container. The docker distribution is current as of October 2018 and also includes the (Pagoda2 package)[https://github.com/hms-dbmi/pagoda2]. To start a docker container, first [install docker](https://docs.docker.com/install/) on your platform and then start the pagoda container with the following command in the shell:
@@ -37,7 +53,7 @@ The first time you run the command it will download several images so make sure 
 
 
 ## Usage example
-Please see [Conos tutorial](vignettes/walkthrough.md) for detailed usage.
+Please see [Conos tutorial](vignettes/walkthrough.md) for detailed usage. The overall runtime of the tutorial should be ~3minutes.
 
 Given a list of individual processed samples (`pl`), Conos processing can be as simple as this:
 ```r
@@ -49,6 +65,9 @@ con$buildGraph()
 
 # find communities
 con$findCommunities()
+
+# plot joint graph
+con$plotGraph()
 
 # plot panel with joint clustering results
 con$plotPanel()
