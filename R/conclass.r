@@ -461,6 +461,41 @@ Conos <- setRefClass(
       label.distribution <- colnames(label.distribution)[apply(label.distribution, 1, which.max)] %>%
         setNames(rownames(label.distribution))
       return(label.distribution)
+    },
+    
+    getClusterCountMatrix=function(clustering=NULL, groups=NULL,common.genes=TRUE,omit.na.cells=TRUE) {
+      "Estimate per-cluster molecule count matrix by summing up the molecules of each gene for all of the cells in each cluster.\n\n
+       Params:\n
+       - clustering: the name of the clustering that should be used
+       - groups: explicitly provided cell grouping\n
+       - common.genes: bring individual sample matrices to a common gene list
+       - omit.na.cells: if set to FALSE, the resulting matrices will include a first column named 'NA' that will report total molecule counts for all of the cells that were not covered by the provided factor.
+       \n
+       Return: a list of per-sample uniform dense matrices with rows being genes, and columns being clusters
+      "
+      if(is.null(groups)) {
+        groups <- getClusteringGroups(clusters, clustering)
+      }
+
+      matl <- lapply(samples,function(s) {
+        m <- getRawCountMatrix(s,trans=TRUE); # rows are cells
+        cl <- as.factor(groups[match(rownames(m),names(groups))]);
+        tc <- colSumByFactor(m,cl);
+        if(omit.na.cells) { tc <- tc[-1,,drop=F] }
+        t(tc);
+      })
+      # bring to a common gene space
+      if(common.genes) {
+        gs <- unique(unlist(lapply(matl,rownames)))
+        matl <- lapply(matl,function(m) {
+          nm <- matrix(0,nrow=length(gs),ncol=ncol(m))
+          colnames(nm) <- colnames(m); rownames(nm) <- gs;
+          mi <- match(rownames(m),gs)
+          nm[mi,] <- m;
+          nm
+        })
+      }
+      matl
     }
   )
 );
@@ -745,6 +780,7 @@ multileiden.community <- function(graph, n.cores=parallel::detectCores(logical=F
     paste(cn,as.character(mbl[[cn]]),sep='-')
   }))
   names(fv) <- unlist(lapply(mbl,names))
+  if(verbose) cat("done\n");
   
   # enclose in a masquerading class
   res <- list(membership=fv,dendrogram=NULL,algorithm='multileiden');

@@ -74,6 +74,10 @@ adjacent_vertex_weights <- function(edge_verts, edge_weights) {
     .Call('_conos_adjacent_vertex_weights', PACKAGE = 'conos', edge_verts, edge_weights)
 }
 
+colSumByFactor <- function(sY, rowSel) {
+    .Call('_conos_colSumByFactor', PACKAGE = 'conos', sY, rowSel)
+}
+
 spcov <- function(m, cm) {
     .Call('_conos_spcov', PACKAGE = 'conos', m, cm)
 }

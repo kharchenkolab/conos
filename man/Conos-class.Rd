@@ -40,6 +40,22 @@ The class encompasses sample collections, providing methods for calculating and 
        - count.matrix: alternative gene count matrix to correct. Default: joint count matrix for all datasets.
       }
 
+\item{\code{getClusterCountMatrix(clustering = NULL, groups = NULL,
+  common.genes = TRUE, omit.na.cells = TRUE)}}{Estimate per-cluster molecule count matrix by summing up the molecules of each gene for all of the cells in each cluster.
+
+
+       Params:
+
+       - clustering: the name of the clustering that should be used
+       - groups: explicitly provided cell grouping
+
+       - common.genes: bring individual sample matrices to a common gene list
+       - omit.na.cells: if set to FALSE, the resulting matrices will include a first column named 'NA' that will report total molecule counts for all of the cells that were not covered by the provided factor.
+       
+
+       Return: a list of per-sample uniform dense matrices with rows being genes, and columns being clusters
+      }
+
 \item{\code{propagateLabels(labels, max.iters = 50, diffusion.fading = 10,
   diffusion.fading.const = 0.5, tol = 0.005, return.distribution = TRUE,
   verbose = TRUE, fixed.initial.labels = FALSE)}}{Estimate labeling distribution for each vertex, based on provided labels.
