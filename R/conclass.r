@@ -474,12 +474,12 @@ Conos <- setRefClass(
        Return: a list of per-sample uniform dense matrices with rows being genes, and columns being clusters
       "
       if(is.null(groups)) {
-        groups <- getClusteringGroups(clusters, clustering)
+        groups <- as.factor(getClusteringGroups(clusters, clustering))
       }
 
       matl <- lapply(samples,function(s) {
         m <- getRawCountMatrix(s,trans=TRUE); # rows are cells
-        cl <- as.factor(groups[match(rownames(m),names(groups))]);
+        cl <- factor(groups[match(rownames(m),names(groups))],levels=levels(groups));
         tc <- colSumByFactor(m,cl);
         if(omit.na.cells) { tc <- tc[-1,,drop=F] }
         t(tc);
