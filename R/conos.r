@@ -7,6 +7,7 @@ NULL
 scaledMatricesP2 <- function(p2.objs, data.type, od.genes, var.scale, neighborhood.average) {
   ## Common variance scaling
   if (var.scale) {
+    # use geometric means for variance, as we're trying to focus on the common variance components
     cgsf <- do.call(cbind, lapply(p2.objs,function(x) x$misc$varinfo[od.genes,]$gsf)) %>%  log() %>% rowMeans() %>% exp()
     #cgsf <- do.call(cbind, lapply(p2.objs,function(x) x$misc$varinfo[od.genes,]$gsf)) %>% rowMeans()
   }
@@ -64,6 +65,17 @@ scaledMatrices <- function(samples, data.type, od.genes, var.scale, neighborhood
     return(scaledMatricesSeurat(samples, data.type=data.type, od.genes, var.scale, neighborhood.average))
 
   stop("Unknown class of sample: ", class(samples[[1]]))
+}
+
+getGeneVariance <- function(obj) {
+  if(class(obj) == 'Pagoda2') {
+    
+  }
+  if(class(obj) == 'seurat') {
+    warming("Seurat doesn't support variance scaling")
+    return(NULL)
+  }
+  
 }
 
 commonOverdispersedGenes <- function(samples, n.odgenes, verbose) {

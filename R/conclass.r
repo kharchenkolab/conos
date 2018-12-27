@@ -191,7 +191,7 @@ Conos <- setRefClass(
       return(invisible(cis))
     },
 
-    buildGraph=function(k=15, k.self=10, k.self.weight=0.1, space='CPCA', matching.method='mNN', metric='angular', data.type='counts', l2.sigma=1e5, var.scale =TRUE, ncomps=40, n.odgenes=2000, return.details=T,neighborhood.average=FALSE,neighborhood.average.k=10, exclude.pairs=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE, const.inner.weights=FALSE) {
+    buildGraph=function(k=15, k.self=10, k.self.weight=0.1, space='CPCA', matching.method='mNN', metric='angular', data.type='counts', l2.sigma=1e5, var.scale =TRUE, ncomps=40, n.odgenes=2000, return.details=T,neighborhood.average=FALSE,neighborhood.average.k=10, exclude.pairs=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE, const.inner.weights=FALSE, base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, append.local.axes=TRUE) {
 
       supported.spaces <- c("CPCA","JNMF","genes","PCA")
       if(!space %in% supported.spaces) {
@@ -212,6 +212,42 @@ Conos <- setRefClass(
       cis <- updatePairs(space=space,ncomps=ncomps,n.odgenes=n.odgenes,verbose=verbose,var.scale=var.scale,neighborhood.average=neighborhood.average,neighborhood.average.k=10,exclude.pairs=exclude.pairs,exclude.samples=exclude.samples)
 
       if(ncol(cis)<1) { stop("insufficient number of comparable pairs") }
+
+      if(!is.null(base.groups)) {
+        samf <- lapply(samples,getCellNames)
+        base.groups <- as.factor(base.groups[names(base.groups) %in% unlist(samf)]) # clean up the group factor
+        if(length(base.groups)<2) stop("provided base.gropus doesn't cover enough cells")
+        # make a sample factor
+        samf <- setNames(rep(names(samf),unlist(lapply(samf,length))),unlist(samf))
+        if(append.global.axes) {
+          if(verbose) cat('calculating global projections ');
+          
+          # calculate global eigenvectors
+          tc <- getClusterCountMatrix(groups=base.groups,common.genes=FALSE)
+          
+          gns <- Reduce(intersect,lapply(tc,rownames))
+          if(verbose) cat('.');        
+          if(length(gns) < length(tc)) stop("insufficient number of common genes")
+          tcc <- Reduce('+',lapply(tc,function(x) x[gns,]))
+          tcc <- t(tcc)/colSums(tcc)*1e6;
+          gv <- apply(tcc,2,var);
+          gns <- gns[is.finite(gv) & gv>0]
+          tcc <- tcc[,gns,drop=F];
+          
+          if(verbose) cat('.');
+          global.pca <- prcomp(log10(tcc+1),center=T,scale=T,retx=F)
+          # project samples onto the global axes
+          global.proj <- papply(samples,function(s) {
+            smat <- as.matrix(scaledMatrices(list(s), data.type=data.type, od.genes=gns, var.scale=F, neighborhood.average=neighborhood.average)[[1]])
+            if(verbose) cat('.')
+            #smat <- as.matrix(conos:::getRawCountMatrix(s,transposed=TRUE)[,gns])
+            #smat <- log10(smat/rowSums(smat)*1e3+1)
+            smat <- scale(smat,scale=T,center=T); smat[is.nan(smat)] <- 0;
+            sproj <- smat %*% global.pca$rotation
+          },n.cores=n.cores)
+          if(verbose) cat('. done\n');
+        }
+      }
 
       # determine inter-sample mapping
       if(verbose) cat('inter-sample links using ',matching.method,' ');
@@ -253,21 +289,89 @@ Conos <- setRefClass(
 
           # create matrices, adjust variance
           cproj <- scaledMatrices(r.ns, data.type=data.type, od.genes=odgenes, var.scale=var.scale, neighborhood.average=neighborhood.average)
+
+          # determine the centering
           if(common.centering) {
             ncells <- unlist(lapply(cproj,nrow));
-            centering <- colSums(do.call(rbind,lapply(cproj,colMeans))*ncells)/sum(ncells)
+            centering <- setNames(rep(colSums(do.call(rbind,lapply(cproj,colMeans))*ncells)/sum(ncells),length(cproj)),names(cproj))
           } else {
-            centering <- NULL;
+            centering <- lapply(cproj,colMeans)
           }
-          cpproj <- lapply(cproj,function(x) {
-            if(is.null(centering)) { centering <- colMeans(x) }
-            x <- t(as.matrix(t(x))-centering)
+
+          # append decoy cells if needed
+          if(!is.null(base.groups) && append.decoys) {
+            cproj.decoys <- lapply(cproj,function(d) {
+              tg <- tabulate(as.integer(base.groups[rownames(d)]),nbins=length(levels(base.groups)))
+              nvi <- which(tg<decoy.threshold)
+              if(length(nvi)>0) {
+                # sample cells from other datasets
+                decoy.cells <- names(base.groups)[unlist(lapply(nvi,function(i) {
+                  vc <- which(as.integer(base.groups)==i & (!samf[names(base.groups)] %in% names(cproj)))
+                  if(length(vc)>n.decoys) {
+                    vc <- sample(vc,n.decoys)
+                  }
+                }))]
+                if(length(decoy.cells)>0) {
+                  # get the matrices
+                  do.call(rbind,lapply(samples[unique(samf[decoy.cells])],function(s) {
+                    gn <- intersect(getGenes(s),colnames(d));
+                    m <- scaledMatrices(list(s),data.type=data.type, od.genes=gn, var.scale=var.scale, neighborhood.average=neighborhood.average)[[1]]
+                    m <- m[rownames(m) %in% decoy.cells,,drop=F]
+                    # append missing genes
+                    gd <- setdiff(colnames(d),gn)
+                    if(length(gd)>0) {
+                      m <- cbind(m,Matrix(0,nrow=nrow(m),ncol=length(gd),dimnames=list(rownames(m),gd),sparse=T))
+                      m <- m[,colnames(d),drop=F] # fix gene order
+                    }
+                  }))
+                } else {
+                  # empty matrix
+                  Matrix(0,nrow=0,ncol=ncol(d),dimnames=list(c(),colnames(d)))
+                }
+              }
+            })
+            #if(verbose) cat(paste0("+",sum(unlist(lapply(cproj.decoys,nrow)))))
+            # append decoys
+            cproj <- lapply(sn(names(cproj)),function(n) rbind(cproj[[n]],cproj.decoys[[n]]))
+          }
+          
+          cpproj <- lapply(sn(names(cproj)),function(n) {
+            x <- cproj[[n]]
+            x <- t(as.matrix(t(x))-centering[[n]])
             x %*% rot;
           })
           n1 <- cis[1,j]; n2 <- cis[2,j]
+          
+          if(!is.null(base.groups)) {
+            if(append.global.axes) {
+              #cpproj <- lapply(sn(names(cpproj)),function(n) cbind(cpproj[[n]],global.proj[[n]])) # case without decoys
+              cpproj <- lapply(sn(names(cpproj)),function(n) {
+                gm <- global.proj[[n]]
+                if(append.decoys) {
+                  decoy.cells <- rownames(cproj.decoys[[n]])
+                  if(length(decoy.cells)>0) {
+                    gm <- rbind(gm,do.call(rbind,lapply(global.proj[unique(samf[decoy.cells])],function(m) {
+                      m[rownames(m) %in% decoy.cells,,drop=F]
+                    })))
+                  }
+                }
+                # append global axes
+                cbind(cpproj[[n]],gm[rownames(cpproj[[n]]),])
+              })
+            }
+          }
+          
           if(verbose) cat(".")
 
           mnn <- get.neighbor.matrix(cpproj[[n1]], cpproj[[n2]], k, matching=matching.method, metric=metric, l2.sigma=l2.sigma)
+
+          if(!is.null(base.groups) && append.decoys) {
+            # discard edges connecting to decoys
+            decoy.cells <- unlist(lapply(cproj.decoys,rownames))
+            mnn <- mnn[,!colnames(mnn) %in% decoy.cells,drop=F]
+            mnn <- mnn[!rownames(mnn) %in% decoy.cells,,drop=F]
+          }
+          
           return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=mnn@x,stringsAsFactors=F))
 
         } else if (space=='genes') {
@@ -316,7 +420,7 @@ Conos <- setRefClass(
 
 
 
-    findCommunities=function(method=multilevel.community, min.group.size=0, name=NULL, ...) {
+    findCommunities=function(method=leiden.community, min.group.size=0, name=NULL, ...) {
 
       cls <- method(graph, ...)
       if(is.null(name)) {
@@ -474,11 +578,13 @@ Conos <- setRefClass(
        Return: a list of per-sample uniform dense matrices with rows being genes, and columns being clusters
       "
       if(is.null(groups)) {
-        groups <- as.factor(getClusteringGroups(clusters, clustering))
+        groups <- getClusteringGroups(clusters, clustering)
       }
 
+      groups <- as.factor(groups)
+      
       matl <- lapply(samples,function(s) {
-        m <- getRawCountMatrix(s,trans=TRUE); # rows are cells
+        m <- conos:::getRawCountMatrix(s,trans=TRUE); # rows are cells
         cl <- factor(groups[match(rownames(m),names(groups))],levels=levels(groups));
         tc <- colSumByFactor(m,cl);
         if(omit.na.cells) { tc <- tc[-1,,drop=F] }
