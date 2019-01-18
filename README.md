@@ -53,7 +53,7 @@ docker run -p 8787:8787 docker.io/barkasn/pagoda2
 ```
 The first time you run the command it will download several images so make sure that you have fast internet access setup. You can then point your browser to http://localhost:8787/ to get an Rstudio environment with pagoda2 and conos installed (log in using credentials rstudio/pass). Explore the docker [--mount option]([https://docs.docker.com/storage/volumes/) to allow access of the docker image to your local files.
 ### Building docker image on the fly
-If you want to run an up-to-date version of Conos (recommended), download the Dockerfile (available in this repo under /dockers) and run to following command to build it:
+If you want to run an up-to-date version of Conos (recommended), download the [Dockerfile](https://github.com/hms-dbmi/conos/blob/master/dockers/Dockerfile) (available in this repo under /dockers) and run to following command to build it:
 ```
 docker build -t conos .
 ```
