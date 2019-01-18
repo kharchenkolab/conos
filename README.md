@@ -44,13 +44,24 @@ yum install cairo-devel pango-devel libXt-devel openssl-devel gsl-devel boost-de
 It is possible to install pagoda2 and Conos on OS X, however some users have reported issues with OpenMP configuration (see [pagoda2](https://github.com/hms-dbmi/pagoda2) readme).
 
 ## Installing Conos as Docker Container
-If your system configuration is making it difficult to install Conos natively, an alternative way to get Conos running is through a docker container. The docker distribution is current as of October 2018 and also includes the (Pagoda2 package)[https://github.com/hms-dbmi/pagoda2]. To start a docker container, first [install docker](https://docs.docker.com/install/) on your platform and then start the pagoda container with the following command in the shell:
+If your system configuration is making it difficult to install Conos natively, an alternative way to get Conos running is through a docker container. 
+### Ready-to-run docker image
+The docker distribution is current as of October 2018 and also includes the (Pagoda2 package)[https://github.com/hms-dbmi/pagoda2]. To start a docker container, first [install docker](https://docs.docker.com/install/) on your platform and then start the pagoda container with the following command in the shell:
 
 ```
 docker run -p 8787:8787 docker.io/barkasn/pagoda2
 ```
 The first time you run the command it will download several images so make sure that you have fast internet access setup. You can then point your browser to http://localhost:8787/ to get an Rstudio environment with pagoda2 and conos installed (log in using credentials rstudio/pass). Explore the docker [--mount option]([https://docs.docker.com/storage/volumes/) to allow access of the docker image to your local files.
-
+### Building docker image on the fly
+If you want to run an up-to-date version of Conos (recommended), download the Dockerfile (available in this repo under /dockers) and run to following command to build it:
+```
+docker build -t conos .
+```
+This will create a "conos" docker image on your system (be patient, as the build takes ~10min or so).
+You can then run it using the following command:
+```
+docker run -d -p 8787:8787 -e PASSWORD=pass --name conos -it conos
+```
 
 ## Usage example
 Please see [Conos tutorial](vignettes/walkthrough.md) for detailed usage. The overall runtime of the tutorial should be ~3minutes.

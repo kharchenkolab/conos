@@ -468,13 +468,25 @@ Conos <- setRefClass(
       return(gg)
     },
 
-    embedGraph=function(method='largeVis',M=1,gamma=1,alpha=0.1,perplexity=NA,sgd_batches=1e8,seed=1,verbose=TRUE) {
-      if(method!='largeVis') { stop("currently, only largeVis embeddings are supported") }
+    embedGraph=function(method='largeVis',M=1,gamma=1,alpha=0.1,perplexity=NA,sgd_batches=1e8,seed=1,verbose=TRUE,target.dims=2) {
+      "Generate an embedding of a joint graph.\n
+       Params:\n
+       - method: embedding method. Currently only largeVis is supported\n
+       - M, gamma, alpha, sgd__batched - largeVis parameters (defaults are 1, 1, 0.01, 1e8 respectively).\n
+       - perplexity: perplexity passed to largeVis (defaults to NA).\n
+       - seed: random seed for the largeVis algorithm. Default: 1.\n
+       - target.dims: numer of dimensions for the reduction. Default: 2. Higher dimensions can be used to generate embeddings for subsequent reductions by other methods, such as tSNE\n
+       - verbose: verbose mode. Default: TRUE.
+      "
+
+      supportedMethods <- c('largeVis')
+      if(!method %in% supportedMethods) { stop(paste0("currently, only the following embeddings are supported: ",paste(supportedMethods,collapse=' '))) }
+      
       wij <- as_adj(graph,attr='weight');
       if(!is.na(perplexity)) {
         wij <- conos:::buildWijMatrix(wij,perplexity=perplexity,threads=n.cores)
       }
-      coords <- conos:::projectKNNs(wij = wij, dim=2, verbose = verbose,sgd_batches = sgd_batches,gamma=gamma, M=M, seed=seed, alpha=alpha, rho=1, threads=n.cores)
+      coords <- conos:::projectKNNs(wij = wij, dim=target.dims, verbose = verbose,sgd_batches = sgd_batches,gamma=gamma, M=M, seed=seed, alpha=alpha, rho=1, threads=n.cores)
       colnames(coords) <- V(graph)$name
       embedding <<- coords;
       return(invisible(embedding))
