@@ -41,7 +41,7 @@ validateBetweenCellTypeParams <- function(con.obj, groups, sample.groups, refgro
   if (!all(unlist(lapply(sample.groups, function(x) {all(x %in% names(con.obj$samples))}))) )
     stop('sample.groups entries must be names of samples in the conos object')
   if (is.null(refgroup)) stop('reference group is not defined')
-  if (is.null(altgroup)) stop('reference group is not defined')
+  if (is.null(altgroup)) stop('altgroup is not defined')
   ## todo: check samplegrousp are named
   if(is.null(names(sample.groups))) stop('sample.groups must be named')
   if(class(groups) != 'factor') stop('groups must be a factor')
@@ -437,7 +437,7 @@ getBetweenCellTypeDE <- function(con.obj, sample.groups =  NULL, groups=NULL, co
     rbindDEMatrices(cluster.sep.chr=cluster.sep.chr)
   gc()
 
-  aggr2.meta <- generateDEMatrixMetadata(aggr2, refgroup, altgroup)
+  aggr2.meta <- generateDEMatrixMetadata(aggr2, refgroup, altgroup, cluster.sep.chr)
 
   ## Get the samples that have both cell types only
   if (only.paired) {
@@ -460,7 +460,7 @@ getBetweenCellTypeDE <- function(con.obj, sample.groups =  NULL, groups=NULL, co
   }
 }
 
-generateDEMatrixMetadata <- function(mtx, refgroup, altgroup) {
+generateDEMatrixMetadata <- function(mtx, refgroup, altgroup, cluster.sep.chr) {
   meta <- data.frame(
     row.names = colnames(mtx),
     sample=colnames(mtx),
