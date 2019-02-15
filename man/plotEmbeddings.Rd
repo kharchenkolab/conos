@@ -5,8 +5,9 @@
 \title{Plot panel of specified embeddings}
 \usage{
 plotEmbeddings(embeddings, groups = NULL, colors = NULL, ncol = NULL,
-  nrow = NULL, raster = FALSE, panel.size = NULL, adjust.func = NULL,
-  title.size = 6, raster.width = NULL, raster.height = NULL, ...)
+  nrow = NULL, raster = FALSE, panel.size = NULL,
+  adjust.func = NULL, title.size = 6, raster.width = NULL,
+  raster.height = NULL, ...)
 }
 \arguments{
 \item{embeddings}{list of two-column matrices with (x, y) coordinates of the embeddings. Each mutrix must have cell names in rownames.}

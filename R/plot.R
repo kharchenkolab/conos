@@ -168,8 +168,13 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
   colnames(plot.df)[2:3] <- c("x", "y")
 
   if (raster && requireNamespace("ggrastr", quietly = TRUE)) {
-    geom_point_w <- function(...)
-      ggrastr::geom_point_rast(..., width=raster.width, height=raster.height, dpi=raster.dpi)
+    if (packageVersion("ggrastr") <= "0.1.6") {
+      geom_point_w <- function(...)
+        ggrastr::geom_point_rast(..., width=raster.width, height=raster.height, dpi=raster.dpi)
+    } else {
+      geom_point_w <- function(...)
+        ggrastr::geom_point_rast(..., raster.width=raster.width, raster.height=raster.height, raster.dpi=raster.dpi)
+    }
   } else {
     if (raster) {
       warning("You have to install ggrastr package to be able to use 'raster' parameter")
