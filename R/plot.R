@@ -304,24 +304,24 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
 
 #' Plots barplots per sample of composition of each pagoda2 application based on
 #' selected clustering
-#' @param conosObjs A conos objects
+#' @param conos.objs A conos objects
 #' @param type one of 'counts' or 'proportions' to select type of plot
 #' @param clustering name of clustering in the current object
 #' @return a ggplot object
-plotClusterBarplots <- function(conosObjs, type='counts',clustering=NULL, groups=NULL) {
+plotClusterBarplots <- function(conos.objs, type='counts',clustering=NULL, groups=NULL) {
     ## param checking
     #if(is.null(clustering)) clustering <- 'multi level'
     if(!type %in% c('counts','proportions')) stop('argument type must be either counts or proportions')
     ## main function
     if(!is.null(clustering)) {
-        if(clustering %in% names(conosObjs$clusters)) stop('Specified clustering doesn\'t exist')
-        groups <- as.factor(conosObjs$clusters[[clustering]]$groups)
+        if(clustering %in% names(conos.objs$clusters)) stop('Specified clustering doesn\'t exist')
+        groups <- as.factor(conos.objs$clusters[[clustering]]$groups)
     } else {
         if (is.null(groups)) stop('One of clustering or groups needs to be specified')
         groups <- as.factor(groups)
     }
-    plot.df <- do.call(rbind,lapply(names(conosObjs$samples), function(n) {
-        o <- conosObjs$samples[[n]]
+    plot.df <- do.call(rbind,lapply(names(conos.objs$samples), function(n) {
+        o <- conos.objs$samples[[n]]
         grps1 <- groups[intersect(names(groups), rownames(o$counts))]
         tbl1 <- data.frame(
             clname=levels(grps1),
@@ -346,11 +346,11 @@ plotClusterBarplots <- function(conosObjs, type='counts',clustering=NULL, groups
 
 
 #' Generate boxplot per cluster of the proportion of cells in each celltype
-#' @param conosObjs conos object
+#' @param conos.objs conos object
 #' @param clustering name of the clustering to use
 #' @param apptypes a factor specifying how to group the samples
 #' @param return.details if TRUE return a list with the plot and the summary data.frame
-plotClusterBoxPlotsByAppType <- function(conosObjs, clustering=NULL, apptypes=NULL, return.details=FALSE) {
+plotClusterBoxPlotsByAppType <- function(conos.objs, clustering=NULL, apptypes=NULL, return.details=FALSE) {
     type <- 'proportions'
     ## param checking
     if(is.null(clustering)) clustering <- 'multi level'
@@ -358,9 +358,9 @@ plotClusterBoxPlotsByAppType <- function(conosObjs, clustering=NULL, apptypes=NU
     if(!is.factor(apptypes)) stop('apptypes must be a factor')
     if(!type %in% c('counts','proportions')) stop('argument type must be either counts or proportions')
     ## main function
-    groups <- as.factor(conosObjs$clusters[[clustering]]$groups)
-    plot.df <- do.call(rbind,lapply(names(conosObjs$samples), function(n) {
-        o <- conosObjs$samples[[n]]
+    groups <- as.factor(conos.objs$clusters[[clustering]]$groups)
+    plot.df <- do.call(rbind,lapply(names(conos.objs$samples), function(n) {
+        o <- conos.objs$samples[[n]]
         grps1 <- groups[intersect(names(groups), rownames(o$counts))]
         tbl1 <- data.frame(
             clname=levels(grps1),
@@ -393,16 +393,16 @@ plotClusterBoxPlotsByAppType <- function(conosObjs, clustering=NULL, apptypes=NU
 
 
 #' Get markers for global clusters
-#' @param conosObjs conos object
+#' @param conos.objs conos object
 #' @param clustering name of the clustering to use
 #' @param min.samples.expressing minimum number of samples that must have the genes upregulated in the respective cluster
 #' @param min.percent.samples.expression minumum percent of samples that must have the gene upregulated
-getGlobalClusterMarkers <- function(conosObjs, clustering='multi level',
+getGlobalClusterMarkers <- function(conos.objs, clustering='multi level',
                                     min.samples.expressing=0,min.percent.samples.expressing=0){
     ## get the groups from the clusters
-    groups <- as.factor(conosObjs$clusters[[clustering]]$groups)
+    groups <- as.factor(conos.objs$clusters[[clustering]]$groups)
     ## de lists
-    delists <- lapply(conosObjs$samples, function(p2) {
+    delists <- lapply(conos.objs$samples, function(p2) {
         cells <- rownames(p2$counts)
         groups.p2 <- groups[cells]
         de <- p2$getDifferentialGenes(groups=groups.p2)
@@ -427,4 +427,30 @@ getGlobalClusterMarkers <- function(conosObjs, clustering='multi level',
     })
     ## return consistent genes
     zp
+}
+
+embedGraphUmap <- function(graph, verbose=T, min.prob = 1e-3, min.visited.verts=1000, n.cores=30,
+                           max.hitting.nn.num=7000, max.commute.nn.num=150, min.prob.lower=1e-7,
+                           n.neighbors=40, n.epochs=1000, spread=15, min.dist=0.001, return.all=F) {
+  min.visited.verts = min(min.visited.verts, length(igraph::V(graph) - 1))
+
+  if (verbose) cat("Convert graph to adjacency list...\n")
+  adj.info <- graphToAdjList(graph);
+  if (verbose) cat("Done\n")
+
+  if (verbose) cat("Estimate nearest neighbors and commute times...\n")
+  commute.times <- get_nearest_neighbors(adj.info$idx, adj.info$probabilities, min_prob=min.prob,
+                                         min_visited_verts=min.visited.verts, n_cores=n.cores, max_hitting_nn_num=max.hitting.nn.num,
+                                         max_commute_nn_num=max.commute.nn.num, min_prob_lower=min.prob.lower, verbose=verbose)
+  if (verbose) cat("Done\n")
+
+  if (verbose) cat("Estimate UMAP embedding...\n")
+  umap <- embedKnnGraph(commute.times, n.neighbors=n.neighbors, names=adj.info$names,
+                        n_epochs=n.epochs, spread=spread, min_dist=min.dist, verbose=verbose)
+  if (verbose) cat("Done\n")
+
+  if (return.all)
+    return(list(adj.info=adj.info, commute.times=commute.times, umap=umap))
+
+  return(umap)
 }

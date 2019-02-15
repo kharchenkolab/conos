@@ -4,11 +4,11 @@
 \alias{plotClusterBoxPlotsByAppType}
 \title{Generate boxplot per cluster of the proportion of cells in each celltype}
 \usage{
-plotClusterBoxPlotsByAppType(conosObjs, clustering = NULL,
+plotClusterBoxPlotsByAppType(conos.objs, clustering = NULL,
   apptypes = NULL, return.details = FALSE)
 }
 \arguments{
-\item{conosObjs}{conos object}
+\item{conos.objs}{conos object}
 
 \item{clustering}{name of the clustering to use}
 

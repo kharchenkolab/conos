@@ -221,19 +221,19 @@ Conos <- setRefClass(
         samf <- setNames(rep(names(samf),unlist(lapply(samf,length))),unlist(samf))
         if(append.global.axes) {
           if(verbose) cat('calculating global projections ');
-          
+
           # calculate global eigenvectors
           tc <- getClusterCountMatrix(groups=base.groups,common.genes=FALSE)
-          
+
           gns <- Reduce(intersect,lapply(tc,rownames))
-          if(verbose) cat('.');        
+          if(verbose) cat('.');
           if(length(gns) < length(tc)) stop("insufficient number of common genes")
           tcc <- Reduce('+',lapply(tc,function(x) x[gns,]))
           tcc <- t(tcc)/colSums(tcc)*1e6;
           gv <- apply(tcc,2,var);
           gns <- gns[is.finite(gv) & gv>0]
           tcc <- tcc[,gns,drop=F];
-          
+
           if(verbose) cat('.');
           global.pca <- prcomp(log10(tcc+1),center=T,scale=T,retx=F)
           # project samples onto the global axes
@@ -334,14 +334,14 @@ Conos <- setRefClass(
             # append decoys
             cproj <- lapply(sn(names(cproj)),function(n) rbind(cproj[[n]],cproj.decoys[[n]]))
           }
-          
+
           cpproj <- lapply(sn(names(cproj)),function(n) {
             x <- cproj[[n]]
             x <- t(as.matrix(t(x))-centering[[n]])
             x %*% rot;
           })
           n1 <- cis[1,j]; n2 <- cis[2,j]
-          
+
           if(!is.null(base.groups)) {
             if(append.global.axes) {
               #cpproj <- lapply(sn(names(cpproj)),function(n) cbind(cpproj[[n]],global.proj[[n]])) # case without decoys
@@ -360,7 +360,7 @@ Conos <- setRefClass(
               })
             }
           }
-          
+
           if(verbose) cat(".")
 
           mnn <- get.neighbor.matrix(cpproj[[n1]], cpproj[[n2]], k, matching=matching.method, metric=metric, l2.sigma=l2.sigma)
@@ -371,7 +371,7 @@ Conos <- setRefClass(
             mnn <- mnn[,!colnames(mnn) %in% decoy.cells,drop=F]
             mnn <- mnn[!rownames(mnn) %in% decoy.cells,,drop=F]
           }
-          
+
           return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=mnn@x,stringsAsFactors=F))
 
         } else if (space=='genes') {
@@ -417,7 +417,6 @@ Conos <- setRefClass(
       graph <<- g;
       return(invisible(g))
     },
-
 
 
     findCommunities=function(method=leiden.community, min.group.size=0, name=NULL, ...) {
@@ -468,27 +467,33 @@ Conos <- setRefClass(
       return(gg)
     },
 
-    embedGraph=function(method='largeVis',M=1,gamma=1,alpha=0.1,perplexity=NA,sgd_batches=1e8,seed=1,verbose=TRUE,target.dims=2) {
+    embedGraph=function(method='largeVis',M=1,gamma=1,alpha=0.1,perplexity=NA,sgd_batches=1e8,seed=1,verbose=TRUE,target.dims=2, ...) {
       "Generate an embedding of a joint graph.\n
        Params:\n
-       - method: embedding method. Currently only largeVis is supported\n
+       - method: embedding method. Currently largeVis and UMAP are supported\n
        - M, gamma, alpha, sgd__batched - largeVis parameters (defaults are 1, 1, 0.01, 1e8 respectively).\n
        - perplexity: perplexity passed to largeVis (defaults to NA).\n
        - seed: random seed for the largeVis algorithm. Default: 1.\n
        - target.dims: numer of dimensions for the reduction. Default: 2. Higher dimensions can be used to generate embeddings for subsequent reductions by other methods, such as tSNE\n
        - verbose: verbose mode. Default: TRUE.
+       - ...: additional arguments, passed to UMAP embedding (run ?conos:::embedGraphUmap for more info)
       "
 
-      supportedMethods <- c('largeVis')
-      if(!method %in% supportedMethods) { stop(paste0("currently, only the following embeddings are supported: ",paste(supportedMethods,collapse=' '))) }
-      
-      wij <- as_adj(graph,attr='weight');
-      if(!is.na(perplexity)) {
-        wij <- conos:::buildWijMatrix(wij,perplexity=perplexity,threads=n.cores)
+      supported.methods <- c('largeVis', 'UMAP')
+      if(!method %in% supported.methods) { stop(paste0("currently, only the following embeddings are supported: ",paste(supported.methods,collapse=' '))) }
+
+      if (method == 'largeVis') {
+        wij <- as_adj(graph,attr='weight');
+        if(!is.na(perplexity)) {
+          wij <- conos:::buildWijMatrix(wij,perplexity=perplexity,threads=n.cores)
+        }
+        coords <- conos:::projectKNNs(wij = wij, dim=target.dims, verbose = verbose,sgd_batches = sgd_batches,gamma=gamma, M=M, seed=seed, alpha=alpha, rho=1, threads=n.cores)
+        colnames(coords) <- V(graph)$name
+        embedding <<- coords;
+      } else {
+        embedding <<- t(embedGraphUmap(graph, verbose=verbose, return.all=F, ...))
       }
-      coords <- conos:::projectKNNs(wij = wij, dim=target.dims, verbose = verbose,sgd_batches = sgd_batches,gamma=gamma, M=M, seed=seed, alpha=alpha, rho=1, threads=n.cores)
-      colnames(coords) <- V(graph)$name
-      embedding <<- coords;
+
       return(invisible(embedding))
     },
 
@@ -506,8 +511,7 @@ Conos <- setRefClass(
         if(color.by == 'cluster') {
           groups <- getClusteringGroups(clusters, clustering)
         } else if(color.by == 'sample') {
-          cl <- lapply(samples, getCellNames)
-          groups <- rep(names(cl), sapply(cl, length)) %>% stats::setNames(unlist(cl)) %>% as.factor()
+          groups <- getDatasetPerCell()
         } else {
           stop('supported values of color.by are ("cluster" and "sample")')
         }
@@ -578,7 +582,7 @@ Conos <- setRefClass(
         setNames(rownames(label.distribution))
       return(label.distribution)
     },
-    
+
     getClusterCountMatrix=function(clustering=NULL, groups=NULL,common.genes=TRUE,omit.na.cells=TRUE) {
       "Estimate per-cluster molecule count matrix by summing up the molecules of each gene for all of the cells in each cluster.\n\n
        Params:\n
@@ -594,7 +598,7 @@ Conos <- setRefClass(
       }
 
       groups <- as.factor(groups)
-      
+
       matl <- lapply(samples,function(s) {
         m <- conos:::getRawCountMatrix(s,trans=TRUE); # rows are cells
         cl <- factor(groups[match(rownames(m),names(groups))],levels=levels(groups));
@@ -614,6 +618,11 @@ Conos <- setRefClass(
         })
       }
       matl
+    },
+
+    getDatasetPerCell=function() {
+      cl <- lapply(samples, getCellNames)
+      return(rep(names(cl), sapply(cl, length)) %>% stats::setNames(unlist(cl)) %>% as.factor())
     }
   )
 );
@@ -826,14 +835,14 @@ multimulti.community <- function(graph, n.cores=parallel::detectCores(logical=F)
 
 ##' Leiden algorithm community detection
 ##'
-##' Detect communities using Leiden algorithm (implementation copied from https://github.com/vtraag/leidenalg) 
+##' Detect communities using Leiden algorithm (implementation copied from https://github.com/vtraag/leidenalg)
 ##' @param graph graph on which communities should be detected
 ##' @param resolution resolution parameter (default=1.0) - higher numbers lead to more communities
 ##' @param n.iterations number of iterations that the algorithm should be run for(default =2)
 ##' @return community object
 ##' @export
 leiden.community <- function(graph, resolution=1.0, n.iterations=2) {
-  
+
   x <- leiden_community(graph,E(graph)$weight,resolution,n.iterations);
 
   # enclose in a masquerading class
@@ -861,23 +870,23 @@ leiden.community <- function(graph, resolution=1.0, n.iterations=2) {
 multileiden.community <- function(graph, n.cores=parallel::detectCores(logical=F), hclust.link='single', min.community.size=10, verbose=FALSE, resolution=1, resolution1=resolution, resolution2=resolution, ...) {
   if(verbose) cat("running leiden 1 ... ");
   mt <- leiden.community(graph, resolution=resolution1, ...);
-  
+
   mem <- membership(mt);
-  
+
   if(verbose) cat("found",length(unique(mem)),"communities\nrunning leiden 2 ... ")
-  
+
   # calculate hierarchy on the existing clusters
   cgraph <- get.cluster.graph(graph,mem)
   chwt <- walktrap.community(cgraph,steps=8)
   d <- as.dendrogram(chwt);
-  
-  
+
+
   wtl <- conos:::papply(conos:::sn(unique(mem)), function(cluster) {
     cn <- names(mem)[which(mem==cluster)]
     sg <- induced.subgraph(graph,cn)
     leiden.community(induced.subgraph(graph,cn), resolution=resolution2, ...)
   },n.cores=n.cores)
-  
+
   mbl <- lapply(wtl,membership);
   # correct small communities
   if(min.community.size>0) {
@@ -890,21 +899,21 @@ multileiden.community <- function(graph, n.cores=parallel::detectCores(logical=F
       x
     })
   }
-  
+
   if(verbose) cat("found",sum(unlist(lapply(mbl,function(x) length(unique(x))))),"communities\nmerging ... ")
-  
+
   # combined clustering factor
   fv <- unlist(lapply(conos:::sn(names(wtl)),function(cn) {
     paste(cn,as.character(mbl[[cn]]),sep='-')
   }))
   names(fv) <- unlist(lapply(mbl,names))
   if(verbose) cat("done\n");
-  
+
   # enclose in a masquerading class
   res <- list(membership=fv,dendrogram=NULL,algorithm='multileiden');
   class(res) <- rev("fakeCommunities");
   return(res);
-  
+
 }
 
 ##' returns pre-calculated dendrogram
@@ -950,4 +959,3 @@ get.cluster.graph <- function(graph,groups,plot=FALSE,node.scale=50,edge.scale=5
 
 
 # TODO: p2 abstraction
-

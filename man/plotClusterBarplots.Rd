@@ -5,11 +5,11 @@
 \title{Plots barplots per sample of composition of each pagoda2 application based on
 selected clustering}
 \usage{
-plotClusterBarplots(conosObjs, type = "counts", clustering = NULL,
+plotClusterBarplots(conos.objs, type = "counts", clustering = NULL,
   groups = NULL)
 }
 \arguments{
-\item{conosObjs}{A conos objects}
+\item{conos.objs}{A conos objects}
 
 \item{type}{one of 'counts' or 'proportions' to select type of plot}
 
