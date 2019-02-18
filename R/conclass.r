@@ -413,7 +413,7 @@ Conos <- setRefClass(
       E(g)$weight <- el[,3]
       E(g)$type <- el[,4]
       # collapse duplicate edges
-      g <- simplify(g, edge.attr.comb=list(weight="sum"))
+      g <- simplify(g, edge.attr.comb=list(weight="sum", type = "first"))
       graph <<- g;
       return(invisible(g))
     },
