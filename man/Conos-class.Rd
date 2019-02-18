@@ -42,7 +42,7 @@ The class encompasses sample collections, providing methods for calculating and 
 
 \item{\code{embedGraph(method = "largeVis", M = 1, gamma = 1, alpha = 0.1,
   perplexity = NA, sgd_batches = 1e+08, seed = 1, verbose = TRUE,
-  target.dims = 2, ...)}}{Generate an embedding of a joint graph.
+  target.dims = 2, n.cores = NULL, ...)}}{Generate an embedding of a joint graph.
 
        Params:
 
@@ -56,11 +56,12 @@ The class encompasses sample collections, providing methods for calculating and 
 
        - target.dims: numer of dimensions for the reduction. Default: 2. Higher dimensions can be used to generate embeddings for subsequent reductions by other methods, such as tSNE
 
+       - n.cores: number of cores, overrides class field
        - verbose: verbose mode. Default: TRUE.
        - ...: additional arguments, passed to UMAP embedding (run ?conos:::embedGraphUmap for more info)
       }
 
-\item{\code{getClusterCountMatrix(clustering = NULL, groups = NULL,
+\item{\code{getClusterCountMatrices(clustering = NULL, groups = NULL,
   common.genes = TRUE, omit.na.cells = TRUE)}}{Estimate per-cluster molecule count matrix by summing up the molecules of each gene for all of the cells in each cluster.
 
 
