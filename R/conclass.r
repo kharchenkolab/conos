@@ -199,14 +199,14 @@ Conos <- setRefClass(
         stop(paste0("only the following spaces are currently supported: [",paste(supported.spaces,collapse=' '),"]"))
       }
 
-      supported.matching.methods <- c("mNN","NN");
+      supported.matching.methods <- c("mNN", "NN");
       if(!matching.method %in% supported.matching.methods) {
-        stop(paste0("only the following matching methods are currently supported: [",paste(supported.matching.methods,collapse=' '),"]"))
+        stop(paste0("only the following matching methods are currently supported: ['",paste(supported.matching.methods,collapse="' '"),"']"))
       }
 
       supported.metrics <- c("L2","angular");
       if(!metric %in% supported.metrics) {
-        stop(paste0("only the following distance metrics are currently supported: [",paste(supported.metrics,collapse=' '),"]"))
+        stop(paste0("only the following distance metrics are currently supported: ['",paste(supported.metrics,collapse="' '"),"']"))
       }
 
       # calculate or update pairwise alignments

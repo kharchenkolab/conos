@@ -750,19 +750,41 @@ basicSeuratProc <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do
 ##' @param l2.sigma L2 distances get transformed as exp(-d/sigma) using this value (default=30)
 ##' @return matrix with the similarity (!) values corresponding to weight (1-d for angular, and exp(-d/l2.sigma) for L2)
 getNeighborMatrix <- function(p1,p2,k,matching='mNN',metric='angular',l2.sigma=1e5) {
-  n12 <- n2CrossKnn(p1,p2,k,1,FALSE,metric)
-  n21 <- n2CrossKnn(p2,p1,k,1,FALSE,metric)
+  if (is.null(p2)) {
+    n12 <- n2CrossKnn(p1,p1,k,1,FALSE,metric)
+    n21 <- n12
+  } else {
+    n12 <- n2CrossKnn(p1,p2,k,1,FALSE,metric)
+    n21 <- n2CrossKnn(p2,p1,k,1,FALSE,metric)
+  }
 
   # Viktor's solution
   n12@x[n12@x<0] <- 0
   n21@x[n21@x<0] <- 0
 
   if (matching=='NN') {
-    adj.mtx <- n21+t(n12);
+    adj.mtx <- drop0(n21+t(n12));
     adj.mtx@x <- adj.mtx@x/2;
   } else if (matching=='mNN') {
     adj.mtx <- drop0(n21*t(n12))
     adj.mtx@x <- sqrt(adj.mtx@x)
+  } else if (matching=='mNN-MST') {
+    if (!is.null(p2)) {
+      stop("mNN-MST method is only supported for 1-sample neighborhood")
+    }
+
+    knn.mtx <- n21+t(n12);
+    knn.mtx@x <- -knn.mtx@x/2;
+
+    mst.mtx <- igraph::graph_from_adjacency_matrix(knn.mtx, mode="undirected", weighted=T) %>%
+      igraph::minimum.spanning.tree() %>% igraph::as_adjacency_matrix(type="both", attr="weight")
+    mst.mtx <- mst.mtx + t(mst.mtx)
+    mst.mtx@x <- -mst.mtx@x/2
+
+    adj.mtx <- drop0(n21*t(n12))
+    adj.mtx@x <- sqrt(adj.mtx@x)
+
+    adj.mtx <- pmax(adj.mtx, mst.mtx)
   } else {
     stop("Unrecognized type of NN matching:", matching)
   }
