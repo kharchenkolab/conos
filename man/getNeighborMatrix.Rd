@@ -5,7 +5,7 @@
 \title{Establish rough neighbor matching between samples given their projections in a common space}
 \usage{
 getNeighborMatrix(p1, p2, k, matching = "mNN", metric = "angular",
-  l2.sigma = 1e+05)
+  l2.sigma = 1e+05, min.similarity = 0.001)
 }
 \arguments{
 \item{p1}{projection of sample 1}
@@ -19,6 +19,8 @@ getNeighborMatrix(p1, p2, k, matching = "mNN", metric = "angular",
 \item{metric}{distance type (default: "angular", can also be 'L2')}
 
 \item{l2.sigma}{L2 distances get transformed as exp(-d/sigma) using this value (default=30)}
+
+\item{min.similarity}{minimal similarity between two cells, required to have an edge}
 }
 \value{
 matrix with the similarity (!) values corresponding to weight (1-d for angular, and exp(-d/l2.sigma) for L2)

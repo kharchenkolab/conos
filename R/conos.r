@@ -748,8 +748,9 @@ basicSeuratProc <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do
 ##' @param matching mNN (default) or NN
 ##' @param metric distance type (default: "angular", can also be 'L2')
 ##' @param l2.sigma L2 distances get transformed as exp(-d/sigma) using this value (default=30)
+##' @param min.similarity minimal similarity between two cells, required to have an edge
 ##' @return matrix with the similarity (!) values corresponding to weight (1-d for angular, and exp(-d/l2.sigma) for L2)
-getNeighborMatrix <- function(p1,p2,k,matching='mNN',metric='angular',l2.sigma=1e5) {
+getNeighborMatrix <- function(p1,p2,k,matching='mNN',metric='angular',l2.sigma=1e5, min.similarity=1e-3) {
   if (is.null(p2)) {
     n12 <- n2CrossKnn(p1,p1,k,1,FALSE,metric)
     n21 <- n12
@@ -759,8 +760,8 @@ getNeighborMatrix <- function(p1,p2,k,matching='mNN',metric='angular',l2.sigma=1
   }
 
   # Viktor's solution
-  n12@x[n12@x<0] <- 0
-  n21@x[n21@x<0] <- 0
+  n12@x[n12@x < min.similarity] <- 0
+  n21@x[n21@x < min.similarity] <- 0
 
   if (matching=='NN') {
     adj.mtx <- drop0(n21+t(n12));
@@ -780,16 +781,18 @@ getNeighborMatrix <- function(p1,p2,k,matching='mNN',metric='angular',l2.sigma=1
       igraph::minimum.spanning.tree() %>% igraph::as_adjacency_matrix(type="both", attr="weight")
     mst.mtx <- mst.mtx + t(mst.mtx)
     mst.mtx@x <- -mst.mtx@x/2
+    mst.mtx@x[mst.mtx@x < min.similarity] <- min.similarity * 1.01
 
-    adj.mtx <- drop0(n21*t(n12))
+    adj.mtx <- n21*t(n12)
     adj.mtx@x <- sqrt(adj.mtx@x)
-
-    adj.mtx <- pmax(adj.mtx, mst.mtx)
+    suppressMessages(adj.mtx <- pmax(adj.mtx, mst.mtx))
   } else {
     stop("Unrecognized type of NN matching:", matching)
   }
 
-  adj.mtx <- as(adj.mtx,'dgTMatrix')
+  adj.mtx@x[adj.mtx@x < min.similarity] <- 0
+  adj.mtx <- drop0(adj.mtx)
+
   rownames(adj.mtx) <- rownames(p1); colnames(adj.mtx) <- rownames(p2);
   if(metric=='angular') {
     adj.mtx@x <- pmax(0,1-adj.mtx@x)
@@ -797,7 +800,7 @@ getNeighborMatrix <- function(p1,p2,k,matching='mNN',metric='angular',l2.sigma=1
     adj.mtx@x <- exp(-adj.mtx@x/l2.sigma)
   }
 
-  return(adj.mtx)
+  return(as(adj.mtx,'dgTMatrix'))
 }
 
 ##' Collapse vertices belonging to each cluster in a graph
