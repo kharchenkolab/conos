@@ -26,7 +26,7 @@ embedKnnGraph <- function(commute.times, n.neighbors, names=NULL, verbose=TRUE, 
   min.n.neighbors <- sapply(commute.times$idx, length) %>% min()
   if (min.n.neighbors < n.neighbors) {
     n.neighbors <- min.n.neighbors
-    warning("Maximal number of estimated neighbors is", min.n.neighbors)
+    warning("Maximal number of estimated neighbors is ", min.n.neighbors)
   }
 
   ct.top <- sapply(commute.times$dist, `[`, 1:n.neighbors) %>% t() + 1
@@ -37,5 +37,31 @@ embedKnnGraph <- function(commute.times, n.neighbors, names=NULL, verbose=TRUE, 
 
   umap <- uwot::umap(data.frame(x=rep(0, nrow(ct.top))), nn_method=list(idx=ct.top.ids, dist=ct.top), verbose=verbose, ...)
   rownames(umap) <- names
+  return(umap)
+}
+
+embedGraphUmap <- function(graph, verbose=T, min.prob=1e-3, min.visited.verts=1000, n.cores=1,
+                           max.hitting.nn.num=7000, max.commute.nn.num=150, min.prob.lower=1e-7,
+                           n.neighbors=40, n.epochs=1000, spread=15, min.dist=0.001, return.all=F) {
+  min.visited.verts = min(min.visited.verts, length(igraph::V(graph) - 1))
+
+  if (verbose) cat("Convert graph to adjacency list...\n")
+  adj.info <- graphToAdjList(graph);
+  if (verbose) cat("Done\n")
+
+  if (verbose) cat("Estimate nearest neighbors and commute times...\n")
+  commute.times <- get_nearest_neighbors(adj.info$idx, adj.info$probabilities, min_prob=min.prob,
+                                         min_visited_verts=min.visited.verts, n_cores=n.cores, max_hitting_nn_num=max.hitting.nn.num,
+                                         max_commute_nn_num=max.commute.nn.num, min_prob_lower=min.prob.lower, verbose=verbose)
+  if (verbose) cat("Done\n")
+
+  if (verbose) cat("Estimate UMAP embedding...\n")
+  umap <- embedKnnGraph(commute.times, n.neighbors=n.neighbors, names=adj.info$names,
+                        n_epochs=n.epochs, spread=spread, min_dist=min.dist, verbose=verbose)
+  if (verbose) cat("Done\n")
+
+  if (return.all)
+    return(list(adj.info=adj.info, commute.times=commute.times, umap=umap))
+
   return(umap)
 }
