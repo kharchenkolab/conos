@@ -134,62 +134,64 @@ Conos <- setRefClass(
       }
 
       # make a list of all pairs
-      snam <- names(samples);
+      sample.names <- names(samples);
       if(!is.null(exclude.samples)) {
-        mi <- snam %in% exclude.samples;
-        if(verbose) { cat("excluded",sum(mi),"out of",length(snam),"samples, based on supplied exclude.samples\n") }
-        snam <- snam[!mi];
+        mi <- sample.names %in% exclude.samples;
+        if(verbose) { cat("excluded", sum(mi), "out of", length(sample.names), "samples, based on supplied exclude.samples\n") }
+        sample.names <- sample.names[!mi];
       }
-      cis <- combn(names(samples),2);
+
+      sn.pairs <- combn(sample.names, 2);
       # TODO: add random subsampling for very large panels
       if(!is.null(exclude.pairs)) { # remove pairs that shouldn't be compared directly
-        ivi <- apply(cis,2,paste,collapse='.vs.') %in% apply(exclude.pairs,2,paste,collapse='.vs.') | apply(cis[c(2,1),],2,paste,collapse='.vs.') %in% apply(exclude.pairs,2,paste,collapse='.vs.')
-        if(verbose) cat("excluded",sum(ivi),"pairs, based on the passed exclude.pairs\n")
-        cis <- cis[,!ivi]
+        exclude.pairs.collapsed <- apply(exclude.pairs, 2, paste, collapse='.vs.')
+        ivi <- apply(sn.pairs,2,paste,collapse='.vs.') %in% exclude.pairs.collapsed | apply(sn.pairs[c(2,1),], 2, paste,collapse='.vs.') %in% exclude.pairs.collapsed
+        if(verbose) cat("excluded", sum(ivi), "pairs, based on the passed exclude.pairs\n")
+        sn.pairs <- sn.pairs[,!ivi]
       }
 
       # determine the pairs that need to be calculated
       if(is.null(pairs[[space]])) { pairs[[space]] <<- list() }
-      mi <- rep(NA,ncol(cis));
-      nm <- match(apply(cis,2,paste,collapse='.vs.'),names(pairs[[space]]));
+      mi <- rep(NA,ncol(sn.pairs));
+      nm <- match(apply(sn.pairs,2,paste,collapse='.vs.'),names(pairs[[space]]));
       mi[which(!is.na(nm))] <- na.omit(nm);
       # try reverse match as well
-      nm <- match(apply(cis[c(2,1),,drop=F],2,paste,collapse='.vs.'),names(pairs[[space]]));
+      nm <- match(apply(sn.pairs[c(2,1),,drop=F],2,paste,collapse='.vs.'),names(pairs[[space]]));
       mi[which(!is.na(nm))] <- na.omit(nm);
       if(verbose) cat('found',sum(!is.na(mi)),'out of',length(mi),'cached',space,' space pairs ... ')
       if(any(is.na(mi))) { # some pairs are missing
         if(verbose) cat('running',sum(is.na(mi)),'additional',space,' space pairs ')
         xl2 <- papply(which(is.na(mi)), function(i) {
           if(space=='CPCA') {
-            xcp <- quickCPCA(samples[cis[,i]],data.type=data.type,k=k,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale,neighborhood.average=neighborhood.average)
+            xcp <- quickCPCA(samples[sn.pairs[,i]],data.type=data.type,k=k,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale,neighborhood.average=neighborhood.average)
           } else if(space=='JNMF') {
-            xcp <- quickJNMF(samples[cis[,i]],data.type=data.type,n.comps=ncomps,n.odgenes=n.odgenes,var.scale=var.scale,verbose=FALSE,max.iter=3e3,neighborhood.average=neighborhood.average)
+            xcp <- quickJNMF(samples[sn.pairs[,i]],data.type=data.type,n.comps=ncomps,n.odgenes=n.odgenes,var.scale=var.scale,verbose=FALSE,max.iter=3e3,neighborhood.average=neighborhood.average)
           } else if (space == 'genes') {
-            xcp <- quickNULL(p2.objs = samples[cis[,i]], data.type=data.type, n.odgenes=n.odgenes, var.scale = var.scale, verbose = FALSE, neighborhood.average=neighborhood.average);
+            xcp <- quickNULL(p2.objs = samples[sn.pairs[,i]], data.type=data.type, n.odgenes=n.odgenes, var.scale = var.scale, verbose = FALSE, neighborhood.average=neighborhood.average);
           } else if (space == 'PCA') {
-            xcp <- quickPlainPCA(samples[cis[,i]], data.type=data.type, k=k,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale,neighborhood.average=neighborhood.average)
+            xcp <- quickPlainPCA(samples[sn.pairs[,i]], data.type=data.type, k=k,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale,neighborhood.average=neighborhood.average)
           }
           if(verbose) cat('.')
           xcp
         },n.cores=n.cores,mc.preschedule=(space=='PCA'));
 
-        names(xl2) <- apply(cis[,which(is.na(mi)),drop=F],2,paste,collapse='.vs.');
+        names(xl2) <- apply(sn.pairs[,which(is.na(mi)),drop=F],2,paste,collapse='.vs.');
         xl2 <- xl2[!unlist(lapply(xl2,is.null))]
         pairs[[space]] <<- c(pairs[[space]],xl2);
       }
 
       # re-do the match and order
-      mi <- rep(NA,ncol(cis));
-      nm <- match(apply(cis,2,paste,collapse='.vs.'),names(pairs[[space]]));
+      mi <- rep(NA,ncol(sn.pairs));
+      nm <- match(apply(sn.pairs,2,paste,collapse='.vs.'),names(pairs[[space]]));
       mi[which(!is.na(nm))] <- na.omit(nm);
-      nm <- match(apply(cis[c(2,1),,drop=F],2,paste,collapse='.vs.'),names(pairs[[space]]));
+      nm <- match(apply(sn.pairs[c(2,1),,drop=F],2,paste,collapse='.vs.'),names(pairs[[space]]));
       mi[which(!is.na(nm))] <- na.omit(nm);
       if(any(is.na(mi))) {
         warning("unable to get complete set of pair comparison results")
-        cis <- cis[,!is.na(mi),drop=FALSE]
+        sn.pairs <- sn.pairs[,!is.na(mi),drop=FALSE]
       }
       if(verbose) cat(" done\n");
-      return(invisible(cis))
+      return(invisible(sn.pairs))
     },
 
     buildGraph=function(k=15, k.self=10, k.self.weight=0.1, space='CPCA', matching.method='mNN', metric='angular', data.type='counts', l2.sigma=1e5, var.scale =TRUE, ncomps=40, n.odgenes=2000, return.details=T,neighborhood.average=FALSE,neighborhood.average.k=10, exclude.pairs=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE, const.inner.weights=FALSE, base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, append.local.axes=TRUE) {
