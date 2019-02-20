@@ -113,7 +113,7 @@ Conos <- setRefClass(
       samples <<- c(samples,x);
     },
 
-    updatePairs=function(space='CPCA',data.type='counts',ncomps=50,n.odgenes=1e3,var.scale=TRUE,neighborhood.average=FALSE,neighborhood.average.k=10, exclude.pairs=NULL, exclude.samples=NULL, verbose=FALSE) {
+    updatePairs=function(space='CPCA',data.type='counts',ncomps=50,n.odgenes=1e3,var.scale=TRUE,neighborhood.average=FALSE,neighborhood.average.k=10, matching.mask=NULL, exclude.samples=NULL, verbose=FALSE) {
       if(neighborhood.average) {
         # pre-calculate averaging matrices for each sample
         if(verbose)  cat("calculating local averaging neighborhoods ")
@@ -141,13 +141,20 @@ Conos <- setRefClass(
         sample.names <- sample.names[!mi];
       }
 
-      sn.pairs <- combn(sample.names, 2);
       # TODO: add random subsampling for very large panels
-      if(!is.null(exclude.pairs)) { # remove pairs that shouldn't be compared directly
-        exclude.pairs.collapsed <- apply(exclude.pairs, 2, paste, collapse='.vs.')
-        ivi <- apply(sn.pairs,2,paste,collapse='.vs.') %in% exclude.pairs.collapsed | apply(sn.pairs[c(2,1),], 2, paste,collapse='.vs.') %in% exclude.pairs.collapsed
-        if(verbose) cat("excluded", sum(ivi), "pairs, based on the passed exclude.pairs\n")
-        sn.pairs <- sn.pairs[,!ivi]
+      if(!is.null(matching.mask)) { # remove pairs that shouldn't be compared directly
+        tryCatch(matching.mask <- matching.mask[sample.names, sample.names],
+                 error=function(e) stop("matching.mask should have the same row- and colnames as provided samples. Error:", e))
+
+        matching.mask <- matching.mask | t(matching.mask)
+        selected.ids <- which(lower.tri(matching.mask) & matching.mask) - 1
+        sn.pairs <- sample.names[selected.ids %/% length(sample.names) + 1] %>%
+          cbind(sample.names[selected.ids %% length(sample.names) + 1]) %>%
+          t()
+
+        if(verbose) cat("Use", ncol(sn.pairs), "pairs, based on the passed exclude.pairs\n")
+      } else {
+        sn.pairs <- combn(sample.names, 2);
       }
 
       # determine the pairs that need to be calculated
@@ -194,7 +201,9 @@ Conos <- setRefClass(
       return(invisible(sn.pairs))
     },
 
-    buildGraph=function(k=15, k.self=10, k.self.weight=0.1, space='CPCA', matching.method='mNN', metric='angular', data.type='counts', l2.sigma=1e5, var.scale =TRUE, ncomps=40, n.odgenes=2000, return.details=T,neighborhood.average=FALSE,neighborhood.average.k=10, exclude.pairs=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE, const.inner.weights=FALSE, base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, append.local.axes=TRUE) {
+    buildGraph=function(k=15, k.self=10, k.self.weight=0.1, space='CPCA', matching.method='mNN', metric='angular', data.type='counts', l2.sigma=1e5, var.scale =TRUE, ncomps=40, n.odgenes=2000, return.details=T,
+                        neighborhood.average=FALSE, neighborhood.average.k=10, matching.mask=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE, const.inner.weights=FALSE, base.groups=NULL,
+                        append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, append.local.axes=TRUE) {
 
       supported.spaces <- c("CPCA","JNMF","genes","PCA")
       if(!space %in% supported.spaces) {
@@ -212,7 +221,8 @@ Conos <- setRefClass(
       }
 
       # calculate or update pairwise alignments
-      cis <- updatePairs(space=space,ncomps=ncomps,n.odgenes=n.odgenes,verbose=verbose,var.scale=var.scale,neighborhood.average=neighborhood.average,neighborhood.average.k=10,exclude.pairs=exclude.pairs,exclude.samples=exclude.samples)
+      cis <- updatePairs(space=space, ncomps=ncomps, n.odgenes=n.odgenes, verbose=verbose, var.scale=var.scale, neighborhood.average=neighborhood.average,
+                         neighborhood.average.k=10, matching.mask=matching.mask, exclude.samples=exclude.samples)
 
       if(ncol(cis)<1) { stop("insufficient number of comparable pairs") }
 
