@@ -42,7 +42,8 @@ embedKnnGraph <- function(commute.times, n.neighbors, names=NULL, verbose=TRUE, 
 
 embedGraphUmap <- function(graph, verbose=T, min.prob=1e-3, min.visited.verts=1000, n.cores=1,
                            max.hitting.nn.num=7000, max.commute.nn.num=150, min.prob.lower=1e-7,
-                           n.neighbors=40, n.epochs=1000, spread=15, min.dist=0.001, return.all=F) {
+                           n.neighbors=40, n.epochs=1000, spread=15, min.dist=0.001, return.all=F,
+                           ...) {
   min.visited.verts = min(min.visited.verts, length(igraph::V(graph) - 1))
 
   if (verbose) cat("Convert graph to adjacency list...\n")
@@ -57,7 +58,7 @@ embedGraphUmap <- function(graph, verbose=T, min.prob=1e-3, min.visited.verts=10
 
   if (verbose) cat("Estimate UMAP embedding...\n")
   umap <- embedKnnGraph(commute.times, n.neighbors=n.neighbors, names=adj.info$names,
-                        n_epochs=n.epochs, spread=spread, min_dist=min.dist, verbose=verbose)
+                        n_epochs=n.epochs, spread=spread, min_dist=min.dist, verbose=verbose, ...)
   if (verbose) cat("Done\n")
 
   if (return.all)

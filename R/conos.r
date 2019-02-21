@@ -583,15 +583,17 @@ getDecoyProjections <- function(samples, samf, data.type, var.scale, cproj, neig
   return(cproj.decoys)
 }
 
-getLocalEdges <- function(samples, k.self, k.self.weight, const.inner.weights, metric, verbose, n.cores) {
+getLocalEdges <- function(samples, k.self, k.self.weight, const.inner.weights, metric, l2.sigma, verbose, n.cores) {
   if(verbose) cat('local pairs ')
   x <- data.frame(do.call(rbind, papply(samples, function(x) {
     pca <- getPca(x)
     xk <- n2Knn(pca, k.self + 1, 1, verbose=FALSE, indexType=metric) # +1 accounts for self-edges that will be removed in the next line
     diag(xk) <- 0; # no self-edges
-    xk <- as(xk,'dgTMatrix')
+    xk <- as(drop0(xk),'dgTMatrix')
     cat(".")
-    return(data.frame('mA.lab'=rownames(pca)[xk@i+1],'mB.lab'=rownames(pca)[xk@j+1],'w'=pmax(1-xk@x,0),stringsAsFactors=F))
+
+    data.frame(mA.lab=rownames(pca)[xk@i+1], mB.lab=rownames(pca)[xk@j+1],
+               w=convertDistanceToSimilarity(xk@x, metric=metric, l2.sigma=l2.sigma), stringsAsFactors=F)
   }, n.cores=n.cores, mc.preschedule=TRUE)), stringsAsFactors=F)
 
   if (const.inner.weights) {
@@ -740,6 +742,14 @@ basicSeuratProc <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do
   return(so)
 }
 
+convertDistanceToSimilarity <- function(distances, metric, l2.sigma=1e5) {
+  if(metric=='angular') {
+    return(pmax(0, 1 - distances))
+  }
+
+  return(exp(-distances / l2.sigma))
+}
+
 ##' Establish rough neighbor matching between samples given their projections in a common space
 ##'
 ##' @param p1 projection of sample 1
@@ -747,7 +757,7 @@ basicSeuratProc <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do
 ##' @param k neighborhood radius
 ##' @param matching mNN (default) or NN
 ##' @param metric distance type (default: "angular", can also be 'L2')
-##' @param l2.sigma L2 distances get transformed as exp(-d/sigma) using this value (default=30)
+##' @param l2.sigma L2 distances get transformed as exp(-d/sigma) using this value (default=1e5)
 ##' @param min.similarity minimal similarity between two cells, required to have an edge
 ##' @return matrix with the similarity (!) values corresponding to weight (1-d for angular, and exp(-d/l2.sigma) for L2)
 getNeighborMatrix <- function(p1,p2,k,matching='mNN',metric='angular',l2.sigma=1e5, min.similarity=1e-3) {
@@ -791,16 +801,11 @@ getNeighborMatrix <- function(p1,p2,k,matching='mNN',metric='angular',l2.sigma=1
   }
 
   adj.mtx@x[adj.mtx@x < min.similarity] <- 0
-  adj.mtx <- drop0(adj.mtx)
 
   rownames(adj.mtx) <- rownames(p1); colnames(adj.mtx) <- rownames(p2);
-  if(metric=='angular') {
-    adj.mtx@x <- pmax(0,1-adj.mtx@x)
-  } else { # L2 metric
-    adj.mtx@x <- exp(-adj.mtx@x/l2.sigma)
-  }
+  adj.mtx@x <- convertDistanceToSimilarity(adj.mtx@x, metric=metric, l2.sigma=l2.sigma)
 
-  return(as(adj.mtx,'dgTMatrix'))
+  return(as(drop0(adj.mtx),'dgTMatrix'))
 }
 
 ##' Collapse vertices belonging to each cluster in a graph

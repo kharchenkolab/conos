@@ -347,7 +347,7 @@ Conos <- setRefClass(
       # append some local edges
       if(k.self>0) {
         if(verbose) cat('local pairs ')
-        x <- getLocalEdges(samples, k.self, k.self.weight, const.inner.weights, metric, verbose, n.cores)
+        x <- getLocalEdges(samples, k.self, k.self.weight, const.inner.weights, metric, l2.sigma=l2.sigma, verbose, n.cores)
         el <- rbind(el,x)
       }
 
