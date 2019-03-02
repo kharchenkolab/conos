@@ -62,15 +62,16 @@ BEGIN_RCPP
 END_RCPP
 }
 // findBestClusterThreshold
-Rcpp::List findBestClusterThreshold(arma::imat& merges, arma::ivec& clusters, arma::ivec& clusterTotals);
-RcppExport SEXP _conos_findBestClusterThreshold(SEXP mergesSEXP, SEXP clustersSEXP, SEXP clusterTotalsSEXP) {
+Rcpp::List findBestClusterThreshold(arma::imat& merges, arma::imat& clusters, arma::ivec& clusterTotals, Rcpp::Nullable<arma::imat&> clmerges);
+RcppExport SEXP _conos_findBestClusterThreshold(SEXP mergesSEXP, SEXP clustersSEXP, SEXP clusterTotalsSEXP, SEXP clmergesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::imat& >::type merges(mergesSEXP);
-    Rcpp::traits::input_parameter< arma::ivec& >::type clusters(clustersSEXP);
+    Rcpp::traits::input_parameter< arma::imat& >::type clusters(clustersSEXP);
     Rcpp::traits::input_parameter< arma::ivec& >::type clusterTotals(clusterTotalsSEXP);
-    rcpp_result_gen = Rcpp::wrap(findBestClusterThreshold(merges, clusters, clusterTotals));
+    Rcpp::traits::input_parameter< Rcpp::Nullable<arma::imat&> >::type clmerges(clmergesSEXP);
+    rcpp_result_gen = Rcpp::wrap(findBestClusterThreshold(merges, clusters, clusterTotals, clmerges));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -313,7 +314,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_conos_checkOpenMP", (DL_FUNC) &_conos_checkOpenMP, 0},
     {"_conos_cpcaF", (DL_FUNC) &_conos_cpcaF, 7},
     {"_conos_greedyModularityCut", (DL_FUNC) &_conos_greedyModularityCut, 7},
-    {"_conos_findBestClusterThreshold", (DL_FUNC) &_conos_findBestClusterThreshold, 3},
+    {"_conos_findBestClusterThreshold", (DL_FUNC) &_conos_findBestClusterThreshold, 4},
     {"_conos_scoreTreeConsistency", (DL_FUNC) &_conos_scoreTreeConsistency, 4},
     {"_conos_maxStableClusters", (DL_FUNC) &_conos_maxStableClusters, 4},
     {"_conos_referenceWij", (DL_FUNC) &_conos_referenceWij, 5},
