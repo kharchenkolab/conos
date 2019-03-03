@@ -292,6 +292,116 @@ Rcpp::List greedyModularityCut(arma::imat& merges, arma::vec& deltaM, int N, int
 }
 
 
+// internal: calculate Jaccard coefficients for the leafs and the merge nodes given 
+// true positive and false positive matrices for the leafs only, as well as cluster totals
+Rcpp::List _treeJaccard(arma::imat& merges, arma::imat& tpm, arma::imat& fpm, arma::ivec& clusterTotals) {
+  int nclusters=tpm.n_rows; int nmerges=merges.n_rows; int nleafs=tpm.n_cols;
+  if(nleafs!=nmerges+1) stop("nleafs!=nmerges+1");
+  // count matries for the merges
+  arma::imat mtpm(nclusters,nmerges,arma::fill::zeros);
+  arma::imat mfpm(nclusters,nmerges,arma::fill::zeros);
+  // keeping track of optimal answers
+  arma::mat ot(nclusters,nmerges); // optimal Jaccard coefficient
+  arma::imat oti(nclusters,nmerges); // optimal threshold node id
+  
+  // go through the merges
+  // temp matrices
+  arma::ivec onecol=ones<ivec>(nclusters);
+  arma::mat tot2(nclusters,2); // temp ot-like matrix for calculating optimal thresholds per node
+  
+  // iterate through the merge matrix
+  for(int i=0;i<merges.n_rows;i++) {
+    arma::mat tot(nclusters,3,arma::fill::zeros); // temp ot-like matrix for comparing optimal threshold between nodes
+    arma::imat toti(nclusters,3,arma::fill::zeros); // temp oti-like matrix 
+    for(int j=0;j<2;j++) {
+      int ni= merges(i,j)-nmerges-1;
+      // update count matrices
+      if(ni<0) { // leaf node
+        mtpm.col(i)+=tpm.col(merges(i,j));
+        mfpm.col(i)+=fpm.col(merges(i,j));
+        // calculate tot
+        tot.col(j)=conv_to<vec>::from(tpm.col(merges(i,j)))/conv_to<vec>::from(clusterTotals+fpm.col(merges(i,j))); // Jaccard coefficient
+        toti.col(j).fill( merges(i,j) );
+      } else { // internal node - transfer values for downstream comparison
+        mtpm.col(i)+=mtpm.col(ni);
+        mfpm.col(i)+=mfpm.col(ni);
+        tot.col(j)=ot.col(ni);
+        toti.col(j)=oti.col(ni);
+      }
+    }
+    // recalculate Jaccard coefficient for the merged node
+    tot.col(2)=conv_to<vec>::from(mtpm.col(i))/conv_to<vec>::from(clusterTotals+mfpm.col(i)); // Jaccard coefficient
+    toti.col(2).fill(i);
+    uvec mi=index_max(tot,1); // report maximum threshold achieved between the leafs and the internal nodes
+    // record threshold value and index according to the best threshold
+    for(int j=0;j<mi.n_elem;j++) { 
+      ot(j,i)=tot(j,mi[j]);
+      oti(j,i)=toti(j,mi[j]);
+    }
+  }
+  
+  return List::create(Named("threshold")=ot.col(merges.n_rows-1), Named("node")=oti.col(merges.n_rows-1));
+}
+
+// merges - merge matrix from walktrap -1, clusters - cluster counts per terminal node (1 x nealfs for cell leaves - containing integer cluster ids, or n.clusters x nelafs for cluster leaves - containing cell counts per cluster), clusterTotals - number of cells per cluster
+// [[Rcpp::export]]
+Rcpp::List treeJaccard(arma::imat& merges, arma::imat& clusters, arma::ivec& clusterTotals, Rcpp::Nullable<arma::imat&> clmerges = R_NilValue) {
+  int nleafs=merges.n_rows+1; // number of leafs
+  int nclusters=clusterTotals.n_elem;
+  // tp and fp matrices for the leafs
+  arma::imat tpm(nclusters,nleafs,arma::fill::zeros); // true positive counts
+  arma::imat fpm(nclusters,nleafs,arma::fill::zeros); // false positive counts
+  arma::ivec onecol=ones<ivec>(nclusters);
+  
+  if(clusters.n_rows>1) { // tree with leaves corresponding to clusters
+    if(nleafs != clusters.n_cols) stop("number of leafs differs from the number of columns in the clusters matrix");
+    tpm=clusters;
+    fpm.each_row()+=sum(clusters,0);
+    fpm-=tpm;
+  } else { // tree with leaves corresponding to individual cells
+    for(int i=0;i<nleafs;i++) {
+      // adjust tnn: add ones to all entries except for the correct class
+      fpm.col(i)+=onecol;
+      int ci=clusters[0,i];
+      if(ci>=0) { // not an NA value
+        fpm(ci,i)--;
+        tpm(ci,i)++;
+      }
+    }
+  }
+  
+  if(clmerges.isNotNull()) {
+    arma::imat clm=Rcpp::as<arma::imat>(clmerges);
+    // append additional "clusters" corresponding to the merges of earlier clustrers
+    arma::imat mtpm(clm.n_rows,nleafs,arma::fill::zeros);
+    arma::imat mfpm(clm.n_rows,nleafs,arma::fill::zeros);
+    arma::ivec mclT(clm.n_rows,arma::fill::zeros);
+    arma::ivec t1(nleafs);
+    for(int i=0;i<clm.n_rows;i++) {
+      for(int j=0;j<2;j++) {
+        int ni= clm(i,j)-clm.n_rows-1;
+        // update count matrices
+        if(ni<0) { // leaf node, take counts from fpm/tpm
+          mtpm.row(i)+=tpm.row(clm(i,j));
+          
+          mfpm.row(i)+=fpm.row(clm(i,j));
+          mclT(i)+=clusterTotals(clm(i,j));
+        } else { // internal node, take counts from mtpm/mfpm
+          mtpm.row(i)+=mtpm.row(ni);
+          mfpm.row(i)+=mfpm.row(ni);
+          mclT(i)+=mclT(ni);
+        }
+      }
+    }
+    // join rows
+    tpm=join_cols(tpm,mtpm);
+    fpm=join_cols(fpm,mfpm);
+    clusterTotals=join_cols(clusterTotals,mclT);
+  }
+  
+  return _treeJaccard(merges, tpm, fpm, clusterTotals);
+}
+  
 
 // merges - merge matrix from walktrap -1, clusters - cluster counts per terminal node (1 x nealfs for cell leaves - containing integer cluster ids, or n.clusters x nelafs for cluster leaves - containing cell counts per cluster), clusterTotals - number of cells per cluster
 // [[Rcpp::export]]
