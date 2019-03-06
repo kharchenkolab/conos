@@ -4,11 +4,11 @@
 \alias{getGlobalClusterMarkers}
 \title{Get markers for global clusters}
 \usage{
-getGlobalClusterMarkers(conosObjs, clustering = "multi level",
+getGlobalClusterMarkers(conos.objs, clustering = "multi level",
   min.samples.expressing = 0, min.percent.samples.expressing = 0)
 }
 \arguments{
-\item{conosObjs}{conos object}
+\item{conos.objs}{conos object}
 
 \item{clustering}{name of the clustering to use}
 

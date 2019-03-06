@@ -69,13 +69,13 @@ scaledMatrices <- function(samples, data.type, od.genes, var.scale, neighborhood
 
 getGeneVariance <- function(obj) {
   if(class(obj) == 'Pagoda2') {
-    
+
   }
   if(class(obj) == 'seurat') {
     warming("Seurat doesn't support variance scaling")
     return(NULL)
   }
-  
+
 }
 
 commonOverdispersedGenes <- function(samples, n.odgenes, verbose) {
@@ -96,7 +96,7 @@ quickNULL <- function(p2.objs, data.type='counts', n.odgenes = NULL, var.scale =
 
   od.genes <- commonOverdispersedGenes(p2.objs, n.odgenes, verbose=verbose)
   if(length(od.genes)<5) return(NULL);
-  
+
   cproj <- scaledMatrices(p2.objs, data.type=data.type, od.genes=od.genes, var.scale=var.scale,
                           neighborhood.average=neighborhood.average)
 
@@ -245,7 +245,7 @@ dend.set.width.by.breadth <- function(d,fac,leafContent,min.width=1,max.width=4)
     ent <- entropy::entropy(cc[-1],method='MM',unit='log2')/log2(length(levels(fac)))
     min.width+ent*(max.width-min.width)
   }
-  
+
   cbm <- function(d,fac) {
     if(is.leaf(d)) {
       lc <- fac[leafContent[[attr(d,'label')]]]
@@ -277,14 +277,14 @@ dend.set.color.by.mixture <- function(d,fac,leafContent) {
   fac <- as.factor(fac);
   if(length(levels(fac))>3) stop("factor with more than 3 levels are not supported")
   if(length(levels(fac))<2) stop("factor with less than 2 levels are not supported")
-  
+
   cc2col <- function(cc,base=0.1) {
     if(sum(cc)==0) {
       cc <- rep(1,length(cc))
     } else {
       cc <- cc/sum(cc)
     }
-    
+
     if(length(cc)==3) { # 2-color
       cv <- c(cc[2],0,cc[3])+base; cv <- cv/max(cv) * (1-base)
       #rgb(base+cc[2],base,base+cc[3],1)
@@ -293,10 +293,10 @@ dend.set.color.by.mixture <- function(d,fac,leafContent) {
       cv <- c(cc[2],cc[3],cc[4])+base; cv <- cv/max(cv) * (1-base);
       #rgb(base+cc[2],base+cc[3],base+cc[4],1)
       rgb(cv[1],cv[2],cv[3],1)
-      
+
     }
   }
-  
+
   cbm <- function(d,fac) {
     if(is.leaf(d)) {
       lc <- fac[leafContent[[attr(d,'label')]]]
@@ -516,6 +516,97 @@ getOdGenesUniformly <- function(samples, n.genes) {
 }
 
 
+projectSamplesOnGlobalAxes <- function(samples, cms.clust, data.type, neighborhood.average, verbose, n.cores) {
+  if(verbose) cat('calculating global projections ');
+
+  # calculate global eigenvectors
+
+  gns <- Reduce(intersect,lapply(cms.clust,rownames))
+  if(verbose) cat('.');
+  if(length(gns) < length(cms.clust)) stop("insufficient number of common genes")
+  tcc <- Reduce('+',lapply(cms.clust,function(x) x[gns,]))
+  tcc <- t(tcc)/colSums(tcc)*1e6;
+  gv <- apply(tcc,2,var);
+  gns <- gns[is.finite(gv) & gv>0]
+  tcc <- tcc[,gns,drop=F];
+
+  if(verbose) cat('.');
+  global.pca <- prcomp(log10(tcc+1),center=T,scale=T,retx=F)
+  # project samples onto the global axes
+  global.proj <- papply(samples,function(s) {
+    smat <- as.matrix(scaledMatrices(list(s), data.type=data.type, od.genes=gns, var.scale=F, neighborhood.average=neighborhood.average)[[1]])
+    if(verbose) cat('.')
+    #smat <- as.matrix(conos:::getRawCountMatrix(s,transposed=TRUE)[,gns])
+    #smat <- log10(smat/rowSums(smat)*1e3+1)
+    smat <- scale(smat,scale=T,center=T); smat[is.nan(smat)] <- 0;
+    sproj <- smat %*% global.pca$rotation
+  },n.cores=n.cores)
+  if(verbose) cat('. done\n');
+
+  return(global.proj)
+}
+
+getDecoyProjections <- function(samples, samf, data.type, var.scale, cproj, neighborhood.average, base.groups, decoy.threshold, n.decoys) {
+  cproj.decoys <- lapply(cproj, function(d) {
+    tg <- tabulate(as.integer(base.groups[rownames(d)]),nbins=length(levels(base.groups)))
+    nvi <- which(tg < decoy.threshold)
+    if(length(nvi)>0) {
+      # sample cells from other datasets
+      decoy.cells <- names(base.groups)[unlist(lapply(nvi,function(i) {
+        vc <- which(as.integer(base.groups)==i & (!samf[names(base.groups)] %in% names(cproj)))
+        if(length(vc) > n.decoys) {
+          vc <- sample(vc, n.decoys)
+        }
+      }))]
+      if(length(decoy.cells)>0) {
+        # get the matrices
+        do.call(rbind,lapply(samples[unique(samf[decoy.cells])],function(s) {
+          gn <- intersect(getGenes(s),colnames(d));
+          m <- scaledMatrices(list(s),data.type=data.type, od.genes=gn, var.scale=var.scale, neighborhood.average=neighborhood.average)[[1]]
+          m <- m[rownames(m) %in% decoy.cells,,drop=F]
+          # append missing genes
+          gd <- setdiff(colnames(d),gn)
+          if(length(gd)>0) {
+            m <- cbind(m,Matrix(0,nrow=nrow(m),ncol=length(gd),dimnames=list(rownames(m),gd),sparse=T))
+            m <- m[,colnames(d),drop=F] # fix gene order
+          }
+        }))
+      } else {
+        # empty matrix
+        Matrix(0,nrow=0,ncol=ncol(d),dimnames=list(c(),colnames(d)))
+      }
+    }
+  })
+
+  #if(verbose) cat(paste0("+",sum(unlist(lapply(cproj.decoys,nrow)))))
+
+  return(cproj.decoys)
+}
+
+getLocalEdges <- function(samples, k.self, k.self.weight, const.inner.weights, metric, verbose, n.cores) {
+  if(verbose) cat('local pairs ')
+  x <- data.frame(do.call(rbind, papply(samples, function(x) {
+    pca <- getPca(x)
+    xk <- n2Knn(pca, k.self + 1, 1, verbose=FALSE, indexType=metric) # +1 accounts for self-edges that will be removed in the next line
+    diag(xk) <- 0; # no self-edges
+    xk <- as(xk,'dgTMatrix')
+    cat(".")
+    return(data.frame('mA.lab'=rownames(pca)[xk@i+1],'mB.lab'=rownames(pca)[xk@j+1],'w'=pmax(1-xk@x,0),stringsAsFactors=F))
+  }, n.cores=n.cores, mc.preschedule=TRUE)), stringsAsFactors=F)
+
+  if (const.inner.weights) {
+    x$w <- k.self.weight
+  } else {
+    x$w <- x$w * k.self.weight
+  }
+
+  x$type <- 0;
+  cat(' done\n')
+
+  return(x)
+}
+
+
 
 ##' Find threshold of cluster detectability
 ##'
@@ -599,7 +690,7 @@ greedy.modularity.cut <- function(wt,N,leaf.labels=NULL,minsize=0,minbreadth=0,f
     }
   }
   x <- greedyModularityCut(wt$merges-1L,-1*diff(wt$modularity),N,minsize,ll,minbreadth,flat.cut)
-  if(length(x$splitsequence)<1) { 
+  if(length(x$splitsequence)<1) {
     stop("unable to make a single split using specified size/breadth restrictions")
   }
   # transfer cell names for the leaf content
@@ -683,4 +774,130 @@ basicSeuratProc <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do
   }
 
   return(so)
+}
+
+##' Establish rough neighbor matching between samples given their projections in a common space
+##'
+##' @param p1 projection of sample 1
+##' @param p2 projection of sample 2
+##' @param k neighborhood radius
+##' @param matching mNN (default) or NN
+##' @param metric distance type (default: "angular", can also be 'L2')
+##' @param l2.sigma L2 distances get transformed as exp(-d/sigma) using this value (default=30)
+##' @param min.similarity minimal similarity between two cells, required to have an edge
+##' @return matrix with the similarity (!) values corresponding to weight (1-d for angular, and exp(-d/l2.sigma) for L2)
+getNeighborMatrix <- function(p1,p2,k,matching='mNN',metric='angular',l2.sigma=1e5, min.similarity=1e-3) {
+  if (is.null(p2)) {
+    n12 <- n2CrossKnn(p1,p1,k,1,FALSE,metric)
+    n21 <- n12
+  } else {
+    n12 <- n2CrossKnn(p1,p2,k,1,FALSE,metric)
+    n21 <- n2CrossKnn(p2,p1,k,1,FALSE,metric)
+  }
+
+  # Viktor's solution
+  n12@x[n12@x < min.similarity] <- 0
+  n21@x[n21@x < min.similarity] <- 0
+
+  if (matching=='NN') {
+    adj.mtx <- drop0(n21+t(n12));
+    adj.mtx@x <- adj.mtx@x/2;
+  } else if (matching=='mNN') {
+    adj.mtx <- drop0(n21*t(n12))
+    adj.mtx@x <- sqrt(adj.mtx@x)
+  } else if (matching=='mNN-MST') {
+    if (!is.null(p2)) {
+      stop("mNN-MST method is only supported for 1-sample neighborhood")
+    }
+
+    knn.mtx <- n21+t(n12);
+    knn.mtx@x <- -knn.mtx@x/2;
+
+    mst.mtx <- igraph::graph_from_adjacency_matrix(knn.mtx, mode="undirected", weighted=T) %>%
+      igraph::minimum.spanning.tree() %>% igraph::as_adjacency_matrix(type="both", attr="weight")
+    mst.mtx <- mst.mtx + t(mst.mtx)
+    mst.mtx@x <- -mst.mtx@x/2
+    mst.mtx@x[mst.mtx@x < min.similarity] <- min.similarity * 1.01
+
+    adj.mtx <- n21*t(n12)
+    adj.mtx@x <- sqrt(adj.mtx@x)
+    suppressMessages(adj.mtx <- pmax(adj.mtx, mst.mtx))
+  } else {
+    stop("Unrecognized type of NN matching:", matching)
+  }
+
+  adj.mtx@x[adj.mtx@x < min.similarity] <- 0
+  adj.mtx <- drop0(adj.mtx)
+
+  rownames(adj.mtx) <- rownames(p1); colnames(adj.mtx) <- rownames(p2);
+  if(metric=='angular') {
+    adj.mtx@x <- pmax(0,1-adj.mtx@x)
+  } else { # L2 metric
+    adj.mtx@x <- exp(-adj.mtx@x/l2.sigma)
+  }
+
+  return(as(adj.mtx,'dgTMatrix'))
+}
+
+
+##' Collapse vertices belonging to each cluster in a graph
+##'
+##' @param graph graph to be collapsed
+##' @param groups factor on vertives describing cluster assignment (can specify integer vertex ids, or character vertex names which will be matched)
+##' @param plot whether to show collapsed graph plot
+##' @param normalize whether recalculate edge weight as observed/oexpected
+##' @return collapsed graph
+##' @export
+get.cluster.graph <- function(graph,groups,plot=FALSE,node.scale=50,edge.scale=50,edge.alpha=0.3,normalize=TRUE) {
+  V(graph)$num <- 1;
+  if(is.integer(groups) && is.null(names(groups))) {
+    nv <- vcount(graph)
+    if(length(groups)!=nv) stop('length of groups should be equal to the number of vertices')
+    if(max(groups)>nv) stop('groups specifies ids that are larger than the number of vertices in the graph')
+    if(any(is.na(groups))) {
+      # remove vertices that are not part of the groups
+      vi <- which(!is.na(groups)); 
+      g <- induced.subgraph(graph,vi);
+      groups <- groups[vi];
+    } else {
+      g <- graph;
+    }
+  } else {
+    gn <- V(graph)$name;
+    groups <- na.omit(groups[names(groups) %in% gn]);
+    if(length(groups)<2) stop('valid names of groups elements include too few cells')
+    if(length(groups)<length(gn)) {
+      g <- induced.subgraph(graph,names(groups))
+    } else {
+      g <- graph;
+    }
+    if(is.factor(groups)) {
+      groups <- groups[V(g)$name]
+    } else {
+      groups <- as.factor(setNames(as.character(groups[V(g)$name]),V(g)$name))
+    }
+  }
+  gcon <- contract.vertices(g,groups,vertex.attr.comb=list('num'='sum',"ignore"))
+  # translate into observed/expected
+  gcon <- simplify(gcon, edge.attr.comb=list(weight="sum","ignore"))
+  if(normalize) {
+    ex <- outer(V(gcon)$num,V(gcon)$num)/(sum(V(gcon)$num)*(sum(V(gcon)$num)-1)/2)*sum(E(g)$weight)
+    gcon2 <- graph_from_adjacency_matrix(as(as_adjacency_matrix(gcon,attr = "weight",sparse = F)/ex,'dgCMatrix'),mode = "undirected",weighted=TRUE)
+    V(gcon2)$num <- V(gcon)$num
+    gcon <- gcon2;
+  }
+  if(is.factor(groups)) {
+    V(gcon)$name <- levels(groups)
+  } else {
+    # not sure when this was actually needed
+    gcon <- induced.subgraph(gcon, unique(groups))
+  }
+  
+
+  if(plot) {
+    set.seed(1)
+    par(mar = rep(0.1, 4))
+    plot.igraph(gcon, layout=layout_with_fr(gcon), vertex.size=V(gcon)$num/(sum(V(gcon)$num)/node.scale), edge.width=E(gcon)$weight/sum(E(gcon)$weight/edge.scale), edge.color=adjustcolor('black',alpha=edge.alpha))
+  }
+  return(invisible(gcon))
 }

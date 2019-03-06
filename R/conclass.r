@@ -28,6 +28,7 @@ NULL
 ##' @return invisible list containing identified communities (groups) and the full community detection result (result)
 NULL
 
+
 #' Conos reference class
 #'
 #' The class encompasses sample collections, providing methods for calculating and visualizing joint graph and communities.
@@ -112,7 +113,7 @@ Conos <- setRefClass(
       samples <<- c(samples,x);
     },
 
-    updatePairs=function(space='CPCA',data.type='counts',ncomps=50,n.odgenes=1e3,var.scale=TRUE,neighborhood.average=FALSE,neighborhood.average.k=10, exclude.pairs=NULL, exclude.samples=NULL, verbose=FALSE) {
+    updatePairs=function(space='CPCA',data.type='counts',ncomps=50,n.odgenes=1e3,var.scale=TRUE,neighborhood.average=FALSE,neighborhood.average.k=10, matching.mask=NULL, exclude.samples=NULL, verbose=FALSE) {
       if(neighborhood.average) {
         # pre-calculate averaging matrices for each sample
         if(verbose)  cat("calculating local averaging neighborhoods ")
@@ -133,119 +134,107 @@ Conos <- setRefClass(
       }
 
       # make a list of all pairs
-      snam <- names(samples);
+      sample.names <- names(samples);
       if(!is.null(exclude.samples)) {
-        mi <- snam %in% exclude.samples;
-        if(verbose) { cat("excluded",sum(mi),"out of",length(snam),"samples, based on supplied exclude.samples\n") }
-        snam <- snam[!mi];
+        mi <- sample.names %in% exclude.samples;
+        if(verbose) { cat("excluded", sum(mi), "out of", length(sample.names), "samples, based on supplied exclude.samples\n") }
+        sample.names <- sample.names[!mi];
       }
-      cis <- combn(names(samples),2);
+
       # TODO: add random subsampling for very large panels
-      if(!is.null(exclude.pairs)) { # remove pairs that shouldn't be compared directly
-        ivi <- apply(cis,2,paste,collapse='.vs.') %in% apply(exclude.pairs,2,paste,collapse='.vs.') | apply(cis[c(2,1),],2,paste,collapse='.vs.') %in% apply(exclude.pairs,2,paste,collapse='.vs.')
-        if(verbose) cat("excluded",sum(ivi),"pairs, based on the passed exclude.pairs\n")
-        cis <- cis[,!ivi]
+      if(!is.null(matching.mask)) { # remove pairs that shouldn't be compared directly
+        tryCatch(matching.mask <- matching.mask[sample.names, sample.names],
+                 error=function(e) stop("matching.mask should have the same row- and colnames as provided samples. Error:", e))
+
+        matching.mask <- matching.mask | t(matching.mask)
+        selected.ids <- which(lower.tri(matching.mask) & matching.mask) - 1
+        sn.pairs <- sample.names[selected.ids %/% length(sample.names) + 1] %>%
+          cbind(sample.names[selected.ids %% length(sample.names) + 1]) %>%
+          t()
+
+        if(verbose) cat("Use", ncol(sn.pairs), "pairs, based on the passed exclude.pairs\n")
+      } else {
+        sn.pairs <- combn(sample.names, 2);
       }
 
       # determine the pairs that need to be calculated
       if(is.null(pairs[[space]])) { pairs[[space]] <<- list() }
-      mi <- rep(NA,ncol(cis));
-      nm <- match(apply(cis,2,paste,collapse='.vs.'),names(pairs[[space]]));
+      mi <- rep(NA,ncol(sn.pairs));
+      nm <- match(apply(sn.pairs,2,paste,collapse='.vs.'),names(pairs[[space]]));
       mi[which(!is.na(nm))] <- na.omit(nm);
       # try reverse match as well
-      nm <- match(apply(cis[c(2,1),,drop=F],2,paste,collapse='.vs.'),names(pairs[[space]]));
+      nm <- match(apply(sn.pairs[c(2,1),,drop=F],2,paste,collapse='.vs.'),names(pairs[[space]]));
       mi[which(!is.na(nm))] <- na.omit(nm);
       if(verbose) cat('found',sum(!is.na(mi)),'out of',length(mi),'cached',space,' space pairs ... ')
       if(any(is.na(mi))) { # some pairs are missing
         if(verbose) cat('running',sum(is.na(mi)),'additional',space,' space pairs ')
         xl2 <- papply(which(is.na(mi)), function(i) {
           if(space=='CPCA') {
-            xcp <- quickCPCA(samples[cis[,i]],data.type=data.type,k=k,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale,neighborhood.average=neighborhood.average)
+            xcp <- quickCPCA(samples[sn.pairs[,i]],data.type=data.type,k=k,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale,neighborhood.average=neighborhood.average)
           } else if(space=='JNMF') {
-            xcp <- quickJNMF(samples[cis[,i]],data.type=data.type,n.comps=ncomps,n.odgenes=n.odgenes,var.scale=var.scale,verbose=FALSE,max.iter=3e3,neighborhood.average=neighborhood.average)
+            xcp <- quickJNMF(samples[sn.pairs[,i]],data.type=data.type,n.comps=ncomps,n.odgenes=n.odgenes,var.scale=var.scale,verbose=FALSE,max.iter=3e3,neighborhood.average=neighborhood.average)
           } else if (space == 'genes') {
-            xcp <- quickNULL(p2.objs = samples[cis[,i]], data.type=data.type, n.odgenes=n.odgenes, var.scale = var.scale, verbose = FALSE, neighborhood.average=neighborhood.average);
+            xcp <- quickNULL(p2.objs = samples[sn.pairs[,i]], data.type=data.type, n.odgenes=n.odgenes, var.scale = var.scale, verbose = FALSE, neighborhood.average=neighborhood.average);
           } else if (space == 'PCA') {
-            xcp <- quickPlainPCA(samples[cis[,i]], data.type=data.type, k=k,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale,neighborhood.average=neighborhood.average)
+            xcp <- quickPlainPCA(samples[sn.pairs[,i]], data.type=data.type, k=k,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale,neighborhood.average=neighborhood.average)
           }
           if(verbose) cat('.')
           xcp
         },n.cores=n.cores,mc.preschedule=(space=='PCA'));
 
-        names(xl2) <- apply(cis[,which(is.na(mi)),drop=F],2,paste,collapse='.vs.');
+        names(xl2) <- apply(sn.pairs[,which(is.na(mi)),drop=F],2,paste,collapse='.vs.');
         xl2 <- xl2[!unlist(lapply(xl2,is.null))]
         pairs[[space]] <<- c(pairs[[space]],xl2);
       }
 
       # re-do the match and order
-      mi <- rep(NA,ncol(cis));
-      nm <- match(apply(cis,2,paste,collapse='.vs.'),names(pairs[[space]]));
+      mi <- rep(NA,ncol(sn.pairs));
+      nm <- match(apply(sn.pairs,2,paste,collapse='.vs.'),names(pairs[[space]]));
       mi[which(!is.na(nm))] <- na.omit(nm);
-      nm <- match(apply(cis[c(2,1),,drop=F],2,paste,collapse='.vs.'),names(pairs[[space]]));
+      nm <- match(apply(sn.pairs[c(2,1),,drop=F],2,paste,collapse='.vs.'),names(pairs[[space]]));
       mi[which(!is.na(nm))] <- na.omit(nm);
       if(any(is.na(mi))) {
         warning("unable to get complete set of pair comparison results")
-        cis <- cis[,!is.na(mi),drop=FALSE]
+        sn.pairs <- sn.pairs[,!is.na(mi),drop=FALSE]
       }
       if(verbose) cat(" done\n");
-      return(invisible(cis))
+      return(invisible(sn.pairs))
     },
 
-    buildGraph=function(k=15, k.self=10, k.self.weight=0.1, space='CPCA', matching.method='mNN', metric='angular', data.type='counts', l2.sigma=1e5, var.scale =TRUE, ncomps=40, n.odgenes=2000, return.details=T,neighborhood.average=FALSE,neighborhood.average.k=10, exclude.pairs=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE, const.inner.weights=FALSE, base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, append.local.axes=TRUE) {
+    buildGraph=function(k=15, k.self=10, k.self.weight=0.1, space='CPCA', matching.method='mNN', metric='angular', data.type='counts', l2.sigma=1e5, var.scale =TRUE, ncomps=40, n.odgenes=2000, return.details=T,
+                        neighborhood.average=FALSE, neighborhood.average.k=10, matching.mask=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE, const.inner.weights=FALSE, base.groups=NULL,
+                        append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, append.local.axes=TRUE) {
 
       supported.spaces <- c("CPCA","JNMF","genes","PCA")
       if(!space %in% supported.spaces) {
         stop(paste0("only the following spaces are currently supported: [",paste(supported.spaces,collapse=' '),"]"))
       }
 
-      supported.matching.methods <- c("mNN","NN");
+      supported.matching.methods <- c("mNN", "NN");
       if(!matching.method %in% supported.matching.methods) {
-        stop(paste0("only the following matching methods are currently supported: [",paste(supported.matching.methods,collapse=' '),"]"))
+        stop(paste0("only the following matching methods are currently supported: ['",paste(supported.matching.methods,collapse="' '"),"']"))
       }
 
       supported.metrics <- c("L2","angular");
       if(!metric %in% supported.metrics) {
-        stop(paste0("only the following distance metrics are currently supported: [",paste(supported.metrics,collapse=' '),"]"))
+        stop(paste0("only the following distance metrics are currently supported: ['",paste(supported.metrics,collapse="' '"),"']"))
       }
 
       # calculate or update pairwise alignments
-      cis <- updatePairs(space=space,ncomps=ncomps,n.odgenes=n.odgenes,verbose=verbose,var.scale=var.scale,neighborhood.average=neighborhood.average,neighborhood.average.k=10,exclude.pairs=exclude.pairs,exclude.samples=exclude.samples)
+      cis <- updatePairs(space=space, ncomps=ncomps, n.odgenes=n.odgenes, verbose=verbose, var.scale=var.scale, neighborhood.average=neighborhood.average,
+                         neighborhood.average.k=10, matching.mask=matching.mask, exclude.samples=exclude.samples)
 
       if(ncol(cis)<1) { stop("insufficient number of comparable pairs") }
 
       if(!is.null(base.groups)) {
         samf <- lapply(samples,getCellNames)
         base.groups <- as.factor(base.groups[names(base.groups) %in% unlist(samf)]) # clean up the group factor
-        if(length(base.groups)<2) stop("provided base.gropus doesn't cover enough cells")
+        if(length(base.groups) < 2) stop("provided base.gropus doesn't cover enough cells")
         # make a sample factor
         samf <- setNames(rep(names(samf),unlist(lapply(samf,length))),unlist(samf))
         if(append.global.axes) {
-          if(verbose) cat('calculating global projections ');
-          
-          # calculate global eigenvectors
-          tc <- getClusterCountMatrix(groups=base.groups,common.genes=FALSE)
-          
-          gns <- Reduce(intersect,lapply(tc,rownames))
-          if(verbose) cat('.');        
-          if(length(gns) < length(tc)) stop("insufficient number of common genes")
-          tcc <- Reduce('+',lapply(tc,function(x) x[gns,]))
-          tcc <- t(tcc)/colSums(tcc)*1e6;
-          gv <- apply(tcc,2,var);
-          gns <- gns[is.finite(gv) & gv>0]
-          tcc <- tcc[,gns,drop=F];
-          
-          if(verbose) cat('.');
-          global.pca <- prcomp(log10(tcc+1),center=T,scale=T,retx=F)
-          # project samples onto the global axes
-          global.proj <- papply(samples,function(s) {
-            smat <- as.matrix(scaledMatrices(list(s), data.type=data.type, od.genes=gns, var.scale=F, neighborhood.average=neighborhood.average)[[1]])
-            if(verbose) cat('.')
-            #smat <- as.matrix(conos:::getRawCountMatrix(s,transposed=TRUE)[,gns])
-            #smat <- log10(smat/rowSums(smat)*1e3+1)
-            smat <- scale(smat,scale=T,center=T); smat[is.nan(smat)] <- 0;
-            sproj <- smat %*% global.pca$rotation
-          },n.cores=n.cores)
-          if(verbose) cat('. done\n');
+          cms.clust <- getClusterCountMatrices(groups=base.groups,common.genes=FALSE)
+          global.proj <- projectSamplesOnGlobalAxes(samples, cms.clust, data.type, neighborhood.average, verbose, n.cores)
         }
       }
 
@@ -260,7 +249,7 @@ Conos <- setRefClass(
         if(is.na(i)) { stop(paste("unable to find alignment for pair",paste(cis[,j],collapse='.vs.'))) }
 
         if(space=='JNMF') {
-          mnn <- get.neighbor.matrix(xl[[i]]$rot1,xl[[i]]$rot2,k,matching=matching.method,metric=metric,l2.sigma=l2.sigma)
+          mnn <- getNeighborMatrix(xl[[i]]$rot1,xl[[i]]$rot2,k,matching=matching.method,metric=metric,l2.sigma=l2.sigma)
           if(verbose) cat(".")
           return(data.frame('mA.lab'=rownames(xl[[i]]$rot1)[mnn@i+1],'mB.lab'=rownames(xl[[i]]$rot2)[mnn@j+1],'w'=mnn@x,stringsAsFactors=F))
           #return(data.frame('mA.lab'=rownames(xl[[i]]$rot1)[mnn@i+1],'mB.lab'=rownames(xl[[i]]$rot2)[mnn@j+1],'w'=1/pmax(1,log(mnn@x)),stringsAsFactors=F))
@@ -300,48 +289,17 @@ Conos <- setRefClass(
 
           # append decoy cells if needed
           if(!is.null(base.groups) && append.decoys) {
-            cproj.decoys <- lapply(cproj,function(d) {
-              tg <- tabulate(as.integer(base.groups[rownames(d)]),nbins=length(levels(base.groups)))
-              nvi <- which(tg<decoy.threshold)
-              if(length(nvi)>0) {
-                # sample cells from other datasets
-                decoy.cells <- names(base.groups)[unlist(lapply(nvi,function(i) {
-                  vc <- which(as.integer(base.groups)==i & (!samf[names(base.groups)] %in% names(cproj)))
-                  if(length(vc)>n.decoys) {
-                    vc <- sample(vc,n.decoys)
-                  }
-                }))]
-                if(length(decoy.cells)>0) {
-                  # get the matrices
-                  do.call(rbind,lapply(samples[unique(samf[decoy.cells])],function(s) {
-                    gn <- intersect(getGenes(s),colnames(d));
-                    m <- scaledMatrices(list(s),data.type=data.type, od.genes=gn, var.scale=var.scale, neighborhood.average=neighborhood.average)[[1]]
-                    m <- m[rownames(m) %in% decoy.cells,,drop=F]
-                    # append missing genes
-                    gd <- setdiff(colnames(d),gn)
-                    if(length(gd)>0) {
-                      m <- cbind(m,Matrix(0,nrow=nrow(m),ncol=length(gd),dimnames=list(rownames(m),gd),sparse=T))
-                      m <- m[,colnames(d),drop=F] # fix gene order
-                    }
-                  }))
-                } else {
-                  # empty matrix
-                  Matrix(0,nrow=0,ncol=ncol(d),dimnames=list(c(),colnames(d)))
-                }
-              }
-            })
-            #if(verbose) cat(paste0("+",sum(unlist(lapply(cproj.decoys,nrow)))))
-            # append decoys
+            cproj.decoys <- getDecoyProjections(samples, samf, data.type, var.scale, cproj, neighborhood.average, base.groups, decoy.threshold, n.decoys)
             cproj <- lapply(sn(names(cproj)),function(n) rbind(cproj[[n]],cproj.decoys[[n]]))
           }
-          
+
           cpproj <- lapply(sn(names(cproj)),function(n) {
             x <- cproj[[n]]
             x <- t(as.matrix(t(x))-centering[[n]])
             x %*% rot;
           })
           n1 <- cis[1,j]; n2 <- cis[2,j]
-          
+
           if(!is.null(base.groups)) {
             if(append.global.axes) {
               #cpproj <- lapply(sn(names(cpproj)),function(n) cbind(cpproj[[n]],global.proj[[n]])) # case without decoys
@@ -360,23 +318,23 @@ Conos <- setRefClass(
               })
             }
           }
-          
+
           if(verbose) cat(".")
 
-          mnn <- get.neighbor.matrix(cpproj[[n1]], cpproj[[n2]], k, matching=matching.method, metric=metric, l2.sigma=l2.sigma)
+          mnn <- getNeighborMatrix(cpproj[[n1]], cpproj[[n2]], k, matching=matching.method, metric=metric, l2.sigma=l2.sigma)
 
-          if(!is.null(base.groups) && append.decoys) {
+          if (!is.null(base.groups) && append.decoys) {
             # discard edges connecting to decoys
             decoy.cells <- unlist(lapply(cproj.decoys,rownames))
             mnn <- mnn[,!colnames(mnn) %in% decoy.cells,drop=F]
             mnn <- mnn[!rownames(mnn) %in% decoy.cells,,drop=F]
           }
-          
+
           return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=mnn@x,stringsAsFactors=F))
 
         } else if (space=='genes') {
           ## Overdispersed Gene space
-          mnn <- get.neighbor.matrix(as.matrix(xl[[i]]$genespace1), as.matrix(xl[[i]]$genespace2),k,matching=matching.method,metric=metric,l2.sigma=l2.sigma)
+          mnn <- getNeighborMatrix(as.matrix(xl[[i]]$genespace1), as.matrix(xl[[i]]$genespace2),k,matching=matching.method,metric=metric,l2.sigma=l2.sigma)
           return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=mnn@x,stringsAsFactors=F))
         }
         mnnres
@@ -389,23 +347,7 @@ Conos <- setRefClass(
       # append some local edges
       if(k.self>0) {
         if(verbose) cat('local pairs ')
-        x <- data.frame(do.call(rbind,papply(samples,function(x) {
-          pca <- getPca(x)
-          xk <- n2Knn(pca,k.self+1,1, verbose=FALSE, indexType=metric) # +1 accounts for self-edges that will be removed in the next line
-          diag(xk) <- 0; # no self-edges
-          xk <- as(xk,'dgTMatrix')
-          cat(".")
-          return(data.frame('mA.lab'=rownames(pca)[xk@i+1],'mB.lab'=rownames(pca)[xk@j+1],'w'=pmax(1-xk@x,0),stringsAsFactors=F))
-        },n.cores=n.cores,mc.preschedule=TRUE)),stringsAsFactors = F)
-
-        if (const.inner.weights) {
-          x$w <- k.self.weight
-        } else {
-          x$w <- x$w * k.self.weight
-        }
-
-        x$type <- 0;
-        cat(' done\n')
+        x <- getLocalEdges(samples, k.self, k.self.weight, const.inner.weights, metric, verbose, n.cores)
         el <- rbind(el,x)
       }
 
@@ -417,7 +359,6 @@ Conos <- setRefClass(
       graph <<- g;
       return(invisible(g))
     },
-
 
 
     findCommunities=function(method=leiden.community, min.group.size=0, name=NULL, test.stability=FALSE, stability.subsampling.fraction=0.95, stability.subsamples=100, verbose=TRUE, cls=NULL, sr=NULL, ...) {
@@ -554,27 +495,36 @@ Conos <- setRefClass(
       return(gg)
     },
 
-    embedGraph=function(method='largeVis',M=1,gamma=1,alpha=0.1,perplexity=NA,sgd_batches=1e8,seed=1,verbose=TRUE,target.dims=2) {
+    embedGraph=function(method='largeVis', M=1, gamma=1, alpha=0.1, perplexity=NA, sgd_batches=1e8, seed=1, verbose=TRUE, target.dims=2, n.cores=NULL, ...) {
       "Generate an embedding of a joint graph.\n
        Params:\n
-       - method: embedding method. Currently only largeVis is supported\n
+       - method: embedding method. Currently largeVis and UMAP are supported\n
        - M, gamma, alpha, sgd__batched - largeVis parameters (defaults are 1, 1, 0.01, 1e8 respectively).\n
        - perplexity: perplexity passed to largeVis (defaults to NA).\n
        - seed: random seed for the largeVis algorithm. Default: 1.\n
        - target.dims: numer of dimensions for the reduction. Default: 2. Higher dimensions can be used to generate embeddings for subsequent reductions by other methods, such as tSNE\n
+       - n.cores: number of cores, overrides class field
        - verbose: verbose mode. Default: TRUE.
+       - ...: additional arguments, passed to UMAP embedding (run ?conos:::embedGraphUmap for more info)
       "
 
-      supportedMethods <- c('largeVis')
-      if(!method %in% supportedMethods) { stop(paste0("currently, only the following embeddings are supported: ",paste(supportedMethods,collapse=' '))) }
-      
-      wij <- as_adj(graph,attr='weight');
-      if(!is.na(perplexity)) {
-        wij <- conos:::buildWijMatrix(wij,perplexity=perplexity,threads=n.cores)
+      n.jobs <- if (is.null(n.cores)) .self$n.cores else n.cores
+
+      supported.methods <- c('largeVis', 'UMAP')
+      if(!method %in% supported.methods) { stop(paste0("currently, only the following embeddings are supported: ",paste(supported.methods,collapse=' '))) }
+
+      if (method == 'largeVis') {
+        wij <- as_adj(graph,attr='weight');
+        if(!is.na(perplexity)) {
+          wij <- conos:::buildWijMatrix(wij,perplexity=perplexity,threads=n.jobs)
+        }
+        coords <- conos:::projectKNNs(wij = wij, dim=target.dims, verbose = verbose,sgd_batches = sgd_batches,gamma=gamma, M=M, seed=seed, alpha=alpha, rho=1, threads=n.jobs)
+        colnames(coords) <- V(graph)$name
+        embedding <<- coords;
+      } else {
+        embedding <<- t(embedGraphUmap(graph, verbose=verbose, return.all=F, n.cores=n.jobs, ...))
       }
-      coords <- conos:::projectKNNs(wij = wij, dim=target.dims, verbose = verbose,sgd_batches = sgd_batches,gamma=gamma, M=M, seed=seed, alpha=alpha, rho=1, threads=n.cores)
-      colnames(coords) <- V(graph)$name
-      embedding <<- coords;
+
       return(invisible(embedding))
     },
 
@@ -592,8 +542,7 @@ Conos <- setRefClass(
         if(color.by == 'cluster') {
           groups <- getClusteringGroups(clusters, clustering)
         } else if(color.by == 'sample') {
-          cl <- lapply(samples, getCellNames)
-          groups <- rep(names(cl), sapply(cl, length)) %>% stats::setNames(unlist(cl)) %>% as.factor()
+          groups <- getDatasetPerCell()
         } else {
           stop('supported values of color.by are ("cluster" and "sample")')
         }
@@ -664,8 +613,8 @@ Conos <- setRefClass(
         setNames(rownames(label.distribution))
       return(label.distribution)
     },
-    
-    getClusterCountMatrix=function(clustering=NULL, groups=NULL,common.genes=TRUE,omit.na.cells=TRUE) {
+
+    getClusterCountMatrices=function(clustering=NULL, groups=NULL,common.genes=TRUE,omit.na.cells=TRUE) {
       "Estimate per-cluster molecule count matrix by summing up the molecules of each gene for all of the cells in each cluster.\n\n
        Params:\n
        - clustering: the name of the clustering that should be used
@@ -680,7 +629,7 @@ Conos <- setRefClass(
       }
 
       groups <- as.factor(groups)
-      
+
       matl <- lapply(samples,function(s) {
         m <- conos:::getRawCountMatrix(s,trans=TRUE); # rows are cells
         cl <- factor(groups[match(rownames(m),names(groups))],levels=levels(groups));
@@ -700,521 +649,11 @@ Conos <- setRefClass(
         })
       }
       matl
+    },
+
+    getDatasetPerCell=function() {
+      cl <- lapply(samples, getCellNames)
+      return(rep(names(cl), sapply(cl, length)) %>% stats::setNames(unlist(cl)) %>% as.factor())
     }
   )
 );
-
-
-## helper functions
-##' Establish rough neighbor matching between samples given their projections in a common space
-##'
-##' @param p1 projection of sample 1
-##' @param p2 projection of sample 2
-##' @param k neighborhood radius
-##' @param matching mNN (default) or NN
-##' @param metric distance type (default: "angular", can also be 'L2')
-##' @param l2.sigma L2 distances get transformed as exp(-d/sigma) using this value (default=30)
-##' @return matrix with the similarity (!) values corresponding to weight (1-d for angular, and exp(-d/l2.sigma) for L2)
-get.neighbor.matrix <- function(p1,p2,k,matching='mNN',metric='angular',l2.sigma=1e5) {
-  n12 <- n2CrossKnn(p1,p2,k,1,FALSE,metric)
-  n21 <- n2CrossKnn(p2,p1,k,1,FALSE,metric)
-  # Viktor's solution
-  n12@x[n12@x<0] <- 0
-  n21@x[n21@x<0] <- 0
-
-  if(matching=='NN') {
-    mnn <- n21+t(n12);
-    mnn@x <- mnn@x/2;
-  } else { # mNN
-    mnn <- drop0(n21*t(n12))
-    mnn@x <- sqrt(mnn@x)
-  }
-  mnn <- as(mnn,'dgTMatrix')
-  rownames(mnn) <- rownames(p1); colnames(mnn) <- rownames(p2);
-  if(metric=='angular') {
-    mnn@x <- pmax(0,1-mnn@x)
-  } else { # L2 metric
-    mnn@x <- exp(-mnn@x/l2.sigma)
-  }
-  mnn
-}
-
-
-# TODO: multitrap method
-##' mutlilevel+walktrap communities
-##'
-##' Constructrs a two-step clustering, first running multilevel.communities, and then walktrap.communities within each
-##' These are combined into an overall hierarchy
-##' @param graph graph
-##' @param n.cores number of cores to use
-##' @param hclust.link link function to use when clustering multilevel communities (based on collapsed graph connectivity)
-##' @param min.community.size minimal community size parameter for the walktrap communities .. communities smaller than that will be merged
-##' @param verbose whether to output progress messages
-##' @param level what level of multitrap clustering to use in the starting step. By default, uses the top level. An integer can be specified for a lower level (i.e. 1).
-##' @param ... passed to walktrap
-##' @return a fakeCommunities object that has methods membership() and as.dendrogram() to mimic regular igraph returns
-##' @export
-multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=F), hclust.link='single', min.community.size=10, verbose=FALSE, level=NULL, ...) {
-  if(verbose) cat("running multilevel ... ");
-  mt <- multilevel.community(graph);
-
-  if(is.null(level)) {
-    # get higest level (to avoid oversplitting at the initial step)
-    mem <- membership(mt);
-  } else {
-    # get the specified level
-    mem <- mt$memberships[level,]; names(mem) <- mt$names;
-  }
-
-  if(verbose) cat("found",length(unique(mem)),"communities\nrunning walktraps ... ")
-
-  # calculate hierarchy on the multilevel clusters
-  cgraph <- get.cluster.graph(graph,mem)
-  chwt <- walktrap.community(cgraph,steps=8)
-  d <- as.dendrogram(chwt);
-
-
-
-  wtl <- conos:::papply(sn(unique(mem)), function(cluster) {
-    cn <- names(mem)[which(mem==cluster)]
-    sg <- induced.subgraph(graph,cn)
-    walktrap.community(induced.subgraph(graph,cn))
-  },n.cores=n.cores)
-
-  mbl <- lapply(wtl,membership);
-  # correct small communities
-  mbl <- lapply(mbl,function(x) {
-    tx <- table(x)
-    ivn <- names(tx)[tx<min.community.size]
-    if(length(ivn)>1) {
-      x[x %in% ivn] <- as.integer(ivn[1]); # collapse into one group
-    }
-    x
-  })
-
-  if(verbose) cat("found",sum(unlist(lapply(mbl,function(x) length(unique(x))))),"communities\nmerging dendrograms ... ")
-
-
-  wtld <- lapply(wtl,as.dendrogram)
-  max.height <- max(unlist(lapply(wtld,attr,'height')))
-
-  # shift leaf ids to fill in 1..N range
-  mn <- unlist(lapply(wtld,attr,'members'))
-  shift.leaf.ids <- function(l,v) { if(is.leaf(l)) { la <- attributes(l); l <- as.integer(l)+v; attributes(l) <- la; }; l  }
-  nshift <- cumsum(c(0,mn))[-(length(mn)+1)]; names(nshift) <- names(mn); # how much to shift ids in each tree
-
-  get.heights <- function(l) {
-    if(is.leaf(l)) {
-      return(attr(l,'height'))
-    } else {
-      return(c(attr(l,'height'),unlist(lapply(l,get.heights))))
-    }
-  }
-  min.d.height <- min(get.heights(d))
-  height.scale <- length(wtld)*2
-  height.shift <- 2
-
-  shift.heights <- function(l,s) { attr(l,'height') <- attr(l,'height')+s; l }
-
-  glue.dends <- function(l) {
-    if(is.leaf(l)) {
-      nam <- as.character(attr(l,'label'));
-      id <- dendrapply(wtld[[nam]], shift.leaf.ids, v=nshift[nam])
-      return(dendrapply(id,shift.heights,s=max.height-attr(id,'height')))
-
-    }
-    attr(l,'height') <- (attr(l,'height')-min.d.height)*height.scale + max.height + height.shift;
-    l[[1]] <- glue.dends(l[[1]]); l[[2]] <- glue.dends(l[[2]])
-    attr(l,'members') <- attr(l[[1]],'members') + attr(l[[2]],'members')
-    return(l)
-  }
-  combd <- glue.dends(d)
-  if(verbose) cat("done\n");
-
-  # combined clustering factor
-  fv <- unlist(lapply(sn(names(wtl)),function(cn) {
-    paste(cn,as.character(mbl[[cn]]),sep='-')
-  }))
-  names(fv) <- unlist(lapply(mbl,names))
-
-  # enclose in a masquerading class
-  res <- list(membership=fv,dendrogram=combd,algorithm='multitrap');
-  class(res) <- rev("fakeCommunities");
-  return(res);
-
-}
-
-
-##' mutlilevel+multilevel communities
-##'
-##' Constructrs a two-step clustering, first running multilevel.communities, and then walktrap.communities within each
-##' These are combined into an overall hierarchy
-##' @param graph graph
-##' @param n.cores number of cores to use
-##' @param hclust.link link function to use when clustering multilevel communities (based on collapsed graph connectivity)
-##' @param min.community.size minimal community size parameter for the walktrap communities .. communities smaller than that will be merged
-##' @param verbose whether to output progress messages
-##' @param level what level of multitrap clustering to use in the starting step. By default, uses the top level. An integer can be specified for a lower level (i.e. 1).
-##' @param ... passed to walktrap
-##' @return a fakeCommunities object that has methods membership() and as.dendrogram() to mimic regular igraph returns
-##' @export
-multimulti.community <- function(graph, n.cores=parallel::detectCores(logical=F), hclust.link='single', min.community.size=10, verbose=FALSE, level=NULL, ...) {
-  if(verbose) cat("running multilevel 1 ... ");
-  mt <- multilevel.community(graph);
-
-  if(is.null(level)) {
-    # get higest level (to avoid oversplitting at the initial step)
-    mem <- membership(mt);
-  } else {
-    # get the specified level
-    mem <- mt$memberships[level,]; names(mem) <- mt$names;
-  }
-
-  if(verbose) cat("found",length(unique(mem)),"communities\nrunning multilevel 2 ... ")
-
-  # calculate hierarchy on the multilevel clusters
-  cgraph <- get.cluster.graph(graph,mem)
-  chwt <- walktrap.community(cgraph,steps=8)
-  d <- as.dendrogram(chwt);
-
-
-  wtl <- conos:::papply(sn(unique(mem)), function(cluster) {
-    cn <- names(mem)[which(mem==cluster)]
-    sg <- induced.subgraph(graph,cn)
-    multilevel.community(induced.subgraph(graph,cn))
-  },n.cores=n.cores)
-
-  mbl <- lapply(wtl,membership);
-  # correct small communities
-  mbl <- lapply(mbl,function(x) {
-    tx <- table(x)
-    ivn <- names(tx)[tx<min.community.size]
-    if(length(ivn)>1) {
-      x[x %in% ivn] <- as.integer(ivn[1]); # collapse into one group
-    }
-    x
-  })
-
-  if(verbose) cat("found",sum(unlist(lapply(mbl,function(x) length(unique(x))))),"communities\nmerging ... ")
-
-  # combined clustering factor
-  fv <- unlist(lapply(sn(names(wtl)),function(cn) {
-    paste(cn,as.character(mbl[[cn]]),sep='-')
-  }))
-  names(fv) <- unlist(lapply(mbl,names))
-
-  # enclose in a masquerading class
-  res <- list(membership=fv,dendrogram=NULL,algorithm='multimulti');
-  class(res) <- rev("fakeCommunities");
-  return(res);
-
-}
-
-##' Leiden algorithm community detection
-##'
-##' Detect communities using Leiden algorithm (implementation copied from https://github.com/vtraag/leidenalg) 
-##' @param graph graph on which communities should be detected
-##' @param resolution resolution parameter (default=1.0) - higher numbers lead to more communities
-##' @param n.iterations number of iterations that the algorithm should be run for(default =2)
-##' @return community object
-##' @export
-leiden.community <- function(graph, resolution=1.0, n.iterations=2) {
-  
-  x <- leiden_community(graph,E(graph)$weight,resolution,n.iterations);
-
-  # enclose in a masquerading class
-  fv <- as.factor(setNames(x,V(graph)$name))
-  res <- list(membership=fv,dendrogram=NULL,algorithm='leiden',resolution=resolution,n.iter=n.iterations);
-  class(res) <- rev("fakeCommunities");
-  return(res);
-}
-
-
-
-##' recursive leiden communities
-##'
-##' Constructrs a n-step recursive clustering, using leiden.communities
-##' @param graph graph
-##' @param n.cores number of cores to use
-##' @param K recursive depth
-##' @param min.community.size minimal community size parameter for the walktrap communities .. communities smaller than that will be merged
-##' @param verbose whether to output progress messages
-##' @param resolution resolution parameter passed to leiden.communities (either a single value, or a value equivalent to K)
-##' @param ... passed to leiden.communities
-##' @return a fakeCommunities object that has methods membership() ... does not return a dendrogram ... see cltrap.community() to constructo that
-##' @export
-rleiden.community <- function(graph, K=2, n.cores=parallel::detectCores(logical=F), min.community.size=10, verbose=FALSE, resolution=1, K.current=1, hierarchical=TRUE, ...) {
-  
-  if(verbose & K.current==1) cat(paste0("running ",K,"-recursive Leiden clustering: "));
-  if(length(resolution)>1) { 
-    if(length(resolution)!=K) { stop("resolution value must be either a single number or a vector of length K")}
-    res <- resolution[K.current] 
-  } else { res <- resolution }
-  mt <- leiden.community(graph, resolution=res, ...);
-  
-  mem <- membership(mt);
-  tx <- table(mem)
-  ivn <- names(tx)[tx<min.community.size]
-  if(length(ivn)>1) {
-    mem[mem %in% ivn] <- as.integer(ivn[1]); # collapse into one group
-  }
-  if(verbose) cat(length(unique(mem)),' ');
-  
-  if(K.current<K) {
-    # start recursive run
-    if(n.cores>1) { 
-      wtl <- mclapply(conos:::sn(unique(mem)), function(cluster) {
-        cn <- names(mem)[which(mem==cluster)]
-        sg <- induced.subgraph(graph,cn)
-        rleiden.community(induced.subgraph(graph,cn), K=K, resolution=resolution, K.current=K.current+1, min.community.size=min.community.size, hierarchical=hierarchical, verbose=verbose, n.cores=n.cores, ...)
-      },mc.cores=n.cores,mc.allow.recursive = FALSE)
-    } else {
-      wtl <- lapply(conos:::sn(unique(mem)), function(cluster) {
-        cn <- names(mem)[which(mem==cluster)]
-        sg <- induced.subgraph(graph,cn)
-        rleiden.community(induced.subgraph(graph,cn), K=K, resolution=resolution, K.current=K.current+1, min.community.size=min.community.size, hierarchical=hierarchical, verbose=verbose, n.cores=n.cores, ...)
-      })
-    }
-    # merge clusters, cleanup
-    mbl <- lapply(wtl,membership);
-    # combined clustering factor
-    fv <- unlist(lapply(conos:::sn(names(wtl)),function(cn) {
-      paste(cn,as.character(mbl[[cn]]),sep='-')
-    }))
-    names(fv) <- unlist(lapply(mbl,names))  
-  } else {
-    fv <- mem;
-    if(hierarchical) {
-      # use walktrap on the last level
-      wtl <- conos:::papply(sn(unique(mem)), function(cluster) {
-        cn <- names(mem)[which(mem==cluster)]
-        sg <- induced.subgraph(graph,cn)
-        res <- walktrap.community(induced.subgraph(graph,cn))
-        res$merges <- igraph:::complete.dend(res,FALSE)
-        res
-      },n.cores=n.cores)
-    }
-  }
-  
-  if(hierarchical) {
-    # calculate hierarchy on the multilevel clusters
-    if(length(wtl)>1) {
-      cgraph <- get.cluster.graph(graph,mem)
-      chwt <- walktrap.community(cgraph,steps=8)
-      d <- as.dendrogram(chwt);
-      
-      # merge hierarchical portions
-      wtld <- lapply(wtl,as.dendrogram)
-      max.height <- max(unlist(lapply(wtld,attr,'height')))
-      
-      # shift leaf ids to fill in 1..N range
-      mn <- unlist(lapply(wtld,attr,'members'))
-      shift.leaf.ids <- function(l,v) { if(is.leaf(l)) { la <- attributes(l); l <- as.integer(l)+v; attributes(l) <- la; }; l  }
-      nshift <- cumsum(c(0,mn))[-(length(mn)+1)]; names(nshift) <- names(mn); # how much to shift ids in each tree
-      
-      get.heights <- function(l) {
-        if(is.leaf(l)) {
-          return(attr(l,'height'))
-        } else {
-          return(c(attr(l,'height'),unlist(lapply(l,get.heights))))
-        }
-      }
-      min.d.height <- min(get.heights(d))
-      height.scale <- length(wtld)*2
-      height.shift <- 2
-      
-      shift.heights <- function(l,s) { attr(l,'height') <- attr(l,'height')+s; l }
-      
-      glue.dends <- function(l) {
-        if(is.leaf(l)) {
-          nam <- as.character(attr(l,'label'));
-          id <- dendrapply(wtld[[nam]], shift.leaf.ids, v=nshift[nam])
-          return(dendrapply(id,shift.heights,s=max.height-attr(id,'height')))
-          
-        }
-        attr(l,'height') <- (attr(l,'height')-min.d.height)*height.scale + max.height + height.shift;
-        l[[1]] <- glue.dends(l[[1]]); l[[2]] <- glue.dends(l[[2]])
-        attr(l,'members') <- attr(l[[1]],'members') + attr(l[[2]],'members')
-        return(l)
-      }
-      combd <- glue.dends(d)
-    } else {
-      combd <- as.dendrogram(wtl[[1]]);
-    }
-  } else {
-    combd <- NULL;
-  }
-  
-  
-  if(K.current==1) {
-    if(verbose) {
-      cat(paste0(' detected a total of ',length(unique(fv)),' clusters '));
-      cat("done\n");
-    }
-  }
-  
-  # enclose in a masquerading class
-  res <- list(membership=fv,dendrogram=combd,algorithm='rleiden');
-  if(K.current==K) {
-    # reconstruct merges matrix
-    hc <- as.hclust(as.dendrogram(combd))
-    # translate hclust $merge to walktrap-like $merges
-    hclustMerge.to.igraphMerge <- function(x){
-      nleafs <- nrow(x) + 1
-      y <- x+nleafs; y[x<0] <- -x[x<0]-1;
-      y
-    }
-    res$merges <- hclustMerge.to.igraphMerge(x)
-  }
-  class(res) <- rev("fakeCommunities");
-  return(res);
-}
-
-##' leiden+leiden communities
-##'
-##' Constructrs a two-step recursive clustering, using leiden.communities
-##' @param graph graph
-##' @param n.cores number of cores to use
-##' @param hclust.link link function to use when clustering multilevel communities (based on collapsed graph connectivity)
-##' @param min.community.size minimal community size parameter for the walktrap communities .. communities smaller than that will be merged
-##' @param verbose whether to output progress messages
-##' @param resolution resolution parameter passed to leiden.communities
-##' @param resolution1 resolution of the 1st step (dfaults to resolution)
-##' @param resolution2 resolution of the 2nd step (dfaults to resolution)
-##' @param ... passed to leiden.communities
-##' @return a fakeCommunities object that has methods membership() and as.dendrogram() to mimic regular igraph returns
-##' @export
-multileiden.community <- function(graph, n.cores=parallel::detectCores(logical=F), hclust.link='single', min.community.size=10, verbose=FALSE, resolution=1, resolution1=resolution, resolution2=resolution, ...) {
-  if(verbose) cat("running leiden 1 ... ");
-  mt <- leiden.community(graph, resolution=resolution1, ...);
-  
-  mem <- membership(mt);
-  
-  if(verbose) cat("found",length(unique(mem)),"communities\nrunning leiden 2 ... ")
-  
-  # calculate hierarchy on the existing clusters
-  cgraph <- get.cluster.graph(graph,mem)
-  chwt <- walktrap.community(cgraph,steps=8)
-  d <- as.dendrogram(chwt);
-  
-  
-  wtl <- conos:::papply(conos:::sn(unique(mem)), function(cluster) {
-    cn <- names(mem)[which(mem==cluster)]
-    sg <- induced.subgraph(graph,cn)
-    leiden.community(induced.subgraph(graph,cn), resolution=resolution2, ...)
-  },n.cores=n.cores)
-  
-  mbl <- lapply(wtl,membership);
-  # correct small communities
-  if(min.community.size>0) {
-    mbl <- lapply(mbl,function(x) {
-      tx <- table(x)
-      ivn <- names(tx)[tx<min.community.size]
-      if(length(ivn)>1) {
-        x[x %in% ivn] <- as.integer(ivn[1]); # collapse into one group
-      }
-      x
-    })
-  }
-  
-  if(verbose) cat("found",sum(unlist(lapply(mbl,function(x) length(unique(x))))),"communities\nmerging ... ")
-  
-  # combined clustering factor
-  fv <- unlist(lapply(conos:::sn(names(wtl)),function(cn) {
-    paste(cn,as.character(mbl[[cn]]),sep='-')
-  }))
-  names(fv) <- unlist(lapply(mbl,names))
-  if(verbose) cat("done\n");
-  
-  # enclose in a masquerading class
-  res <- list(membership=fv,dendrogram=NULL,algorithm='multileiden');
-  class(res) <- rev("fakeCommunities");
-  return(res);
-  
-}
-
-##' returns pre-calculated dendrogram
-##'
-##' @param obj fakeCommunities object
-##' @param ... dropped
-##' @return dendrogram
-##' @export
-as.dendrogram.fakeCommunities <- function(obj, ...) {
-  return(obj$dendrogram)
-}
-##' returns pre-calculated membership factor
-##'
-##' @param obj fakeCommunities object
-##' @return membership factor
-##' @export
-membership.fakeCommunities <- function(obj) {
-  return(obj$membership)
-}
-
-
-
-##' Collapse vertices belonging to each cluster in a graph
-##'
-##' @param graph graph to be collapsed
-##' @param groups factor on vertives describing cluster assignment (can specify integer vertex ids, or character vertex names which will be matched)
-##' @param plot whether to show collapsed graph plot
-##' @param normalize whether recalculate edge weight as observed/oexpected
-##' @return collapsed graph
-##' @export
-get.cluster.graph <- function(graph,groups,plot=FALSE,node.scale=50,edge.scale=50,edge.alpha=0.3,normalize=TRUE) {
-  V(graph)$num <- 1;
-  if(is.integer(groups) && is.null(names(groups))) {
-    nv <- vcount(graph)
-    if(length(groups)!=nv) stop('length of groups should be equal to the number of vertices')
-    if(max(groups)>nv) stop('groups specifies ids that are larger than the number of vertices in the graph')
-    if(any(is.na(groups))) {
-      # remove vertices that are not part of the groups
-      vi <- which(!is.na(groups)); 
-      g <- induced.subgraph(graph,vi);
-      groups <- groups[vi];
-    } else {
-      g <- graph;
-    }
-  } else {
-    gn <- V(graph)$name;
-    groups <- na.omit(groups[names(groups) %in% gn]);
-    if(length(groups)<2) stop('valid names of groups elements include too few cells')
-    if(length(groups)<length(gn)) {
-      g <- induced.subgraph(graph,names(groups))
-    } else {
-      g <- graph;
-    }
-    if(is.factor(groups)) {
-      groups <- groups[V(g)$name]
-    } else {
-      groups <- as.factor(setNames(as.character(groups[V(g)$name]),V(g)$name))
-    }
-  }
-  gcon <- contract.vertices(g,groups,vertex.attr.comb=list('num'='sum',"ignore"))
-  # translate into observed/expected
-  gcon <- simplify(gcon, edge.attr.comb=list(weight="sum","ignore"))
-  if(normalize) {
-    ex <- outer(V(gcon)$num,V(gcon)$num)/(sum(V(gcon)$num)*(sum(V(gcon)$num)-1)/2)*sum(E(g)$weight)
-    gcon2 <- graph_from_adjacency_matrix(as(as_adjacency_matrix(gcon,attr = "weight",sparse = F)/ex,'dgCMatrix'),mode = "undirected",weighted=TRUE)
-    V(gcon2)$num <- V(gcon)$num
-    gcon <- gcon2;
-  }
-  if(is.factor(groups)) {
-    V(gcon)$name <- levels(groups)
-  } else {
-    # not sure when this was actually needed
-    gcon <- induced.subgraph(gcon, unique(groups))
-  }
-  
-
-  if(plot) {
-    set.seed(1)
-    par(mar = rep(0.1, 4))
-    plot.igraph(gcon, layout=layout_with_fr(gcon), vertex.size=V(gcon)$num/(sum(V(gcon)$num)/node.scale), edge.width=E(gcon)$weight/sum(E(gcon)$weight/edge.scale), edge.color=adjustcolor('black',alpha=edge.alpha))
-  }
-  return(invisible(gcon))
-}
-
-
-# TODO: p2 abstraction
-
