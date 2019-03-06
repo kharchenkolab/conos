@@ -354,7 +354,7 @@ Rcpp::List treeJaccard(arma::imat& merges, arma::imat& clusters, arma::ivec& clu
   if(clusters.n_rows>1) { // tree with leaves corresponding to clusters
     if(nleafs != clusters.n_cols) stop("number of leafs differs from the number of columns in the clusters matrix");
     tpm=clusters;
-    ncells=sum(clusters,0);
+    ncells=sum(clusters,0).t();
   } else { // tree with leaves corresponding to individual cells
     for(int i=0;i<nleafs;i++) {
       // adjust tnn: add ones to all entries except for the correct class
@@ -394,81 +394,6 @@ Rcpp::List treeJaccard(arma::imat& merges, arma::imat& clusters, arma::ivec& clu
 }
   
 
-// merges - merge matrix from walktrap -1, clusters - cluster counts per terminal node (1 x nealfs for cell leaves - containing integer cluster ids, or n.clusters x nelafs for cluster leaves - containing cell counts per cluster), clusterTotals - number of cells per cluster
-// [[Rcpp::export]]
-Rcpp::List findBestClusterThreshold(arma::imat& merges, arma::imat& clusters, arma::ivec& clusterTotals, Rcpp::Nullable<arma::imat&> clmerges = R_NilValue) {
-  int nmerges=merges.n_rows; // number of internal nodes (merges)
-  int nclusters=clusterTotals.n_elem;
-  int ncells=sum(clusterTotals);
-  arma::vec ocells=conv_to<vec>::from(clusterTotals); ocells=-1*ocells + ncells;
-  
-  // allocate answer matrices
-  arma::imat tpn(nclusters,nmerges,arma::fill::zeros); // true positive counts
-  arma::imat tnn(nclusters,nmerges,arma::fill::zeros); // true negative counts
-  arma::mat ot(nclusters,nmerges); // optimal specificity/sensitivity threshold
-  arma::imat oti(nclusters,nmerges); // optimal threshold node id
-  
-  // temp matrices
-  arma::ivec onecol=ones<ivec>(nclusters);
-  arma::mat tot2(nclusters,2); // temp ot-like matrix for calculating optimal thresholds per node
-  
-  // iterate through the merge matrix
-  for(int i=0;i<merges.n_rows;i++) {
-    arma::mat tot(nclusters,3,arma::fill::zeros); // temp ot-like matrix for comparing optimal threshold between nodes
-    arma::imat toti(nclusters,3,arma::fill::zeros); // temp oti-like matrix 
-    for(int j=0;j<2;j++) {
-      int ni= merges(i,j)-nmerges-1;
-      // update count matrices
-      if(ni<0) { // leaf node
-        if(clusters.n_rows>1) { // tree with leaves corresponding to clusters
-          // in a block scenario, we will have a vector of cluster counts for each merge leaf
-          arma::ivec cc = clusters.col(merges(i,j));
-          int scc=sum(cc);
-          tnn.col(i)+=scc;
-          tnn.col(i)-=cc;
-          tpn.col(i)+=cc;
-          // Jaccard coefficient measure
-          tot.col(j)=conv_to<vec>::from(cc)/conv_to<vec>::from(clusterTotals+ scc - cc);
-          toti.col(j).fill( merges(i,j) );
-        } else { // tree with leaves corresponding to individual cells
-          // adjust tnn: add ones to all entries except for the correct class
-          tnn.col(i)+=onecol;
-          int ci=clusters[0,merges(i,j)];
-          if(ci>=0) { // not an NA value
-            tnn(ci,i)--;
-            tpn(ci,i)++;
-            tot(ci,j)=1.0/(clusterTotals[ci]); // Jaccard
-            toti(ci,j)=merges(i,j);
-          }
-        }
-      } else { // internal node - simply transfer values
-        tnn.col(i)+=tnn.col(ni);
-        tpn.col(i)+=tpn.col(ni);
-        tot.col(j)=ot.col(ni);
-        toti.col(j)=oti.col(ni);
-      }
-    }
-    // recalculate Jaccard coefficient for the merged node
-    tot.col(2)=conv_to<vec>::from(tpn.col(i))/conv_to<vec>::from(clusterTotals+tnn.col(i)); // Jaccard coefficient
-    toti.col(2).fill(i);
-    uvec mi=index_max(tot,1); // report maximum threshold achieved between the leafs and the internal nodes
-    // record threshold value and index according to the best threshold
-    for(int j=0;j<mi.n_elem;j++) { 
-      ot(j,i)=tot(j,mi[j]);
-      oti(j,i)=toti(j,mi[j]);
-    }
-  }
-  
-  // if cluster merges were supplied, walk down the merges list, combining tnn and tpn, and calculating ot for the merged nodes
-  if(clmerges.isNotNull()) {
-    stop("not supported yet");
-  }
-  
-  return List::create(Named("threshold")=ot.col(merges.n_rows-1), Named("node")=oti.col(merges.n_rows-1));  
-  
-  
-  //Named("tpn")=tpn,Named("tnn")=tnn,Named("ot")=ot,Named("oti")=oti);
-}
 
 
 // CODE FOR TREE vs. TREE SCORING
@@ -576,7 +501,7 @@ Rcpp::List scoreTreeConsistency(arma::imat& test, arma::imat& ref, arma::ivec& l
     cout<<"scoring ... "<<flush;
 #endif
     // score current cut
-    Rcpp::List a=findBestClusterThreshold(test, factor, factorTotals);
+    Rcpp::List a=treeJaccard(test, factor, factorTotals);
     arma::vec currentThresholds = as<arma::vec>(a["threshold"]);
     
     

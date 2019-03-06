@@ -17,8 +17,8 @@ greedyModularityCut <- function(merges, deltaM, N, minsize, labels, minbreadth, 
     .Call('_conos_greedyModularityCut', PACKAGE = 'conos', merges, deltaM, N, minsize, labels, minbreadth, flatCut)
 }
 
-findBestClusterThreshold <- function(merges, clusters, clusterTotals) {
-    .Call('_conos_findBestClusterThreshold', PACKAGE = 'conos', merges, clusters, clusterTotals)
+treeJaccard <- function(merges, clusters, clusterTotals, clmerges = NULL) {
+    .Call('_conos_treeJaccard', PACKAGE = 'conos', merges, clusters, clusterTotals, clmerges)
 }
 
 scoreTreeConsistency <- function(test, ref, leafidmap, minsize = 10L) {

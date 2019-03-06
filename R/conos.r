@@ -525,14 +525,50 @@ getOdGenesUniformly <- function(samples, n.genes) {
 ##' @param clusters cluster factor
 ##' @return a list of $thresholds - per cluster optimal detectability values, and $node - internal node id (merge row) where the optimum was found
 ##' @export
-bestClusterThresholds <- function(res,clusters) {
+bestClusterThresholds <- function(res,clusters,clmerges=NULL) {
   clusters <- as.factor(clusters);
   # prepare cluster vectors
   cl <- as.integer(clusters[res$names]);
   clT <- tabulate(cl,nbins=length(levels(clusters)))
   # run
   res$merges <- igraph:::complete.dend(res,FALSE)
-  x <- findBestClusterThreshold(res$merges-1L,cl-1L,clT)
+  #x <- conos:::findBestClusterThreshold(res$merges-1L,matrix(cl-1L,nrow=1),clT)
+  if(is.null(clmerges)) {
+    x <- conos:::treeJaccard(res$merges-1L,matrix(cl-1L,nrow=1),clT)
+    names(x$threshold) <- levels(clusters);
+  } else {
+    x <- conos:::treeJaccard(res$merges-1L,matrix(cl-1L,nrow=1),clT,clmerges-1L)
+  }
+  x
+}
+
+##' Find threshold of cluster detectability in trees of clusters
+##'
+##' For a given clustering, walks the walktrap (of clusters) result tree to find
+##' a subtree with max(min(sens,spec)) for each cluster, where sens is sensitivity, spec is specificity
+##' @param res walktrap result object (igraph) where the nodes were clusters
+##' @param leaf.factor a named factor describing cell assignments to the leaf nodes (in the same order as res$names)
+##' @param clusters cluster factor
+##' @return a list of $thresholds - per cluster optimal detectability values, and $node - internal node id (merge row) where the optimum was found
+##' @export
+bestClusterTreeThresholds <- function(res,leaf.factor,clusters,clmerges=NULL) {
+  clusters <- as.factor(clusters);
+  # prepare cluster vectors
+  cl <- as.integer(clusters[names(leaf.factor)]);
+  clT <- tabulate(cl,nbins=length(levels(clusters)))
+  # prepare clusters matrix: cluster (rows) counts per leaf of the merge tree (column)
+  mt <- table(cl,leaf.factor)
+  # run
+  merges <- igraph:::complete.dend(res,FALSE)
+  #x <- conos:::findBestClusterThreshold(res$merges-1L,as.matrix(mt),clT)
+  if(is.null(clmerges)) {
+    x <- conos:::treeJaccard(res$merges-1L,as.matrix(mt),clT)
+    names(x$threshold) <- levels(clusters);
+  } else {
+    x <- conos:::treeJaccard(res$merges-1L,as.matrix(mt),clT,clmerges-1L)
+  }
+  
+  x
 }
 
 

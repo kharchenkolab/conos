@@ -420,9 +420,11 @@ Conos <- setRefClass(
 
 
 
-    findCommunities=function(method=leiden.community, min.group.size=0, name=NULL, ...) {
+    findCommunities=function(method=leiden.community, min.group.size=0, name=NULL, test.stability=FALSE, stability.subsampling.fraction=0.95, stability.subsamples=100, verbose=TRUE, cls=NULL, sr=NULL, ...) {
 
-      cls <- method(graph, ...)
+      if(is.null(cls)) { 
+        cls <- method(graph, ...)
+      }
       if(is.null(name)) {
         name <- cls$algorithm;
         if(is.null(name)) {
@@ -432,8 +434,92 @@ Conos <- setRefClass(
 
       ## Extract groups from this graph
       cls.mem <- membership(cls)
-      cls.groups <- as.character(cls.mem)
-      names(cls.groups) <- names(cls.mem)
+      cls.groups <- factor(setNames(as.character(cls.mem),names(cls.mem)),levels=1:max(cls.mem))
+      cls.levs <- levels(cls.groups)
+      res <- list(groups=cls.groups,result=cls)
+      
+      # test stability
+      if(test.stability) {
+        subset.clustering <- function(g,f=stability.subsampling.fraction,seed=NULL, ...) {
+          if(!is.null(seed)) { set.seed(seed) }
+          vi <- sample(1:length(V(g)),ceiling(length(V(g))*(f)))
+          sg <- induced_subgraph(g,vi)
+          method(sg,...)
+        }
+        if(verbose) { cat("running",stability.subsamples,"subsampling iterations ... ")}
+        if(is.null(sr)) { 
+          sr <- papply(1:stability.subsamples,function(i) subset.clustering(graph,f=stability.subsampling.fraction,seed=i),n.cores=n.cores)
+        }
+        
+        if(verbose) { cat("done\n")}
+        
+        cat("calculating flat stability stats ... ")
+        # Jaccard coefficient for each cluster against all, plus random expecctation
+        jc.stats <- do.call(rbind,conos:::papply(sr,function(o) {
+          p1 <- membership(o);
+          p2 <- cls.groups[names(p1)]; p1 <- as.character(p1)
+          #x <- tapply(1:length(p2),factor(p2,levels=cls.levs),function(i1) {
+          x <- tapply(1:length(p2),p2,function(i1) {  
+            i2 <- which(p1==p1[i1[[1]]])
+            length(intersect(i1,i2))/length(unique(c(i1,i2)))
+          })
+        },n.cores=n.cores,mc.preschedule=T))
+        
+        # Adjusted rand index
+        cat("adjusted Rand ... ")
+        ari <- unlist(conos:::papply(sr,function(o) { ol <- membership(o); adjustedRand(as.integer(ol),as.integer(cls.groups[names(ol)]),randMethod='HA') },n.cores=n.cores))
+        cat("done\n");
+
+        res$stability <- list(flat=list(jc=jc.stats,ari=ari))
+        
+        # hierarchical measures
+        cat("calculating hierarchical stability stats ... ")
+        if(is.hierarchical(cls)) {
+          # hierarchical to hierarchical stability analysis - cut reference
+          # determine hierarchy of clusters (above the cut)
+          t.get.walktrap.upper.merges <- function(res,n=length(unique(membership(res)))) {
+            x <- tail(res$merges,n-1)
+            x <- x - 2*nrow(res$merges) + nrow(x)-1 
+            # now all >=0 ids are cut leafs and need to be reassigned ids according to their rank
+            xp <- x+nrow(x)+1
+            xp[x<=0] <- rank(-x[x<=0])
+            xp  
+          }
+
+          clm <- t.get.walktrap.upper.merges(cls)
+          res$stability$upper.tree <- clm
+          
+          cat("tree Jaccard ... ")
+          jc.hstats <- do.call(rbind,mclapply(sr,function(z) conos:::bestClusterThresholds(z,cls.groups)$threshold ,mc.cores=n.cores))
+
+        } else {
+          # compute cluster hierarchy based on cell mixing (and then something)
+          # assess stability for that hierarchy (to visualize internal node stability)
+          # for the original clustering and every subsample clustering,
+          cat("upper clustering ... ")
+          cgraph <- get.cluster.graph(graph,cls.groups,plot=F,normalize=F)
+          chwt <- walktrap.community(cgraph,steps=9)
+          
+          clm <- chwt$merge
+          
+
+          cat("clusterTree Jaccard ... ")
+          jc.hstats <- do.call(rbind,mclapply(sr,function(st1) {
+            mf <- membership(st1); mf <- as.factor(setNames(as.character(mf),names(mf)))
+            st1g <- get.cluster.graph(graph,mf,plot=F,normalize=T)
+            st1w <- walktrap.community(st1g,steps=8)
+            
+            #merges <- st1w$merge; leaf.factor <- mf; clusters <- cls.groups
+            x <- conos:::bestClusterTreeThresholds(st1w,mf,cls.groups,clm)
+            x$threshold
+          },mc.cores=n.cores))
+          
+        }
+        res$stability$upper.tree <- clm
+        res$stability$hierarchical <- jc.hstats;
+        cat("done\n");
+
+      }
 
       ## Filter groups
       if(min.group.size>0) {
@@ -441,7 +527,7 @@ Conos <- setRefClass(
         cls.groups[! as.character(cls.groups) %in% as.character(lvls.keep)] <- NA
         cls.groups <- as.factor(cls.groups)
       }
-      res <- list(groups=cls.groups,result=cls)
+      res$groups <- cls.groups;
       clusters[[name]] <<- res;
       return(invisible(res))
 
@@ -844,6 +930,146 @@ leiden.community <- function(graph, resolution=1.0, n.iterations=2) {
 }
 
 
+
+##' recursive leiden communities
+##'
+##' Constructrs a n-step recursive clustering, using leiden.communities
+##' @param graph graph
+##' @param n.cores number of cores to use
+##' @param K recursive depth
+##' @param min.community.size minimal community size parameter for the walktrap communities .. communities smaller than that will be merged
+##' @param verbose whether to output progress messages
+##' @param resolution resolution parameter passed to leiden.communities (either a single value, or a value equivalent to K)
+##' @param ... passed to leiden.communities
+##' @return a fakeCommunities object that has methods membership() ... does not return a dendrogram ... see cltrap.community() to constructo that
+##' @export
+rleiden.community <- function(graph, K=2, n.cores=parallel::detectCores(logical=F), min.community.size=10, verbose=FALSE, resolution=1, K.current=1, hierarchical=TRUE, ...) {
+  
+  if(verbose & K.current==1) cat(paste0("running ",K,"-recursive Leiden clustering: "));
+  if(length(resolution)>1) { 
+    if(length(resolution)!=K) { stop("resolution value must be either a single number or a vector of length K")}
+    res <- resolution[K.current] 
+  } else { res <- resolution }
+  mt <- leiden.community(graph, resolution=res, ...);
+  
+  mem <- membership(mt);
+  tx <- table(mem)
+  ivn <- names(tx)[tx<min.community.size]
+  if(length(ivn)>1) {
+    mem[mem %in% ivn] <- as.integer(ivn[1]); # collapse into one group
+  }
+  if(verbose) cat(length(unique(mem)),' ');
+  
+  if(K.current<K) {
+    # start recursive run
+    if(n.cores>1) { 
+      wtl <- mclapply(conos:::sn(unique(mem)), function(cluster) {
+        cn <- names(mem)[which(mem==cluster)]
+        sg <- induced.subgraph(graph,cn)
+        rleiden.community(induced.subgraph(graph,cn), K=K, resolution=resolution, K.current=K.current+1, min.community.size=min.community.size, hierarchical=hierarchical, verbose=verbose, n.cores=n.cores, ...)
+      },mc.cores=n.cores,mc.allow.recursive = FALSE)
+    } else {
+      wtl <- lapply(conos:::sn(unique(mem)), function(cluster) {
+        cn <- names(mem)[which(mem==cluster)]
+        sg <- induced.subgraph(graph,cn)
+        rleiden.community(induced.subgraph(graph,cn), K=K, resolution=resolution, K.current=K.current+1, min.community.size=min.community.size, hierarchical=hierarchical, verbose=verbose, n.cores=n.cores, ...)
+      })
+    }
+    # merge clusters, cleanup
+    mbl <- lapply(wtl,membership);
+    # combined clustering factor
+    fv <- unlist(lapply(conos:::sn(names(wtl)),function(cn) {
+      paste(cn,as.character(mbl[[cn]]),sep='-')
+    }))
+    names(fv) <- unlist(lapply(mbl,names))  
+  } else {
+    fv <- mem;
+    if(hierarchical) {
+      # use walktrap on the last level
+      wtl <- conos:::papply(sn(unique(mem)), function(cluster) {
+        cn <- names(mem)[which(mem==cluster)]
+        sg <- induced.subgraph(graph,cn)
+        res <- walktrap.community(induced.subgraph(graph,cn))
+        res$merges <- igraph:::complete.dend(res,FALSE)
+        res
+      },n.cores=n.cores)
+    }
+  }
+  
+  if(hierarchical) {
+    # calculate hierarchy on the multilevel clusters
+    if(length(wtl)>1) {
+      cgraph <- get.cluster.graph(graph,mem)
+      chwt <- walktrap.community(cgraph,steps=8)
+      d <- as.dendrogram(chwt);
+      
+      # merge hierarchical portions
+      wtld <- lapply(wtl,as.dendrogram)
+      max.height <- max(unlist(lapply(wtld,attr,'height')))
+      
+      # shift leaf ids to fill in 1..N range
+      mn <- unlist(lapply(wtld,attr,'members'))
+      shift.leaf.ids <- function(l,v) { if(is.leaf(l)) { la <- attributes(l); l <- as.integer(l)+v; attributes(l) <- la; }; l  }
+      nshift <- cumsum(c(0,mn))[-(length(mn)+1)]; names(nshift) <- names(mn); # how much to shift ids in each tree
+      
+      get.heights <- function(l) {
+        if(is.leaf(l)) {
+          return(attr(l,'height'))
+        } else {
+          return(c(attr(l,'height'),unlist(lapply(l,get.heights))))
+        }
+      }
+      min.d.height <- min(get.heights(d))
+      height.scale <- length(wtld)*2
+      height.shift <- 2
+      
+      shift.heights <- function(l,s) { attr(l,'height') <- attr(l,'height')+s; l }
+      
+      glue.dends <- function(l) {
+        if(is.leaf(l)) {
+          nam <- as.character(attr(l,'label'));
+          id <- dendrapply(wtld[[nam]], shift.leaf.ids, v=nshift[nam])
+          return(dendrapply(id,shift.heights,s=max.height-attr(id,'height')))
+          
+        }
+        attr(l,'height') <- (attr(l,'height')-min.d.height)*height.scale + max.height + height.shift;
+        l[[1]] <- glue.dends(l[[1]]); l[[2]] <- glue.dends(l[[2]])
+        attr(l,'members') <- attr(l[[1]],'members') + attr(l[[2]],'members')
+        return(l)
+      }
+      combd <- glue.dends(d)
+    } else {
+      combd <- as.dendrogram(wtl[[1]]);
+    }
+  } else {
+    combd <- NULL;
+  }
+  
+  
+  if(K.current==1) {
+    if(verbose) {
+      cat(paste0(' detected a total of ',length(unique(fv)),' clusters '));
+      cat("done\n");
+    }
+  }
+  
+  # enclose in a masquerading class
+  res <- list(membership=fv,dendrogram=combd,algorithm='rleiden');
+  if(K.current==K) {
+    # reconstruct merges matrix
+    hc <- as.hclust(as.dendrogram(combd))
+    # translate hclust $merge to walktrap-like $merges
+    hclustMerge.to.igraphMerge <- function(x){
+      nleafs <- nrow(x) + 1
+      y <- x+nleafs; y[x<0] <- -x[x<0]-1;
+      y
+    }
+    res$merges <- hclustMerge.to.igraphMerge(x)
+  }
+  class(res) <- rev("fakeCommunities");
+  return(res);
+}
+
 ##' leiden+leiden communities
 ##'
 ##' Constructrs a two-step recursive clustering, using leiden.communities
@@ -932,13 +1158,54 @@ membership.fakeCommunities <- function(obj) {
 ##' @param graph graph to be collapsed
 ##' @param groups factor on vertives describing cluster assignment (can specify integer vertex ids, or character vertex names which will be matched)
 ##' @param plot whether to show collapsed graph plot
+##' @param normalize whether recalculate edge weight as observed/oexpected
 ##' @return collapsed graph
 ##' @export
-get.cluster.graph <- function(graph,groups,plot=FALSE,node.scale=50,edge.scale=50,edge.alpha=0.3) {
-  if(plot) V(graph)$num <- 1;
-  gcon <- contract.vertices(graph,groups,vertex.attr.comb=list('num'='sum',"ignore"))
+get.cluster.graph <- function(graph,groups,plot=FALSE,node.scale=50,edge.scale=50,edge.alpha=0.3,normalize=TRUE) {
+  V(graph)$num <- 1;
+  if(is.integer(groups) && is.null(names(groups))) {
+    nv <- vcount(graph)
+    if(length(groups)!=nv) stop('length of groups should be equal to the number of vertices')
+    if(max(groups)>nv) stop('groups specifies ids that are larger than the number of vertices in the graph')
+    if(any(is.na(groups))) {
+      # remove vertices that are not part of the groups
+      vi <- which(!is.na(groups)); 
+      g <- induced.subgraph(graph,vi);
+      groups <- groups[vi];
+    } else {
+      g <- graph;
+    }
+  } else {
+    gn <- V(graph)$name;
+    groups <- na.omit(groups[names(groups) %in% gn]);
+    if(length(groups)<2) stop('valid names of groups elements include too few cells')
+    if(length(groups)<length(gn)) {
+      g <- induced.subgraph(graph,names(groups))
+    } else {
+      g <- graph;
+    }
+    if(is.factor(groups)) {
+      groups <- groups[V(g)$name]
+    } else {
+      groups <- as.factor(setNames(as.character(groups[V(g)$name]),V(g)$name))
+    }
+  }
+  gcon <- contract.vertices(g,groups,vertex.attr.comb=list('num'='sum',"ignore"))
+  # translate into observed/expected
   gcon <- simplify(gcon, edge.attr.comb=list(weight="sum","ignore"))
-  gcon <- induced.subgraph(gcon, unique(groups))
+  if(normalize) {
+    ex <- outer(V(gcon)$num,V(gcon)$num)/(sum(V(gcon)$num)*(sum(V(gcon)$num)-1)/2)*sum(E(g)$weight)
+    gcon2 <- graph_from_adjacency_matrix(as(as_adjacency_matrix(gcon,attr = "weight",sparse = F)/ex,'dgCMatrix'),mode = "undirected",weighted=TRUE)
+    V(gcon2)$num <- V(gcon)$num
+    gcon <- gcon2;
+  }
+  if(is.factor(groups)) {
+    V(gcon)$name <- levels(groups)
+  } else {
+    # not sure when this was actually needed
+    gcon <- induced.subgraph(gcon, unique(groups))
+  }
+  
 
   if(plot) {
     set.seed(1)
