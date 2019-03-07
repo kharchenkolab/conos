@@ -24,15 +24,12 @@ using namespace Rcpp;
 
 // [[Rcpp::export]]
 Eigen::SparseMatrix<double> n2Knn(const NumericMatrix& m, int k, int nThreads=10, bool verbose=true, std::string indexType="angular", int M=12, int MaxM0=24) {
-  
+
   Eigen::SparseMatrix<double> mat(m.nrow(),m.nrow());
 
-  if(m.nrow()<=k) {
-    if(verbose) cout<<"k>=m.nrow(): returning dense matrix\n";
-    Eigen::MatrixXd md(m.nrow(),m.nrow());
-    md.fill(1);
-    mat=md.sparseView();
-    return(mat);
+  if(m.nrow() <= k) {
+    Rcpp::warning("k >= m.nrow(), reducing it to m.nrow() - 1");
+    k = m.nrow() - 1;
   }
 
   if(verbose) cout<<"creating space of type "<<indexType<<" done\n";
@@ -44,25 +41,25 @@ Eigen::SparseMatrix<double> n2Knn(const NumericMatrix& m, int k, int nThreads=10
     index.AddData(v);
   }
   if(verbose) cout<<"done"<<endl;
-  
+
   if(verbose) cout<<"building index ... "<<flush;
   index.Build(M, MaxM0, -1, nThreads);
   if(verbose) cout<<"done"<<endl;
 
   int ef_search = k*50;
-  
-  int nanswers=k*m.nrow();
-  
-  if(verbose) cout<<"querying ... "<<flush; 
 
-  //#pragma omp parallel for num_threads(nThreads) shared(index,ansloc,ansdist,m,ef_search,nanswers) 
+  int nanswers=k*m.nrow();
+
+  if(verbose) cout<<"querying ... "<<flush;
+
+  //#pragma omp parallel for num_threads(nThreads) shared(index,ansloc,ansdist,m,ef_search,nanswers)
   std::vector<T> tripletList;
   tripletList.reserve(nanswers);
 
   for(int i=0;i<m.nrow();i++) {
     std::vector<std::pair<int, float> > result;
     index.SearchById(i, k, ef_search, result);
-    int nr=result.size(); 
+    int nr=result.size();
     if(nr>k) nr=k;
     for(int j=0;j<nr;j++) {
       int l=i*k+j;
@@ -83,22 +80,11 @@ Eigen::SparseMatrix<double> n2CrossKnn(const NumericMatrix& mA, const NumericMat
 
   Eigen::SparseMatrix<double> mat(mB.nrow(),mA.nrow());
 
-  if(mB.nrow()<=k) {
-    if(verbose) cout<<"k>=mB.nrow(): returning dense matrix\n";
-    Eigen::MatrixXd md(mB.nrow(),mA.nrow());
-    md.fill(1);
-    mat=md.sparseView();
-    return(mat);
+  if(mB.nrow() <= k) {
+    Rcpp::warning("k >= mB.nrow(), reducing it to mB.nrow() - 1");
+    k = mB.nrow() - 1;
   }
-  
-  if(mB.nrow()<=k) {
-    if(verbose) cout<<"k>=mB.nrow(): returning dense matrix\n";
-    Eigen::MatrixXd md(mB.nrow(),mA.nrow());
-    md.fill(1);
-    mat=md.sparseView();
-    return(mat);
-  }
-  
+
   if(verbose) cout<<"creating space of type "<<indexType<<" done\n";
   n2::Hnsw index(mB.ncol(), indexType);
   if(verbose) cout<<"adding data ... "<<flush;
@@ -108,25 +94,25 @@ Eigen::SparseMatrix<double> n2CrossKnn(const NumericMatrix& mA, const NumericMat
     index.AddData(v);
   }
   if(verbose) cout<<"done"<<endl;
-  
+
   if(verbose) cout<<"building index ... "<<flush;
   index.Build(M, MaxM0, -1, nThreads);
   if(verbose) cout<<"done"<<endl;
 
   int ef_search = k*50;
-  
+
   int nanswers=k*mA.nrow();
   std::vector<T> tripletList;
   tripletList.reserve(nanswers);
 
-  if(verbose) cout<<"querying ... "<<flush; 
+  if(verbose) cout<<"querying ... "<<flush;
 
   for(int i=0;i<mA.nrow();i++) {
     NumericVector nv = mA.row(i);
     std::vector<float> v(nv.begin(),nv.end());
     std::vector<std::pair<int, float> > result;
     index.SearchByVector(v, k, ef_search, result);
-    int nr=result.size(); 
+    int nr=result.size();
     if(nr>k) nr=k;
     for(int j=0;j<nr;j++) {
       int l=i*k+j;
@@ -138,5 +124,5 @@ Eigen::SparseMatrix<double> n2CrossKnn(const NumericMatrix& mA, const NumericMat
   mat.setFromTriplets(tripletList.begin(),tripletList.end());
   return(mat);
 };
-  
+
 

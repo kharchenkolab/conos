@@ -819,13 +819,12 @@ getNeighborMatrix <- function(p1,p2,k,matching='mNN',metric='angular',l2.sigma=1
     n12 <- n2CrossKnn(p1,p1,k,1,FALSE,metric)
     n21 <- n12
   } else {
-    n12 <- n2CrossKnn(p1,p2,k,1,FALSE,metric)
-    n21 <- n2CrossKnn(p2,p1,k,1,FALSE,metric)
+    n12 <- n2CrossKnn(p1, p2, k, 1, FALSE, metric)
+    n21 <- n2CrossKnn(p2, p1, k, 1, FALSE, metric)
   }
 
-  # Viktor's solution
-  n12@x[n12@x < min.similarity] <- 0
-  n21@x[n21@x < min.similarity] <- 0
+  n12@x <- convertDistanceToSimilarity(n12@x, metric=metric, l2.sigma=l2.sigma)
+  n21@x <- convertDistanceToSimilarity(n21@x, metric=metric, l2.sigma=l2.sigma)
 
   if (matching=='NN') {
     adj.mtx <- drop0(n21+t(n12));
@@ -837,10 +836,8 @@ getNeighborMatrix <- function(p1,p2,k,matching='mNN',metric='angular',l2.sigma=1
     stop("Unrecognized type of NN matching:", matching)
   }
 
-  adj.mtx@x[adj.mtx@x < min.similarity] <- 0
-
   rownames(adj.mtx) <- rownames(p1); colnames(adj.mtx) <- rownames(p2);
-  adj.mtx@x <- convertDistanceToSimilarity(adj.mtx@x, metric=metric, l2.sigma=l2.sigma)
+  adj.mtx@x[adj.mtx@x < min.similarity] <- 0
 
   return(as(drop0(adj.mtx),'dgTMatrix'))
 }
