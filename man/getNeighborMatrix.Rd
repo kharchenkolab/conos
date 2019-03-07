@@ -18,7 +18,7 @@ getNeighborMatrix(p1, p2, k, matching = "mNN", metric = "angular",
 
 \item{metric}{distance type (default: "angular", can also be 'L2')}
 
-\item{l2.sigma}{L2 distances get transformed as exp(-d/sigma) using this value (default=30)}
+\item{l2.sigma}{L2 distances get transformed as exp(-d/sigma) using this value (default=1e5)}
 
 \item{min.similarity}{minimal similarity between two cells, required to have an edge}
 }

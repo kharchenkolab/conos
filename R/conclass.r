@@ -203,7 +203,7 @@ Conos <- setRefClass(
 
     buildGraph=function(k=15, k.self=10, k.self.weight=0.1, space='CPCA', matching.method='mNN', metric='angular', data.type='counts', l2.sigma=1e5, var.scale =TRUE, ncomps=40, n.odgenes=2000, return.details=T,
                         neighborhood.average=FALSE, neighborhood.average.k=10, matching.mask=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE, const.inner.weights=FALSE, base.groups=NULL,
-                        append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, append.local.axes=TRUE) {
+                        append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, append.local.axes=TRUE, edge.combine.method="sum") {
 
       supported.spaces <- c("CPCA","JNMF","genes","PCA")
       if(!space %in% supported.spaces) {
@@ -221,10 +221,10 @@ Conos <- setRefClass(
       }
 
       # calculate or update pairwise alignments
-      cis <- updatePairs(space=space, ncomps=ncomps, n.odgenes=n.odgenes, verbose=verbose, var.scale=var.scale, neighborhood.average=neighborhood.average,
-                         neighborhood.average.k=10, matching.mask=matching.mask, exclude.samples=exclude.samples)
+      sn.pairs <- updatePairs(space=space, ncomps=ncomps, n.odgenes=n.odgenes, verbose=verbose, var.scale=var.scale, neighborhood.average=neighborhood.average,
+                              neighborhood.average.k=10, matching.mask=matching.mask, exclude.samples=exclude.samples)
 
-      if(ncol(cis)<1) { stop("insufficient number of comparable pairs") }
+      if(ncol(sn.pairs)<1) { stop("insufficient number of comparable pairs") }
 
       if(!is.null(base.groups)) {
         samf <- lapply(samples,getCellNames)
@@ -240,101 +240,53 @@ Conos <- setRefClass(
 
       # determine inter-sample mapping
       if(verbose) cat('inter-sample links using ',matching.method,' ');
-      xl <- pairs[[space]]
-      mnnres <- papply(1:ncol(cis), function(j) {
-        r.ns <- samples[cis[,j]]
+      cached.pairs <- pairs[[space]]
+      mnnres <- papply(1:ncol(sn.pairs), function(j) {
         # we'll look up the pair by name (possibly reversed), not to assume for the ordering of $pairs[[space]] to be the same
-        i <- match(paste(cis[,j],collapse='.vs.'),names(xl));
-        if(is.na(i)) { i <- match(paste(rev(cis[,j]),collapse='.vs.'),names(xl)) }
-        if(is.na(i)) { stop(paste("unable to find alignment for pair",paste(cis[,j],collapse='.vs.'))) }
+        i <- match(paste(sn.pairs[,j],collapse='.vs.'),names(cached.pairs));
+        if(is.na(i)) { i <- match(paste(rev(sn.pairs[,j]),collapse='.vs.'),names(cached.pairs)) }
+        if(is.na(i)) { stop(paste("unable to find alignment for pair",paste(sn.pairs[,j],collapse='.vs.'))) }
 
         if(space=='JNMF') {
-          mnn <- getNeighborMatrix(xl[[i]]$rot1,xl[[i]]$rot2,k,matching=matching.method,metric=metric,l2.sigma=l2.sigma)
+          mnn <- getNeighborMatrix(cached.pairs[[i]]$rot1,cached.pairs[[i]]$rot2,k,matching=matching.method,metric=metric,l2.sigma=l2.sigma)
           if(verbose) cat(".")
-          return(data.frame('mA.lab'=rownames(xl[[i]]$rot1)[mnn@i+1],'mB.lab'=rownames(xl[[i]]$rot2)[mnn@j+1],'w'=mnn@x,stringsAsFactors=F))
-          #return(data.frame('mA.lab'=rownames(xl[[i]]$rot1)[mnn@i+1],'mB.lab'=rownames(xl[[i]]$rot2)[mnn@j+1],'w'=1/pmax(1,log(mnn@x)),stringsAsFactors=F))
+          return(data.frame('mA.lab'=rownames(cached.pairs[[i]]$rot1)[mnn@i+1],'mB.lab'=rownames(cached.pairs[[i]]$rot2)[mnn@j+1],'w'=mnn@x,stringsAsFactors=F))
+          #return(data.frame('mA.lab'=rownames(cached.pairs[[i]]$rot1)[mnn@i+1],'mB.lab'=rownames(cached.pairs[[i]]$rot2)[mnn@j+1],'w'=1/pmax(1,log(mnn@x)),stringsAsFactors=F))
 
         } else if (space %in% c("CPCA","GSVD","PCA")) {
           #common.genes <- Reduce(intersect,lapply(r.ns, getGenes))
-          if(!is.null(xl[[i]]$CPC)) {
+          if(!is.null(cached.pairs[[i]]$CPC)) {
             # CPCA or PCA
-            #odgenes <- intersect(rownames(xl[[i]]$CPC),common.genes)
-            odgenes <- rownames(xl[[i]]$CPC);
-            rot <- xl[[i]]$CPC[odgenes,];
-          } else if(!is.null(xl[[i]]$o$Q)) {
+            #od.genes <- intersect(rownames(cached.pairs[[i]]$CPC),common.genes)
+            od.genes <- rownames(cached.pairs[[i]]$CPC);
+            rot <- cached.pairs[[i]]$CPC[od.genes,];
+          } else if(!is.null(cached.pairs[[i]]$o$Q)) {
             # GSVD
-            rot <- xl[[i]]$o$Q;
-            odgenes <- rownames(rot) <- colnames(xl[[i]]$o$A);
+            rot <- cached.pairs[[i]]$o$Q;
+            od.genes <- rownames(rot) <- colnames(cached.pairs[[i]]$o$A);
           } else {
             stop("unknown reduction provided")
           }
 
           # TODO: a more careful analysis of parameters used to calculate the cached version
-          if(ncomps>ncol(rot)) {
+          if(ncomps > ncol(rot)) {
             warning(paste0("specified ncomps (",ncomps,") is greater than the cached version (",ncol(rot),")"))
           } else {
             rot <- rot[,1:ncomps,drop=F]
           }
 
-          # create matrices, adjust variance
-          cproj <- scaledMatrices(r.ns, data.type=data.type, od.genes=odgenes, var.scale=var.scale, neighborhood.average=neighborhood.average)
-
-          # determine the centering
-          if(common.centering) {
-            ncells <- unlist(lapply(cproj,nrow));
-            centering <- setNames(rep(colSums(do.call(rbind,lapply(cproj,colMeans))*ncells)/sum(ncells),length(cproj)),names(cproj))
-          } else {
-            centering <- lapply(cproj,colMeans)
-          }
-
-          # append decoy cells if needed
-          if(!is.null(base.groups) && append.decoys) {
-            cproj.decoys <- getDecoyProjections(samples, samf, data.type, var.scale, cproj, neighborhood.average, base.groups, decoy.threshold, n.decoys)
-            cproj <- lapply(sn(names(cproj)),function(n) rbind(cproj[[n]],cproj.decoys[[n]]))
-          }
-
-          cpproj <- lapply(sn(names(cproj)),function(n) {
-            x <- cproj[[n]]
-            x <- t(as.matrix(t(x))-centering[[n]])
-            x %*% rot;
-          })
-          n1 <- cis[1,j]; n2 <- cis[2,j]
-
-          if(!is.null(base.groups)) {
-            if(append.global.axes) {
-              #cpproj <- lapply(sn(names(cpproj)),function(n) cbind(cpproj[[n]],global.proj[[n]])) # case without decoys
-              cpproj <- lapply(sn(names(cpproj)),function(n) {
-                gm <- global.proj[[n]]
-                if(append.decoys) {
-                  decoy.cells <- rownames(cproj.decoys[[n]])
-                  if(length(decoy.cells)>0) {
-                    gm <- rbind(gm,do.call(rbind,lapply(global.proj[unique(samf[decoy.cells])],function(m) {
-                      m[rownames(m) %in% decoy.cells,,drop=F]
-                    })))
-                  }
-                }
-                # append global axes
-                cbind(cpproj[[n]],gm[rownames(cpproj[[n]]),])
-              })
-            }
-          }
-
+          mnn <- getPcaBasedNeighborMatrix(samples[sn.pairs[,j]], od.genes=od.genes, rot=rot, k=k, data.type=data.type,
+                                           var.scale=var.scale, neighborhood.average=neighborhood.average, common.centering=common.centering,
+                                           matching.method=matching.method, metric=metric, l2.sigma=l2.sigma,
+                                           base.groups=base.groups, append.decoys=append.decoys, samples=samples, samf=samf, decoy.threshold=decoy.threshold,
+                                           n.decoys=n.decoys, append.global.axes=append.global.axes, global.proj=global.proj)
           if(verbose) cat(".")
-
-          mnn <- getNeighborMatrix(cpproj[[n1]], cpproj[[n2]], k, matching=matching.method, metric=metric, l2.sigma=l2.sigma)
-
-          if (!is.null(base.groups) && append.decoys) {
-            # discard edges connecting to decoys
-            decoy.cells <- unlist(lapply(cproj.decoys,rownames))
-            mnn <- mnn[,!colnames(mnn) %in% decoy.cells,drop=F]
-            mnn <- mnn[!rownames(mnn) %in% decoy.cells,,drop=F]
-          }
 
           return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=mnn@x,stringsAsFactors=F))
 
         } else if (space=='genes') {
           ## Overdispersed Gene space
-          mnn <- getNeighborMatrix(as.matrix(xl[[i]]$genespace1), as.matrix(xl[[i]]$genespace2),k,matching=matching.method,metric=metric,l2.sigma=l2.sigma)
+          mnn <- getNeighborMatrix(as.matrix(cached.pairs[[i]]$genespace1), as.matrix(cached.pairs[[i]]$genespace2),k,matching=matching.method,metric=metric,l2.sigma=l2.sigma)
           return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=mnn@x,stringsAsFactors=F))
         }
         mnnres
@@ -355,7 +307,7 @@ Conos <- setRefClass(
       E(g)$weight <- el[,3]
       E(g)$type <- el[,4]
       # collapse duplicate edges
-      g <- simplify(g, edge.attr.comb=list(weight="sum", type = "first"))
+      g <- simplify(g, edge.attr.comb=list(weight=edge.combine.method, type = "first"))
       graph <<- g;
       return(invisible(g))
     },

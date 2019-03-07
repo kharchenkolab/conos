@@ -30,7 +30,7 @@ scaledMatricesP2 <- function(p2.objs, data.type, od.genes, var.scale, neighborho
     }
     if(neighborhood.average) {
       ## use the averaged matrices
-      x <- Matrix::t(edgeMat(r)$mat) %*% x
+      x <- Matrix::t(edgeMat(r)$mat) %*% x # TODO: looks like `$mat` doesn't exist anymore
     }
     x
   })
@@ -750,6 +750,60 @@ convertDistanceToSimilarity <- function(distances, metric, l2.sigma=1e5) {
   return(exp(-distances / l2.sigma))
 }
 
+getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, data.type='counts', var.scale=T, neighborhood.average=F, common.centering=T,
+                                      matching.method='mNN', metric='angular', l2.sigma=1e5,
+                                      base.groups=NULL, append.decoys=F, samples=NULL, samf=NULL, decoy.threshold=1, n.decoys=k*2, append.global.axes=T, global.proj=NULL) {
+  # create matrices, adjust variance
+  cproj <- scaledMatrices(sample.pair, data.type=data.type, od.genes=od.genes, var.scale=var.scale, neighborhood.average=neighborhood.average)
+
+  # determine the centering
+  if (common.centering) {
+    ncells <- unlist(lapply(cproj, nrow));
+    centering <- setNames(rep(colSums(do.call(rbind, lapply(cproj, colMeans)) * ncells) / sum(ncells), length(cproj)), names(cproj))
+  } else {
+    centering <- lapply(cproj,colMeans)
+  }
+
+  # append decoy cells if needed
+  if(!is.null(base.groups) && append.decoys) {
+    cproj.decoys <- getDecoyProjections(samples, samf, data.type, var.scale, cproj, neighborhood.average, base.groups, decoy.threshold, n.decoys)
+    cproj <- lapply(sn(names(cproj)),function(n) rbind(cproj[[n]],cproj.decoys[[n]]))
+  }
+
+  cpproj <- lapply(sn(names(cproj)),function(n) {
+    x <- cproj[[n]]
+    x <- t(as.matrix(t(x))-centering[[n]])
+    x %*% rot;
+  })
+
+  if(!is.null(base.groups) && append.global.axes) {
+    #cpproj <- lapply(sn(names(cpproj)),function(n) cbind(cpproj[[n]],global.proj[[n]])) # case without decoys
+    cpproj <- lapply(sn(names(cpproj)),function(n) {
+      gm <- global.proj[[n]]
+      if (append.decoys) {
+        decoy.cells <- rownames(cproj.decoys[[n]])
+        if (length(decoy.cells)>0) {
+          gm <- rbind(gm, do.call(rbind, lapply(global.proj[unique(samf[decoy.cells])],
+                                                function(m) m[rownames(m) %in% decoy.cells,,drop=F])))
+        }
+      }
+      # append global axes
+      cbind(cpproj[[n]],gm[rownames(cpproj[[n]]),])
+    })
+  }
+
+  mnn <- getNeighborMatrix(cpproj[[names(sample.pair)[1]]], cpproj[[names(sample.pair)[2]]], k, matching=matching.method, metric=metric, l2.sigma=l2.sigma)
+
+  if (!is.null(base.groups) && append.decoys) {
+    # discard edges connecting to decoys
+    decoy.cells <- unlist(lapply(cproj.decoys,rownames))
+    mnn <- mnn[, !colnames(mnn) %in% decoy.cells, drop=F]
+    mnn <- mnn[!rownames(mnn) %in% decoy.cells, , drop=F]
+  }
+
+  return(mnn)
+}
+
 ##' Establish rough neighbor matching between samples given their projections in a common space
 ##'
 ##' @param p1 projection of sample 1
@@ -779,23 +833,6 @@ getNeighborMatrix <- function(p1,p2,k,matching='mNN',metric='angular',l2.sigma=1
   } else if (matching=='mNN') {
     adj.mtx <- drop0(n21*t(n12))
     adj.mtx@x <- sqrt(adj.mtx@x)
-  } else if (matching=='mNN-MST') {
-    if (!is.null(p2)) {
-      stop("mNN-MST method is only supported for 1-sample neighborhood")
-    }
-
-    knn.mtx <- n21+t(n12);
-    knn.mtx@x <- -knn.mtx@x/2;
-
-    mst.mtx <- igraph::graph_from_adjacency_matrix(knn.mtx, mode="undirected", weighted=T) %>%
-      igraph::minimum.spanning.tree() %>% igraph::as_adjacency_matrix(type="both", attr="weight")
-    mst.mtx <- mst.mtx + t(mst.mtx)
-    mst.mtx@x <- -mst.mtx@x/2
-    mst.mtx@x[mst.mtx@x < min.similarity] <- min.similarity * 1.01
-
-    adj.mtx <- n21*t(n12)
-    adj.mtx@x <- sqrt(adj.mtx@x)
-    suppressMessages(adj.mtx <- pmax(adj.mtx, mst.mtx))
   } else {
     stop("Unrecognized type of NN matching:", matching)
   }

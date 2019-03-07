@@ -18,6 +18,9 @@ graphToAdjList <- function(graph) {
     lapply(unlist) %>%
     lapply(function(x) x / sum(x))
 
+  if (any(sapply(probs, function(x) sum(is.na(x)))))
+    stop("NAs in transition probabilities")
+
   return(list(idx=adj.list, probabilities=probs, names=edge.list.fact$levels))
 }
 
@@ -41,10 +44,13 @@ embedKnnGraph <- function(commute.times, n.neighbors, names=NULL, verbose=TRUE, 
 }
 
 embedGraphUmap <- function(graph, verbose=T, min.prob=1e-3, min.visited.verts=1000, n.cores=1,
-                           max.hitting.nn.num=7000, max.commute.nn.num=150, min.prob.lower=1e-7,
+                           max.hitting.nn.num=0, max.commute.nn.num=0, min.prob.lower=1e-7,
                            n.neighbors=40, n.epochs=1000, spread=15, min.dist=0.001, return.all=F,
                            ...) {
   min.visited.verts = min(min.visited.verts, length(igraph::V(graph) - 1))
+  if (max.hitting.nn.num == 0) {
+    max.hitting.nn.num <- length(igraph::V(graph)) - 1
+  }
 
   if (verbose) cat("Convert graph to adjacency list...\n")
   adj.info <- graphToAdjList(graph);

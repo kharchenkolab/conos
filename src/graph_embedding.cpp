@@ -112,6 +112,10 @@ void dfs_hitting_time(const std::vector<std::vector<int>> &adjacency_list,
                       double current_prob, int current_length, double min_prob,
                       int min_visited_verts, double min_prob_lower)
 {
+  if (current_prob < 0 || current_prob > 1 || isnan(current_prob)) {
+    Rcpp::stop("Wrong current_prob: " + std::to_string(current_prob));
+  }
+
   bool was_visited_before = visited.at(vertex_id);
   if (!was_visited_before)
   {
@@ -128,6 +132,10 @@ void dfs_hitting_time(const std::vector<std::vector<int>> &adjacency_list,
   {
     int neighbor_id = adjacency_list.at(vertex_id).at(i);
     double transition_prob = transition_probabilities.at(vertex_id).at(i);
+    if (transition_prob < 0 || transition_prob > 1 || isnan(transition_prob)) {
+      Rcpp::stop("Wrong transition probability: " + std::to_string(transition_prob));
+    }
+
     dfs_hitting_time(adjacency_list, transition_probabilities, neighbor_id, visited, result_paths,
                      current_prob * transition_prob, current_length + 1, min_prob,
                      min_visited_verts, min_prob_lower);
@@ -141,6 +149,9 @@ std::pair<std::vector<double>, std::vector<int>> hitting_time_per_neighbor(const
                                                                            int start_vertex, double min_prob, int min_visited_verts, double min_prob_lower,
                                                                            int max_adj_num)
 {
+  if (start_vertex < 0 || start_vertex >= adjacency_list.size())
+    Rcpp::stop("Wrong start_vertex index: " + std::to_string(start_vertex));
+
   path_map_t paths;
   std::vector<bool> visited(adjacency_list.size(), false);
   visited[start_vertex] = true;
