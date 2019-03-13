@@ -521,6 +521,7 @@ Conos <- setRefClass(
         colnames(coords) <- V(graph)$name
         embedding <<- coords;
       } else {
+        require(uwot)
         embedding <<- t(embedGraphUmap(graph, verbose=verbose, return.all=F, n.cores=n.jobs, ...))
       }
 
