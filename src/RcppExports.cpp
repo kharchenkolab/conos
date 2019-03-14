@@ -189,8 +189,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // n2Knn
-Eigen::SparseMatrix<double> n2Knn(const NumericMatrix& m, int k, int nThreads, bool verbose, std::string indexType, int M, int MaxM0);
-RcppExport SEXP _conos_n2Knn(SEXP mSEXP, SEXP kSEXP, SEXP nThreadsSEXP, SEXP verboseSEXP, SEXP indexTypeSEXP, SEXP MSEXP, SEXP MaxM0SEXP) {
+Eigen::SparseMatrix<double> n2Knn(const NumericMatrix& m, int k, int nThreads, bool verbose, std::string indexType, int M, int MaxM0, float ef_search_multiplier);
+RcppExport SEXP _conos_n2Knn(SEXP mSEXP, SEXP kSEXP, SEXP nThreadsSEXP, SEXP verboseSEXP, SEXP indexTypeSEXP, SEXP MSEXP, SEXP MaxM0SEXP, SEXP ef_search_multiplierSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -201,13 +201,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::string >::type indexType(indexTypeSEXP);
     Rcpp::traits::input_parameter< int >::type M(MSEXP);
     Rcpp::traits::input_parameter< int >::type MaxM0(MaxM0SEXP);
-    rcpp_result_gen = Rcpp::wrap(n2Knn(m, k, nThreads, verbose, indexType, M, MaxM0));
+    Rcpp::traits::input_parameter< float >::type ef_search_multiplier(ef_search_multiplierSEXP);
+    rcpp_result_gen = Rcpp::wrap(n2Knn(m, k, nThreads, verbose, indexType, M, MaxM0, ef_search_multiplier));
     return rcpp_result_gen;
 END_RCPP
 }
 // n2CrossKnn
-Eigen::SparseMatrix<double> n2CrossKnn(const NumericMatrix& mA, const NumericMatrix& mB, int k, int nThreads, bool verbose, std::string indexType, int M, int MaxM0);
-RcppExport SEXP _conos_n2CrossKnn(SEXP mASEXP, SEXP mBSEXP, SEXP kSEXP, SEXP nThreadsSEXP, SEXP verboseSEXP, SEXP indexTypeSEXP, SEXP MSEXP, SEXP MaxM0SEXP) {
+Eigen::SparseMatrix<double> n2CrossKnn(const NumericMatrix& mA, const NumericMatrix& mB, int k, int nThreads, bool verbose, std::string indexType, int M, int MaxM0, float ef_search_multiplier);
+RcppExport SEXP _conos_n2CrossKnn(SEXP mASEXP, SEXP mBSEXP, SEXP kSEXP, SEXP nThreadsSEXP, SEXP verboseSEXP, SEXP indexTypeSEXP, SEXP MSEXP, SEXP MaxM0SEXP, SEXP ef_search_multiplierSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -219,7 +220,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::string >::type indexType(indexTypeSEXP);
     Rcpp::traits::input_parameter< int >::type M(MSEXP);
     Rcpp::traits::input_parameter< int >::type MaxM0(MaxM0SEXP);
-    rcpp_result_gen = Rcpp::wrap(n2CrossKnn(mA, mB, k, nThreads, verbose, indexType, M, MaxM0));
+    Rcpp::traits::input_parameter< float >::type ef_search_multiplier(ef_search_multiplierSEXP);
+    rcpp_result_gen = Rcpp::wrap(n2CrossKnn(mA, mB, k, nThreads, verbose, indexType, M, MaxM0, ef_search_multiplier));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -322,8 +324,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_conos_get_nearest_neighbors", (DL_FUNC) &_conos_get_nearest_neighbors, 10},
     {"_conos_sgd", (DL_FUNC) &_conos_sgd, 15},
     {"_conos_leiden_community", (DL_FUNC) &_conos_leiden_community, 4},
-    {"_conos_n2Knn", (DL_FUNC) &_conos_n2Knn, 7},
-    {"_conos_n2CrossKnn", (DL_FUNC) &_conos_n2CrossKnn, 8},
+    {"_conos_n2Knn", (DL_FUNC) &_conos_n2Knn, 8},
+    {"_conos_n2CrossKnn", (DL_FUNC) &_conos_n2CrossKnn, 9},
     {"_conos_propagate_labels", (DL_FUNC) &_conos_propagate_labels, 9},
     {"_conos_smooth_count_matrix", (DL_FUNC) &_conos_smooth_count_matrix, 9},
     {"_conos_adjacent_vertices", (DL_FUNC) &_conos_adjacent_vertices, 1},
