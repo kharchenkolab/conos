@@ -5,7 +5,7 @@
 \title{Collapse vertices belonging to each cluster in a graph}
 \usage{
 get.cluster.graph(graph, groups, plot = FALSE, node.scale = 50,
-  edge.scale = 50, edge.alpha = 0.3)
+  edge.scale = 50, edge.alpha = 0.3, normalize = TRUE)
 }
 \arguments{
 \item{graph}{graph to be collapsed}
@@ -13,6 +13,8 @@ get.cluster.graph(graph, groups, plot = FALSE, node.scale = 50,
 \item{groups}{factor on vertives describing cluster assignment (can specify integer vertex ids, or character vertex names which will be matched)}
 
 \item{plot}{whether to show collapsed graph plot}
+
+\item{normalize}{whether recalculate edge weight as observed/oexpected}
 }
 \value{
 collapsed graph

@@ -4,7 +4,7 @@
 \alias{bestClusterThresholds}
 \title{Find threshold of cluster detectability}
 \usage{
-bestClusterThresholds(res, clusters)
+bestClusterThresholds(res, clusters, clmerges = NULL)
 }
 \arguments{
 \item{res}{walktrap result object (igraph)}

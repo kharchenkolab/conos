@@ -621,14 +621,50 @@ getLocalEdges <- function(samples, k.self, k.self.weight, const.inner.weights, m
 ##' @param clusters cluster factor
 ##' @return a list of $thresholds - per cluster optimal detectability values, and $node - internal node id (merge row) where the optimum was found
 ##' @export
-bestClusterThresholds <- function(res,clusters) {
+bestClusterThresholds <- function(res,clusters,clmerges=NULL) {
   clusters <- as.factor(clusters);
   # prepare cluster vectors
   cl <- as.integer(clusters[res$names]);
   clT <- tabulate(cl,nbins=length(levels(clusters)))
   # run
   res$merges <- igraph:::complete.dend(res,FALSE)
-  x <- findBestClusterThreshold(res$merges-1L,cl-1L,clT)
+  #x <- conos:::findBestClusterThreshold(res$merges-1L,matrix(cl-1L,nrow=1),clT)
+  if(is.null(clmerges)) {
+    x <- conos:::treeJaccard(res$merges-1L,matrix(cl-1L,nrow=1),clT)
+    names(x$threshold) <- levels(clusters);
+  } else {
+    x <- conos:::treeJaccard(res$merges-1L,matrix(cl-1L,nrow=1),clT,clmerges-1L)
+  }
+  x
+}
+
+##' Find threshold of cluster detectability in trees of clusters
+##'
+##' For a given clustering, walks the walktrap (of clusters) result tree to find
+##' a subtree with max(min(sens,spec)) for each cluster, where sens is sensitivity, spec is specificity
+##' @param res walktrap result object (igraph) where the nodes were clusters
+##' @param leaf.factor a named factor describing cell assignments to the leaf nodes (in the same order as res$names)
+##' @param clusters cluster factor
+##' @return a list of $thresholds - per cluster optimal detectability values, and $node - internal node id (merge row) where the optimum was found
+##' @export
+bestClusterTreeThresholds <- function(res,leaf.factor,clusters,clmerges=NULL) {
+  clusters <- as.factor(clusters);
+  # prepare cluster vectors
+  cl <- as.integer(clusters[names(leaf.factor)]);
+  clT <- tabulate(cl,nbins=length(levels(clusters)))
+  # prepare clusters matrix: cluster (rows) counts per leaf of the merge tree (column)
+  mt <- table(cl,leaf.factor)
+  # run
+  merges <- igraph:::complete.dend(res,FALSE)
+  #x <- conos:::findBestClusterThreshold(res$merges-1L,as.matrix(mt),clT)
+  if(is.null(clmerges)) {
+    x <- conos:::treeJaccard(res$merges-1L,as.matrix(mt),clT)
+    names(x$threshold) <- levels(clusters);
+  } else {
+    x <- conos:::treeJaccard(res$merges-1L,as.matrix(mt),clT,clmerges-1L)
+  }
+
+  x
 }
 
 
@@ -849,18 +885,60 @@ getNeighborMatrix <- function(p1,p2,k,matching='mNN',metric='angular',l2.sigma=1
   return(as(drop0(adj.mtx),'dgTMatrix'))
 }
 
+
 ##' Collapse vertices belonging to each cluster in a graph
 ##'
 ##' @param graph graph to be collapsed
 ##' @param groups factor on vertives describing cluster assignment (can specify integer vertex ids, or character vertex names which will be matched)
 ##' @param plot whether to show collapsed graph plot
+##' @param normalize whether recalculate edge weight as observed/oexpected
 ##' @return collapsed graph
 ##' @export
-get.cluster.graph <- function(graph,groups,plot=FALSE,node.scale=50,edge.scale=50,edge.alpha=0.3) {
-  if(plot) V(graph)$num <- 1;
-  gcon <- contract.vertices(graph,groups,vertex.attr.comb=list('num'='sum',"ignore"))
+get.cluster.graph <- function(graph,groups,plot=FALSE,node.scale=50,edge.scale=50,edge.alpha=0.3,normalize=TRUE) {
+  V(graph)$num <- 1;
+  if(is.integer(groups) && is.null(names(groups))) {
+    nv <- vcount(graph)
+    if(length(groups)!=nv) stop('length of groups should be equal to the number of vertices')
+    if(max(groups)>nv) stop('groups specifies ids that are larger than the number of vertices in the graph')
+    if(any(is.na(groups))) {
+      # remove vertices that are not part of the groups
+      vi <- which(!is.na(groups));
+      g <- induced.subgraph(graph,vi);
+      groups <- groups[vi];
+    } else {
+      g <- graph;
+    }
+  } else {
+    gn <- V(graph)$name;
+    groups <- na.omit(groups[names(groups) %in% gn]);
+    if(length(groups)<2) stop('valid names of groups elements include too few cells')
+    if(length(groups)<length(gn)) {
+      g <- induced.subgraph(graph,names(groups))
+    } else {
+      g <- graph;
+    }
+    if(is.factor(groups)) {
+      groups <- groups[V(g)$name]
+    } else {
+      groups <- as.factor(setNames(as.character(groups[V(g)$name]),V(g)$name))
+    }
+  }
+  gcon <- contract.vertices(g,groups,vertex.attr.comb=list('num'='sum',"ignore"))
+  # translate into observed/expected
   gcon <- simplify(gcon, edge.attr.comb=list(weight="sum","ignore"))
-  gcon <- induced.subgraph(gcon, unique(groups))
+  if(normalize) {
+    ex <- outer(V(gcon)$num,V(gcon)$num)/(sum(V(gcon)$num)*(sum(V(gcon)$num)-1)/2)*sum(E(g)$weight)
+    gcon2 <- graph_from_adjacency_matrix(as(as_adjacency_matrix(gcon,attr = "weight",sparse = F)/ex,'dgCMatrix'),mode = "undirected",weighted=TRUE)
+    V(gcon2)$num <- V(gcon)$num
+    gcon <- gcon2;
+  }
+  if(is.factor(groups)) {
+    V(gcon)$name <- levels(groups)
+  } else {
+    # not sure when this was actually needed
+    gcon <- induced.subgraph(gcon, unique(groups))
+  }
+
 
   if(plot) {
     set.seed(1)

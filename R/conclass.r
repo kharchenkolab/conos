@@ -313,9 +313,11 @@ Conos <- setRefClass(
     },
 
 
-    findCommunities=function(method=leiden.community, min.group.size=0, name=NULL, ...) {
+    findCommunities=function(method=leiden.community, min.group.size=0, name=NULL, test.stability=FALSE, stability.subsampling.fraction=0.95, stability.subsamples=100, verbose=TRUE, cls=NULL, sr=NULL, ...) {
 
-      cls <- method(graph, ...)
+      if(is.null(cls)) { 
+        cls <- method(graph, ...)
+      }
       if(is.null(name)) {
         name <- cls$algorithm;
         if(is.null(name)) {
@@ -325,8 +327,91 @@ Conos <- setRefClass(
 
       ## Extract groups from this graph
       cls.mem <- membership(cls)
-      cls.groups <- as.character(cls.mem)
-      names(cls.groups) <- names(cls.mem)
+      cls.groups <- factor(setNames(as.character(cls.mem),names(cls.mem)),levels=1:max(cls.mem))
+      cls.levs <- levels(cls.groups)
+      res <- list(groups=cls.groups,result=cls)
+      
+      # test stability
+      if(test.stability) {
+        subset.clustering <- function(g,f=stability.subsampling.fraction,seed=NULL, ...) {
+          if(!is.null(seed)) { set.seed(seed) }
+          vi <- sample(1:length(V(g)),ceiling(length(V(g))*(f)))
+          sg <- induced_subgraph(g,vi)
+          method(sg,...)
+        }
+        if(verbose) { cat("running",stability.subsamples,"subsampling iterations ... ")}
+        if(is.null(sr)) { 
+          sr <- papply(1:stability.subsamples,function(i) subset.clustering(graph,f=stability.subsampling.fraction,seed=i),n.cores=n.cores)
+        }
+        
+        if(verbose) { cat("done\n")}
+        
+        cat("calculating flat stability stats ... ")
+        # Jaccard coefficient for each cluster against all, plus random expecctation
+        jc.stats <- do.call(rbind,conos:::papply(sr,function(o) {
+          p1 <- membership(o);
+          p2 <- cls.groups[names(p1)]; p1 <- as.character(p1)
+          #x <- tapply(1:length(p2),factor(p2,levels=cls.levs),function(i1) {
+          x <- tapply(1:length(p2),p2,function(i1) {  
+            i2 <- which(p1==p1[i1[[1]]])
+            length(intersect(i1,i2))/length(unique(c(i1,i2)))
+          })
+        },n.cores=n.cores,mc.preschedule=T))
+        
+        # Adjusted rand index
+        cat("adjusted Rand ... ")
+        ari <- unlist(conos:::papply(sr,function(o) { ol <- membership(o); adjustedRand(as.integer(ol),as.integer(cls.groups[names(ol)]),randMethod='HA') },n.cores=n.cores))
+        cat("done\n");
+
+        res$stability <- list(flat=list(jc=jc.stats,ari=ari))
+        
+        # hierarchical measures
+        cat("calculating hierarchical stability stats ... ")
+        if(is.hierarchical(cls)) {
+          # hierarchical to hierarchical stability analysis - cut reference
+          # determine hierarchy of clusters (above the cut)
+          t.get.walktrap.upper.merges <- function(res,n=length(unique(membership(res)))) {
+            clm <- igraph:::complete.dend(res,FALSE) 
+            x <- tail(clm,n-1)
+            x <- x - 2*nrow(res$merges) + nrow(x)-1 
+            # now all >=0 ids are cut leafs and need to be reassigned ids according to their rank
+            xp <- x+nrow(x)+1
+            xp[x<=0] <- rank(-x[x<=0])
+            xp  
+          }
+
+          clm <- t.get.walktrap.upper.merges(cls)
+          res$stability$upper.tree <- clm
+          
+          cat("tree Jaccard ... ")
+          jc.hstats <- do.call(rbind,mclapply(sr,function(z) conos:::bestClusterThresholds(z,cls.groups,clm)$threshold ,mc.cores=n.cores))
+
+        } else {
+          # compute cluster hierarchy based on cell mixing (and then something)
+          # assess stability for that hierarchy (to visualize internal node stability)
+          # for the original clustering and every subsample clustering,
+          cat("upper clustering ... ")
+          cgraph <- get.cluster.graph(graph,cls.groups,plot=F,normalize=F)
+          chwt <- walktrap.community(cgraph,steps=9)
+          clm <- igraph:::complete.dend(chwt,FALSE)
+
+          cat("clusterTree Jaccard ... ")
+          jc.hstats <- do.call(rbind,mclapply(sr,function(st1) {
+            mf <- membership(st1); mf <- as.factor(setNames(as.character(mf),names(mf)))
+            st1g <- get.cluster.graph(graph,mf,plot=F,normalize=T)
+            st1w <- walktrap.community(st1g,steps=8)
+            
+            #merges <- st1w$merge; leaf.factor <- mf; clusters <- cls.groups
+            x <- conos:::bestClusterTreeThresholds(st1w,mf,cls.groups,clm)
+            x$threshold
+          },mc.cores=n.cores))
+          
+        }
+        res$stability$upper.tree <- clm
+        res$stability$hierarchical <- list(jc=jc.hstats);
+        cat("done\n");
+
+      }
 
       ## Filter groups
       if(min.group.size>0) {
@@ -334,7 +419,7 @@ Conos <- setRefClass(
         cls.groups[! as.character(cls.groups) %in% as.character(lvls.keep)] <- NA
         cls.groups <- as.factor(cls.groups)
       }
-      res <- list(groups=cls.groups,result=cls)
+      res$groups <- cls.groups;
       clusters[[name]] <<- res;
       return(invisible(res))
 
@@ -388,11 +473,79 @@ Conos <- setRefClass(
         colnames(coords) <- V(graph)$name
         embedding <<- coords;
       } else {
+        require(uwot)
         embedding <<- t(embedGraphUmap(graph, verbose=verbose, return.all=F, n.cores=n.jobs, ...))
       }
 
       return(invisible(embedding))
     },
+
+    plotClusterStability=function(clustering=NULL,what='all') {
+      "Plot cluster stability statistics.\n
+       Params:\n
+       - clustering : name of the clustering result to show
+       - what : show a specific plot (ari - adjusted rand index, fjc - flat Jaccard, hjc - hierarchical Jaccard, dend - cluster dendrogram)
+      "
+
+      if(is.null(clustering)) clustering <- names(clusters)[[1]]
+
+      if(is.null(clusters[[clustering]])) stop(paste("clustering",clustering,"doesn't exist, run findCommunity() first"))
+      if(is.null(clusters[[clustering]]$stability)) stop(paste("clustering",clustering,"doesn't have stability info. Run findCommunity( ... , test.stability=TRUE) first"))
+
+      st <- clusters[[clustering]]$stability
+      nclusters <- ncol(st$flat$jc)
+      jitter.alpha <- 0.1;
+      
+      if(what=='all' || what=='ari') { 
+        p.fai <- ggplot(data.frame(aRI=st$flat$ari),aes(x=1,y=aRI))+geom_boxplot(notch=T,outlier.shape=NA)+  geom_point(shape=16, position = position_jitter(),alpha=jitter.alpha) + guides(color=FALSE)  + geom_hline(yintercept=1, linetype="dashed", alpha=0.2) +ylim(c(0,1)) + ylab("adjusted Rand Index") + theme(legend.position="none",axis.ticks.x=element_blank(),axis.text.x=element_blank())+xlab(" ")
+        if(what=='ari') return(p.fai)
+      }
+
+      if(what=='all' || what=='fjc') { 
+        df <- melt(st$flat$jc); 
+        colnames(df) <- c('rep','cluster','jc'); df$cluster <- factor(colnames(st$flat$jc)[df$cluster],levels=levels(clusters[[clustering]]$groups))
+        p.fjc <- ggplot(df,aes(x=cluster,y=jc,color=cluster)) + geom_boxplot(aes(color=cluster),notch=T,outlier.shape=NA) + geom_jitter(shape=16, position=position_jitter(0.2),alpha=jitter.alpha) + guides(color=FALSE)  + geom_hline(yintercept=1, linetype="dashed", alpha=0.2) + ylab("Jaccard coefficient (flat)")+ylim(c(0,1))
+        if(what=='fjc') return(p.fjc)
+      }
+
+      if(what=='all' || what=='hjc') { 
+        # hierarchical
+        df <- melt(st$hierarchical$jc[,1:nclusters])
+        colnames(df) <- c('rep','cluster','jc'); df$cluster <- factor(colnames(st$flat$jc)[df$cluster],levels=levels(clusters[[clustering]]$groups))
+        p.hjc <- ggplot(df,aes(x=cluster,y=jc,color=cluster)) + geom_boxplot(aes(color=cluster),notch=T,outlier.shape=NA) + geom_jitter(shape=16, position=position_jitter(0.2),alpha=jitter.alpha) + guides(color=FALSE)  + geom_hline(yintercept=1, linetype="dashed", alpha=0.2) + ylab("Jaccard coefficient (hierarchical)")+ylim(c(0,1))
+        if(what=='hjc') return(p.hjc)        
+      }
+
+      if(what=='dend') {
+        require(dendextend)
+        m <- st$upper.tree; nleafs <- nrow(m)+1; m[m<=nleafs] <- -1*m[m<=nleafs]; m[m>0] <- m[m>0]-nleafs;
+        hc <- list(merge=m,height=1:nrow(m),labels=levels(clusters[[clustering]]$groups),order=c(1:nleafs)); class(hc) <- 'hclust'
+        # fix the ordering so that edges don't intersects
+        hc$order <- order.dendrogram(as.dendrogram(hc))
+        
+        d <- as.dendrogram(hc) %>% hang.dendrogram()
+
+        # depth-first traversal of a merge matrix
+        t.dfirst <- function(m,i=nrow(m)) {
+          rl <- m[i,1]; if(rl<0) { rl <- abs(rl) } else { rl <- t.dfirst(m,rl) }
+          rr <- m[i,2]; if(rr<0) { rr <- abs(rr) } else { rr <- t.dfirst(m,rr) }
+          c(i+nrow(m)+1,rl,rr)
+        }
+        xy <- get_nodes_xy(d)
+        to <- t.dfirst(hc$merge)
+        plot(d,las=2,axes=F)
+        # flat on the left
+        #x <- apply(st$flat$jc,2,median)
+        #text(xy,labels=round(x[to],2),col='blue',adj=c(-0.1,-1.24),cex=0.8)
+        x <- apply(st$hierarchical$jc,2,median)
+        text(xy,labels=round(x[to],2),col='red',adj=c(-0.1,-0.12),cex=0.8)
+        return(NULL)
+      }
+
+      cowplot::plot_grid(plotlist=list(p.fai,p.fjc,p.hjc),nrow=1,rel_widths=c(4,nclusters,nclusters))
+      
+    },
+
 
     plotGraph=function(color.by='cluster', clustering=NULL, groups=NULL, colors=NULL, gene=NULL, plot.theme=NULL, ...) {
       if(class(embedding)[1] == "uninitializedField") {
