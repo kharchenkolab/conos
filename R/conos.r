@@ -2,6 +2,9 @@
 #' @import Matrix
 #' @import igraph
 #' @importFrom parallel mclapply
+#' @importFrom dplyr %>%
+#' @importFrom magrittr %<>%
+#' @importFrom magrittr %$%
 NULL
 
 scaledMatricesP2 <- function(p2.objs, data.type, od.genes, var.scale, neighborhood.average) {
@@ -751,7 +754,7 @@ convertDistanceToSimilarity <- function(distances, metric, l2.sigma=1e5) {
 }
 
 getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, data.type='counts', var.scale=T, neighborhood.average=F, common.centering=T,
-                                      matching.method='mNN', metric='angular', l2.sigma=1e5,
+                                      matching.method='mNN', metric='angular', l2.sigma=1e5, subset.cells=NULL,
                                       base.groups=NULL, append.decoys=F, samples=NULL, samf=NULL, decoy.threshold=1, n.decoys=k*2, append.global.axes=T, global.proj=NULL) {
   # create matrices, adjust variance
   cproj <- scaledMatrices(sample.pair, data.type=data.type, od.genes=od.genes, var.scale=var.scale, neighborhood.average=neighborhood.average)
@@ -792,6 +795,10 @@ getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, data.type='
     })
   }
 
+  if (!is.null(subset.cells)) {
+    cpproj <- lapply(cpproj, function(proj) proj[intersect(rownames(proj), subset.cells), ])
+  }
+
   mnn <- getNeighborMatrix(cpproj[[names(sample.pair)[1]]], cpproj[[names(sample.pair)[2]]], k, matching=matching.method, metric=metric, l2.sigma=l2.sigma)
 
   if (!is.null(base.groups) && append.decoys) {
@@ -814,7 +821,7 @@ getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, data.type='
 ##' @param l2.sigma L2 distances get transformed as exp(-d/sigma) using this value (default=1e5)
 ##' @param min.similarity minimal similarity between two cells, required to have an edge
 ##' @return matrix with the similarity (!) values corresponding to weight (1-d for angular, and exp(-d/l2.sigma) for L2)
-getNeighborMatrix <- function(p1,p2,k,matching='mNN',metric='angular',l2.sigma=1e5, min.similarity=1e-3) {
+getNeighborMatrix <- function(p1,p2,k,matching='mNN',metric='angular',l2.sigma=1e5, min.similarity=1e-5) {
   if (is.null(p2)) {
     n12 <- n2CrossKnn(p1,p1,k,1,FALSE,metric)
     n21 <- n12
@@ -861,4 +868,9 @@ get.cluster.graph <- function(graph,groups,plot=FALSE,node.scale=50,edge.scale=5
     plot.igraph(gcon, layout=layout_with_fr(gcon), vertex.size=V(gcon)$num/(sum(V(gcon)$num)/node.scale), edge.width=E(gcon)$weight/sum(E(gcon)$weight/edge.scale), edge.color=adjustcolor('black',alpha=edge.alpha))
   }
   return(invisible(gcon))
+}
+
+## Correct unloading of the library
+.onUnload <- function (libpath) {
+  library.dynam.unload("conos", libpath)
 }

@@ -102,6 +102,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// edge_removal_mask
+std::vector<bool> edge_removal_mask(const std::vector<std::string>& verts1, const std::vector<std::string>& verts2, const std::vector<double>& weights, int min_neighb_per_vertex, bool verbose);
+RcppExport SEXP _conos_edge_removal_mask(SEXP verts1SEXP, SEXP verts2SEXP, SEXP weightsSEXP, SEXP min_neighb_per_vertexSEXP, SEXP verboseSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::vector<std::string>& >::type verts1(verts1SEXP);
+    Rcpp::traits::input_parameter< const std::vector<std::string>& >::type verts2(verts2SEXP);
+    Rcpp::traits::input_parameter< const std::vector<double>& >::type weights(weightsSEXP);
+    Rcpp::traits::input_parameter< int >::type min_neighb_per_vertex(min_neighb_per_vertexSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    rcpp_result_gen = Rcpp::wrap(edge_removal_mask(verts1, verts2, weights, min_neighb_per_vertex, verbose));
+    return rcpp_result_gen;
+END_RCPP
+}
 // referenceWij
 Eigen::SparseMatrix<double> referenceWij(const arma::ivec& i, const arma::ivec& j, arma::vec& d, Rcpp::Nullable<Rcpp::IntegerVector> threads, double perplexity);
 RcppExport SEXP _conos_referenceWij(SEXP iSEXP, SEXP jSEXP, SEXP dSEXP, SEXP threadsSEXP, SEXP perplexitySEXP) {
@@ -316,6 +331,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_conos_findBestClusterThreshold", (DL_FUNC) &_conos_findBestClusterThreshold, 3},
     {"_conos_scoreTreeConsistency", (DL_FUNC) &_conos_scoreTreeConsistency, 4},
     {"_conos_maxStableClusters", (DL_FUNC) &_conos_maxStableClusters, 4},
+    {"_conos_edge_removal_mask", (DL_FUNC) &_conos_edge_removal_mask, 5},
     {"_conos_referenceWij", (DL_FUNC) &_conos_referenceWij, 5},
     {"_conos_as_factor", (DL_FUNC) &_conos_as_factor, 1},
     {"_conos_get_nearest_neighbors", (DL_FUNC) &_conos_get_nearest_neighbors, 10},
