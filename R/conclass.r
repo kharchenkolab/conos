@@ -315,7 +315,7 @@ Conos <- setRefClass(
 
     findCommunities=function(method=leiden.community, min.group.size=0, name=NULL, test.stability=FALSE, stability.subsampling.fraction=0.95, stability.subsamples=100, verbose=TRUE, cls=NULL, sr=NULL, ...) {
 
-      if(is.null(cls)) { 
+      if(is.null(cls)) {
         cls <- method(graph, ...)
       }
       if(is.null(name)) {
@@ -330,7 +330,7 @@ Conos <- setRefClass(
       cls.groups <- factor(setNames(as.character(cls.mem),names(cls.mem)),levels=1:max(cls.mem))
       cls.levs <- levels(cls.groups)
       res <- list(groups=cls.groups,result=cls)
-      
+
       # test stability
       if(test.stability) {
         subset.clustering <- function(g,f=stability.subsampling.fraction,seed=NULL, ...) {
@@ -340,49 +340,49 @@ Conos <- setRefClass(
           method(sg,...)
         }
         if(verbose) { cat("running",stability.subsamples,"subsampling iterations ... ")}
-        if(is.null(sr)) { 
+        if(is.null(sr)) {
           sr <- papply(1:stability.subsamples,function(i) subset.clustering(graph,f=stability.subsampling.fraction,seed=i),n.cores=n.cores)
         }
-        
+
         if(verbose) { cat("done\n")}
-        
+
         cat("calculating flat stability stats ... ")
         # Jaccard coefficient for each cluster against all, plus random expecctation
         jc.stats <- do.call(rbind,conos:::papply(sr,function(o) {
           p1 <- membership(o);
           p2 <- cls.groups[names(p1)]; p1 <- as.character(p1)
           #x <- tapply(1:length(p2),factor(p2,levels=cls.levs),function(i1) {
-          x <- tapply(1:length(p2),p2,function(i1) {  
+          x <- tapply(1:length(p2),p2,function(i1) {
             i2 <- which(p1==p1[i1[[1]]])
             length(intersect(i1,i2))/length(unique(c(i1,i2)))
           })
         },n.cores=n.cores,mc.preschedule=T))
-        
+
         # Adjusted rand index
         cat("adjusted Rand ... ")
         ari <- unlist(conos:::papply(sr,function(o) { ol <- membership(o); adjustedRand(as.integer(ol),as.integer(cls.groups[names(ol)]),randMethod='HA') },n.cores=n.cores))
         cat("done\n");
 
         res$stability <- list(flat=list(jc=jc.stats,ari=ari))
-        
+
         # hierarchical measures
         cat("calculating hierarchical stability stats ... ")
         if(is.hierarchical(cls)) {
           # hierarchical to hierarchical stability analysis - cut reference
           # determine hierarchy of clusters (above the cut)
           t.get.walktrap.upper.merges <- function(res,n=length(unique(membership(res)))) {
-            clm <- igraph:::complete.dend(res,FALSE) 
+            clm <- igraph:::complete.dend(res,FALSE)
             x <- tail(clm,n-1)
-            x <- x - 2*nrow(res$merges) + nrow(x)-1 
+            x <- x - 2*nrow(res$merges) + nrow(x)-1
             # now all >=0 ids are cut leafs and need to be reassigned ids according to their rank
             xp <- x+nrow(x)+1
             xp[x<=0] <- rank(-x[x<=0])
-            xp  
+            xp
           }
 
           clm <- t.get.walktrap.upper.merges(cls)
           res$stability$upper.tree <- clm
-          
+
           cat("tree Jaccard ... ")
           jc.hstats <- do.call(rbind,mclapply(sr,function(z) conos:::bestClusterThresholds(z,cls.groups,clm)$threshold ,mc.cores=n.cores))
 
@@ -400,12 +400,12 @@ Conos <- setRefClass(
             mf <- membership(st1); mf <- as.factor(setNames(as.character(mf),names(mf)))
             st1g <- get.cluster.graph(graph,mf,plot=F,normalize=T)
             st1w <- walktrap.community(st1g,steps=8)
-            
+
             #merges <- st1w$merge; leaf.factor <- mf; clusters <- cls.groups
             x <- conos:::bestClusterTreeThresholds(st1w,mf,cls.groups,clm)
             x$threshold
           },mc.cores=n.cores))
-          
+
         }
         res$stability$upper.tree <- clm
         res$stability$hierarchical <- list(jc=jc.hstats);
@@ -473,7 +473,9 @@ Conos <- setRefClass(
         colnames(coords) <- V(graph)$name
         embedding <<- coords;
       } else {
-        require(uwot)
+        if (!requireNamespace("uwot", quietly=T))
+          stop("You need to install package 'uwot' to be able to use UMAP embedding.")
+
         embedding <<- t(embedGraphUmap(graph, verbose=verbose, return.all=F, n.cores=n.jobs, ...))
       }
 
@@ -495,25 +497,25 @@ Conos <- setRefClass(
       st <- clusters[[clustering]]$stability
       nclusters <- ncol(st$flat$jc)
       jitter.alpha <- 0.1;
-      
-      if(what=='all' || what=='ari') { 
+
+      if(what=='all' || what=='ari') {
         p.fai <- ggplot(data.frame(aRI=st$flat$ari),aes(x=1,y=aRI))+geom_boxplot(notch=T,outlier.shape=NA)+  geom_point(shape=16, position = position_jitter(),alpha=jitter.alpha) + guides(color=FALSE)  + geom_hline(yintercept=1, linetype="dashed", alpha=0.2) +ylim(c(0,1)) + ylab("adjusted Rand Index") + theme(legend.position="none",axis.ticks.x=element_blank(),axis.text.x=element_blank())+xlab(" ")
         if(what=='ari') return(p.fai)
       }
 
-      if(what=='all' || what=='fjc') { 
-        df <- melt(st$flat$jc); 
+      if(what=='all' || what=='fjc') {
+        df <- melt(st$flat$jc);
         colnames(df) <- c('rep','cluster','jc'); df$cluster <- factor(colnames(st$flat$jc)[df$cluster],levels=levels(clusters[[clustering]]$groups))
         p.fjc <- ggplot(df,aes(x=cluster,y=jc,color=cluster)) + geom_boxplot(aes(color=cluster),notch=T,outlier.shape=NA) + geom_jitter(shape=16, position=position_jitter(0.2),alpha=jitter.alpha) + guides(color=FALSE)  + geom_hline(yintercept=1, linetype="dashed", alpha=0.2) + ylab("Jaccard coefficient (flat)")+ylim(c(0,1))
         if(what=='fjc') return(p.fjc)
       }
 
-      if(what=='all' || what=='hjc') { 
+      if(what=='all' || what=='hjc') {
         # hierarchical
         df <- melt(st$hierarchical$jc[,1:nclusters])
         colnames(df) <- c('rep','cluster','jc'); df$cluster <- factor(colnames(st$flat$jc)[df$cluster],levels=levels(clusters[[clustering]]$groups))
         p.hjc <- ggplot(df,aes(x=cluster,y=jc,color=cluster)) + geom_boxplot(aes(color=cluster),notch=T,outlier.shape=NA) + geom_jitter(shape=16, position=position_jitter(0.2),alpha=jitter.alpha) + guides(color=FALSE)  + geom_hline(yintercept=1, linetype="dashed", alpha=0.2) + ylab("Jaccard coefficient (hierarchical)")+ylim(c(0,1))
-        if(what=='hjc') return(p.hjc)        
+        if(what=='hjc') return(p.hjc)
       }
 
       if(what=='dend') {
@@ -522,7 +524,7 @@ Conos <- setRefClass(
         hc <- list(merge=m,height=1:nrow(m),labels=levels(clusters[[clustering]]$groups),order=c(1:nleafs)); class(hc) <- 'hclust'
         # fix the ordering so that edges don't intersects
         hc$order <- order.dendrogram(as.dendrogram(hc))
-        
+
         d <- as.dendrogram(hc) %>% hang.dendrogram()
 
         # depth-first traversal of a merge matrix
@@ -543,7 +545,7 @@ Conos <- setRefClass(
       }
 
       cowplot::plot_grid(plotlist=list(p.fai,p.fjc,p.hjc),nrow=1,rel_widths=c(4,nclusters,nclusters))
-      
+
     },
 
 
