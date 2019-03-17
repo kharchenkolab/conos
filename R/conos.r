@@ -104,26 +104,26 @@ quickNULL <- function(p2.objs, data.type='counts', n.odgenes = NULL, var.scale =
 }
 
 #' Perform pairwise JNMF
-quickJNMF <- function(p2.objs, data.type='counts', n.comps = 30, n.odgenes=NULL, var.scale=TRUE,
-                      verbose =TRUE, max.iter=1000, neighborhood.average=FALSE) {
+quickJNMF <- function(p2.objs, data.type='counts', n.comps = 30, n.odgenes=NULL, var.scale=TRUE, verbose =TRUE, max.iter=1000, neighborhood.average=FALSE) {
   ## Stop if more than 2 samples
   if (length(p2.objs) != 2) stop('quickJNMF only supports pairwise alignment');
 
   od.genes <- commonOverdispersedGenes(p2.objs, n.odgenes, verbose=verbose)
   if(length(od.genes)<5) return(NULL);
 
-  cproj <- scaledMatrices(p2.objs, data.type=data.type, od.genes=od.genes, var.scale=var.scale,
-                          neighborhood.average=neighborhood.average) %>%
+  cproj <- scaledMatrices(p2.objs, data.type=data.type, od.genes=od.genes, var.scale=var.scale, neighborhood.average=neighborhood.average) %>%
     lapply(as.matrix)
 
   rjnmf.seed <- 12345
   ## Do JNMF
-  z <- Rjnmf::Rjnmf(Xs=t(cproj[[1]]), Xu=t(cproj[[2]]), k=n.comps, alpha=0.5, lambda = 0.5, epsilon = 0.001,
-                    maxiter= max.iter, verbose=F, seed=rjnmf.seed)
+  z <- Rjnmf::Rjnmf(Xs=t(cproj[[1]]), Xu=t(cproj[[2]]), k=n.comps, alpha=0.5, lambda = 0.5, epsilon = 0.001, maxiter= max.iter, verbose=F, seed=rjnmf.seed)
   rot1 <- cproj[[1]] %*% z$W
   rot2 <- cproj[[2]] %*% z$W
-  ## return
-  list(rot1=rot1, rot2=rot2,z=z)
+
+  res <- list(rot1=rot1, rot2=rot2,z=z);
+
+  
+  return(res)
 }
 
 cpcaFast <- function(covl,ncells,ncomp=10,maxit=1000,tol=1e-6,use.irlba=TRUE,verbose=F) {
@@ -154,7 +154,7 @@ cpcaFast <- function(covl,ncells,ncomp=10,maxit=1000,tol=1e-6,use.irlba=TRUE,ver
 #' @param verbose whether to be verbose
 #' @param neighborhood.average use neighborhood average values
 #' @param n.cores number of cores to use
-quickCPCA <- function(r.n,data.type='counts',k=30,ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=TRUE,neighborhood.average=FALSE) {
+quickCPCA <- function(r.n,data.type='counts',k=30,ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=TRUE,neighborhood.average=FALSE, score.component.variance=FALSE) {
   od.genes <- commonOverdispersedGenes(r.n, n.odgenes, verbose=verbose)
   if(length(od.genes)<5) return(NULL);
 
@@ -168,9 +168,8 @@ quickCPCA <- function(r.n,data.type='counts',k=30,ncomps=100,n.odgenes=NULL,var.
   ##   covmat <- spcov(x,cMeans);
   ## }
 
-  covl <- scaledMatrices(r.n, data.type=data.type, od.genes=od.genes, var.scale=var.scale,
-                         neighborhood.average=neighborhood.average) %>%
-    lapply(function(x) spcov(as(x, "dgCMatrix"), Matrix::colMeans(x)))
+  sm <- scaledMatrices(r.n, data.type=data.type, od.genes=od.genes, var.scale=var.scale, neighborhood.average=neighborhood.average)
+  covl <- lapply(sm,function(x) spcov(as(x, "dgCMatrix"), Matrix::colMeans(x)))
 
   ## # centering
   ## if(common.centering) {
@@ -185,16 +184,26 @@ quickCPCA <- function(r.n,data.type='counts',k=30,ncomps=100,n.odgenes=NULL,var.
   if(verbose) cat(' done\n')
 
   #W: get counts
-  ncells <- unlist(lapply(r.n,function(x) length(getCellNames(x))));
+  ncells <- unlist(lapply(sm,nrow))
   if(verbose) cat('common PCs ...')
   #xcp <- cpca(covl,ncells,ncomp=ncomps)
-  xcp <- cpcaFast(covl,ncells,ncomp=ncomps,verbose=verbose,maxit=500,tol=1e-5);
-  #system.time(xcp <- cpca:::cpca_stepwise_base(covl,ncells,k=ncomps))
-  #xcp <- cpc(abind(covl,along=3),k=ncomps)
-  rownames(xcp$CPC) <- od.genes;
-  #xcp$rot <- xcp$CPC*cgsf;
+  res <- cpcaFast(covl,ncells,ncomp=ncomps,verbose=verbose,maxit=500,tol=1e-5);
+  #system.time(res <- cpca:::cpca_stepwise_base(covl,ncells,k=ncomps))
+  #res <- cpc(abind(covl,along=3),k=ncomps)
+  rownames(res$CPC) <- od.genes;
+  if(score.component.variance) {
+    v0 <- lapply(sm,function(x) sum(apply(x,2,var)))
+    v1 <- lapply(1:length(sm),function(i) {
+      x <- sm[[i]];
+      cm <- Matrix::colMeans(x);
+      rot <- as.matrix(t(t(x %*% res$CPC) - t(cm %*% res$CPC)))
+      apply(rot,2,var)/v0[[i]]
+    })
+    # calculate projection
+    res$nv <- v1;
+  }
   if(verbose) cat(' done\n')
-  return(xcp);
+  return(res);
 }
 
 
@@ -208,27 +217,38 @@ quickCPCA <- function(r.n,data.type='counts',k=30,ncomps=100,n.odgenes=NULL,var.
 #' @param cgsf an optional set of common genes to align on
 #' @param neighborhood.average use neighborhood average values
 #' @param n.cores number of cores to use
-quickPlainPCA <- function(r.n,data.type='counts',k=30,ncomps=30,n.odgenes=NULL,var.scale=TRUE,verbose=TRUE,neighborhood.average=FALSE,n.cores=30) {
+quickPlainPCA <- function(r.n,data.type='counts',k=30,ncomps=30,n.odgenes=NULL,var.scale=TRUE,verbose=TRUE,neighborhood.average=FALSE, score.component.variance=FALSE, n.cores=30) {
   od.genes <- commonOverdispersedGenes(r.n, n.odgenes, verbose=verbose)
   if(length(od.genes)<5) return(NULL);
 
   if(verbose) cat('calculating PCs for',length(r.n),' datasets ...')
 
-  pcs <- scaledMatrices(r.n, data.type=data.type, od.genes=od.genes, var.scale=var.scale, neighborhood.average=neighborhood.average) %>%
-    lapply(function(x) {
-      cm <- Matrix::colMeans(x);
-      ncomps <- min(c(nrow(cm)-1,ncol(cm)-1,ncomps));
-      pcs <- irlba::irlba(x, nv=ncomps, nu =0, center=cm, right_only = F, reorth = T);
-      #rownames(pcs$v) <- colnames(x);
-      pcs$v
-    })
+  sm <- scaledMatrices(r.n, data.type=data.type, od.genes=od.genes, var.scale=var.scale, neighborhood.average=neighborhood.average);
+  pcs <- lapply(sm, function(x) {
+    cm <- Matrix::colMeans(x);
+    ncomps <- min(c(nrow(cm)-1,ncol(cm)-1,ncomps));
+    res <- irlba::irlba(x, nv=ncomps, nu =0, center=cm, right_only = F, reorth = T);
+    if(score.component.variance) {
+      # calculate projection
+      rot <- as.matrix(t(t(x %*% res$v) - t(cm %*% res$v)))
+      # note: this could be calculated a lot faster, but would need to account for the variable matrix format
+      v0 <- apply(x,2,var)
+      v1 <- apply(rot,2,var)/sum(v0)
+      res$nv <- v1;
+    }
+    res
+  })
 
-  pcs <- do.call(cbind,pcs)
-  rownames(pcs) <- od.genes;
-
+  pcj <- do.call(cbind,lapply(pcs,function(x) x$v))
+  rownames(pcj) <- od.genes;
+  res <- list(CPC=pcj);
+  
+  if(score.component.variance) {
+    res$nv <- lapply(pcs,function(x) x$nv)
+  }
   if(verbose) cat(' done\n')
 
-  return(list(CPC=pcs));
+  return(res);
 }
 
 

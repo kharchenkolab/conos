@@ -304,24 +304,24 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
 
 #' Plots barplots per sample of composition of each pagoda2 application based on
 #' selected clustering
-#' @param conos.objs A conos objects
+#' @param conos.obj A conos object
 #' @param type one of 'counts' or 'proportions' to select type of plot
 #' @param clustering name of clustering in the current object
 #' @return a ggplot object
-plotClusterBarplots <- function(conos.objs, type='counts',clustering=NULL, groups=NULL) {
+plotClusterBarplots <- function(conos.obj, type='counts',clustering=NULL, groups=NULL) {
     ## param checking
     #if(is.null(clustering)) clustering <- 'multi level'
     if(!type %in% c('counts','proportions')) stop('argument type must be either counts or proportions')
     ## main function
     if(!is.null(clustering)) {
-        if(clustering %in% names(conos.objs$clusters)) stop('Specified clustering doesn\'t exist')
-        groups <- as.factor(conos.objs$clusters[[clustering]]$groups)
+        if(clustering %in% names(conos.obj$clusters)) stop('Specified clustering doesn\'t exist')
+        groups <- as.factor(conos.obj$clusters[[clustering]]$groups)
     } else {
         if (is.null(groups)) stop('One of clustering or groups needs to be specified')
         groups <- as.factor(groups)
     }
-    plot.df <- do.call(rbind,lapply(names(conos.objs$samples), function(n) {
-        o <- conos.objs$samples[[n]]
+    plot.df <- do.call(rbind,lapply(names(conos.obj$samples), function(n) {
+        o <- conos.obj$samples[[n]]
         grps1 <- groups[intersect(names(groups), rownames(o$counts))]
         tbl1 <- data.frame(
             clname=levels(grps1),
@@ -346,11 +346,11 @@ plotClusterBarplots <- function(conos.objs, type='counts',clustering=NULL, group
 
 
 #' Generate boxplot per cluster of the proportion of cells in each celltype
-#' @param conos.objs conos object
+#' @param conos.obj conos object
 #' @param clustering name of the clustering to use
 #' @param apptypes a factor specifying how to group the samples
 #' @param return.details if TRUE return a list with the plot and the summary data.frame
-plotClusterBoxPlotsByAppType <- function(conos.objs, clustering=NULL, apptypes=NULL, return.details=FALSE) {
+plotClusterBoxPlotsByAppType <- function(conos.obj, clustering=NULL, apptypes=NULL, return.details=FALSE) {
     type <- 'proportions'
     ## param checking
     if(is.null(clustering)) clustering <- 'multi level'
@@ -358,9 +358,9 @@ plotClusterBoxPlotsByAppType <- function(conos.objs, clustering=NULL, apptypes=N
     if(!is.factor(apptypes)) stop('apptypes must be a factor')
     if(!type %in% c('counts','proportions')) stop('argument type must be either counts or proportions')
     ## main function
-    groups <- as.factor(conos.objs$clusters[[clustering]]$groups)
-    plot.df <- do.call(rbind,lapply(names(conos.objs$samples), function(n) {
-        o <- conos.objs$samples[[n]]
+    groups <- as.factor(conos.obj$clusters[[clustering]]$groups)
+    plot.df <- do.call(rbind,lapply(names(conos.obj$samples), function(n) {
+        o <- conos.obj$samples[[n]]
         grps1 <- groups[intersect(names(groups), rownames(o$counts))]
         tbl1 <- data.frame(
             clname=levels(grps1),
@@ -393,16 +393,16 @@ plotClusterBoxPlotsByAppType <- function(conos.objs, clustering=NULL, apptypes=N
 
 
 #' Get markers for global clusters
-#' @param conos.objs conos object
+#' @param conos.obj conos object
 #' @param clustering name of the clustering to use
 #' @param min.samples.expressing minimum number of samples that must have the genes upregulated in the respective cluster
 #' @param min.percent.samples.expression minumum percent of samples that must have the gene upregulated
-getGlobalClusterMarkers <- function(conos.objs, clustering='multi level',
+getGlobalClusterMarkers <- function(conos.obj, clustering='multi level',
                                     min.samples.expressing=0,min.percent.samples.expressing=0){
     ## get the groups from the clusters
-    groups <- as.factor(conos.objs$clusters[[clustering]]$groups)
+    groups <- as.factor(conos.obj$clusters[[clustering]]$groups)
     ## de lists
-    delists <- lapply(conos.objs$samples, function(p2) {
+    delists <- lapply(conos.obj$samples, function(p2) {
         cells <- rownames(p2$counts)
         groups.p2 <- groups[cells]
         de <- p2$getDifferentialGenes(groups=groups.p2)
@@ -427,4 +427,31 @@ getGlobalClusterMarkers <- function(conos.objs, clustering='multi level',
     })
     ## return consistent genes
     zp
+}
+
+##' Plot fraction of variance explained by the successive reduced space components (PCA, CPCA)
+##'
+##' Requires buildGraph() or updatePairs() to be ran first with the argument score.component.variance=TRUE.
+##'
+##' @title Plot variance explained by the successive components
+##' @param conos.obj conos object
+##' @param space reduction space to be analyzed (currently, component variance scoring is only supported by PCA and CPCA)
+##' @return ggplot
+##' @export
+plotComponentVariance <- function(conos.obj, space='PCA',plot.theme=theme_bw()) {
+  pairs <- conos.obj$pairs[[space]]
+
+  if(!is.null(pairs[[space]])) stop(paste("no pairs for space",space,"found. Please run buildGraph() or updatePairs() first, with score.component.variance=TRUE"))
+
+  nvs <- lapply(pairs,'[[','nv'); nvs <- setNames(unlist(nvs,recursive=F,use.names=F),unlist(lapply(nvs,names)))
+  if(length(nvs)<1) stop("no variance information found. Please run buildGraph() or updatePairs() with score.component.variance=TRUE")
+  if(space=='PCA') { # omit duplicates
+    nvs <- nvs[unique(names(nvs))]
+  }
+  df <- melt(do.call(cbind,nvs))
+  colnames(df) <- c('component','dataset','var')
+  df$component <- factor(df$component,levels=sort(unique(df$component)))
+  require(ggplot2); require(reshape2);
+  ggplot(df,aes(x=component,y=var))+  geom_point(shape=16, aes(color=dataset),position = position_jitter(),alpha=0.3)+ geom_line(aes(group=dataset,color=dataset),alpha=0.2)+ ylab('fraction of variance explained')+xlab('component number')+geom_boxplot(notch=F,outlier.shape=NA,fill=NA) + plot.theme + theme(legend.position='none') 
+  
 }

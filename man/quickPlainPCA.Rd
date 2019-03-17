@@ -6,7 +6,8 @@
 \usage{
 quickPlainPCA(r.n, data.type = "counts", k = 30, ncomps = 30,
   n.odgenes = NULL, var.scale = TRUE, verbose = TRUE,
-  neighborhood.average = FALSE, n.cores = 30)
+  neighborhood.average = FALSE, score.component.variance = FALSE,
+  n.cores = 30)
 }
 \arguments{
 \item{r.n}{list of p2 objects}

@@ -77,6 +77,14 @@ The class encompasses sample collections, providing methods for calculating and 
        Return: a list of per-sample uniform dense matrices with rows being genes, and columns being clusters
       }
 
+\item{\code{plotClusterStability(clustering = NULL, what = "all")}}{Plot cluster stability statistics.
+
+       Params:
+
+       - clustering : name of the clustering result to show
+       - what : show a specific plot (ari - adjusted rand index, fjc - flat Jaccard, hjc - hierarchical Jaccard, dend - cluster dendrogram)
+      }
+
 \item{\code{propagateLabels(labels, max.iters = 50, diffusion.fading = 10,
   diffusion.fading.const = 0.5, tol = 0.005, return.distribution = TRUE,
   verbose = TRUE, fixed.initial.labels = FALSE)}}{Estimate labeling distribution for each vertex, based on provided labels.

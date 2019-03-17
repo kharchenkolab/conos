@@ -6,7 +6,7 @@
 \usage{
 quickCPCA(r.n, data.type = "counts", k = 30, ncomps = 100,
   n.odgenes = NULL, var.scale = TRUE, verbose = TRUE,
-  neighborhood.average = FALSE)
+  neighborhood.average = FALSE, score.component.variance = FALSE)
 }
 \arguments{
 \item{r.n}{list of p2 objects}
