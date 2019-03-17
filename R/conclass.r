@@ -201,7 +201,7 @@ Conos <- setRefClass(
       return(invisible(sn.pairs))
     },
 
-    buildGraph=function(k=15, k.self=10, k.self.weight=0.1, space='CPCA', matching.method='mNN', metric='angular', data.type='counts', l2.sigma=1e5, var.scale =TRUE, ncomps=40, n.odgenes=2000, return.details=T, neighborhood.average=FALSE, neighborhood.average.k=10, matching.mask=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE, const.inner.weights=FALSE, base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, append.local.axes=TRUE, score.component.variance=FALSE) {
+    buildGraph=function(k=15, k.self=10, k.self.weight=0.1, space='CPCA', matching.method='mNN', metric='angular', data.type='counts', l2.sigma=1e5, var.scale =TRUE, ncomps=40, n.odgenes=2000, return.details=T, neighborhood.average=FALSE, neighborhood.average.k=10, matching.mask=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE, const.inner.weights=FALSE, base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, append.local.axes=TRUE, score.component.variance=FALSE, edge.combine.method="sum") {
 
       supported.spaces <- c("CPCA","JNMF","genes","PCA")
       if(!space %in% supported.spaces) {
@@ -219,10 +219,10 @@ Conos <- setRefClass(
       }
 
       # calculate or update pairwise alignments
-      cis <- updatePairs(space=space, ncomps=ncomps, n.odgenes=n.odgenes, verbose=verbose, var.scale=var.scale, neighborhood.average=neighborhood.average,
-                         neighborhood.average.k=10, matching.mask=matching.mask, exclude.samples=exclude.samples, score.component.variance=score.component.variance)
+      sn.pairs <- updatePairs(space=space, ncomps=ncomps, n.odgenes=n.odgenes, verbose=verbose, var.scale=var.scale, neighborhood.average=neighborhood.average,
+                              neighborhood.average.k=10, matching.mask=matching.mask, exclude.samples=exclude.samples, score.component.variance=score.component.variance)
 
-      if(ncol(cis)<1) { stop("insufficient number of comparable pairs") }
+      if(ncol(sn.pairs)<1) { stop("insufficient number of comparable pairs") }
 
       if(!is.null(base.groups)) {
         samf <- lapply(samples,getCellNames)
@@ -238,101 +238,53 @@ Conos <- setRefClass(
 
       # determine inter-sample mapping
       if(verbose) cat('inter-sample links using ',matching.method,' ');
-      xl <- pairs[[space]]
-      mnnres <- papply(1:ncol(cis), function(j) {
-        r.ns <- samples[cis[,j]]
+      cached.pairs <- pairs[[space]]
+      mnnres <- papply(1:ncol(sn.pairs), function(j) {
         # we'll look up the pair by name (possibly reversed), not to assume for the ordering of $pairs[[space]] to be the same
-        i <- match(paste(cis[,j],collapse='.vs.'),names(xl));
-        if(is.na(i)) { i <- match(paste(rev(cis[,j]),collapse='.vs.'),names(xl)) }
-        if(is.na(i)) { stop(paste("unable to find alignment for pair",paste(cis[,j],collapse='.vs.'))) }
+        i <- match(paste(sn.pairs[,j],collapse='.vs.'),names(cached.pairs));
+        if(is.na(i)) { i <- match(paste(rev(sn.pairs[,j]),collapse='.vs.'),names(cached.pairs)) }
+        if(is.na(i)) { stop(paste("unable to find alignment for pair",paste(sn.pairs[,j],collapse='.vs.'))) }
 
         if(space=='JNMF') {
-          mnn <- getNeighborMatrix(xl[[i]]$rot1,xl[[i]]$rot2,k,matching=matching.method,metric=metric,l2.sigma=l2.sigma)
+          mnn <- getNeighborMatrix(cached.pairs[[i]]$rot1,cached.pairs[[i]]$rot2,k,matching=matching.method,metric=metric,l2.sigma=l2.sigma)
           if(verbose) cat(".")
-          return(data.frame('mA.lab'=rownames(xl[[i]]$rot1)[mnn@i+1],'mB.lab'=rownames(xl[[i]]$rot2)[mnn@j+1],'w'=mnn@x,stringsAsFactors=F))
-          #return(data.frame('mA.lab'=rownames(xl[[i]]$rot1)[mnn@i+1],'mB.lab'=rownames(xl[[i]]$rot2)[mnn@j+1],'w'=1/pmax(1,log(mnn@x)),stringsAsFactors=F))
+          return(data.frame('mA.lab'=rownames(cached.pairs[[i]]$rot1)[mnn@i+1],'mB.lab'=rownames(cached.pairs[[i]]$rot2)[mnn@j+1],'w'=mnn@x,stringsAsFactors=F))
+          #return(data.frame('mA.lab'=rownames(cached.pairs[[i]]$rot1)[mnn@i+1],'mB.lab'=rownames(cached.pairs[[i]]$rot2)[mnn@j+1],'w'=1/pmax(1,log(mnn@x)),stringsAsFactors=F))
 
         } else if (space %in% c("CPCA","GSVD","PCA")) {
           #common.genes <- Reduce(intersect,lapply(r.ns, getGenes))
-          if(!is.null(xl[[i]]$CPC)) {
+          if(!is.null(cached.pairs[[i]]$CPC)) {
             # CPCA or PCA
-            #odgenes <- intersect(rownames(xl[[i]]$CPC),common.genes)
-            odgenes <- rownames(xl[[i]]$CPC);
-            rot <- xl[[i]]$CPC[odgenes,];
-          } else if(!is.null(xl[[i]]$o$Q)) {
+            #od.genes <- intersect(rownames(cached.pairs[[i]]$CPC),common.genes)
+            od.genes <- rownames(cached.pairs[[i]]$CPC);
+            rot <- cached.pairs[[i]]$CPC[od.genes,];
+          } else if(!is.null(cached.pairs[[i]]$o$Q)) {
             # GSVD
-            rot <- xl[[i]]$o$Q;
-            odgenes <- rownames(rot) <- colnames(xl[[i]]$o$A);
+            rot <- cached.pairs[[i]]$o$Q;
+            od.genes <- rownames(rot) <- colnames(cached.pairs[[i]]$o$A);
           } else {
             stop("unknown reduction provided")
           }
 
           # TODO: a more careful analysis of parameters used to calculate the cached version
-          if(ncomps>ncol(rot)) {
+          if(ncomps > ncol(rot)) {
             warning(paste0("specified ncomps (",ncomps,") is greater than the cached version (",ncol(rot),")"))
           } else {
             rot <- rot[,1:ncomps,drop=F]
           }
 
-          # create matrices, adjust variance
-          cproj <- scaledMatrices(r.ns, data.type=data.type, od.genes=odgenes, var.scale=var.scale, neighborhood.average=neighborhood.average)
-
-          # determine the centering
-          if(common.centering) {
-            ncells <- unlist(lapply(cproj,nrow));
-            centering <- setNames(rep(colSums(do.call(rbind,lapply(cproj,colMeans))*ncells)/sum(ncells),length(cproj)),names(cproj))
-          } else {
-            centering <- lapply(cproj,colMeans)
-          }
-
-          # append decoy cells if needed
-          if(!is.null(base.groups) && append.decoys) {
-            cproj.decoys <- getDecoyProjections(samples, samf, data.type, var.scale, cproj, neighborhood.average, base.groups, decoy.threshold, n.decoys)
-            cproj <- lapply(sn(names(cproj)),function(n) rbind(cproj[[n]],cproj.decoys[[n]]))
-          }
-
-          cpproj <- lapply(sn(names(cproj)),function(n) {
-            x <- cproj[[n]]
-            x <- t(as.matrix(t(x))-centering[[n]])
-            x %*% rot;
-          })
-          n1 <- cis[1,j]; n2 <- cis[2,j]
-
-          if(!is.null(base.groups)) {
-            if(append.global.axes) {
-              #cpproj <- lapply(sn(names(cpproj)),function(n) cbind(cpproj[[n]],global.proj[[n]])) # case without decoys
-              cpproj <- lapply(sn(names(cpproj)),function(n) {
-                gm <- global.proj[[n]]
-                if(append.decoys) {
-                  decoy.cells <- rownames(cproj.decoys[[n]])
-                  if(length(decoy.cells)>0) {
-                    gm <- rbind(gm,do.call(rbind,lapply(global.proj[unique(samf[decoy.cells])],function(m) {
-                      m[rownames(m) %in% decoy.cells,,drop=F]
-                    })))
-                  }
-                }
-                # append global axes
-                cbind(cpproj[[n]],gm[rownames(cpproj[[n]]),])
-              })
-            }
-          }
-
+          mnn <- getPcaBasedNeighborMatrix(samples[sn.pairs[,j]], od.genes=od.genes, rot=rot, k=k, data.type=data.type,
+                                           var.scale=var.scale, neighborhood.average=neighborhood.average, common.centering=common.centering,
+                                           matching.method=matching.method, metric=metric, l2.sigma=l2.sigma,
+                                           base.groups=base.groups, append.decoys=append.decoys, samples=samples, samf=samf, decoy.threshold=decoy.threshold,
+                                           n.decoys=n.decoys, append.global.axes=append.global.axes, global.proj=global.proj)
           if(verbose) cat(".")
-
-          mnn <- getNeighborMatrix(cpproj[[n1]], cpproj[[n2]], k, matching=matching.method, metric=metric, l2.sigma=l2.sigma)
-
-          if (!is.null(base.groups) && append.decoys) {
-            # discard edges connecting to decoys
-            decoy.cells <- unlist(lapply(cproj.decoys,rownames))
-            mnn <- mnn[,!colnames(mnn) %in% decoy.cells,drop=F]
-            mnn <- mnn[!rownames(mnn) %in% decoy.cells,,drop=F]
-          }
 
           return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=mnn@x,stringsAsFactors=F))
 
         } else if (space=='genes') {
           ## Overdispersed Gene space
-          mnn <- getNeighborMatrix(as.matrix(xl[[i]]$genespace1), as.matrix(xl[[i]]$genespace2),k,matching=matching.method,metric=metric,l2.sigma=l2.sigma)
+          mnn <- getNeighborMatrix(as.matrix(cached.pairs[[i]]$genespace1), as.matrix(cached.pairs[[i]]$genespace2),k,matching=matching.method,metric=metric,l2.sigma=l2.sigma)
           return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=mnn@x,stringsAsFactors=F))
         }
         mnnres
@@ -345,7 +297,7 @@ Conos <- setRefClass(
       # append some local edges
       if(k.self>0) {
         if(verbose) cat('local pairs ')
-        x <- getLocalEdges(samples, k.self, k.self.weight, const.inner.weights, metric, verbose, n.cores)
+        x <- getLocalEdges(samples, k.self, k.self.weight, const.inner.weights, metric, l2.sigma=l2.sigma, verbose, n.cores)
         el <- rbind(el,x)
       }
 
@@ -353,7 +305,7 @@ Conos <- setRefClass(
       E(g)$weight <- el[,3]
       E(g)$type <- el[,4]
       # collapse duplicate edges
-      g <- simplify(g, edge.attr.comb=list(weight="sum", type = "first"))
+      g <- simplify(g, edge.attr.comb=list(weight=edge.combine.method, type = "first"))
       graph <<- g;
       return(invisible(g))
     },
@@ -361,7 +313,7 @@ Conos <- setRefClass(
 
     findCommunities=function(method=leiden.community, min.group.size=0, name=NULL, test.stability=FALSE, stability.subsampling.fraction=0.95, stability.subsamples=100, verbose=TRUE, cls=NULL, sr=NULL, ...) {
 
-      if(is.null(cls)) { 
+      if(is.null(cls)) {
         cls <- method(graph, ...)
       }
       if(is.null(name)) {
@@ -376,7 +328,7 @@ Conos <- setRefClass(
       cls.groups <- factor(setNames(as.character(cls.mem),names(cls.mem)),levels=1:max(cls.mem))
       cls.levs <- levels(cls.groups)
       res <- list(groups=cls.groups,result=cls)
-      
+
       # test stability
       if(test.stability) {
         subset.clustering <- function(g,f=stability.subsampling.fraction,seed=NULL, ...) {
@@ -386,49 +338,49 @@ Conos <- setRefClass(
           method(sg,...)
         }
         if(verbose) { cat("running",stability.subsamples,"subsampling iterations ... ")}
-        if(is.null(sr)) { 
+        if(is.null(sr)) {
           sr <- papply(1:stability.subsamples,function(i) subset.clustering(graph,f=stability.subsampling.fraction,seed=i),n.cores=n.cores)
         }
-        
+
         if(verbose) { cat("done\n")}
-        
+
         cat("calculating flat stability stats ... ")
         # Jaccard coefficient for each cluster against all, plus random expecctation
         jc.stats <- do.call(rbind,conos:::papply(sr,function(o) {
           p1 <- membership(o);
           p2 <- cls.groups[names(p1)]; p1 <- as.character(p1)
           #x <- tapply(1:length(p2),factor(p2,levels=cls.levs),function(i1) {
-          x <- tapply(1:length(p2),p2,function(i1) {  
+          x <- tapply(1:length(p2),p2,function(i1) {
             i2 <- which(p1==p1[i1[[1]]])
             length(intersect(i1,i2))/length(unique(c(i1,i2)))
           })
         },n.cores=n.cores,mc.preschedule=T))
-        
+
         # Adjusted rand index
         cat("adjusted Rand ... ")
         ari <- unlist(conos:::papply(sr,function(o) { ol <- membership(o); adjustedRand(as.integer(ol),as.integer(cls.groups[names(ol)]),randMethod='HA') },n.cores=n.cores))
         cat("done\n");
 
         res$stability <- list(flat=list(jc=jc.stats,ari=ari))
-        
+
         # hierarchical measures
         cat("calculating hierarchical stability stats ... ")
         if(is.hierarchical(cls)) {
           # hierarchical to hierarchical stability analysis - cut reference
           # determine hierarchy of clusters (above the cut)
           t.get.walktrap.upper.merges <- function(res,n=length(unique(membership(res)))) {
-            clm <- igraph:::complete.dend(res,FALSE) 
+            clm <- igraph:::complete.dend(res,FALSE)
             x <- tail(clm,n-1)
-            x <- x - 2*nrow(res$merges) + nrow(x)-1 
+            x <- x - 2*nrow(res$merges) + nrow(x)-1
             # now all >=0 ids are cut leafs and need to be reassigned ids according to their rank
             xp <- x+nrow(x)+1
             xp[x<=0] <- rank(-x[x<=0])
-            xp  
+            xp
           }
 
           clm <- t.get.walktrap.upper.merges(cls)
           res$stability$upper.tree <- clm
-          
+
           cat("tree Jaccard ... ")
           jc.hstats <- do.call(rbind,mclapply(sr,function(z) conos:::bestClusterThresholds(z,cls.groups,clm)$threshold ,mc.cores=n.cores))
 
@@ -446,12 +398,12 @@ Conos <- setRefClass(
             mf <- membership(st1); mf <- as.factor(setNames(as.character(mf),names(mf)))
             st1g <- get.cluster.graph(graph,mf,plot=F,normalize=T)
             st1w <- walktrap.community(st1g,steps=8)
-            
+
             #merges <- st1w$merge; leaf.factor <- mf; clusters <- cls.groups
             x <- conos:::bestClusterTreeThresholds(st1w,mf,cls.groups,clm)
             x$threshold
           },mc.cores=n.cores))
-          
+
         }
         res$stability$upper.tree <- clm
         res$stability$hierarchical <- list(jc=jc.hstats);
@@ -519,7 +471,9 @@ Conos <- setRefClass(
         colnames(coords) <- V(graph)$name
         embedding <<- coords;
       } else {
-        require(uwot)
+        if (!requireNamespace("uwot", quietly=T))
+          stop("You need to install package 'uwot' to be able to use UMAP embedding.")
+
         embedding <<- t(embedGraphUmap(graph, verbose=verbose, return.all=F, n.cores=n.jobs, ...))
       }
 
@@ -541,25 +495,25 @@ Conos <- setRefClass(
       st <- clusters[[clustering]]$stability
       nclusters <- ncol(st$flat$jc)
       jitter.alpha <- 0.1;
-      
-      if(what=='all' || what=='ari') { 
+
+      if(what=='all' || what=='ari') {
         p.fai <- ggplot(data.frame(aRI=st$flat$ari),aes(x=1,y=aRI))+geom_boxplot(notch=T,outlier.shape=NA)+  geom_point(shape=16, position = position_jitter(),alpha=jitter.alpha) + guides(color=FALSE)  + geom_hline(yintercept=1, linetype="dashed", alpha=0.2) +ylim(c(0,1)) + ylab("adjusted Rand Index") + theme(legend.position="none",axis.ticks.x=element_blank(),axis.text.x=element_blank())+xlab(" ")
         if(what=='ari') return(p.fai)
       }
 
-      if(what=='all' || what=='fjc') { 
-        df <- melt(st$flat$jc); 
+      if(what=='all' || what=='fjc') {
+        df <- melt(st$flat$jc);
         colnames(df) <- c('rep','cluster','jc'); df$cluster <- factor(colnames(st$flat$jc)[df$cluster],levels=levels(clusters[[clustering]]$groups))
         p.fjc <- ggplot(df,aes(x=cluster,y=jc,color=cluster)) + geom_boxplot(aes(color=cluster),notch=T,outlier.shape=NA) + geom_jitter(shape=16, position=position_jitter(0.2),alpha=jitter.alpha) + guides(color=FALSE)  + geom_hline(yintercept=1, linetype="dashed", alpha=0.2) + ylab("Jaccard coefficient (flat)")+ylim(c(0,1))
         if(what=='fjc') return(p.fjc)
       }
 
-      if(what=='all' || what=='hjc') { 
+      if(what=='all' || what=='hjc') {
         # hierarchical
         df <- melt(st$hierarchical$jc[,1:nclusters])
         colnames(df) <- c('rep','cluster','jc'); df$cluster <- factor(colnames(st$flat$jc)[df$cluster],levels=levels(clusters[[clustering]]$groups))
         p.hjc <- ggplot(df,aes(x=cluster,y=jc,color=cluster)) + geom_boxplot(aes(color=cluster),notch=T,outlier.shape=NA) + geom_jitter(shape=16, position=position_jitter(0.2),alpha=jitter.alpha) + guides(color=FALSE)  + geom_hline(yintercept=1, linetype="dashed", alpha=0.2) + ylab("Jaccard coefficient (hierarchical)")+ylim(c(0,1))
-        if(what=='hjc') return(p.hjc)        
+        if(what=='hjc') return(p.hjc)
       }
 
       if(what=='dend') {
@@ -568,7 +522,7 @@ Conos <- setRefClass(
         hc <- list(merge=m,height=1:nrow(m),labels=levels(clusters[[clustering]]$groups),order=c(1:nleafs)); class(hc) <- 'hclust'
         # fix the ordering so that edges don't intersects
         hc$order <- order.dendrogram(as.dendrogram(hc))
-        
+
         d <- as.dendrogram(hc) %>% hang.dendrogram()
 
         # depth-first traversal of a merge matrix
@@ -589,7 +543,7 @@ Conos <- setRefClass(
       }
 
       cowplot::plot_grid(plotlist=list(p.fai,p.fjc,p.hjc),nrow=1,rel_widths=c(4,nclusters,nclusters))
-      
+
     },
 
 

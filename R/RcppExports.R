@@ -29,6 +29,11 @@ maxStableClusters <- function(merges, thresholds, minthreshold = 0.8, minsize = 
     .Call('_conos_maxStableClusters', PACKAGE = 'conos', merges, thresholds, minthreshold, minsize)
 }
 
+#' @export
+edge_removal_mask <- function(verts1, verts2, weights, min_neighb_per_vertex, verbose = TRUE) {
+    .Call('_conos_edge_removal_mask', PACKAGE = 'conos', verts1, verts2, weights, min_neighb_per_vertex, verbose)
+}
+
 referenceWij <- function(i, j, d, threads, perplexity) {
     .Call('_conos_referenceWij', PACKAGE = 'conos', i, j, d, threads, perplexity)
 }

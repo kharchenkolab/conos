@@ -2,6 +2,9 @@
 #' @import Matrix
 #' @import igraph
 #' @importFrom parallel mclapply
+#' @importFrom dplyr %>%
+#' @importFrom magrittr %<>%
+#' @importFrom magrittr %$%
 NULL
 
 scaledMatricesP2 <- function(p2.objs, data.type, od.genes, var.scale, neighborhood.average) {
@@ -30,7 +33,7 @@ scaledMatricesP2 <- function(p2.objs, data.type, od.genes, var.scale, neighborho
     }
     if(neighborhood.average) {
       ## use the averaged matrices
-      x <- Matrix::t(edgeMat(r)$mat) %*% x
+      x <- Matrix::t(edgeMat(r)$mat) %*% x # TODO: looks like `$mat` doesn't exist anymore
     }
     x
   })
@@ -603,15 +606,17 @@ getDecoyProjections <- function(samples, samf, data.type, var.scale, cproj, neig
   return(cproj.decoys)
 }
 
-getLocalEdges <- function(samples, k.self, k.self.weight, const.inner.weights, metric, verbose, n.cores) {
+getLocalEdges <- function(samples, k.self, k.self.weight, const.inner.weights, metric, l2.sigma, verbose, n.cores) {
   if(verbose) cat('local pairs ')
   x <- data.frame(do.call(rbind, papply(samples, function(x) {
     pca <- getPca(x)
     xk <- n2Knn(pca, k.self + 1, 1, verbose=FALSE, indexType=metric) # +1 accounts for self-edges that will be removed in the next line
     diag(xk) <- 0; # no self-edges
-    xk <- as(xk,'dgTMatrix')
+    xk <- as(drop0(xk),'dgTMatrix')
     cat(".")
-    return(data.frame('mA.lab'=rownames(pca)[xk@i+1],'mB.lab'=rownames(pca)[xk@j+1],'w'=pmax(1-xk@x,0),stringsAsFactors=F))
+
+    data.frame(mA.lab=rownames(pca)[xk@i+1], mB.lab=rownames(pca)[xk@j+1],
+               w=convertDistanceToSimilarity(xk@x, metric=metric, l2.sigma=l2.sigma), stringsAsFactors=F)
   }, n.cores=n.cores, mc.preschedule=TRUE)), stringsAsFactors=F)
 
   if (const.inner.weights) {
@@ -678,7 +683,7 @@ bestClusterTreeThresholds <- function(res,leaf.factor,clusters,clmerges=NULL) {
   } else {
     x <- conos:::treeJaccard(res$merges-1L,as.matrix(mt),clT,clmerges-1L)
   }
-  
+
   x
 }
 
@@ -796,6 +801,72 @@ basicSeuratProc <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do
   return(so)
 }
 
+convertDistanceToSimilarity <- function(distances, metric, l2.sigma=1e5) {
+  if(metric=='angular') {
+    return(pmax(0, 1 - distances))
+  }
+
+  return(exp(-distances / l2.sigma))
+}
+
+getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, data.type='counts', var.scale=T, neighborhood.average=F, common.centering=T,
+                                      matching.method='mNN', metric='angular', l2.sigma=1e5, subset.cells=NULL,
+                                      base.groups=NULL, append.decoys=F, samples=NULL, samf=NULL, decoy.threshold=1, n.decoys=k*2, append.global.axes=T, global.proj=NULL) {
+  # create matrices, adjust variance
+  cproj <- scaledMatrices(sample.pair, data.type=data.type, od.genes=od.genes, var.scale=var.scale, neighborhood.average=neighborhood.average)
+
+  # determine the centering
+  if (common.centering) {
+    ncells <- unlist(lapply(cproj, nrow));
+    centering <- setNames(rep(colSums(do.call(rbind, lapply(cproj, colMeans)) * ncells) / sum(ncells), length(cproj)), names(cproj))
+  } else {
+    centering <- lapply(cproj,colMeans)
+  }
+
+  # append decoy cells if needed
+  if(!is.null(base.groups) && append.decoys) {
+    cproj.decoys <- getDecoyProjections(samples, samf, data.type, var.scale, cproj, neighborhood.average, base.groups, decoy.threshold, n.decoys)
+    cproj <- lapply(sn(names(cproj)),function(n) rbind(cproj[[n]],cproj.decoys[[n]]))
+  }
+
+  cpproj <- lapply(sn(names(cproj)),function(n) {
+    x <- cproj[[n]]
+    x <- t(as.matrix(t(x))-centering[[n]])
+    x %*% rot;
+  })
+
+  if(!is.null(base.groups) && append.global.axes) {
+    #cpproj <- lapply(sn(names(cpproj)),function(n) cbind(cpproj[[n]],global.proj[[n]])) # case without decoys
+    cpproj <- lapply(sn(names(cpproj)),function(n) {
+      gm <- global.proj[[n]]
+      if (append.decoys) {
+        decoy.cells <- rownames(cproj.decoys[[n]])
+        if (length(decoy.cells)>0) {
+          gm <- rbind(gm, do.call(rbind, lapply(global.proj[unique(samf[decoy.cells])],
+                                                function(m) m[rownames(m) %in% decoy.cells,,drop=F])))
+        }
+      }
+      # append global axes
+      cbind(cpproj[[n]],gm[rownames(cpproj[[n]]),])
+    })
+  }
+
+  if (!is.null(subset.cells)) {
+    cpproj <- lapply(cpproj, function(proj) proj[intersect(rownames(proj), subset.cells), ])
+  }
+
+  mnn <- getNeighborMatrix(cpproj[[names(sample.pair)[1]]], cpproj[[names(sample.pair)[2]]], k, matching=matching.method, metric=metric, l2.sigma=l2.sigma)
+
+  if (!is.null(base.groups) && append.decoys) {
+    # discard edges connecting to decoys
+    decoy.cells <- unlist(lapply(cproj.decoys,rownames))
+    mnn <- mnn[, !colnames(mnn) %in% decoy.cells, drop=F]
+    mnn <- mnn[!rownames(mnn) %in% decoy.cells, , drop=F]
+  }
+
+  return(mnn)
+}
+
 ##' Establish rough neighbor matching between samples given their projections in a common space
 ##'
 ##' @param p1 projection of sample 1
@@ -803,21 +874,20 @@ basicSeuratProc <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do
 ##' @param k neighborhood radius
 ##' @param matching mNN (default) or NN
 ##' @param metric distance type (default: "angular", can also be 'L2')
-##' @param l2.sigma L2 distances get transformed as exp(-d/sigma) using this value (default=30)
+##' @param l2.sigma L2 distances get transformed as exp(-d/sigma) using this value (default=1e5)
 ##' @param min.similarity minimal similarity between two cells, required to have an edge
 ##' @return matrix with the similarity (!) values corresponding to weight (1-d for angular, and exp(-d/l2.sigma) for L2)
-getNeighborMatrix <- function(p1,p2,k,matching='mNN',metric='angular',l2.sigma=1e5, min.similarity=1e-3) {
+getNeighborMatrix <- function(p1,p2,k,matching='mNN',metric='angular',l2.sigma=1e5, min.similarity=1e-5) {
   if (is.null(p2)) {
     n12 <- n2CrossKnn(p1,p1,k,1,FALSE,metric)
     n21 <- n12
   } else {
-    n12 <- n2CrossKnn(p1,p2,k,1,FALSE,metric)
-    n21 <- n2CrossKnn(p2,p1,k,1,FALSE,metric)
+    n12 <- n2CrossKnn(p1, p2, k, 1, FALSE, metric)
+    n21 <- n2CrossKnn(p2, p1, k, 1, FALSE, metric)
   }
 
-  # Viktor's solution
-  n12@x[n12@x < min.similarity] <- 0
-  n21@x[n21@x < min.similarity] <- 0
+  n12@x <- convertDistanceToSimilarity(n12@x, metric=metric, l2.sigma=l2.sigma)
+  n21@x <- convertDistanceToSimilarity(n21@x, metric=metric, l2.sigma=l2.sigma)
 
   if (matching=='NN') {
     adj.mtx <- drop0(n21+t(n12));
@@ -825,38 +895,14 @@ getNeighborMatrix <- function(p1,p2,k,matching='mNN',metric='angular',l2.sigma=1
   } else if (matching=='mNN') {
     adj.mtx <- drop0(n21*t(n12))
     adj.mtx@x <- sqrt(adj.mtx@x)
-  } else if (matching=='mNN-MST') {
-    if (!is.null(p2)) {
-      stop("mNN-MST method is only supported for 1-sample neighborhood")
-    }
-
-    knn.mtx <- n21+t(n12);
-    knn.mtx@x <- -knn.mtx@x/2;
-
-    mst.mtx <- igraph::graph_from_adjacency_matrix(knn.mtx, mode="undirected", weighted=T) %>%
-      igraph::minimum.spanning.tree() %>% igraph::as_adjacency_matrix(type="both", attr="weight")
-    mst.mtx <- mst.mtx + t(mst.mtx)
-    mst.mtx@x <- -mst.mtx@x/2
-    mst.mtx@x[mst.mtx@x < min.similarity] <- min.similarity * 1.01
-
-    adj.mtx <- n21*t(n12)
-    adj.mtx@x <- sqrt(adj.mtx@x)
-    suppressMessages(adj.mtx <- pmax(adj.mtx, mst.mtx))
   } else {
     stop("Unrecognized type of NN matching:", matching)
   }
 
-  adj.mtx@x[adj.mtx@x < min.similarity] <- 0
-  adj.mtx <- drop0(adj.mtx)
-
   rownames(adj.mtx) <- rownames(p1); colnames(adj.mtx) <- rownames(p2);
-  if(metric=='angular') {
-    adj.mtx@x <- pmax(0,1-adj.mtx@x)
-  } else { # L2 metric
-    adj.mtx@x <- exp(-adj.mtx@x/l2.sigma)
-  }
+  adj.mtx@x[adj.mtx@x < min.similarity] <- 0
 
-  return(as(adj.mtx,'dgTMatrix'))
+  return(as(drop0(adj.mtx),'dgTMatrix'))
 }
 
 
@@ -876,7 +922,7 @@ get.cluster.graph <- function(graph,groups,plot=FALSE,node.scale=50,edge.scale=5
     if(max(groups)>nv) stop('groups specifies ids that are larger than the number of vertices in the graph')
     if(any(is.na(groups))) {
       # remove vertices that are not part of the groups
-      vi <- which(!is.na(groups)); 
+      vi <- which(!is.na(groups));
       g <- induced.subgraph(graph,vi);
       groups <- groups[vi];
     } else {
@@ -912,7 +958,7 @@ get.cluster.graph <- function(graph,groups,plot=FALSE,node.scale=50,edge.scale=5
     # not sure when this was actually needed
     gcon <- induced.subgraph(gcon, unique(groups))
   }
-  
+
 
   if(plot) {
     set.seed(1)
@@ -920,4 +966,9 @@ get.cluster.graph <- function(graph,groups,plot=FALSE,node.scale=50,edge.scale=5
     plot.igraph(gcon, layout=layout_with_fr(gcon), vertex.size=V(gcon)$num/(sum(V(gcon)$num)/node.scale), edge.width=E(gcon)$weight/sum(E(gcon)$weight/edge.scale), edge.color=adjustcolor('black',alpha=edge.alpha))
   }
   return(invisible(gcon))
+}
+
+## Correct unloading of the library
+.onUnload <- function (libpath) {
+  library.dynam.unload("conos", libpath)
 }

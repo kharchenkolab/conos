@@ -34,7 +34,8 @@ Suggests:
   shinycssloaders,
   DESeq2,
   knitr,
-  rmarkdown
+  rmarkdown,
+  pbapply
 VignetteBuilder: knitr
 RoxygenNote: 6.1.0
 LinkingTo: Rcpp, RcppArmadillo, RcppEigen, RcppProgress, igraph
