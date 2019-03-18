@@ -201,7 +201,7 @@ Conos <- setRefClass(
       return(invisible(sn.pairs))
     },
 
-    buildGraph=function(k=15, k.self=10, k.self.weight=0.1, space='CPCA', matching.method='mNN', metric='angular', k1=k, data.type='counts', l2.sigma=1e5, var.scale =TRUE, ncomps=40, n.odgenes=2000, return.details=T, neighborhood.average=FALSE, neighborhood.average.k=10, matching.mask=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE, const.inner.weights=FALSE, base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, append.local.axes=TRUE, score.component.variance=FALSE, edge.combine.method="sum") {
+    buildGraph=function(k=15, k.self=10, k.self.weight=0.1, space='CPCA', matching.method='mNN', metric='angular', k1=k, data.type='counts', l2.sigma=1e5, cor.base=1, var.scale =TRUE, ncomps=40, n.odgenes=2000, return.details=T, neighborhood.average=FALSE, neighborhood.average.k=10, matching.mask=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE, const.inner.weights=FALSE, base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, append.local.axes=TRUE, score.component.variance=FALSE, edge.combine.method="sum") {
 
       supported.spaces <- c("CPCA","JNMF","genes","PCA")
       if(!space %in% supported.spaces) {
@@ -277,7 +277,7 @@ Conos <- setRefClass(
 
           mnn <- getPcaBasedNeighborMatrix(samples[sn.pairs[,j]], od.genes=od.genes, rot=rot, k=k,k1=k1, data.type=data.type,
                                            var.scale=var.scale, neighborhood.average=neighborhood.average, common.centering=common.centering,
-                                           matching.method=matching.method, metric=metric, l2.sigma=l2.sigma,
+                                           matching.method=matching.method, metric=metric, l2.sigma=l2.sigma, cor.base=cor.base,
                                            base.groups=base.groups, append.decoys=append.decoys, samples=samples, samf=samf, decoy.threshold=decoy.threshold,
                                            n.decoys=n.decoys, append.global.axes=append.global.axes, global.proj=global.proj)
           if(verbose) cat(".")

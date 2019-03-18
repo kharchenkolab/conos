@@ -13,10 +13,12 @@ using namespace Rcpp;
 // guarantees not to remove edges from nodes that have <k edges
 // sY - sparse matrix (dgCmatrix)
 // rowN - number of non-zero elements per row
-// k - minimal number of edges to keep
-// will return a modified copy of the @x
+// k - number of edges to which the degree of the column nodes should be reduced
+// klow - minimal number of edges to leave in the row nodes (defaults to k)
+// will return a modified copy of the @x slot
 // [[Rcpp::export]]
-NumericVector pareDownHubEdges(SEXP sY,  IntegerVector rowN, int k) {
+NumericVector pareDownHubEdges(SEXP sY,  IntegerVector rowN, int k, int klow=-1) {
+  if(klow<0) klow=k;
   S4 mat(sY);
   const arma::uvec i(( unsigned int *)INTEGER(mat.slot("i")),LENGTH(mat.slot("i")),false,true);
   const arma::ivec dims(INTEGER(mat.slot("Dim")),LENGTH(mat.slot("Dim")),false,true);
@@ -42,7 +44,7 @@ NumericVector pareDownHubEdges(SEXP sY,  IntegerVector rowN, int k) {
     arma::uvec cido=sort_index(cid,"descend");
     // remove top edges, adjusting row counts
     j=0;
-    while(nedges > k && j<cido.n_elem && cid[ cido[j] ]>k) {
+    while(nedges > k && j<cido.n_elem && cid[ cido[j] ]>klow) {
       x[ cido[j]+p0 ]=0;  // zero-out the edge
       rowN[ i[ cido[j]+p0 ] ]--; // decrease row counts
       nedges--; j++; // adjust counters

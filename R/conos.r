@@ -801,16 +801,16 @@ basicSeuratProc <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do
   return(so)
 }
 
-convertDistanceToSimilarity <- function(distances, metric, l2.sigma=1e5) {
+convertDistanceToSimilarity <- function(distances, metric, l2.sigma=1e5, cor.base=1) {
   if(metric=='angular') {
-    return(pmax(0, 2 - distances))
+    return(pmax(0, cor.base - distances))
   }
 
   return(exp(-distances / l2.sigma))
 }
 
 getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, k1=k, data.type='counts', var.scale=T, neighborhood.average=F, common.centering=T,
-                                      matching.method='mNN', metric='angular', l2.sigma=1e5, subset.cells=NULL,
+                                      matching.method='mNN', metric='angular', l2.sigma=1e5, cor.base=1, subset.cells=NULL,
                                       base.groups=NULL, append.decoys=F, samples=NULL, samf=NULL, decoy.threshold=1, n.decoys=k*2, append.global.axes=T, global.proj=NULL) {
   # create matrices, adjust variance
   cproj <- scaledMatrices(sample.pair, data.type=data.type, od.genes=od.genes, var.scale=var.scale, neighborhood.average=neighborhood.average)
@@ -855,7 +855,7 @@ getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, k1=k, data.
     cpproj <- lapply(cpproj, function(proj) proj[intersect(rownames(proj), subset.cells), ])
   }
 
-  mnn <- getNeighborMatrix(cpproj[[names(sample.pair)[1]]], cpproj[[names(sample.pair)[2]]], k, k1=k1, matching=matching.method, metric=metric, l2.sigma=l2.sigma)
+  mnn <- getNeighborMatrix(cpproj[[names(sample.pair)[1]]], cpproj[[names(sample.pair)[2]]], k, k1=k1, matching=matching.method, metric=metric, l2.sigma=l2.sigma, cor.base=cor.base)
 
   if (!is.null(base.groups) && append.decoys) {
     # discard edges connecting to decoys
@@ -877,7 +877,7 @@ getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, k1=k, data.
 ##' @param l2.sigma L2 distances get transformed as exp(-d/sigma) using this value (default=1e5)
 ##' @param min.similarity minimal similarity between two cells, required to have an edge
 ##' @return matrix with the similarity (!) values corresponding to weight (1-d for angular, and exp(-d/l2.sigma) for L2)
-getNeighborMatrix <- function(p1,p2,k,k1=k,matching='mNN',metric='angular',l2.sigma=1e5, min.similarity=1e-5) {
+getNeighborMatrix <- function(p1,p2,k,k1=k,matching='mNN',metric='angular',l2.sigma=1e5, cor.base=1, min.similarity=1e-5) {
   if (is.null(p2)) {
     n12 <- n2CrossKnn(p1,p1,k1,1,FALSE,metric)
     n21 <- n12
@@ -887,8 +887,8 @@ getNeighborMatrix <- function(p1,p2,k,k1=k,matching='mNN',metric='angular',l2.si
   }
 
 
-  n12@x <- convertDistanceToSimilarity(n12@x, metric=metric, l2.sigma=l2.sigma)
-  n21@x <- convertDistanceToSimilarity(n21@x, metric=metric, l2.sigma=l2.sigma)
+  n12@x <- convertDistanceToSimilarity(n12@x, metric=metric, l2.sigma=l2.sigma, cor.base=cor.base)
+  n21@x <- convertDistanceToSimilarity(n21@x, metric=metric, l2.sigma=l2.sigma, cor.base=cor.base)
 
   if (matching=='NN') {
     adj.mtx <- drop0(n21+t(n12));
@@ -902,22 +902,53 @@ getNeighborMatrix <- function(p1,p2,k,k1=k,matching='mNN',metric='angular',l2.si
 
   rownames(adj.mtx) <- rownames(p1); colnames(adj.mtx) <- rownames(p2);
   adj.mtx@x[adj.mtx@x < min.similarity] <- 0
+  adj.mtx <- drop0(adj.mtx);
 
   if(k1 > k) { # downsample edges
-    co <- colnames(adj.mtx); ro <- rownames(adj.mtx);
-    adj.mtx <- adj.mtx[,order(diff(adj.mtx@p),decreasing=T)]
-    adj.mtx@x <- pareDownHubEdges(adj.mtx,tabulate(adj.mtx@i+1),k)
-    adj.mtx <- t(drop0(adj.mtx))
-    adj.mtx <- adj.mtx[,order(diff(adj.mtx@p),decreasing=T)]    
-    adj.mtx@x <- pareDownHubEdges(adj.mtx,tabulate(adj.mtx@i+1),k)
-    adj.mtx <- t(drop0(adj.mtx));
-    adj.mtx <- adj.mtx[match(ro,rownames(adj.mtx)),match(co,colnames(adj.mtx))]; # do we need to recover the original order?
-    # note: even though procedure tries to pare down hubs first, the resulting graph can still contain hubs in the end ... those could be reduced with additional steps
+    adj.mtx <- t.reduce.edges.iteratively(adj.mtx,k)
   }
 
   return(as(drop0(adj.mtx),'dgTMatrix'))
 }
 
+# 1-step edge reduction
+t.reduce.edges <- function(adj.mtx,k,klow=k,preserve.order=TRUE) {
+  if(preserve.order) { co <- colnames(adj.mtx); ro <- rownames(adj.mtx); }
+  adj.mtx <- adj.mtx[,order(diff(adj.mtx@p),decreasing=T)]
+  adj.mtx@x <- pareDownHubEdges(adj.mtx,tabulate(adj.mtx@i+1),k,klow)
+  adj.mtx <- t(drop0(adj.mtx))
+  adj.mtx <- adj.mtx[,order(diff(adj.mtx@p),decreasing=T)]    
+  adj.mtx@x <- pareDownHubEdges(adj.mtx,tabulate(adj.mtx@i+1),k,klow)
+  adj.mtx <- t(drop0(adj.mtx));
+  if(preserve.order) { adj.mtx <- adj.mtx[match(ro,rownames(adj.mtx)),match(co,colnames(adj.mtx))]; }
+  adj.mtx
+}
+# a simple multi-step strategy to smooth out remaining hubs
+# max.kdiff gives approximate difference in the degree of the resulting nodes that is tolerable
+t.reduce.edges.iteratively <- function(adj.mtx,k,preserve.order=TRUE,max.kdiff=5,n.steps=3) {
+  cc <- diff(adj.mtx@p); rc <- tabulate(adj.mtx@i+1);
+  maxd <- max(max(cc),max(rc));
+  if(maxd<=k) return(adj.mtx); # nothing to be done - already below k
+  klow <- max(min(k,3),k-max.kdiff); # allowable lower limit
+  # set up a stepping strategy
+  n.steps <- min(n.steps,round(maxd/k))
+  if(n.steps>1) {
+    ks <- round(exp(seq(log(maxd),log(k),length.out=n.steps+1))[-1])
+  } else {
+    ks <- c(k);
+  }
+  for(ki in ks) {
+    adj.mtx <- t.reduce.edges(adj.mtx,ki,preserve.order=preserve.order)
+  }
+  cc <- diff(adj.mtx@p); rc <- tabulate(adj.mtx@i+1);
+  maxd <- max(max(cc),max(rc));
+  if(maxd-k > max.kdiff) {
+    # do a cleanup step
+    adj.mtx <- t.reduce.edges(adj.mtx,k,klow=klow,preserve.order=preserve.order)
+  }
+  
+  adj.mtx
+}
 
 ##' Collapse vertices belonging to each cluster in a graph
 ##'

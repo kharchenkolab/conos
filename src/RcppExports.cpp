@@ -119,15 +119,16 @@ BEGIN_RCPP
 END_RCPP
 }
 // pareDownHubEdges
-NumericVector pareDownHubEdges(SEXP sY, IntegerVector rowN, int k);
-RcppExport SEXP _conos_pareDownHubEdges(SEXP sYSEXP, SEXP rowNSEXP, SEXP kSEXP) {
+NumericVector pareDownHubEdges(SEXP sY, IntegerVector rowN, int k, int klow);
+RcppExport SEXP _conos_pareDownHubEdges(SEXP sYSEXP, SEXP rowNSEXP, SEXP kSEXP, SEXP klowSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type sY(sYSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type rowN(rowNSEXP);
     Rcpp::traits::input_parameter< int >::type k(kSEXP);
-    rcpp_result_gen = Rcpp::wrap(pareDownHubEdges(sY, rowN, k));
+    Rcpp::traits::input_parameter< int >::type klow(klowSEXP);
+    rcpp_result_gen = Rcpp::wrap(pareDownHubEdges(sY, rowN, k, klow));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -348,7 +349,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_conos_scoreTreeConsistency", (DL_FUNC) &_conos_scoreTreeConsistency, 4},
     {"_conos_maxStableClusters", (DL_FUNC) &_conos_maxStableClusters, 4},
     {"_conos_edge_removal_mask", (DL_FUNC) &_conos_edge_removal_mask, 5},
-    {"_conos_pareDownHubEdges", (DL_FUNC) &_conos_pareDownHubEdges, 3},
+    {"_conos_pareDownHubEdges", (DL_FUNC) &_conos_pareDownHubEdges, 4},
     {"_conos_referenceWij", (DL_FUNC) &_conos_referenceWij, 5},
     {"_conos_as_factor", (DL_FUNC) &_conos_as_factor, 1},
     {"_conos_get_nearest_neighbors", (DL_FUNC) &_conos_get_nearest_neighbors, 10},
