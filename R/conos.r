@@ -803,13 +803,13 @@ basicSeuratProc <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do
 
 convertDistanceToSimilarity <- function(distances, metric, l2.sigma=1e5) {
   if(metric=='angular') {
-    return(pmax(0, 1 - distances))
+    return(pmax(0, 2 - distances))
   }
 
   return(exp(-distances / l2.sigma))
 }
 
-getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, data.type='counts', var.scale=T, neighborhood.average=F, common.centering=T,
+getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, k1=k, data.type='counts', var.scale=T, neighborhood.average=F, common.centering=T,
                                       matching.method='mNN', metric='angular', l2.sigma=1e5, subset.cells=NULL,
                                       base.groups=NULL, append.decoys=F, samples=NULL, samf=NULL, decoy.threshold=1, n.decoys=k*2, append.global.axes=T, global.proj=NULL) {
   # create matrices, adjust variance
@@ -855,7 +855,7 @@ getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, data.type='
     cpproj <- lapply(cpproj, function(proj) proj[intersect(rownames(proj), subset.cells), ])
   }
 
-  mnn <- getNeighborMatrix(cpproj[[names(sample.pair)[1]]], cpproj[[names(sample.pair)[2]]], k, matching=matching.method, metric=metric, l2.sigma=l2.sigma)
+  mnn <- getNeighborMatrix(cpproj[[names(sample.pair)[1]]], cpproj[[names(sample.pair)[2]]], k, k1=k1, matching=matching.method, metric=metric, l2.sigma=l2.sigma)
 
   if (!is.null(base.groups) && append.decoys) {
     # discard edges connecting to decoys
@@ -877,14 +877,15 @@ getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, data.type='
 ##' @param l2.sigma L2 distances get transformed as exp(-d/sigma) using this value (default=1e5)
 ##' @param min.similarity minimal similarity between two cells, required to have an edge
 ##' @return matrix with the similarity (!) values corresponding to weight (1-d for angular, and exp(-d/l2.sigma) for L2)
-getNeighborMatrix <- function(p1,p2,k,matching='mNN',metric='angular',l2.sigma=1e5, min.similarity=1e-5) {
+getNeighborMatrix <- function(p1,p2,k,k1=k,matching='mNN',metric='angular',l2.sigma=1e5, min.similarity=1e-5) {
   if (is.null(p2)) {
-    n12 <- n2CrossKnn(p1,p1,k,1,FALSE,metric)
+    n12 <- n2CrossKnn(p1,p1,k1,1,FALSE,metric)
     n21 <- n12
   } else {
-    n12 <- n2CrossKnn(p1, p2, k, 1, FALSE, metric)
-    n21 <- n2CrossKnn(p2, p1, k, 1, FALSE, metric)
+    n12 <- n2CrossKnn(p1, p2, k1, 1, FALSE, metric)
+    n21 <- n2CrossKnn(p2, p1, k1, 1, FALSE, metric)
   }
+
 
   n12@x <- convertDistanceToSimilarity(n12@x, metric=metric, l2.sigma=l2.sigma)
   n21@x <- convertDistanceToSimilarity(n21@x, metric=metric, l2.sigma=l2.sigma)
@@ -901,6 +902,18 @@ getNeighborMatrix <- function(p1,p2,k,matching='mNN',metric='angular',l2.sigma=1
 
   rownames(adj.mtx) <- rownames(p1); colnames(adj.mtx) <- rownames(p2);
   adj.mtx@x[adj.mtx@x < min.similarity] <- 0
+
+  if(k1 > k) { # downsample edges
+    co <- colnames(adj.mtx); ro <- rownames(adj.mtx);
+    adj.mtx <- adj.mtx[,order(diff(adj.mtx@p),decreasing=T)]
+    adj.mtx@x <- pareDownHubEdges(adj.mtx,tabulate(adj.mtx@i+1),k)
+    adj.mtx <- t(drop0(adj.mtx))
+    adj.mtx <- adj.mtx[,order(diff(adj.mtx@p),decreasing=T)]    
+    adj.mtx@x <- pareDownHubEdges(adj.mtx,tabulate(adj.mtx@i+1),k)
+    adj.mtx <- t(drop0(adj.mtx));
+    adj.mtx <- adj.mtx[match(ro,rownames(adj.mtx)),match(co,colnames(adj.mtx))]; # do we need to recover the original order?
+    # note: even though procedure tries to pare down hubs first, the resulting graph can still contain hubs in the end ... those could be reduced with additional steps
+  }
 
   return(as(drop0(adj.mtx),'dgTMatrix'))
 }

@@ -34,6 +34,10 @@ edge_removal_mask <- function(verts1, verts2, weights, min_neighb_per_vertex, ve
     .Call('_conos_edge_removal_mask', PACKAGE = 'conos', verts1, verts2, weights, min_neighb_per_vertex, verbose)
 }
 
+pareDownHubEdges <- function(sY, rowN, k) {
+    .Call('_conos_pareDownHubEdges', PACKAGE = 'conos', sY, rowN, k)
+}
+
 referenceWij <- function(i, j, d, threads, perplexity) {
     .Call('_conos_referenceWij', PACKAGE = 'conos', i, j, d, threads, perplexity)
 }

@@ -201,7 +201,7 @@ Conos <- setRefClass(
       return(invisible(sn.pairs))
     },
 
-    buildGraph=function(k=15, k.self=10, k.self.weight=0.1, space='CPCA', matching.method='mNN', metric='angular', data.type='counts', l2.sigma=1e5, var.scale =TRUE, ncomps=40, n.odgenes=2000, return.details=T, neighborhood.average=FALSE, neighborhood.average.k=10, matching.mask=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE, const.inner.weights=FALSE, base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, append.local.axes=TRUE, score.component.variance=FALSE, edge.combine.method="sum") {
+    buildGraph=function(k=15, k.self=10, k.self.weight=0.1, space='CPCA', matching.method='mNN', metric='angular', k1=k, data.type='counts', l2.sigma=1e5, var.scale =TRUE, ncomps=40, n.odgenes=2000, return.details=T, neighborhood.average=FALSE, neighborhood.average.k=10, matching.mask=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE, const.inner.weights=FALSE, base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, append.local.axes=TRUE, score.component.variance=FALSE, edge.combine.method="sum") {
 
       supported.spaces <- c("CPCA","JNMF","genes","PCA")
       if(!space %in% supported.spaces) {
@@ -217,6 +217,8 @@ Conos <- setRefClass(
       if(!metric %in% supported.metrics) {
         stop(paste0("only the following distance metrics are currently supported: ['",paste(supported.metrics,collapse="' '"),"']"))
       }
+
+      if(k1<k) { stop("k1 must be >= k") }
 
       # calculate or update pairwise alignments
       sn.pairs <- updatePairs(space=space, ncomps=ncomps, n.odgenes=n.odgenes, verbose=verbose, var.scale=var.scale, neighborhood.average=neighborhood.average,
@@ -273,7 +275,7 @@ Conos <- setRefClass(
             rot <- rot[,1:ncomps,drop=F]
           }
 
-          mnn <- getPcaBasedNeighborMatrix(samples[sn.pairs[,j]], od.genes=od.genes, rot=rot, k=k, data.type=data.type,
+          mnn <- getPcaBasedNeighborMatrix(samples[sn.pairs[,j]], od.genes=od.genes, rot=rot, k=k,k1=k1, data.type=data.type,
                                            var.scale=var.scale, neighborhood.average=neighborhood.average, common.centering=common.centering,
                                            matching.method=matching.method, metric=metric, l2.sigma=l2.sigma,
                                            base.groups=base.groups, append.decoys=append.decoys, samples=samples, samf=samf, decoy.threshold=decoy.threshold,
