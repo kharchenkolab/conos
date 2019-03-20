@@ -626,7 +626,7 @@ getLocalEdges <- function(samples, k.self, k.self.weight, const.inner.weights, m
   }
 
   x$type <- 0;
-  cat(' done\n')
+  if(verbose) cat(' done\n')
 
   return(x)
 }
