@@ -113,7 +113,7 @@ Conos <- setRefClass(
       samples <<- c(samples,x);
     },
 
-    updatePairs=function(space='CPCA',data.type='counts',ncomps=50,n.odgenes=1e3,var.scale=TRUE,neighborhood.average=FALSE,neighborhood.average.k=10, matching.mask=NULL, exclude.samples=NULL, score.component.variance=FALSE, verbose=FALSE) {
+    updatePairs=function(space='CPCA', data.type='counts', ncomps=50, n.odgenes=1e3, var.scale=TRUE, neighborhood.average=FALSE, neighborhood.average.k=10, matching.mask=NULL, exclude.samples=NULL, score.component.variance=FALSE, verbose=FALSE) {
       if(neighborhood.average) {
         # pre-calculate averaging matrices for each sample
         if(verbose)  cat("calculating local averaging neighborhoods ")
@@ -201,7 +201,8 @@ Conos <- setRefClass(
       return(invisible(sn.pairs))
     },
 
-    buildGraph=function(k=15, k.self=10, k.self.weight=0.1, space='CPCA', matching.method='mNN', metric='angular', k1=k, data.type='counts', l2.sigma=1e5, cor.base=1, var.scale =TRUE, ncomps=40, n.odgenes=2000, return.details=T, neighborhood.average=FALSE, neighborhood.average.k=10, matching.mask=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE, const.inner.weights=FALSE, base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, append.local.axes=TRUE, score.component.variance=FALSE, edge.combine.method="sum") {
+    # TODO: remove const.inner.weights option
+    buildGraph=function(k=15, k.self=10, k.self.weight=0.1, space='CPCA', matching.method='mNN', metric='angular', k1=k, data.type='counts', l2.sigma=1e5, cor.base=1, var.scale =TRUE, ncomps=40, n.odgenes=2000, neighborhood.average=FALSE, neighborhood.average.k=10, matching.mask=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE, const.inner.weights=FALSE, base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, score.component.variance=FALSE) {
 
       supported.spaces <- c("CPCA","JNMF","genes","PCA")
       if(!space %in% supported.spaces) {
@@ -307,7 +308,7 @@ Conos <- setRefClass(
       E(g)$weight <- el[,3]
       E(g)$type <- el[,4]
       # collapse duplicate edges
-      g <- simplify(g, edge.attr.comb=list(weight=edge.combine.method, type = "first"))
+      g <- simplify(g, edge.attr.comb=list(weight="sum", type = "first"))
       graph <<- g;
       return(invisible(g))
     },
