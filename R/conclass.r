@@ -202,8 +202,7 @@ Conos <- setRefClass(
     },
 
     # TODO: remove const.inner.weights option
-    buildGraph=function(k=15, k.self=10, k.self.weight=0.1, space='CPCA', matching.method='mNN', metric='angular', k1=k, data.type='counts', l2.sigma=1e5, cor.base=1, var.scale =TRUE, ncomps=40, n.odgenes=2000, neighborhood.average=FALSE, neighborhood.average.k=10, matching.mask=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE, const.inner.weights=FALSE, base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, score.component.variance=FALSE) {
-
+    buildGraph=function(k=15, k.self=10, k.self.weight=0.1, space='CPCA', matching.method='mNN', metric='angular', k1=k, data.type='counts', l2.sigma=1e5, cor.base=1, var.scale =TRUE, ncomps=40, n.odgenes=2000, neighborhood.average=FALSE, neighborhood.average.k=10, matching.mask=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE, const.inner.weights=FALSE, base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, score.component.variance=FALSE, balance.edge.weights=FALSE) {
       supported.spaces <- c("CPCA","JNMF","genes","PCA")
       if(!space %in% supported.spaces) {
         stop(paste0("only the following spaces are currently supported: [",paste(supported.spaces,collapse=' '),"]"))
@@ -309,6 +308,20 @@ Conos <- setRefClass(
       E(g)$type <- el[,4]
       # collapse duplicate edges
       g <- simplify(g, edge.attr.comb=list(weight="sum", type = "first"))
+
+      if (length(balance.edge.weights) > 1 || balance.edge.weights) {
+        if(verbose) cat('balancing edge weights ');
+
+        if (length(balance.edge.weights) == 1) {
+          balance.edge.weights <- getDatasetPerCell()
+        }
+
+        igraph::E(g)$weight <- igraph::as_adjacency_matrix(g, attr="weight") %>%
+          adjustWeightsByCellBalancing(balance.edge.weights)
+
+        if(verbose) cat('done\n');
+      }
+
       graph <<- g;
       return(invisible(g))
     },
@@ -427,7 +440,6 @@ Conos <- setRefClass(
     },
 
     plotPanel=function(clustering=NULL, groups=NULL, colors=NULL, gene=NULL, use.local.clusters=FALSE, plot.theme=NULL, ...) {
-      # W: clusters and plots
       if (use.local.clusters) {
         if (is.null(clustering) && !("seurat" %in% class(samples[[1]]))) {
           stop("You have to provide 'clustering' parameter to be able to use local clusters")

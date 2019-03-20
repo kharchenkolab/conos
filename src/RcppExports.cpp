@@ -103,18 +103,32 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// edge_removal_mask
-std::vector<bool> edge_removal_mask(const std::vector<std::string>& verts1, const std::vector<std::string>& verts2, const std::vector<double>& weights, int min_neighb_per_vertex, bool verbose);
-RcppExport SEXP _conos_edge_removal_mask(SEXP verts1SEXP, SEXP verts2SEXP, SEXP weightsSEXP, SEXP min_neighb_per_vertexSEXP, SEXP verboseSEXP) {
+// getSumWeightMatrix
+NumericMatrix getSumWeightMatrix(const std::vector<double>& weights, const std::vector<int>& row_inds, const std::vector<int>& col_inds, const std::vector<int>& factor_levels);
+RcppExport SEXP _conos_getSumWeightMatrix(SEXP weightsSEXP, SEXP row_indsSEXP, SEXP col_indsSEXP, SEXP factor_levelsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const std::vector<std::string>& >::type verts1(verts1SEXP);
-    Rcpp::traits::input_parameter< const std::vector<std::string>& >::type verts2(verts2SEXP);
     Rcpp::traits::input_parameter< const std::vector<double>& >::type weights(weightsSEXP);
-    Rcpp::traits::input_parameter< int >::type min_neighb_per_vertex(min_neighb_per_vertexSEXP);
-    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
-    rcpp_result_gen = Rcpp::wrap(edge_removal_mask(verts1, verts2, weights, min_neighb_per_vertex, verbose));
+    Rcpp::traits::input_parameter< const std::vector<int>& >::type row_inds(row_indsSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int>& >::type col_inds(col_indsSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int>& >::type factor_levels(factor_levelsSEXP);
+    rcpp_result_gen = Rcpp::wrap(getSumWeightMatrix(weights, row_inds, col_inds, factor_levels));
+    return rcpp_result_gen;
+END_RCPP
+}
+// adjustWeightsByCellBalancingC
+std::vector<double> adjustWeightsByCellBalancingC(std::vector<double> weights, const std::vector<int>& row_inds, const std::vector<int>& col_inds, const std::vector<int>& factor_levels, NumericMatrix dividers);
+RcppExport SEXP _conos_adjustWeightsByCellBalancingC(SEXP weightsSEXP, SEXP row_indsSEXP, SEXP col_indsSEXP, SEXP factor_levelsSEXP, SEXP dividersSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector<double> >::type weights(weightsSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int>& >::type row_inds(row_indsSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int>& >::type col_inds(col_indsSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int>& >::type factor_levels(factor_levelsSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type dividers(dividersSEXP);
+    rcpp_result_gen = Rcpp::wrap(adjustWeightsByCellBalancingC(weights, row_inds, col_inds, factor_levels, dividers));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -218,8 +232,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // n2Knn
-Eigen::SparseMatrix<double> n2Knn(const NumericMatrix& m, int k, int nThreads, bool verbose, std::string indexType, int M, int MaxM0, float ef_search_multiplier);
-RcppExport SEXP _conos_n2Knn(SEXP mSEXP, SEXP kSEXP, SEXP nThreadsSEXP, SEXP verboseSEXP, SEXP indexTypeSEXP, SEXP MSEXP, SEXP MaxM0SEXP, SEXP ef_search_multiplierSEXP) {
+Eigen::SparseMatrix<double> n2Knn(const NumericMatrix& m, int k, int nThreads, bool verbose, std::string indexType, int M, int MaxM0, float ef_search_multiplier, bool quiet);
+RcppExport SEXP _conos_n2Knn(SEXP mSEXP, SEXP kSEXP, SEXP nThreadsSEXP, SEXP verboseSEXP, SEXP indexTypeSEXP, SEXP MSEXP, SEXP MaxM0SEXP, SEXP ef_search_multiplierSEXP, SEXP quietSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -231,13 +245,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type M(MSEXP);
     Rcpp::traits::input_parameter< int >::type MaxM0(MaxM0SEXP);
     Rcpp::traits::input_parameter< float >::type ef_search_multiplier(ef_search_multiplierSEXP);
-    rcpp_result_gen = Rcpp::wrap(n2Knn(m, k, nThreads, verbose, indexType, M, MaxM0, ef_search_multiplier));
+    Rcpp::traits::input_parameter< bool >::type quiet(quietSEXP);
+    rcpp_result_gen = Rcpp::wrap(n2Knn(m, k, nThreads, verbose, indexType, M, MaxM0, ef_search_multiplier, quiet));
     return rcpp_result_gen;
 END_RCPP
 }
 // n2CrossKnn
-Eigen::SparseMatrix<double> n2CrossKnn(const NumericMatrix& mA, const NumericMatrix& mB, int k, int nThreads, bool verbose, std::string indexType, int M, int MaxM0, float ef_search_multiplier);
-RcppExport SEXP _conos_n2CrossKnn(SEXP mASEXP, SEXP mBSEXP, SEXP kSEXP, SEXP nThreadsSEXP, SEXP verboseSEXP, SEXP indexTypeSEXP, SEXP MSEXP, SEXP MaxM0SEXP, SEXP ef_search_multiplierSEXP) {
+Eigen::SparseMatrix<double> n2CrossKnn(const NumericMatrix& mA, const NumericMatrix& mB, int k, int nThreads, bool verbose, std::string indexType, int M, int MaxM0, float ef_search_multiplier, bool quiet);
+RcppExport SEXP _conos_n2CrossKnn(SEXP mASEXP, SEXP mBSEXP, SEXP kSEXP, SEXP nThreadsSEXP, SEXP verboseSEXP, SEXP indexTypeSEXP, SEXP MSEXP, SEXP MaxM0SEXP, SEXP ef_search_multiplierSEXP, SEXP quietSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -250,7 +265,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type M(MSEXP);
     Rcpp::traits::input_parameter< int >::type MaxM0(MaxM0SEXP);
     Rcpp::traits::input_parameter< float >::type ef_search_multiplier(ef_search_multiplierSEXP);
-    rcpp_result_gen = Rcpp::wrap(n2CrossKnn(mA, mB, k, nThreads, verbose, indexType, M, MaxM0, ef_search_multiplier));
+    Rcpp::traits::input_parameter< bool >::type quiet(quietSEXP);
+    rcpp_result_gen = Rcpp::wrap(n2CrossKnn(mA, mB, k, nThreads, verbose, indexType, M, MaxM0, ef_search_multiplier, quiet));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -348,15 +364,16 @@ static const R_CallMethodDef CallEntries[] = {
     {"_conos_treeJaccard", (DL_FUNC) &_conos_treeJaccard, 4},
     {"_conos_scoreTreeConsistency", (DL_FUNC) &_conos_scoreTreeConsistency, 4},
     {"_conos_maxStableClusters", (DL_FUNC) &_conos_maxStableClusters, 4},
-    {"_conos_edge_removal_mask", (DL_FUNC) &_conos_edge_removal_mask, 5},
+    {"_conos_getSumWeightMatrix", (DL_FUNC) &_conos_getSumWeightMatrix, 4},
+    {"_conos_adjustWeightsByCellBalancingC", (DL_FUNC) &_conos_adjustWeightsByCellBalancingC, 5},
     {"_conos_pareDownHubEdges", (DL_FUNC) &_conos_pareDownHubEdges, 4},
     {"_conos_referenceWij", (DL_FUNC) &_conos_referenceWij, 5},
     {"_conos_as_factor", (DL_FUNC) &_conos_as_factor, 1},
     {"_conos_get_nearest_neighbors", (DL_FUNC) &_conos_get_nearest_neighbors, 10},
     {"_conos_sgd", (DL_FUNC) &_conos_sgd, 15},
     {"_conos_leiden_community", (DL_FUNC) &_conos_leiden_community, 4},
-    {"_conos_n2Knn", (DL_FUNC) &_conos_n2Knn, 8},
-    {"_conos_n2CrossKnn", (DL_FUNC) &_conos_n2CrossKnn, 9},
+    {"_conos_n2Knn", (DL_FUNC) &_conos_n2Knn, 9},
+    {"_conos_n2CrossKnn", (DL_FUNC) &_conos_n2CrossKnn, 10},
     {"_conos_propagate_labels", (DL_FUNC) &_conos_propagate_labels, 9},
     {"_conos_smooth_count_matrix", (DL_FUNC) &_conos_smooth_count_matrix, 9},
     {"_conos_adjacent_vertices", (DL_FUNC) &_conos_adjacent_vertices, 1},

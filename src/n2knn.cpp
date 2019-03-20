@@ -23,11 +23,14 @@ using namespace Rcpp;
 
 
 // [[Rcpp::export]]
-Eigen::SparseMatrix<double> n2Knn(const NumericMatrix& m, int k, int nThreads=10, bool verbose=true, std::string indexType="angular", int M=12, int MaxM0=24,float ef_search_multiplier=50) {
+Eigen::SparseMatrix<double> n2Knn(const NumericMatrix& m, int k, int nThreads=10, bool verbose=true, std::string indexType="angular", int M=12, int MaxM0=24,float ef_search_multiplier=50, bool quiet=false) {
   Eigen::SparseMatrix<double> mat(m.nrow(),m.nrow());
 
   if(m.nrow() <= k) {
-    Rcpp::warning("k >= m.nrow(), reducing it to m.nrow() - 1");
+    if (!quiet) {
+      Rcpp::warning("k >= m.nrow(), reducing it to m.nrow() - 1");
+    }
+
     k = m.nrow() - 1;
   }
 
@@ -75,12 +78,15 @@ Eigen::SparseMatrix<double> n2Knn(const NumericMatrix& m, int k, int nThreads=10
 
 // find NN of A in B
 // [[Rcpp::export]]
-Eigen::SparseMatrix<double> n2CrossKnn(const NumericMatrix& mA, const NumericMatrix& mB, int k, int nThreads=10, bool verbose=true, std::string indexType="angular", int M=12, int MaxM0=24,float ef_search_multiplier=50) {
+Eigen::SparseMatrix<double> n2CrossKnn(const NumericMatrix& mA, const NumericMatrix& mB, int k, int nThreads=10, bool verbose=true, std::string indexType="angular", int M=12, int MaxM0=24, float ef_search_multiplier=50, bool quiet=false) {
 
   Eigen::SparseMatrix<double> mat(mB.nrow(),mA.nrow());
 
   if(mB.nrow() <= k) {
-    Rcpp::warning("k >= mB.nrow(), reducing it to mB.nrow() - 1");
+    if (!quiet) {
+      Rcpp::warning("k >= mB.nrow(), reducing it to mB.nrow() - 1");
+    }
+
     k = mB.nrow() - 1;
   }
 

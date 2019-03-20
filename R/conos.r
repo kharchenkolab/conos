@@ -125,7 +125,7 @@ quickJNMF <- function(p2.objs, data.type='counts', n.comps = 30, n.odgenes=NULL,
 
   res <- list(rot1=rot1, rot2=rot2,z=z);
 
-  
+
   return(res)
 }
 
@@ -245,7 +245,7 @@ quickPlainPCA <- function(r.n,data.type='counts',k=30,ncomps=30,n.odgenes=NULL,v
   pcj <- do.call(cbind,lapply(pcs,function(x) x$v))
   rownames(pcj) <- od.genes;
   res <- list(CPC=pcj);
-  
+
   if(score.component.variance) {
     res$nv <- lapply(pcs,function(x) x$nv)
   }
@@ -878,12 +878,13 @@ getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, k1=k, data.
 ##' @param min.similarity minimal similarity between two cells, required to have an edge
 ##' @return matrix with the similarity (!) values corresponding to weight (1-d for angular, and exp(-d/l2.sigma) for L2)
 getNeighborMatrix <- function(p1,p2,k,k1=k,matching='mNN',metric='angular',l2.sigma=1e5, cor.base=1, min.similarity=1e-5) {
+  quiet.knn <- (k1 > k)
   if (is.null(p2)) {
-    n12 <- n2CrossKnn(p1,p1,k1,1,FALSE,metric)
+    n12 <- n2CrossKnn(p1, p1,k1,1, FALSE, metric, quiet=quiet.knn)
     n21 <- n12
   } else {
-    n12 <- n2CrossKnn(p1, p2, k1, 1, FALSE, metric)
-    n21 <- n2CrossKnn(p2, p1, k1, 1, FALSE, metric)
+    n12 <- n2CrossKnn(p1, p2, k1, 1, FALSE, metric, quiet=quiet.knn)
+    n21 <- n2CrossKnn(p2, p1, k1, 1, FALSE, metric, quiet=quiet.knn)
   }
 
 
@@ -917,7 +918,7 @@ t.reduce.edges <- function(adj.mtx,k,klow=k,preserve.order=TRUE) {
   adj.mtx <- adj.mtx[,order(diff(adj.mtx@p),decreasing=T)]
   adj.mtx@x <- pareDownHubEdges(adj.mtx,tabulate(adj.mtx@i+1),k,klow)
   adj.mtx <- t(drop0(adj.mtx))
-  adj.mtx <- adj.mtx[,order(diff(adj.mtx@p),decreasing=T)]    
+  adj.mtx <- adj.mtx[,order(diff(adj.mtx@p),decreasing=T)]
   adj.mtx@x <- pareDownHubEdges(adj.mtx,tabulate(adj.mtx@i+1),k,klow)
   adj.mtx <- t(drop0(adj.mtx));
   if(preserve.order) { adj.mtx <- adj.mtx[match(ro,rownames(adj.mtx)),match(co,colnames(adj.mtx))]; }
@@ -946,7 +947,7 @@ t.reduce.edges.iteratively <- function(adj.mtx,k,preserve.order=TRUE,max.kdiff=5
     # do a cleanup step
     adj.mtx <- t.reduce.edges(adj.mtx,k,klow=klow,preserve.order=preserve.order)
   }
-  
+
   adj.mtx
 }
 
@@ -1010,6 +1011,24 @@ get.cluster.graph <- function(graph,groups,plot=FALSE,node.scale=50,edge.scale=5
     plot.igraph(gcon, layout=layout_with_fr(gcon), vertex.size=V(gcon)$num/(sum(V(gcon)$num)/node.scale), edge.width=E(gcon)$weight/sum(E(gcon)$weight/edge.scale), edge.color=adjustcolor('black',alpha=edge.alpha))
   }
   return(invisible(gcon))
+}
+
+adjustWeightsByCellBalancing <- function(adj.mtx, factor.per.cell, n.iters=30, verbose=F) {
+  adj.mtx %<>% .[colnames(.), colnames(.)] %>% as("dgTMatrix")
+  factor.per.cell %<>% .[colnames(adj.mtx)] %>% as.factor()
+
+  weights.adj <- adj.mtx@x
+  for (i in 0:(n.iters-1)) {
+    factor.frac.per.cell <- getSumWeightMatrix(weights.adj, adj.mtx@i, adj.mtx@j, as.integer(factor.per.cell))
+    w.dividers <- factor.frac.per.cell * rowSums(factor.frac.per.cell > 1e-10)
+    weights.adj <- adjustWeightsByCellBalancingC(weights.adj, adj.mtx@i, adj.mtx@j, as.integer(factor.per.cell), w.dividers)
+
+    if (verbose && i %% 10 == 0) {
+      cat("Difference from balanced state:", sum(abs(w.dividers[w.dividers > 1e-10] - 1)), "\n")
+    }
+  }
+
+  return(weights.adj)
 }
 
 ## Correct unloading of the library
