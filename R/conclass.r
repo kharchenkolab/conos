@@ -333,6 +333,22 @@ Conos <- setRefClass(
       return(invisible(g))
     },
 
+    getDifferentialGenes=function(clustering=NULL, groups=NULL, z.threshold=3.0, upregulated.only=F, verbose=T, n.cores=NULL) {
+      if (!is.null(clustering)) {
+        groups <- clusters[[clustering]]$groups
+      }
+
+      if (is.null(groups))
+        stop("Either 'clustering' or 'groups' must be provided")
+
+      if (class(samples[[1]]) != 'Pagoda2') # TODO: add Seurat
+        stop("Only Pagoda onjects are supported for marker genes")
+
+      n.jobs <- if (is.null(n.cores)) .self$n.cores else n.cores
+
+      return(getDifferentialGenesP2(samples, groups=groups, z.threshold=z.threshold, upregulated.only=upregulated.only, verbose=verbose, n.cores=n.jobs))
+    },
+
     findCommunities=function(method=leiden.community, min.group.size=0, name=NULL, test.stability=FALSE, stability.subsampling.fraction=0.95, stability.subsamples=100, verbose=TRUE, cls=NULL, sr=NULL, ...) {
 
       if(is.null(cls)) {
