@@ -202,7 +202,7 @@ Conos <- setRefClass(
     },
 
     # TODO: remove const.inner.weights option
-    buildGraph=function(k=15, k.self=10, k.self.weight=0.1, alignment.force.level=NULL, space='CPCA', matching.method='mNN', metric='angular', k1=k, data.type='counts', l2.sigma=1e5, cor.base=1, var.scale =TRUE, ncomps=40, n.odgenes=2000, neighborhood.average=FALSE, neighborhood.average.k=10, matching.mask=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE, const.inner.weights=FALSE, base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, score.component.variance=FALSE, balance.edge.weights=FALSE) {
+    buildGraph=function(k=15, k.self=10, k.self.weight=0.1, alignment.force.level=NULL, space='CPCA', matching.method='mNN', metric='angular', k1=k, data.type='counts', l2.sigma=1e5, cor.base=1, var.scale =TRUE, ncomps=40, n.odgenes=2000, neighborhood.average=FALSE, neighborhood.average.k=10, matching.mask=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE, const.inner.weights=FALSE, base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, score.component.variance=FALSE, balance.edge.weights=FALSE, same.factor.downweight=1.0) {
       supported.spaces <- c("CPCA","JNMF","genes","PCA")
       if(!space %in% supported.spaces) {
         stop(paste0("only the following spaces are currently supported: [",paste(supported.spaces,collapse=' '),"]"))
@@ -322,8 +322,9 @@ Conos <- setRefClass(
           balance.edge.weights <- getDatasetPerCell()
         }
 
-        igraph::E(g)$weight <- igraph::as_adjacency_matrix(g, attr="weight") %>%
-          adjustWeightsByCellBalancing(balance.edge.weights)
+        g <- igraph::as_adjacency_matrix(g, attr="weight") %>%
+          adjustWeightsByCellBalancing(balance.edge.weights, same.factor.downweight=same.factor.downweight) %>%
+          igraph::graph_from_adjacency_matrix(mode="undirected", weighted=T)
 
         if(verbose) cat('done\n');
       }
@@ -331,7 +332,6 @@ Conos <- setRefClass(
       graph <<- g;
       return(invisible(g))
     },
-
 
     findCommunities=function(method=leiden.community, min.group.size=0, name=NULL, test.stability=FALSE, stability.subsampling.fraction=0.95, stability.subsamples=100, verbose=TRUE, cls=NULL, sr=NULL, ...) {
 

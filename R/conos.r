@@ -1013,11 +1013,12 @@ get.cluster.graph <- function(graph,groups,plot=FALSE,node.scale=50,edge.scale=5
   return(invisible(gcon))
 }
 
-adjustWeightsByCellBalancing <- function(adj.mtx, factor.per.cell, n.iters=30, verbose=F) {
+adjustWeightsByCellBalancing <- function(adj.mtx, factor.per.cell, same.factor.downweight=1.0, n.iters=50, verbose=F) {
   adj.mtx %<>% .[colnames(.), colnames(.)] %>% as("dgTMatrix")
   factor.per.cell %<>% .[colnames(adj.mtx)] %>% as.factor()
 
   weights.adj <- adj.mtx@x
+
   for (i in 0:(n.iters-1)) {
     factor.frac.per.cell <- getSumWeightMatrix(weights.adj, adj.mtx@i, adj.mtx@j, as.integer(factor.per.cell))
     w.dividers <- factor.frac.per.cell * rowSums(factor.frac.per.cell > 1e-10)
@@ -1028,7 +1029,12 @@ adjustWeightsByCellBalancing <- function(adj.mtx, factor.per.cell, n.iters=30, v
     }
   }
 
-  return(weights.adj)
+  weights.adj[factor.per.cell[adj.mtx@i + 1] == factor.per.cell[adj.mtx@j + 1]] %<>% `*`(same.factor.downweight)
+
+  mtx.res <- adj.mtx
+  mtx.res@x <- weights.adj
+
+  return(mtx.res)
 }
 
 ## Correct unloading of the library
