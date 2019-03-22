@@ -51,10 +51,14 @@ validateBetweenCellTypeParams <- function(con.obj, groups, sample.groups, refgro
     stop('cluster.sep.chr must not be part of any cluster name')
 }
 
-rawMatricesWithCommonGenes <- function(con.obj, sample.groups) {
-  samples.used <- unlist(sample.groups)
+rawMatricesWithCommonGenes <- function(con.obj, sample.groups=NULL) {
+  samples <- con.obj$samples
+  if (!is.null(sample.groups)) {
+    samples <- samples[unlist(sample.groups)]
+  }
+
   ## Generate an aggregated matrix
-  raw.mats <- lapply(con.obj$samples[samples.used], getRawCountMatrix, transposed=T)
+  raw.mats <- lapply(samples, getRawCountMatrix, transposed=T)
   common.genes <- Reduce(intersect,lapply(raw.mats, colnames))
   return(lapply(raw.mats, function(x) {x[,common.genes]}))
 }
