@@ -549,3 +549,35 @@ getBetweenCellTypeCorrectedDE <- function(con.obj, sample.groups =  NULL, groups
     res1
   }
 }
+
+## Marker genes
+
+#' Takes data.frames with info about DE genes for single cell type and many samples and
+#' returns data.frame with aggregated info for this cell type
+aggregateDEMarkersAcrossDatasets <- function(marker.dfs, z.threshold, upregulated.only) {
+  z.scores.per.dataset <- lapply(marker.dfs, function(df) setNames(df$Z, rownames(df)))
+  gene.union <- lapply(z.scores.per.dataset, names) %>% Reduce(union, .)
+  z.scores <- sapply(z.scores.per.dataset, `[`, gene.union) %>% rowMeans(na.rm=T) %>% sort(decreasing=T)
+  pvals <- dnorm(z.scores)
+  res <- data.frame(Gene=names(z.scores), Z=z.scores, PValue=pvals, PAdj=p.adjust(pvals))
+
+  z.filter <- if (upregulated.only) res$Z else abs(res$Z)
+  return(res[z.filter > z.threshold,])
+}
+
+getDifferentialGenesP2 <- function(p2.samples, groups, z.threshold=3.0, upregulated.only=F, verbose=T, n.cores=1) {
+  lapply.func <- if (verbose) function(...) pbapply::pblapply(..., cl=n.cores) else function(...) papply(..., n.cores=n.cores)
+
+  if (verbose) cat("Estimating marker genes per sample\n")
+  markers.per.sample <- lapply.func(p2.samples, function(p2) p2$getDifferentialGenes(groups=groups, z.threshold=0))
+
+  if (verbose) cat("Aggregating marker genes\n")
+  markers.per.type <- unique(groups) %>%
+    lapply(function(id) lapply(markers.per.sample, `[[`, id) %>% .[!sapply(., is.null)]) %>%
+    setNames(unique(groups)) %>%
+    lapply.func(aggregateDEMarkersAcrossDatasets, z.threshold=z.threshold, upregulated.only=upregulated.only)
+
+  if (verbose) cat("All done!\n")
+
+  return(markers.per.type)
+}
