@@ -29,9 +29,12 @@ maxStableClusters <- function(merges, thresholds, minthreshold = 0.8, minsize = 
     .Call('_conos_maxStableClusters', PACKAGE = 'conos', merges, thresholds, minthreshold, minsize)
 }
 
-#' @export
-edge_removal_mask <- function(verts1, verts2, weights, min_neighb_per_vertex, verbose = TRUE) {
-    .Call('_conos_edge_removal_mask', PACKAGE = 'conos', verts1, verts2, weights, min_neighb_per_vertex, verbose)
+getSumWeightMatrix <- function(weights, row_inds, col_inds, factor_levels) {
+    .Call('_conos_getSumWeightMatrix', PACKAGE = 'conos', weights, row_inds, col_inds, factor_levels)
+}
+
+adjustWeightsByCellBalancingC <- function(weights, row_inds, col_inds, factor_levels, dividers) {
+    .Call('_conos_adjustWeightsByCellBalancingC', PACKAGE = 'conos', weights, row_inds, col_inds, factor_levels, dividers)
 }
 
 pareDownHubEdges <- function(sY, rowN, k, klow = -1L) {
@@ -59,12 +62,12 @@ leiden_community <- function(graph, edge_weights, resolution = 1.0, niter = 2L) 
     .Call('_conos_leiden_community', PACKAGE = 'conos', graph, edge_weights, resolution, niter)
 }
 
-n2Knn <- function(m, k, nThreads = 10L, verbose = TRUE, indexType = "angular", M = 12L, MaxM0 = 24L, ef_search_multiplier = 50) {
-    .Call('_conos_n2Knn', PACKAGE = 'conos', m, k, nThreads, verbose, indexType, M, MaxM0, ef_search_multiplier)
+n2Knn <- function(m, k, nThreads = 10L, verbose = TRUE, indexType = "angular", M = 12L, MaxM0 = 24L, ef_search_multiplier = 50, quiet = FALSE) {
+    .Call('_conos_n2Knn', PACKAGE = 'conos', m, k, nThreads, verbose, indexType, M, MaxM0, ef_search_multiplier, quiet)
 }
 
-n2CrossKnn <- function(mA, mB, k, nThreads = 10L, verbose = TRUE, indexType = "angular", M = 12L, MaxM0 = 24L, ef_search_multiplier = 50) {
-    .Call('_conos_n2CrossKnn', PACKAGE = 'conos', mA, mB, k, nThreads, verbose, indexType, M, MaxM0, ef_search_multiplier)
+n2CrossKnn <- function(mA, mB, k, nThreads = 10L, verbose = TRUE, indexType = "angular", M = 12L, MaxM0 = 24L, ef_search_multiplier = 50, quiet = FALSE) {
+    .Call('_conos_n2CrossKnn', PACKAGE = 'conos', mA, mB, k, nThreads, verbose, indexType, M, MaxM0, ef_search_multiplier, quiet)
 }
 
 propagate_labels <- function(edge_verts, edge_weights, vert_labels, max_n_iters = 10L, verbose = TRUE, diffusion_fading = 10, diffusion_fading_const = 0.5, tol = 5e-3, fixed_initial_labels = FALSE) {

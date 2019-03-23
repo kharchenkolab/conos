@@ -94,3 +94,51 @@ getClusterNonMixingScores <- function(clusters, annotation, mixing.factor, retur
 
   return(setNames(nonmixing.scores[clusters], names(clusters)))
 }
+
+embeddingNonMixingScores <- function(embedding, factor.per.cell, annotation=NULL, k=40, metric="L2", verbose=F) {
+  if (is.null(annotation)) {
+    annotation <- rep("x", nrow(embedding)) %>% setNames(rownames(embedding))
+  }
+
+  nn.largevis <- conos::n2Knn(embedding, k=k+1, indexType=metric, verbose=verbose) %>%
+    drop0() %>% as("dgTMatrix")
+
+  adj.list <- split(nn.largevis@i + 1, nn.largevis@j + 1) %>%
+    setNames(colnames(embedding))
+
+  factor.per.cell %<>% .[rownames(embedding)]
+  annotation %<>% .[rownames(embedding)]
+  all.factors <- unique(factor.per.cell)
+
+  nn.type.frac.per.cell <- adj.list %>%
+    sapply(function(x) fillNa(table(factor.per.cell[x])[all.factors])) %>% t() %>%
+    magrittr::set_colnames(all.factors) %>% magrittr::set_rownames(rownames(embedding)) %>%
+    `/`(rowSums(.))
+
+  expected.frac.per.cell <- table(annotation, factor.per.cell) %>%
+    `/`(rowSums(.)) %>%
+    .[annotation,] %>% as.matrix() %>%
+    magrittr::set_rownames(rownames(embedding)) %>%
+    .[, all.factors]
+
+  return(rowSums(abs(nn.type.frac.per.cell - expected.frac.per.cell)))
+}
+
+adjustWeightsByFactorSum <- function(graph, factor.per.vert, within.factor.weight.mult=1.0, balance.factors=T) {
+  edge.list <- igraph::as_edgelist(graph)
+  same.factor <- (factor.per.vert[edge.list[,1]] == factor.per.vert[edge.list[,2]])
+  edge.weights <- igraph::E(graph)$weight
+  edge.weights[same.factor] %<>% `*`(within.factor.weight.mult)
+
+  if (!balance.factors)
+    return(edge.weights)
+
+  factor.per.edge <- tibble::as_tibble(edge.list) %>% set_colnames(c("v1", "v2")) %>%
+    getFactorPairPerEdge(factor.per.vert)
+  weights.per.pair <- split(edge.weights[!same.factor], factor.per.edge[!same.factor])
+
+  weight.div.per.pair <- sapply(weights.per.pair, sum) %>% `/`(mean(.))
+
+  edge.weights[!same.factor] %<>% `/`(weight.div.per.pair[factor.per.edge[!same.factor]])
+  return(edge.weights)
+}

@@ -113,7 +113,7 @@ Conos <- setRefClass(
       samples <<- c(samples,x);
     },
 
-    updatePairs=function(space='CPCA',data.type='counts',ncomps=50,n.odgenes=1e3,var.scale=TRUE,neighborhood.average=FALSE,neighborhood.average.k=10, matching.mask=NULL, exclude.samples=NULL, score.component.variance=FALSE, verbose=FALSE) {
+    updatePairs=function(space='CPCA', data.type='counts', ncomps=50, n.odgenes=1e3, var.scale=TRUE, neighborhood.average=FALSE, neighborhood.average.k=10, matching.mask=NULL, exclude.samples=NULL, score.component.variance=FALSE, verbose=FALSE) {
       if(neighborhood.average) {
         # pre-calculate averaging matrices for each sample
         if(verbose)  cat("calculating local averaging neighborhoods ")
@@ -201,8 +201,8 @@ Conos <- setRefClass(
       return(invisible(sn.pairs))
     },
 
-    buildGraph=function(k=15, k.self=10, k.self.weight=0.1, space='CPCA', matching.method='mNN', metric='angular', k1=k, data.type='counts', l2.sigma=1e5, cor.base=1, var.scale =TRUE, ncomps=40, n.odgenes=2000, return.details=T, neighborhood.average=FALSE, neighborhood.average.k=10, matching.mask=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE, const.inner.weights=FALSE, base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, append.local.axes=TRUE, score.component.variance=FALSE, edge.combine.method="sum") {
-
+    # TODO: remove const.inner.weights option
+    buildGraph=function(k=15, k.self=10, k.self.weight=0.1, alignment.force.level=NULL, space='CPCA', matching.method='mNN', metric='angular', k1=k, data.type='counts', l2.sigma=1e5, cor.base=1, var.scale =TRUE, ncomps=40, n.odgenes=2000, neighborhood.average=FALSE, neighborhood.average.k=10, matching.mask=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE, const.inner.weights=FALSE, base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, score.component.variance=FALSE, balance.edge.weights=FALSE, same.factor.downweight=1.0) {
       supported.spaces <- c("CPCA","JNMF","genes","PCA")
       if(!space %in% supported.spaces) {
         stop(paste0("only the following spaces are currently supported: [",paste(supported.spaces,collapse=' '),"]"))
@@ -216,6 +216,12 @@ Conos <- setRefClass(
       supported.metrics <- c("L2","angular");
       if(!metric %in% supported.metrics) {
         stop(paste0("only the following distance metrics are currently supported: ['",paste(supported.metrics,collapse="' '"),"']"))
+      }
+
+      if (!is.null(alignment.force.level)) {
+        alignment.force.level %<>% max(0) %>% min(1)
+        k1 <- sapply(samples, function(p2) nrow(p2$counts)) %>% max() %>%
+          `*`(alignment.force.level ^ 2) %>% round() %>% max(k)
       }
 
       if(k1<k) { stop("k1 must be >= k") }
@@ -307,11 +313,41 @@ Conos <- setRefClass(
       E(g)$weight <- el[,3]
       E(g)$type <- el[,4]
       # collapse duplicate edges
-      g <- simplify(g, edge.attr.comb=list(weight=edge.combine.method, type = "first"))
+      g <- simplify(g, edge.attr.comb=list(weight="sum", type = "first"))
+
+      if (length(balance.edge.weights) > 1 || balance.edge.weights) {
+        if(verbose) cat('balancing edge weights ');
+
+        if (length(balance.edge.weights) == 1) {
+          balance.edge.weights <- getDatasetPerCell()
+        }
+
+        g <- igraph::as_adjacency_matrix(g, attr="weight") %>%
+          adjustWeightsByCellBalancing(balance.edge.weights, same.factor.downweight=same.factor.downweight) %>%
+          igraph::graph_from_adjacency_matrix(mode="undirected", weighted=T)
+
+        if(verbose) cat('done\n');
+      }
+
       graph <<- g;
       return(invisible(g))
     },
 
+    getDifferentialGenes=function(clustering=NULL, groups=NULL, z.threshold=3.0, upregulated.only=F, verbose=T, n.cores=NULL) {
+      if (!is.null(clustering)) {
+        groups <- clusters[[clustering]]$groups
+      }
+
+      if (is.null(groups))
+        stop("Either 'clustering' or 'groups' must be provided")
+
+      if (class(samples[[1]]) != 'Pagoda2') # TODO: add Seurat
+        stop("Only Pagoda onjects are supported for marker genes")
+
+      n.jobs <- if (is.null(n.cores)) .self$n.cores else n.cores
+
+      return(getDifferentialGenesP2(samples, groups=groups, z.threshold=z.threshold, upregulated.only=upregulated.only, verbose=verbose, n.cores=n.jobs))
+    },
 
     findCommunities=function(method=leiden.community, min.group.size=0, name=NULL, test.stability=FALSE, stability.subsampling.fraction=0.95, stability.subsamples=100, verbose=TRUE, cls=NULL, sr=NULL, ...) {
 
@@ -426,7 +462,6 @@ Conos <- setRefClass(
     },
 
     plotPanel=function(clustering=NULL, groups=NULL, colors=NULL, gene=NULL, use.local.clusters=FALSE, plot.theme=NULL, ...) {
-      # W: clusters and plots
       if (use.local.clusters) {
         if (is.null(clustering) && !("seurat" %in% class(samples[[1]]))) {
           stop("You have to provide 'clustering' parameter to be able to use local clusters")
