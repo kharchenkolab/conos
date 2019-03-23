@@ -613,7 +613,7 @@ getLocalEdges <- function(samples, k.self, k.self.weight, const.inner.weights, m
     xk <- n2Knn(pca, k.self + 1, 1, verbose=FALSE, indexType=metric) # +1 accounts for self-edges that will be removed in the next line
     diag(xk) <- 0; # no self-edges
     xk <- as(drop0(xk),'dgTMatrix')
-    cat(".")
+    if(verbose) cat(".")
 
     data.frame(mA.lab=rownames(pca)[xk@i+1], mB.lab=rownames(pca)[xk@j+1],
                w=convertDistanceToSimilarity(xk@x, metric=metric, l2.sigma=l2.sigma), stringsAsFactors=F)
@@ -626,7 +626,7 @@ getLocalEdges <- function(samples, k.self, k.self.weight, const.inner.weights, m
   }
 
   x$type <- 0;
-  cat(' done\n')
+  if(verbose) cat(' done\n')
 
   return(x)
 }
@@ -1015,4 +1015,51 @@ get.cluster.graph <- function(graph,groups,plot=FALSE,node.scale=50,edge.scale=5
 ## Correct unloading of the library
 .onUnload <- function (libpath) {
   library.dynam.unload("conos", libpath)
+}
+
+
+##' Scan joint graph modularity for a range of k (or k.self) values
+##'
+##' Builds graph with different values of k (or k.self if scan.k.self=TRUE), evaluating modularity of the resulting multilevel clustering
+##' note: will run evaluations in parallel using con$n.cores (temporarily setting con$n.cores to 1 in the process)
+##' @param con Conos object to test
+##' @param min minimal value of k to test
+##' @param max vlaue of k to test
+##' @param by scan step (defaults to 1)
+##' @param scan.k.self whether to test dependency on scan.k.self
+##' @param ... other parameters will be passed to con$buildGraph()
+##' @return a data frame with $k $m columns giving k and the corresponding modularity 
+##' @export
+scan.k.modularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.internal.edges=TRUE, verbose=TRUE, plot=TRUE, ... ) {
+  k.seq <- seq(min,max,by=by);
+  n.cores <- con$n.cores;
+  con$n.cores <- 1;
+  if(verbose) cat(paste0(ifelse(scan.k.self,'k.self=(','k=('),min,', ',max,') ['))
+  xl <- conos:::papply(k.seq,function(kv) {
+    if(scan.k.self) { 
+      x <- con$buildGraph(k.self=kv, ..., verbose=FALSE)
+    } else {
+      x <- con$buildGraph(k=kv, ..., verbose=FALSE)
+    }
+    if(verbose) cat('.')
+    if(omit.internal.edges) {
+      x <- delete_edges(x,which(E(x)$type==0))
+      #adj.mtx <- as_adj(x,attr='weight')
+      #adj.mtx <- conos:::t.reduce.edges.iteratively(adj.mtx,kv)
+      #adj.mtx <- drop0(adj.mtx*t(adj.mtx))
+      #adj.mtx@x <- sqrt(adj.mtx@x)
+      #x <- graph_from_adjacency_matrix(adj.mtx,mode = "undirected",weighted=TRUE)
+    }
+    xc <- multilevel.community(x)
+    modularity(xc)
+  },n.cores=30)
+  if(verbose) cat(']\n')
+  con$n.cores <- n.cores;
+
+  k.sens <- data.frame(k=k.seq,m=as.numeric(unlist(xl)))
+  if(plot) {
+    ggplot2::ggplot(k.sens,aes(x=k,y=m))+theme_bw()+ggplot2::geom_point()+ggplot2::geom_smooth()+ggplot2::xlab('modularity')+ggplot2::ylab('k')
+  }
+  
+  return(k.sens);
 }

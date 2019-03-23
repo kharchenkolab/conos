@@ -346,7 +346,7 @@ Conos <- setRefClass(
 
         if(verbose) { cat("done\n")}
 
-        cat("calculating flat stability stats ... ")
+        if(verbose) cat("calculating flat stability stats ... ")
         # Jaccard coefficient for each cluster against all, plus random expecctation
         jc.stats <- do.call(rbind,conos:::papply(sr,function(o) {
           p1 <- membership(o);
@@ -359,14 +359,14 @@ Conos <- setRefClass(
         },n.cores=n.cores,mc.preschedule=T))
 
         # Adjusted rand index
-        cat("adjusted Rand ... ")
+        if(verbose) cat("adjusted Rand ... ")
         ari <- unlist(conos:::papply(sr,function(o) { ol <- membership(o); adjustedRand(as.integer(ol),as.integer(cls.groups[names(ol)]),randMethod='HA') },n.cores=n.cores))
-        cat("done\n");
+        if(verbose) cat("done\n");
 
         res$stability <- list(flat=list(jc=jc.stats,ari=ari))
 
         # hierarchical measures
-        cat("calculating hierarchical stability stats ... ")
+        if(verbose) cat("calculating hierarchical stability stats ... ")
         if(is.hierarchical(cls)) {
           # hierarchical to hierarchical stability analysis - cut reference
           # determine hierarchy of clusters (above the cut)
@@ -383,19 +383,19 @@ Conos <- setRefClass(
           clm <- t.get.walktrap.upper.merges(cls)
           res$stability$upper.tree <- clm
 
-          cat("tree Jaccard ... ")
+          if(verbose) cat("tree Jaccard ... ")
           jc.hstats <- do.call(rbind,mclapply(sr,function(z) conos:::bestClusterThresholds(z,cls.groups,clm)$threshold ,mc.cores=n.cores))
 
         } else {
           # compute cluster hierarchy based on cell mixing (and then something)
           # assess stability for that hierarchy (to visualize internal node stability)
           # for the original clustering and every subsample clustering,
-          cat("upper clustering ... ")
+          if(verbose) cat("upper clustering ... ")
           cgraph <- get.cluster.graph(graph,cls.groups,plot=F,normalize=F)
           chwt <- walktrap.community(cgraph,steps=9)
           clm <- igraph:::complete.dend(chwt,FALSE)
 
-          cat("clusterTree Jaccard ... ")
+          if(verbose) cat("clusterTree Jaccard ... ")
           jc.hstats <- do.call(rbind,mclapply(sr,function(st1) {
             mf <- membership(st1); mf <- as.factor(setNames(as.character(mf),names(mf)))
             st1g <- get.cluster.graph(graph,mf,plot=F,normalize=T)
@@ -409,7 +409,7 @@ Conos <- setRefClass(
         }
         res$stability$upper.tree <- clm
         res$stability$hierarchical <- list(jc=jc.hstats);
-        cat("done\n");
+        if(verbose) cat("done\n");
 
       }
 
