@@ -359,7 +359,7 @@ Rcpp::List treeJaccard(arma::imat& merges, arma::imat& clusters, arma::ivec& clu
     for(int i=0;i<nleafs;i++) {
       // adjust tnn: add ones to all entries except for the correct class
       ncells(i)++;
-      int ci=clusters[0,i];
+      int ci=clusters(0,i);
       if(ci>=0) { // not an NA value
         tpm(ci,i)++;
       }
@@ -461,7 +461,7 @@ Rcpp::List scoreTreeConsistency(arma::imat& test, arma::imat& ref, arma::ivec& l
 #ifdef DEBUG
   cout<<"done."<<endl;
 #endif
-  arma::ivec factor(test.n_rows+1); 
+  arma::imat factor(1,test.n_rows+1); 
   arma::vec thresholds(ref.n_rows,arma::fill::zeros); // a vector to keep final thresholds in
   bool hadmerges=true;
   int step=0; // to count interations
@@ -490,7 +490,7 @@ Rcpp::List scoreTreeConsistency(arma::imat& test, arma::imat& ref, arma::ivec& l
         //if(i<10) cout<<j<<"="<<ni<<' '<<flush;
         //if(ni>=0 && factor[ni]>=0) { cout<<"overriding factor["<<ni<<"]="<<(factor[ni])<<" with "<<i<<endl; }
         
-        if(ni>=0) { factor[ ni ]=i; realsize++; }
+        if(ni>=0) { factor(0, ni )=i; realsize++; }
       }
       factorTotals[i]=realsize;
       //if(i<10) cout<<endl;
