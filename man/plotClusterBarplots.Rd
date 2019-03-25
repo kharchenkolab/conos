@@ -5,15 +5,26 @@
 \title{Plots barplots per sample of composition of each pagoda2 application based on
 selected clustering}
 \usage{
-plotClusterBarplots(conos.obj, type = "counts", clustering = NULL,
-  groups = NULL)
+plotClusterBarplots(conos.obj = NULL, clustering = NULL,
+  groups = NULL, sample.factor = NULL, show.entropy = TRUE,
+  show.size = TRUE, show.composition = TRUE, legend.height = 0.2)
 }
 \arguments{
 \item{conos.obj}{A conos object}
 
-\item{type}{one of 'counts' or 'proportions' to select type of plot}
-
 \item{clustering}{name of clustering in the current object}
+
+\item{groups}{arbitrary grouping of cells (to use instead of the clustering)}
+
+\item{sample.factor}{a factor describing cell membership in the samples (or some other category); will default to samples if not provided}
+
+\item{show.entropy}{whether to include entropy barplot}
+
+\item{show.size}{whether to include size barplot}
+
+\item{show.composition}{whether to include composition barplot}
+
+\item{legend.height}{relative hight of the legend panel}
 }
 \value{
 a ggplot object
