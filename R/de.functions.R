@@ -255,8 +255,8 @@ getPerCellTypeDECorrected <- function(con.obj, groups=NULL, sample.groups=NULL, 
             rownames(nf.tmp) <- rownames(cm);
             colnames(nf.tmp) <- colnames(cm)
             gene.scale.factors <- 2^(correction[rownames(nf.tmp)])
-            baselevel <- levels(colData(dds1)$group)[1]
-            x <- do.call(cbind, lapply(colData(dds1)$group, function(x) {
+            baselevel <- levels(SummarizedExperiment::colData(dds1)$group)[1]
+            x <- do.call(cbind, lapply(SummarizedExperiment::colData(dds1)$group, function(x) {
                 if (x == baselevel) {
                     rep(1, length(gene.scale.factors))
                 } else {
@@ -267,7 +267,7 @@ getPerCellTypeDECorrected <- function(con.obj, groups=NULL, sample.groups=NULL, 
             colnames(x) <- colnames(nf.tmp)
             nf.tmp <- nf.tmp * x
             x2 <- plyr::aaply(nf.tmp, 1, function(x) {x / exp(mean(log(x)))})
-            normalizationFactors(dds1) <- x2
+            DESeq2::normalizationFactors(dds1) <- x2
             dds1 <- DESeq2::DESeq(dds1)
             res1 <- DESeq2::results(dds1, cooksCutoff = cooks.cutoff, independentFiltering = independent.filtering)
             res1 <- as.data.frame(res1)
@@ -499,7 +499,7 @@ getBetweenCellTypeCorrectedDE <- function(con.obj, sample.groups =  NULL, groups
     rbindDEMatrices(cluster.sep.chr=cluster.sep.chr)
   gc()
 
-  aggr2.meta <- generateDEMatrixMetadata(aggr2, refgroup, altgroup)
+  aggr2.meta <- generateDEMatrixMetadata(aggr2, refgroup, altgroup, cluster.sep.chr=cluster.sep.chr)
   ## Get the samples that have both cell types only
   if (only.paired) {
     complete.obs <- reshape2::acast(aggr2.meta, library ~ celltype, value.var = 'celltype', fun.aggregate = length) %>%
@@ -525,8 +525,8 @@ getBetweenCellTypeCorrectedDE <- function(con.obj, sample.groups =  NULL, groups
   rownames(nf.tmp) <- rownames(aggr2);
   colnames(nf.tmp) <- colnames(aggr2)
   gene.scale.factors <- 2^(correction[rownames(nf.tmp)])
-  baselevel <- levels(colData(dds1)$group)[1]
-  x <- do.call(cbind, lapply(colData(dds1)$group, function(x) {
+  baselevel <- levels(SummarizedExperiment::colData(dds1)$group)[1]
+  x <- do.call(cbind, lapply(SummarizedExperiment::colData(dds1)$group, function(x) {
     if (x == baselevel) {
       rep(1, length(gene.scale.factors))
     } else {
@@ -568,13 +568,20 @@ aggregateDEMarkersAcrossDatasets <- function(marker.dfs, z.threshold, upregulate
 getDifferentialGenesP2 <- function(p2.samples, groups, z.threshold=3.0, upregulated.only=F, verbose=T, n.cores=1) {
   lapply.func <- if (verbose) function(...) pbapply::pblapply(..., cl=n.cores) else function(...) papply(..., n.cores=n.cores)
 
+  groups %<>% as.character() %>% setNames(names(groups))
+
   if (verbose) cat("Estimating marker genes per sample\n")
-  markers.per.sample <- lapply.func(p2.samples, function(p2) p2$getDifferentialGenes(groups=groups, z.threshold=0))
+  markers.per.sample <- lapply.func(p2.samples, function(p2) {
+    if (length(intersect(rownames(p2$counts), names(groups))) < 3) {
+      list()
+    } else {
+      p2$getDifferentialGenes(groups=groups, z.threshold=0)
+    }
+  })
 
   if (verbose) cat("Aggregating marker genes\n")
-  markers.per.type <- unique(groups) %>%
+  markers.per.type <- unique(groups) %>% setNames(., .) %>%
     lapply(function(id) lapply(markers.per.sample, `[[`, id) %>% .[!sapply(., is.null)]) %>%
-    setNames(unique(groups)) %>%
     lapply.func(aggregateDEMarkersAcrossDatasets, z.threshold=z.threshold, upregulated.only=upregulated.only)
 
   if (verbose) cat("All done!\n")
