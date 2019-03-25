@@ -1,6 +1,8 @@
 ---
 title: "Conos Walkthrough"
-output: rmarkdown::github_document
+output:
+  rmarkdown::github_document:
+    toc: true
 ---
 
 In this tutorial we will go over the analysis of a panel of samples using conos. Conos objects can be used to identify clusters of corresponding cells across panels of samples from similar or dissimilar sources, with different degrees of cell type overlap. Here we will identify corresponding clusters accorss a panel of bone marrow (BM) and cord blood (CB) by generating a joint graph with the cells from all the samples. We will use the graph to propagate labels from a single labelled sample to other samples and finally perform differential expression between BM and CM samples.
@@ -9,7 +11,7 @@ In this tutorial we will go over the analysis of a panel of samples using conos.
 
 Let's load conos library to start with:
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 library(conos)
 ```
 
@@ -62,7 +64,7 @@ str(panel.preprocessed,1)
 The alternative, Seurat, pre-processing can be done in a similar way using an analogous `basicSeuratProc` helper function. Alternatively, if you already have a set of Seurat objects (one per dataset), you can just skip this step and feed them directly to `Conos$new()` as shown below.
 
 ```{r, eval=FALSE}
-require(Seurat)
+library(Seurat)
 panel.preprocessed <- lapply(panel, basicSeuratProc)
 ```
 
@@ -102,6 +104,8 @@ We next use the graph we identified to get global clusters. Here we use Leiden c
 con$findCommunities(method=leiden.community, resolution=1)
 ```
 
+## Visualization
+
 We can now plot the clusters we obtained. Note that the cluster numbers between different samples now correspond to the same cell type. Also not the presence of cluster 5 in BM samples only, but not in CB.
 
 ```{r, fig.height=6, fig.width=6}
@@ -111,16 +115,20 @@ con$plotPanel(font.size=4)
 A convenience function can be used to examine the compoistion of the clusters in terms of samples, sample entropy (middle), and cluster size (bottom):
 
 ```{r, fig.height=8,fig.width=8}
-plotClusterBarplots(con,legend.height = 0.1)
+plotClusterBarplots(con, legend.height = 0.1)
 ```
 
 Check an expression pattern of a specific gene across all the individual embeddings.
+
 ```{r, fig.height=6, fig.width=6}
 con$plotPanel(gene = 'GZMK')
 ```
 
-Next we embed and visualize the complete joint graph:
-note: embedding estimation will run the first time around. Please see `$embedGraph()` function for additional embedding options.
+Next we embed and visualize the complete joint graph.
+
+Note: embedding estimation will run the first time around. Please see `$embedGraph()` function for additional embedding options.
+
+Note 2: both functions `$plotGraph` and `$plotPanel` are based on the function `conos::embeddingPlot` and forward all visualization paramteres to this function. So, to get full list of the possible parameters see `?conos::embeddingPlot`.
 
 ```{r, fig.height=4, fig.width=4}
 con$plotGraph()
@@ -129,13 +137,13 @@ con$plotGraph()
 We note that the graph captures the population structure irrespecively of the sample of origin of each cell.
 
 ```{r, fig.height=4, fig.width=6}
-con$plotGraph(color.by='sample',mark.groups=F,alpha=0.1,show.legend=T)
+con$plotGraph(color.by='sample', mark.groups=F, alpha=0.1, show.legend=T)
 ```
 
 We can also visualize gene expression on this joint graph embedding:
 
 ```{r, fig.height=4, fig.width=4}
-con$plotGraph(gene='GZMK',title='GZMK expression')
+con$plotGraph(gene='GZMK', title='GZMK expression')
 ```
 
 Other community detection methods can provide a more sensitive and hierarchical view of the subpopulation structure. Here we run walktrap community detection method on the same joint graph:
@@ -158,21 +166,53 @@ New clustering, as viewed on a joint graph:
 con$plotGraph(clustering='walktrap')
 ```
 
+## Better embedding parameters
+
+At the moment, Conos is able to use two methods of graph embedding: [largeVis](https://github.com/lferry007/LargeVis) (default) and [UMAP](https://github.com/jlmelville/uwot). The latest takes a bit longer to estimate, but generally gives better quality of the embedding. Though sometime UMAP makes even slightest difference (which is not detected by either largeVis or even clustering algorithms) looking perfectly distinguishable. Particularly it can work with batch effect, so if you have suspicions about real size of some effects, it's better to examine both types of embeddings.
+
+### largeVis
+
+For the description of largeVis parameters please look at `conos::projectKNNs` function. The most influential are `alpha` and `sgd_batched`:
+
+```{r}
+con$embedGraph(alpha=0.001, sgd_batched=1e8)
+```
+
+```{r, fig.width=4, fig.height=4}
+con$plotGraph(clustering='walktrap', size=0.1)
+```
+
+### UMAP
+
+UMAP embedding supports all parameters, described in the [uwot](https://github.com/jlmelville/uwot) package. Two most important ones are `spread` and `min.dist`, which together control how tight the clusters are. According to the [python manual](https://umap-learn.readthedocs.io/en/latest/api.html):
+
+> - **min.dist:** The effective minimum distance between embedded points. Smaller values will result in a more clustered/clumped embedding where nearby points on the manifold are drawn closer together, while larger values will result on a more even dispersal of points. The value should be set relative to the spread value, which determines the scale at which embedded points will be spread out.
+> - **spread:** The effective scale of embedded points. In combination with min_dist this determines how clustered/clumped the embedded points are.
+
+```{r}
+con$embedGraph(method="UMAP", min.dist=0.01, spread=15, n.cores=4)
+```
+
+```{r, fig.width=4, fig.height=4}
+con$plotGraph(clustering='walktrap', size=0.1)
+```
 
 # Exploring hierarchical community structure
+
+## Using code
 
 Walktrap clustering generates a hierarchical community structure.
 
 We can get a cut of the top dendrogram and visualize it. Here we'll cut to get 40 top clusters.
 
 ```{r}
-fc <- greedy.modularity.cut(con$clusters$walktrap$result,40);
+fc <- greedyModularityCut(con$clusters$walktrap$result,40);
 ```
 
 The cut determines a finer clustering (likely overclustering) of the dataset on its leafs:
 
 ```{r, fig.height=4, fig.width=4}
-con$plotGraph(groups=fc$groups)
+con$plotGraph(groups=fc$groups, size=0.1)
 ```
 
 Let's look at the hierarchical structure of these clusters:
@@ -191,26 +231,28 @@ samf <- as.factor(setNames(rep(names(samf),unlist(lapply(samf,length))),unlist(s
 str(samf)
 ```
 
-Now we'll use `dend.set.width.by.breadth()` function to calculate the entropies of each edge and set the width accordingly:
+Now we'll use `dendSetWidthByBreadth()` function to calculate the entropies of each edge and set the width accordingly:
 
 ```{r}
-dend <- dend.set.width.by.breadth(dend,samf,fc$leafContent, min.width=1, max.width=4)
+dend <- dendSetWidthByBreadth(dend,samf,fc$leafContent, min.width=1, max.width=4)
 plot(dend)
 ```
 
 Similarly, we can finde a factor that labels cells by the tissue they are from (in this case BM or CB). To define the factor for this simple dataset, we'll simply parse the cell names:
 
 ```{r}
-tissue.factor <- as.factor(setNames( ifelse(grepl('BM',names(samf)),'BM','CB'), names(samf)))
+tissue.factor <- as.factor(setNames(ifelse(grepl('BM',names(samf)),'BM','CB'), names(samf)))
 str(tissue.factor)
 ```
 
 Now, let's color the edges according to the tissue mixture:
 
 ```{r}
-dend <- dend.set.color.by.mixture(dend,tissue.factor,fc$leafContent)
+dend <- dendSetColorByMixture(dend, tissue.factor, fc$leafContent)
 plot(dend)
 ```
+
+## Using Shiny Application
 
 An alternative way to explore this the hierarchical community structure using an interactive app. The app also allows to visualize tissue composition and sample similarities:
 
@@ -220,13 +262,15 @@ conosShinyApp(con,N=30)
 
 # Label propagation
 
+## General workflow
+
 One of the uses of this graph is to propagate labels. For example in some cases we will only have information about the cell types in one of the samples and we want to automatically label the other samples.
 
 We'll load annotation from a simple text file (first column giving cell name, second - cell type), and make a named factor out of it:
 
 ```{r}
 cellannot <- read.table(file.path(find.package('conos'),'extdata','cellannot.txt'),header=F)
-cellannot <- setNames(cellannot[,2],cellannot[,1])
+cellannot <- setNames(cellannot[,2], cellannot[,1])
 ```
 
 Next we plot our panel with the annotations we made. This is to verify that the annotated cells are indeed in only one sample and that the other samples are unlabelled.
@@ -238,17 +282,47 @@ con$plotPanel(groups = cellannot)
 Next let's propagaes the labels from the one annotated sample to the other samples.
 
 ```{r}
-new.label.probabilities <- con$propagateLabels(labels = cellannot,verbose = T)
+new.label.probabilities <- con$propagateLabels(labels = cellannot, verbose=T)
 ```
 
-This function returns probabilites of the cell belonging to each group, we can assign each cell to the the the cell type with the highest probability.
+This function returns probabilites of the cell belonging to each group. These probabilities can be used to estimate uncertainty of the labeling:
+
+```{r, fig.width=4, fig.height=4}
+con$plotGraph(colors=(1 - apply(new.label.probabilities, 1, max)), show.legend=T, legend.title="Uncertainty", legend.pos=c(1, 0))
+```
+
+Now we can assign each cell to the the the cell type with the highest probability. Though we can see that one cluster has high uncertainty and possibly represent a cell type, not presented in the initial annotation.
 
 ```{r}
 new.annot <- setNames(colnames(new.label.probabilities)[apply(new.label.probabilities,1,which.max)], rownames(new.label.probabilities))
 head(new.annot)
 ```
 
-We not see that all our samples have been labelled automagically!
+We now see that all our samples have been labelled automagically!
+
+```{r, fig.width=6, fig.height=6}
+con$plotPanel(groups = new.annot)
+```
+
+The same effect can be achieved with parameter `return.distribution=F` (though it's recommended to always examine uncertainty):
+
+```{r}
+new.annot2 <- con$propagateLabels(labels = cellannot, verbose=F, return.distribution=F)
+all(new.annot2 == new.annot)
+```
+
+By default, label propagation affects initial labels as well:
+
+```{r}
+sum(new.annot[names(cellannot)] != cellannot)
+```
+
+Even though here the effect on this data is not that pronounced, sometimes we trust initial labeling completely and don't want to change it. In this case, option `fixed.initial.labels=T` should be used:
+
+```{r}
+new.annot <- con$propagateLabels(labels = cellannot, verbose=F, return.distribution=F, fixed.initial.labels=T)
+all(new.annot[names(cellannot)] == cellannot)
+```
 
 ```{r, fig.width=6, fig.height=6}
 con$plotPanel(groups = new.annot)
