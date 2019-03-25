@@ -271,10 +271,10 @@ getListOfDescendants <- function(hc=NULL,parent.ID=NULL,list.of.descendants=list
   return(list.of.descendants)
 }
 
-##' get memerships vector from greedy.modularity.cut function results without running shiny app
+##' get memerships vector from greedyModularityCut function results without running shiny app
 ##'
-##' @param n.clusters number of clusters less or equal to N + 1 number of splits in greedy.modularity.cut results
-##' @param greedy.modularity.cut.result greedy.modularity.cut function results
+##' @param n.clusters number of clusters less or equal to N + 1 number of splits in greedyModularityCut results
+##' @param greedy.modularity.cut.result greedyModularityCut function results
 ##' @export
 getGreedyCutGroups <- function(n.clusters=NULL,greedy.modularity.cut.result=NULL){
   hc <- greedy.modularity.cut.result$hc
@@ -326,7 +326,7 @@ conosShinyApp <- function(con, N=30, leaf.labels=NULL, tissue_mapping=NULL, tiss
   }
 
   #.GlobalEnv$con <- con
-  greedy.modularity.cut.result <- conos::greedy.modularity.cut(wt=con$clusters$walktrap$result,N=N,leaf.labels=leaf.labels,minsize=minsize,minbreadth=minbreadth,flat.cut=flat.cut)
+  greedy.modularity.cut.result <- conos::greedyModularityCut(wt=con$clusters$walktrap$result,N=N,leaf.labels=leaf.labels,minsize=minsize,minbreadth=minbreadth,flat.cut=flat.cut)
 
   leafContent <- greedy.modularity.cut.result$leafContentArray
   hc <- greedy.modularity.cut.result$hc

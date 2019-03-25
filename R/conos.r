@@ -263,7 +263,7 @@ quickPlainPCA <- function(r.n,data.type='counts',k=30,ncomps=30,n.odgenes=NULL,v
 #' @param min.width minimum line width
 #' @param max.width maximum line width
 #' @export
-dend.set.width.by.breadth <- function(d,fac,leafContent,min.width=1,max.width=4) {
+dendSetWidthByBreadth <- function(d,fac,leafContent,min.width=1,max.width=4) {
   cc2width <- function(cc) {
     ent <- entropy::entropy(cc[-1],method='MM',unit='log2')/log2(length(levels(fac)))
     min.width+ent*(max.width-min.width)
@@ -296,7 +296,7 @@ dend.set.width.by.breadth <- function(d,fac,leafContent,min.width=1,max.width=4)
 #' @param fac across cells
 #' @param leafContent $leafContent output of greedy.modularity.cut() providing information about which cells map to which dendrogram leafs
 #' @export
-dend.set.color.by.mixture <- function(d,fac,leafContent) {
+dendSetColorByMixture <- function(d,fac,leafContent) {
   fac <- as.factor(fac);
   if(length(levels(fac))>3) stop("factor with more than 3 levels are not supported")
   if(length(levels(fac))<2) stop("factor with less than 2 levels are not supported")
@@ -699,7 +699,7 @@ bestClusterTreeThresholds <- function(res,leaf.factor,clusters,clmerges=NULL) {
 ##' @param flat.cut whether to simply take a flat cut (i.e. follow provided tree; default=TRUE). Does no observe minsize/minbreadth restrictions
 ##' @return list(hclust - hclust structure of the derived tree, leafContent - binary matrix with rows corresponding to old leaves, columns to new ones, deltaM - modularity increments)
 ##' @export
-greedy.modularity.cut <- function(wt,N,leaf.labels=NULL,minsize=0,minbreadth=0,flat.cut=TRUE) {
+greedyModularityCut <- function(wt,N,leaf.labels=NULL,minsize=0,minbreadth=0,flat.cut=TRUE) {
   # prepare labels
   nleafs <- nrow(wt$merges)+1;
   if(is.null(leaf.labels)) {
@@ -1051,7 +1051,7 @@ adjustWeightsByCellBalancing <- function(adj.mtx, factor.per.cell, n.iters=50, v
 ##' @param by scan step (defaults to 1)
 ##' @param scan.k.self whether to test dependency on scan.k.self
 ##' @param ... other parameters will be passed to con$buildGraph()
-##' @return a data frame with $k $m columns giving k and the corresponding modularity 
+##' @return a data frame with $k $m columns giving k and the corresponding modularity
 ##' @export
 scan.k.modularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.internal.edges=TRUE, verbose=TRUE, plot=TRUE, ... ) {
   k.seq <- seq(min,max,by=by);
@@ -1059,7 +1059,7 @@ scan.k.modularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.
   con$n.cores <- 1;
   if(verbose) cat(paste0(ifelse(scan.k.self,'k.self=(','k=('),min,', ',max,') ['))
   xl <- conos:::papply(k.seq,function(kv) {
-    if(scan.k.self) { 
+    if(scan.k.self) {
       x <- con$buildGraph(k.self=kv, ..., verbose=FALSE)
     } else {
       x <- con$buildGraph(k=kv, ..., verbose=FALSE)
@@ -1083,6 +1083,6 @@ scan.k.modularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.
   if(plot) {
     ggplot2::ggplot(k.sens,aes(x=k,y=m))+theme_bw()+ggplot2::geom_point()+ggplot2::geom_smooth()+ggplot2::xlab('modularity')+ggplot2::ylab('k')
   }
-  
+
   return(k.sens);
 }
