@@ -314,7 +314,7 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
 #' @param legend.height relative hight of the legend panel
 #' @return a ggplot object
 #' @export
-plotClusterBarplots <- function(conos.obj=NULL,clustering=NULL, groups=NULL,sample.factor=NULL,show.entropy=TRUE,show.size=TRUE,show.composition=TRUE,legend.height=0.2) {
+plotClusterBarplots <- function(conos.obj=NULL, clustering=NULL, groups=NULL,sample.factor=NULL,show.entropy=TRUE,show.size=TRUE,show.composition=TRUE,legend.height=0.2) {
   ## param checking
   if(!is.null(clustering)) {
     if(is.null(conos.obj)) stop('conos.obj must be passed if clustering name is specified');
@@ -331,35 +331,40 @@ plotClusterBarplots <- function(conos.obj=NULL,clustering=NULL, groups=NULL,samp
 
   xt <- table(sample.factor[match(names(groups),names(sample.factor))],groups)
   xt <- xt[rowSums(xt)>0,]; xt <- xt[,colSums(xt)>0]
-  
+
   df <- reshape2::melt(xt); colnames(df) <- c("sample","cluster","f");  df$f <- df$f/colSums(xt)[as.character(df$cluster)]
-  clp <- ggplot(df,aes(x=factor(cluster,levels=1:ncol(xt)),y=f,fill=sample))+geom_bar(stat='identity')  + xlab('cluster') + ylab('fraction of cells')+theme_bw()
+  clp <- ggplot2::ggplot(df, ggplot2::aes(x=factor(cluster, levels=1:ncol(xt)),y=f,fill=sample)) +
+    ggplot2::geom_bar(stat='identity') + ggplot2::xlab('cluster') + ggplot2::ylab('fraction of cells') + ggplot2::theme_bw()
 
-  if(!show.size && !show.entropy) return(clp);
+  if(!show.size && !show.entropy)
+    return(clp);
 
-  
   # extract legend
-  leg <- cowplot::get_legend(clp + theme(legend.position="bottom"))
-  pl <- list(clp+ theme(legend.position="none"));  
-
-  
+  leg <- cowplot::get_legend(clp + ggplot2::theme(legend.position="bottom"))
+  pl <- list(clp + ggplot2::theme(legend.position="none"));
 
   if(show.entropy) {
-    require(entropy);
+    if (!requireNamespace("entropy", quietly=T))
+      stop("You need to install 'entropy' package to use 'show.entropy=T'")
+
     n.samples <- nrow(xt);
-    ne <- 1-apply(xt,2,KL.empirical,y2=rowSums(xt),unit=c('log2'))/log2(n.samples) # relative entropy
-    enp <- ggplot(data.frame(cluster=as.factor(colnames(xt)),entropy=ne),aes(cluster,entropy))+geom_bar(stat='identity',fill='grey65')+ylim(0,1) + geom_hline(yintercept=1, linetype="dashed", color = "grey30")+theme_bw()
-    pl <- c(pl,list(enp))    
+    ne <- 1-apply(xt, 2, entropy::KL.empirical, y2=rowSums(xt), unit=c('log2')) / log2(n.samples) # relative entropy
+    enp <- ggplot2::ggplot(data.frame(cluster=as.factor(colnames(xt)),entropy=ne), ggplot2::aes(cluster, entropy)) +
+      ggplot2::geom_bar(stat='identity',fill='grey65') + ggplot2::ylim(0,1) +
+      ggplot2::geom_hline(yintercept=1, linetype="dashed", color = "grey30") + ggplot2::theme_bw()
+    pl <- c(pl,list(enp))
   }
 
   if(show.size) {
-    szp <- ggplot(data.frame(cluster=as.factor(colnames(xt)),cells=colSums(xt)),aes(cluster,cells))+geom_bar(stat='identity')+scale_y_continuous(trans='log10')+theme_bw()+ylab('number of cells')
+    szp <- ggplot2::ggplot(data.frame(cluster=as.factor(colnames(xt)), cells=colSums(xt)), ggplot2::aes(cluster,cells)) +
+      ggplot2::geom_bar(stat='identity') + ggplot2::scale_y_continuous(trans='log10') + ggplot2::theme_bw() + ggplot2::ylab('number of cells')
     pl <- c(pl,list(szp))
   }
 
   pp <- cowplot::plot_grid(plotlist=pl,ncol=1,rel_heights=c(1,rep(0.3,length(pl)-1)))
   pp2 <- cowplot::plot_grid(leg,pp,ncol=1,rel_heights=c(legend.height,1))
-  pp2
+
+  return(pp2)
 }
 
 
@@ -371,10 +376,13 @@ plotClusterBarplots <- function(conos.obj=NULL,clustering=NULL, groups=NULL,samp
 plotClusterBoxPlotsByAppType <- function(conos.obj, clustering=NULL, apptypes=NULL, return.details=FALSE) {
     type <- 'proportions'
     ## param checking
-    if(is.null(clustering)) clustering <- 'multi level'
+    if(is.null(clustering)) {
+      clustering <- 'multi level'
+    }
     if(is.null(apptypes)) stop('apptypes must be spectified')
     if(!is.factor(apptypes)) stop('apptypes must be a factor')
     if(!type %in% c('counts','proportions')) stop('argument type must be either counts or proportions')
+
     ## main function
     groups <- as.factor(conos.obj$clusters[[clustering]]$groups)
     plot.df <- do.call(rbind,lapply(names(conos.obj$samples), function(n) {
@@ -394,19 +402,18 @@ plotClusterBoxPlotsByAppType <- function(conos.obj, clustering=NULL, apptypes=NU
     ## append app type
     plot.df$apptype <- apptypes[plot.df$sample]
     ## Make the plot
-    gg <- ggplot(plot.df, aes(x=apptype,y=val,fill=clname)) + facet <- wrap(~clname) + geom <- boxplot()
+    gg <- ggplot2::ggplot(plot.df, ggplot2::aes(x=apptype,y=val,fill=clname)) + ggplot2::facet_wrap(~clname) + ggplot2::geom_boxplot()
     if (type == 'counts') {
-        gg <- gg + scale <- y <- continuous(name='counts')
+        gg <- gg + ggplot2::scale_y_continuous(name='counts')
     } else {
-        gg <- gg + scale <- y <- continuous(name='% of sample')
+        gg <- gg + ggplot2::scale_y_continuous(name='% of sample')
     }
-    gg <- gg + scale <- x <- discrete(name='cluster')
+    gg <- gg + ggplot2::scale_x_discrete(name='cluster')
     ## return
-    if(return.details) {
-        list(plot=gg,data=plot.df)
-    } else {
-        gg
-    }
+    if(return.details)
+        return(list(plot=gg,data=plot.df))
+
+    return(gg)
 }
 
 
@@ -417,6 +424,7 @@ plotClusterBoxPlotsByAppType <- function(conos.obj, clustering=NULL, apptypes=NU
 #' @param min.percent.samples.expression minumum percent of samples that must have the gene upregulated
 getGlobalClusterMarkers <- function(conos.obj, clustering='multi level',
                                     min.samples.expressing=0,min.percent.samples.expressing=0){
+  .Deprecated("getDifferentialGenes")
     ## get the groups from the clusters
     groups <- as.factor(conos.obj$clusters[[clustering]]$groups)
     ## de lists
@@ -466,10 +474,15 @@ plotComponentVariance <- function(conos.obj, space='PCA',plot.theme=theme_bw()) 
   if(space=='PCA') { # omit duplicates
     nvs <- nvs[unique(names(nvs))]
   }
-  df <- melt(do.call(cbind,nvs))
+
+  df <- reshape2::melt(do.call(cbind,nvs))
   colnames(df) <- c('component','dataset','var')
   df$component <- factor(df$component,levels=sort(unique(df$component)))
-  require(ggplot2); require(reshape2);
-  ggplot(df,aes(x=component,y=var))+  geom_point(shape=16, aes(color=dataset),position = position_jitter(),alpha=0.3)+ geom_line(aes(group=dataset,color=dataset),alpha=0.2)+ ylab('fraction of variance explained')+xlab('component number')+geom_boxplot(notch=F,outlier.shape=NA,fill=NA) + plot.theme + theme(legend.position='none') 
-  
+
+  ggplot2::ggplot(df, ggplot2::aes(x=component,y=var)) +
+    ggplot2::geom_point(shape=16, ggplot2::aes(color=dataset), position = ggplot2::position_jitter(), alpha=0.3) +
+    ggplot2::geom_line(ggplot2::aes(group=dataset,color=dataset), alpha=0.2)+
+    ggplot2::ylab('fraction of variance explained') + ggplot2::xlab('component number') +
+    ggplot2::geom_boxplot(notch=F,outlier.shape=NA,fill=NA) + plot.theme + ggplot2::theme(legend.position='none')
+
 }

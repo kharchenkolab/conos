@@ -7,7 +7,7 @@ Depends: R (>= 3.2.1), Matrix, igraph
 License: GPL3
 Encoding: UTF-8
 LazyData: true
-Imports: 
+Imports:
   cowplot,
   dplyr,
   reshape2,
@@ -30,7 +30,8 @@ Imports:
   viridis,
   entropy,
   Matrix.utils
-Suggests: 
+Suggests:
+  entropy,
   ggrastr,
   shinycssloaders,
   DESeq2,
