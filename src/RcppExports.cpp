@@ -103,8 +103,22 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// pareDownHubEdges
+NumericVector pareDownHubEdges(SEXP sY, IntegerVector rowN, int k, int klow);
+RcppExport SEXP _conos_pareDownHubEdges(SEXP sYSEXP, SEXP rowNSEXP, SEXP kSEXP, SEXP klowSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type sY(sYSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type rowN(rowNSEXP);
+    Rcpp::traits::input_parameter< int >::type k(kSEXP);
+    Rcpp::traits::input_parameter< int >::type klow(klowSEXP);
+    rcpp_result_gen = Rcpp::wrap(pareDownHubEdges(sY, rowN, k, klow));
+    return rcpp_result_gen;
+END_RCPP
+}
 // getSumWeightMatrix
-NumericMatrix getSumWeightMatrix(const std::vector<double>& weights, const std::vector<int>& row_inds, const std::vector<int>& col_inds, const std::vector<int>& factor_levels);
+Rcpp::NumericMatrix getSumWeightMatrix(const std::vector<double>& weights, const std::vector<int>& row_inds, const std::vector<int>& col_inds, const std::vector<int>& factor_levels);
 RcppExport SEXP _conos_getSumWeightMatrix(SEXP weightsSEXP, SEXP row_indsSEXP, SEXP col_indsSEXP, SEXP factor_levelsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -118,7 +132,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // adjustWeightsByCellBalancingC
-std::vector<double> adjustWeightsByCellBalancingC(std::vector<double> weights, const std::vector<int>& row_inds, const std::vector<int>& col_inds, const std::vector<int>& factor_levels, NumericMatrix dividers);
+std::vector<double> adjustWeightsByCellBalancingC(std::vector<double> weights, const std::vector<int>& row_inds, const std::vector<int>& col_inds, const std::vector<int>& factor_levels, Rcpp::NumericMatrix dividers);
 RcppExport SEXP _conos_adjustWeightsByCellBalancingC(SEXP weightsSEXP, SEXP row_indsSEXP, SEXP col_indsSEXP, SEXP factor_levelsSEXP, SEXP dividersSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -127,22 +141,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const std::vector<int>& >::type row_inds(row_indsSEXP);
     Rcpp::traits::input_parameter< const std::vector<int>& >::type col_inds(col_indsSEXP);
     Rcpp::traits::input_parameter< const std::vector<int>& >::type factor_levels(factor_levelsSEXP);
-    Rcpp::traits::input_parameter< NumericMatrix >::type dividers(dividersSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type dividers(dividersSEXP);
     rcpp_result_gen = Rcpp::wrap(adjustWeightsByCellBalancingC(weights, row_inds, col_inds, factor_levels, dividers));
-    return rcpp_result_gen;
-END_RCPP
-}
-// pareDownHubEdges
-NumericVector pareDownHubEdges(SEXP sY, IntegerVector rowN, int k, int klow);
-RcppExport SEXP _conos_pareDownHubEdges(SEXP sYSEXP, SEXP rowNSEXP, SEXP kSEXP, SEXP klowSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type sY(sYSEXP);
-    Rcpp::traits::input_parameter< IntegerVector >::type rowN(rowNSEXP);
-    Rcpp::traits::input_parameter< int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< int >::type klow(klowSEXP);
-    rcpp_result_gen = Rcpp::wrap(pareDownHubEdges(sY, rowN, k, klow));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -364,9 +364,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_conos_treeJaccard", (DL_FUNC) &_conos_treeJaccard, 4},
     {"_conos_scoreTreeConsistency", (DL_FUNC) &_conos_scoreTreeConsistency, 4},
     {"_conos_maxStableClusters", (DL_FUNC) &_conos_maxStableClusters, 4},
+    {"_conos_pareDownHubEdges", (DL_FUNC) &_conos_pareDownHubEdges, 4},
     {"_conos_getSumWeightMatrix", (DL_FUNC) &_conos_getSumWeightMatrix, 4},
     {"_conos_adjustWeightsByCellBalancingC", (DL_FUNC) &_conos_adjustWeightsByCellBalancingC, 5},
-    {"_conos_pareDownHubEdges", (DL_FUNC) &_conos_pareDownHubEdges, 4},
     {"_conos_referenceWij", (DL_FUNC) &_conos_referenceWij, 5},
     {"_conos_as_factor", (DL_FUNC) &_conos_as_factor, 1},
     {"_conos_get_nearest_neighbors", (DL_FUNC) &_conos_get_nearest_neighbors, 10},

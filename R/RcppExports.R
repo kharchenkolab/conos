@@ -29,16 +29,16 @@ maxStableClusters <- function(merges, thresholds, minthreshold = 0.8, minsize = 
     .Call('_conos_maxStableClusters', PACKAGE = 'conos', merges, thresholds, minthreshold, minsize)
 }
 
+pareDownHubEdges <- function(sY, rowN, k, klow = -1L) {
+    .Call('_conos_pareDownHubEdges', PACKAGE = 'conos', sY, rowN, k, klow)
+}
+
 getSumWeightMatrix <- function(weights, row_inds, col_inds, factor_levels) {
     .Call('_conos_getSumWeightMatrix', PACKAGE = 'conos', weights, row_inds, col_inds, factor_levels)
 }
 
 adjustWeightsByCellBalancingC <- function(weights, row_inds, col_inds, factor_levels, dividers) {
     .Call('_conos_adjustWeightsByCellBalancingC', PACKAGE = 'conos', weights, row_inds, col_inds, factor_levels, dividers)
-}
-
-pareDownHubEdges <- function(sY, rowN, k, klow = -1L) {
-    .Call('_conos_pareDownHubEdges', PACKAGE = 'conos', sY, rowN, k, klow)
 }
 
 referenceWij <- function(i, j, d, threads, perplexity) {

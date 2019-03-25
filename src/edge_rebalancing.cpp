@@ -11,9 +11,9 @@
 using namespace Rcpp;
 
 // [[Rcpp::export]]
-NumericMatrix getSumWeightMatrix(const std::vector<double> &weights, const std::vector<int> &row_inds,
-                                 const std::vector<int> &col_inds, const std::vector<int> &factor_levels) {
-  NumericMatrix m(factor_levels.size(), *std::max_element(factor_levels.begin(), factor_levels.end()));
+Rcpp::NumericMatrix getSumWeightMatrix(const std::vector<double> &weights, const std::vector<int> &row_inds,
+                                       const std::vector<int> &col_inds, const std::vector<int> &factor_levels) {
+  Rcpp::NumericMatrix m(factor_levels.size(), *std::max_element(factor_levels.begin(), factor_levels.end()));
   for (int i = 0; i < weights.size(); ++i) {
     int cur_row = row_inds.at(i), cur_col = col_inds.at(i);
     int col_fac = factor_levels.at(cur_col) - 1, row_fac = factor_levels.at(cur_row) - 1;
@@ -23,7 +23,7 @@ NumericMatrix getSumWeightMatrix(const std::vector<double> &weights, const std::
     m(cur_col, row_fac) += edge_weight;
   }
 
-  auto rs = as<NumericVector>(rowSums(m));
+  auto rs = as<Rcpp::NumericVector>(Rcpp::rowSums(m));
   for (int i = 0; i < rs.size(); ++i) {
     m(i, _) = m(i, _) / std::max(rs(i), 1e-10);
   }
@@ -33,7 +33,7 @@ NumericMatrix getSumWeightMatrix(const std::vector<double> &weights, const std::
 
 // [[Rcpp::export]]
 std::vector<double> adjustWeightsByCellBalancingC(std::vector<double> weights, const std::vector<int> &row_inds, const std::vector<int> &col_inds,
-                                                  const std::vector<int> &factor_levels, NumericMatrix dividers) {
+                                                  const std::vector<int> &factor_levels, Rcpp::NumericMatrix dividers) {
   for (int i = 0; i < weights.size(); ++i) {
     int cur_row = row_inds.at(i), cur_col = col_inds.at(i);
     int col_fac = factor_levels.at(cur_col) - 1, row_fac = factor_levels.at(cur_row) - 1;
