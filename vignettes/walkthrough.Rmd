@@ -5,11 +5,11 @@ output:
     toc: true
 ---
 
-In this tutorial we will go over the analysis of a panel of samples using conos. Conos objects can be used to identify clusters of corresponding cells across panels of samples from similar or dissimilar sources, with different degrees of cell type overlap. Here we will identify corresponding clusters accorss a panel of bone marrow (BM) and cord blood (CB) by generating a joint graph with the cells from all the samples. We will use the graph to propagate labels from a single labelled sample to other samples and finally perform differential expression between BM and CM samples.
+In this tutorial we will go over the analysis of a panel of samples using Conos. Conos objects can be used to identify clusters of corresponding cells across panels of samples from similar or dissimilar sources, with different degrees of cell type overlap. Here we will identify corresponding clusters across a panel of bone marrow (BM) and cord blood (CB) by generating a joint graph with the cells from all the samples. We will use the graph to propagate labels from a single labelled sample to other samples and finally perform differential expression between BM and CM samples.
 
 # Preliminary
 
-Let's load conos library to start with:
+Let's load Conos library to start with:
 
 ```{r, message=FALSE, warning=FALSE}
 library(conos)
@@ -46,7 +46,7 @@ Conos is focused on integration, and relies on [pagoda2](https://github.com/hms-
 
 ## Pre-processing with Pagoda2
 
-We will generate pagoda2 apps for poorly-expressed genes from each individual sample using `basicP2proc` helper function for quick processing. As the datasets will be compared to each other we will turn off automated dropping of low-expressed genes (`min.cells.per.gene=0`), and lower the numbers of local PCs estimated for faster processing. (note: you could run the outer loop in parallel using mclapply, however if ran within RStudio this sometimes causes multithreading problems; also, multiprocessing must be disabled in order to obtain exactly the same individual sample embeddings from one run to another: this can be done by using `set.seed(1)` and specifying `n.cores=1` in the command below).
+We will generate pagoda2 apps for poorly-expressed genes from each individual sample using `basicP2proc` helper function for quick processing. As the datasets will be compared to each other we will turn off automated dropping of low-expressed genes (`min.cells.per.gene=0`), and lower the numbers of local PCs estimated for faster processing. (note: you could run the outer loop in parallel using mclapply, however if ran within RStudio this sometimes causes multi-threading problems; also, multiprocessing must be disabled in order to obtain exactly the same individual sample embeddings from one run to another: this can be done by using `set.seed(1)` and specifying `n.cores=1` in the command below).
 
 ```{r}
 library(pagoda2)
@@ -76,7 +76,7 @@ We will now construct a Conos object for this panel of samples. At this point we
 con <- Conos$new(panel.preprocessed, n.cores=4)
 ```
 
-Our original pagoda2 (or Seurat) objects are now saved in the conos object (if you are short of memory you can go ahead and delete the originals).
+Our original pagoda2 (or Seurat) objects are now saved in the Conos object (if you are short of memory you can go ahead and delete the originals).
 
 ```{r}
 str(con$samples,1)
@@ -88,7 +88,7 @@ We can now plot a panel of these samples using the clusters we identified by exa
 con$plotPanel(clustering="multilevel", use.local.clusters=T, title.size=6)
 ```
 
-Next we will build the joint graph that emcompasses all the samples. We do that by pairwise projecting samples onto a common space and establishing kNN of mNN pairs between the samples. We then append iwthin sample kNN neighbours to the graph to ensure that all the cell are included in the graph.
+Next we will build the joint graph that encompasses all the samples. We do that by pairwise projecting samples onto a common space and establishing kNN of mNN pairs between the samples. We then append within-sample kNN neighbours to the graph to ensure that all the cell are included in the graph.
 
 We will use 'PCA' space here, which is faster than the default 'CPCA' space, and in most cases gives reasonable results. If your datasets were all measured on the same platform you may also want to consider "genes" space which can give better resolution in such (simpler) cases. Other parameters passed to the `buildGraph()` function below are all default values - so are shown just for information.
 
@@ -96,7 +96,7 @@ We will use 'PCA' space here, which is faster than the default 'CPCA' space, and
 con$buildGraph(k=15, k.self=10, k.self.weight=0.1, space='PCA', ncomps=50, n.odgenes=2000, matching.method='mNN', metric='angular', verbose=TRUE)
 ```
 
-Note: as pairwise comparisons may take a while, Conos will cache results for each space. If you want to recalculate, for instance PCA, pairings with different set of parameters (e.g. more components, different number of starting overdispersed genes), clear the cache first by doing `con$pairs$PCA <- NULL`.
+Note: as pairwise comparisons may take a while, Conos will cache results for each space. If you want to recalculate, for instance PCA, pairings with different set of parameters (e.g. more components, different number of starting over-dispersed genes), clear the cache first by doing `con$pairs$PCA <- NULL`.
 
 We next use the graph we identified to get global clusters. Here we use Leiden community detection method to obtain clusters. Increasing the value of the resolution parameter will result in more fine-grained clusters, while decreasing it will return coarser clustering.
 
@@ -112,7 +112,7 @@ We can now plot the clusters we obtained. Note that the cluster numbers between 
 con$plotPanel(font.size=4)
 ```
 
-A convenience function can be used to examine the compoistion of the clusters in terms of samples, sample entropy (middle), and cluster size (bottom):
+A convenience function can be used to examine the composition of the clusters in terms of samples, sample entropy (middle), and cluster size (bottom):
 
 ```{r, fig.height=8,fig.width=8}
 plotClusterBarplots(con, legend.height = 0.1)
@@ -128,13 +128,13 @@ Next we embed and visualize the complete joint graph.
 
 Note: embedding estimation will run the first time around. Please see `$embedGraph()` function for additional embedding options.
 
-Note 2: both functions `$plotGraph` and `$plotPanel` are based on the function `conos::embeddingPlot` and forward all visualization paramteres to this function. So, to get full list of the possible parameters see `?conos::embeddingPlot`.
+Note 2: both functions `$plotGraph` and `$plotPanel` are based on the function `conos::embeddingPlot` and forward all visualization parameters to this function. So, to get full list of the possible parameters see `?conos::embeddingPlot`.
 
 ```{r, fig.height=4, fig.width=4}
 con$plotGraph()
 ```
 
-We note that the graph captures the population structure irrespecively of the sample of origin of each cell.
+We note that the graph captures the population structure irrespectively of the sample of origin of each cell.
 
 ```{r, fig.height=4, fig.width=6}
 con$plotGraph(color.by='sample', mark.groups=F, alpha=0.1, show.legend=T)
@@ -238,7 +238,7 @@ dend <- dendSetWidthByBreadth(dend,samf,fc$leafContent, min.width=1, max.width=4
 plot(dend)
 ```
 
-Similarly, we can finde a factor that labels cells by the tissue they are from (in this case BM or CB). To define the factor for this simple dataset, we'll simply parse the cell names:
+Similarly, we can find a factor that labels cells by the tissue they are from (in this case BM or CB). To define the factor for this simple dataset, we'll simply parse the cell names:
 
 ```{r}
 tissue.factor <- as.factor(setNames(ifelse(grepl('BM',names(samf)),'BM','CB'), names(samf)))
@@ -279,13 +279,13 @@ Next we plot our panel with the annotations we made. This is to verify that the 
 con$plotPanel(groups = cellannot)
 ```
 
-Next let's propagaes the labels from the one annotated sample to the other samples.
+Next let's propagates the labels from the one annotated sample to the other samples.
 
 ```{r}
 new.label.probabilities <- con$propagateLabels(labels = cellannot, verbose=T)
 ```
 
-This function returns probabilites of the cell belonging to each group. These probabilities can be used to estimate uncertainty of the labeling:
+This function returns probabilities of each cell belonging to each group. These probabilities can be used to estimate uncertainty of the labeling:
 
 ```{r, fig.width=4, fig.height=4}
 con$plotGraph(colors=(1 - apply(new.label.probabilities, 1, max)), show.legend=T, legend.title="Uncertainty", legend.pos=c(1, 0))
@@ -298,7 +298,7 @@ new.annot <- setNames(colnames(new.label.probabilities)[apply(new.label.probabil
 head(new.annot)
 ```
 
-We now see that all our samples have been labelled automagically!
+We now see that all our samples have been labelled automatically!
 
 ```{r, fig.width=6, fig.height=6}
 con$plotPanel(groups = new.annot)
@@ -370,7 +370,7 @@ de.info <- getPerCellTypeDE(con, groups=as.factor(new.annot), sample.groups = sa
 str(de.info[1:3], 2)
 ```
 
-Let's look at the results for the Bcells
+Let's look at the results for the B cells
 
 ```{r}
 res <- de.info[['Bcells']]$res
