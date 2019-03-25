@@ -28,6 +28,7 @@ devtools::install_github("hms-dbmi/conos")
 
 #### System dependencies
 The dependencies are inherited from [pagoda2](https://github.com/hms-dbmi/pagoda2):
+
 ##### Ubuntu Dependencies
 Install system dependencies, example here provided for Ubuntu
 ```sh
@@ -40,8 +41,9 @@ Was tested on AWS linux and Centos 7
 ```sh
 yum install cairo-devel pango-devel libXt-devel openssl-devel gsl-devel boost-devel libcurl-devel
 ```
+
 ##### OS X
-It is possible to install pagoda2 and Conos on OS X, however some users have reported issues with OpenMP configuration (see [pagoda2](https://github.com/hms-dbmi/pagoda2) readme).
+It is possible to install pagoda2 and Conos on OS X, however some users have reported issues with OpenMP configuration. For instructions see [pagoda2](https://github.com/hms-dbmi/pagoda2#mac-dependencies) readme.
 
 ## Installing Conos as Docker Container
 If your system configuration is making it difficult to install Conos natively, an alternative way to get Conos running is through a docker container. 
