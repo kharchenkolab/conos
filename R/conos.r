@@ -1013,7 +1013,7 @@ get.cluster.graph <- function(graph,groups,plot=FALSE,node.scale=50,edge.scale=5
   return(invisible(gcon))
 }
 
-adjustWeightsByCellBalancing <- function(adj.mtx, factor.per.cell, same.factor.downweight=1.0, n.iters=50, verbose=F) {
+adjustWeightsByCellBalancing <- function(adj.mtx, factor.per.cell, n.iters=50, verbose=F) {
   adj.mtx %<>% .[colnames(.), colnames(.)] %>% as("dgTMatrix")
   factor.per.cell %<>% .[colnames(adj.mtx)] %>% as.factor()
 
@@ -1028,8 +1028,6 @@ adjustWeightsByCellBalancing <- function(adj.mtx, factor.per.cell, same.factor.d
       cat("Difference from balanced state:", sum(abs(w.dividers[w.dividers > 1e-10] - 1)), "\n")
     }
   }
-
-  weights.adj[factor.per.cell[adj.mtx@i + 1] == factor.per.cell[adj.mtx@j + 1]] %<>% `*`(same.factor.downweight)
 
   mtx.res <- adj.mtx
   mtx.res@x <- weights.adj
