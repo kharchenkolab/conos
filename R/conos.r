@@ -714,7 +714,7 @@ greedyModularityCut <- function(wt,N,leaf.labels=NULL,minsize=0,minbreadth=0,fla
       ll <- as.integer(as.factor(leaf.labels[wt$names]))-1L;
     }
   }
-  x <- greedyModularityCut(wt$merges-1L,-1*diff(wt$modularity),N,minsize,ll,minbreadth,flat.cut)
+  x <- greedyModularityCutC(wt$merges-1L,-1*diff(wt$modularity),N,minsize,ll,minbreadth,flat.cut)
   if(length(x$splitsequence)<1) {
     stop("unable to make a single split using specified size/breadth restrictions")
   }

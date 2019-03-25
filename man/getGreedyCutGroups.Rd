@@ -2,16 +2,16 @@
 % Please edit documentation in R/runShinyApp.R
 \name{getGreedyCutGroups}
 \alias{getGreedyCutGroups}
-\title{get memerships vector from greedy.modularity.cut function results without running shiny app}
+\title{get memerships vector from greedyModularityCut function results without running shiny app}
 \usage{
 getGreedyCutGroups(n.clusters = NULL,
   greedy.modularity.cut.result = NULL)
 }
 \arguments{
-\item{n.clusters}{number of clusters less or equal to N + 1 number of splits in greedy.modularity.cut results}
+\item{n.clusters}{number of clusters less or equal to N + 1 number of splits in greedyModularityCut results}
 
-\item{greedy.modularity.cut.result}{greedy.modularity.cut function results}
+\item{greedy.modularity.cut.result}{greedyModularityCut function results}
 }
 \description{
-get memerships vector from greedy.modularity.cut function results without running shiny app
+get memerships vector from greedyModularityCut function results without running shiny app
 }

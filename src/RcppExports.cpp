@@ -44,9 +44,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// greedyModularityCut
-Rcpp::List greedyModularityCut(arma::imat& merges, arma::vec& deltaM, int N, int minsize, arma::ivec& labels, double minbreadth, bool flatCut);
-RcppExport SEXP _conos_greedyModularityCut(SEXP mergesSEXP, SEXP deltaMSEXP, SEXP NSEXP, SEXP minsizeSEXP, SEXP labelsSEXP, SEXP minbreadthSEXP, SEXP flatCutSEXP) {
+// greedyModularityCutC
+Rcpp::List greedyModularityCutC(arma::imat& merges, arma::vec& deltaM, int N, int minsize, arma::ivec& labels, double minbreadth, bool flatCut);
+RcppExport SEXP _conos_greedyModularityCutC(SEXP mergesSEXP, SEXP deltaMSEXP, SEXP NSEXP, SEXP minsizeSEXP, SEXP labelsSEXP, SEXP minbreadthSEXP, SEXP flatCutSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -57,7 +57,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::ivec& >::type labels(labelsSEXP);
     Rcpp::traits::input_parameter< double >::type minbreadth(minbreadthSEXP);
     Rcpp::traits::input_parameter< bool >::type flatCut(flatCutSEXP);
-    rcpp_result_gen = Rcpp::wrap(greedyModularityCut(merges, deltaM, N, minsize, labels, minbreadth, flatCut));
+    rcpp_result_gen = Rcpp::wrap(greedyModularityCutC(merges, deltaM, N, minsize, labels, minbreadth, flatCut));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -360,7 +360,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_conos_checkBits", (DL_FUNC) &_conos_checkBits, 0},
     {"_conos_checkOpenMP", (DL_FUNC) &_conos_checkOpenMP, 0},
     {"_conos_cpcaF", (DL_FUNC) &_conos_cpcaF, 7},
-    {"_conos_greedyModularityCut", (DL_FUNC) &_conos_greedyModularityCut, 7},
+    {"_conos_greedyModularityCutC", (DL_FUNC) &_conos_greedyModularityCutC, 7},
     {"_conos_treeJaccard", (DL_FUNC) &_conos_treeJaccard, 4},
     {"_conos_scoreTreeConsistency", (DL_FUNC) &_conos_scoreTreeConsistency, 4},
     {"_conos_maxStableClusters", (DL_FUNC) &_conos_maxStableClusters, 4},
