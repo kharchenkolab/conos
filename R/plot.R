@@ -305,43 +305,58 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
 #' Plots barplots per sample of composition of each pagoda2 application based on
 #' selected clustering
 #' @param conos.obj A conos object
-#' @param type one of 'counts' or 'proportions' to select type of plot
 #' @param clustering name of clustering in the current object
+#' @param groups arbitrary grouping of cells (to use instead of the clustering)
+#' @param sample.factor a factor describing cell membership in the samples (or some other category); will default to samples if not provided
+#' @param show.entropy whether to include entropy barplot
+#' @param show.size whether to include size barplot
+#' @param show.composition whether to include composition barplot
+#' @param legend.height relative hight of the legend panel
 #' @return a ggplot object
-plotClusterBarplots <- function(conos.obj, type='counts',clustering=NULL, groups=NULL) {
-    ## param checking
-    #if(is.null(clustering)) clustering <- 'multi level'
-    if(!type %in% c('counts','proportions')) stop('argument type must be either counts or proportions')
-    ## main function
-    if(!is.null(clustering)) {
-        if(clustering %in% names(conos.obj$clusters)) stop('Specified clustering doesn\'t exist')
-        groups <- as.factor(conos.obj$clusters[[clustering]]$groups)
-    } else {
-        if (is.null(groups)) stop('One of clustering or groups needs to be specified')
-        groups <- as.factor(groups)
-    }
-    plot.df <- do.call(rbind,lapply(names(conos.obj$samples), function(n) {
-        o <- conos.obj$samples[[n]]
-        grps1 <- groups[intersect(names(groups), rownames(o$counts))]
-        tbl1 <- data.frame(
-            clname=levels(grps1),
-            val=as.numeric(table(grps1)),
-            sample=c(n),
-            stringsAsFactors = FALSE
-        )
-        if(type=='proportions') {
-            tbl1$val <- tbl1$val / sum(tbl1$val)
-        }
-        tbl1
-    }))
-    gg <- ggplot(plot.df, aes(x=clname,y=val,fill=clname)) + geom_bar(stat='identity') + facet_wrap(~sample)
-    if (type == 'counts') {
-        gg <- gg + scale_y_continuous(name='counts')
-    } else {
-        gg <- gg + scale_y_continuous(name='% of sample')
-    }
-    gg <- gg + scale_x_discrete(name='cluster')
-    gg
+#' @export
+plotClusterBarplots <- function(conos.obj=NULL,clustering=NULL, groups=NULL,sample.factor=NULL,show.entropy=TRUE,show.size=TRUE,show.composition=TRUE,legend.height=0.2) {
+  ## param checking
+  if(!is.null(clustering)) {
+    if(is.null(conos.obj)) stop('conos.obj must be passed if clustering name is specified');
+    if(clustering %in% names(conos.obj$clusters)) stop('specified clustering doesn\'t exist')
+    groups <- as.factor(conos.obj$clusters[[clustering]]$groups)
+  } else {
+    if(is.null(groups)) stop('either clustering name or groups factor on the cells needs to be specified')
+  }
+  if(is.null(sample.factor)) {
+    sample.factor <- conos.obj$getDatasetPerCell(); # assignment to samples
+  }
+
+  xt <- table(sample.factor[match(names(groups),names(sample.factor))],groups)
+  xt <- xt[rowSums(xt)>0,]; xt <- xt[,colSums(xt)>0]
+  
+  df <- melt(xt); colnames(df) <- c("sample","cluster","f");  df$f <- df$f/colSums(xt)[as.character(df$cluster)]
+  clp <- ggplot(df,aes(x=factor(cluster,levels=1:ncol(xt)),y=f,fill=sample))+geom_bar(stat='identity')  + xlab('cluster') + ylab('fraction of cells')+theme_bw()
+
+  if(!show.size && !show.entropy) return(clp);
+
+  
+  # extract legend
+  leg <- get_legend(clp + theme(legend.position="bottom"))
+  pl <- list(clp+ theme(legend.position="none"));  
+
+  
+
+  if(show.entropy) {
+    require(entropy);
+    ne <- 1-apply(xt,2,KL.empirical,y2=rowSums(xt),unit=c('log2'))/log2(n.samples) # relative entropy
+    enp <- ggplot(data.frame(cluster=as.factor(colnames(xt)),entropy=ne),aes(cluster,entropy))+geom_bar(stat='identity',fill='grey65')+ylim(0,1) + geom_hline(yintercept=1, linetype="dashed", color = "grey30")+theme_bw()
+    pl <- c(pl,list(enp))    
+  }
+
+  if(show.size) {
+    szp <- ggplot(data.frame(cluster=as.factor(colnames(xt)),cells=colSums(xt)),aes(cluster,cells))+geom_bar(stat='identity')+scale_y_continuous(trans='log10')+theme_bw()+ylab('number of cells')
+    pl <- c(pl,list(szp))
+  }
+
+  pp <- plot_grid(plotlist=pl,ncol=1,rel_heights=c(1,rep(0.3,length(pl)-1)))
+  pp2 <- plot_grid(leg,pp,ncol=1,rel_heights=c(legend.height,1))
+  pp2
 }
 
 
