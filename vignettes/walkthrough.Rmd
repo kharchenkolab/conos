@@ -330,7 +330,22 @@ con$plotPanel(groups = new.annot)
 
 # Differential expression
 
-Once we have identified a joint clustering of cells that captures cell relationships between samples, we want to ask what is different between the cells of these populations between specific samples types, in this case CB and BM samples. Conos provides routines to be able to do that.
+## Cluster markers
+
+The first step we can do to understand meaning of the dataset is to look at the cluster cell markers:
+
+```{r}
+de.info <- con$getDifferentialGenes(groups=new.annot)
+head(de.info$Bcells)
+```
+
+```{r, fig.width=8, fig.height=4}
+cowplot::plot_grid(con$plotGraph(groups=new.annot), con$plotGraph(gene="CD74"))
+```
+
+## DE Between Sample Groups
+
+Next, given a joint clustering of cells that captures cell relationships between samples, we can want to ask what is different between the cells of these populations between specific samples types, in this case CB and BM samples. Conos provides routines to be able to do that.
 
 First we need to define our sample groups
 
@@ -341,26 +356,28 @@ samplegroups <- list(
 )
 ```
 
+### Simple run
+
 We can then run differential expression between cells in these groups
 
 ```{r}
-de.multilevel <- getPerCellTypeDE(con, groups=as.factor(new.annot),sample.groups = samplegroups, ref.level='bm', n.cores=4)
+de.info <- getPerCellTypeDE(con, groups=as.factor(new.annot), sample.groups = samplegroups, ref.level='bm', n.cores=4)
 ```
 
 ...and examine the output
 
 ```{r}
-str(de.multilevel[1:3], 2)
+str(de.info[1:3], 2)
 ```
 
 Let's look at the results for the Bcells
 
 ```{r}
-res <- de.multilevel[['Bcells']]$res
+res <- de.info[['Bcells']]$res
 head(res[order(res$padj,decreasing = FALSE),])
 ```
 
-## With correction
+### With correction
 
 In certain cases we observe that differential expression will result in the similar genes between multiple cell types. This may be due to genuine biological reasons (similar response), due to background, or due to other effects. Conos can calculate a mean expression vector between the two conditions and subtract this from all the comparisons, so observer the cell-type specific effect.
 
@@ -369,10 +386,10 @@ fc.correction <- getCorrectionVector(con, groups=as.factor(new.annot),sample.gro
 fc.correction[is.na(fc.correction)] <- 0
 
 ## Use corrected version
-de.multilevel.corrected <- getPerCellTypeDECorrected(con, groups=as.factor(new.annot),sample.groups = samplegroups, ref.level='bm', n.cores=4, correction = fc.correction)
+de.info.corrected <- getPerCellTypeDECorrected(con, groups=as.factor(new.annot),sample.groups = samplegroups, ref.level='bm', n.cores=4, correction = fc.correction)
 ```
 
 ```{r}
-res <- as.data.frame(de.multilevel.corrected[['Mono']]$res)
+res <- as.data.frame(de.info.corrected[['Bcells']]$res)
 head(res[order(res$padj,decreasing = FALSE),])
 ```
