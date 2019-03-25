@@ -308,12 +308,14 @@ Conos <- setRefClass(
         x <- getLocalEdges(samples, k.self, k.self.weight, const.inner.weights, metric, l2.sigma=l2.sigma, verbose, n.cores)
         el <- rbind(el,x)
       }
-
+      if(verbose) cat('building graph .')
       g  <- graph_from_edgelist(as.matrix(el[,c(1,2)]), directed =FALSE)
       E(g)$weight <- el[,3]
       E(g)$type <- el[,4]
+      if(verbose) cat('.')
       # collapse duplicate edges
       g <- simplify(g, edge.attr.comb=list(weight="sum", type = "first"))
+      if(verbose) cat('done\n')
 
       if (length(balance.edge.weights) > 1 || balance.edge.weights) {
         if(verbose) cat('balancing edge weights ');
@@ -444,6 +446,7 @@ Conos <- setRefClass(
 
         }
         res$stability$upper.tree <- clm
+        res$stability$sr <- sr
         res$stability$hierarchical <- list(jc=jc.hstats);
         if(verbose) cat("done\n");
 
