@@ -318,12 +318,12 @@ plotClusterBarplots <- function(conos.obj=NULL, clustering=NULL, groups=NULL,sam
   ## param checking
   if(!is.null(clustering)) {
     if(is.null(conos.obj)) stop('conos.obj must be passed if clustering name is specified');
-    if(clustering %in% names(conos.obj$clusters)) stop('specified clustering doesn\'t exist')
+    if(!clustering %in% names(conos.obj$clusters)) stop('specified clustering doesn\'t exist')
     groups <- as.factor(conos.obj$clusters[[clustering]]$groups)
   } else {
     if(is.null(conos.obj)) stop('either groups factor on the cells or a conos object needs to be specified')
     if(is.null(conos.obj$clusters[[1]])) stop('conos object lacks any clustering. run $findCommunities() first')
-    groups <- conos.obj$clusters[[1]]$groups
+    groups <- as.factor(conos.obj$clusters[[1]]$groups)
   }
   if(is.null(sample.factor)) {
     sample.factor <- conos.obj$getDatasetPerCell(); # assignment to samples
@@ -333,7 +333,7 @@ plotClusterBarplots <- function(conos.obj=NULL, clustering=NULL, groups=NULL,sam
   xt <- xt[rowSums(xt)>0,]; xt <- xt[,colSums(xt)>0]
 
   df <- reshape2::melt(xt); colnames(df) <- c("sample","cluster","f");  df$f <- df$f/colSums(xt)[as.character(df$cluster)]
-  clp <- ggplot2::ggplot(df, ggplot2::aes(x=factor(cluster, levels=1:ncol(xt)),y=f,fill=sample)) +
+  clp <- ggplot2::ggplot(df, ggplot2::aes(x=factor(cluster, levels=levels(groups)),y=f,fill=sample)) +
     ggplot2::geom_bar(stat='identity') + ggplot2::xlab('cluster') + ggplot2::ylab('fraction of cells') + ggplot2::theme_bw()
 
   if(!show.size && !show.entropy)
@@ -349,14 +349,14 @@ plotClusterBarplots <- function(conos.obj=NULL, clustering=NULL, groups=NULL,sam
 
     n.samples <- nrow(xt);
     ne <- 1-apply(xt, 2, entropy::KL.empirical, y2=rowSums(xt), unit=c('log2')) / log2(n.samples) # relative entropy
-    enp <- ggplot2::ggplot(data.frame(cluster=as.factor(colnames(xt)),entropy=ne), ggplot2::aes(cluster, entropy)) +
+    enp <- ggplot2::ggplot(data.frame(cluster=factor(colnames(xt),levels=levels(groups)),entropy=ne), ggplot2::aes(cluster, entropy)) +
       ggplot2::geom_bar(stat='identity',fill='grey65') + ggplot2::ylim(0,1) +
       ggplot2::geom_hline(yintercept=1, linetype="dashed", color = "grey30") + ggplot2::theme_bw()
     pl <- c(pl,list(enp))
   }
 
   if(show.size) {
-    szp <- ggplot2::ggplot(data.frame(cluster=as.factor(colnames(xt)), cells=colSums(xt)), ggplot2::aes(cluster,cells)) +
+    szp <- ggplot2::ggplot(data.frame(cluster=factor(colnames(xt),levels=levels(groups)), cells=colSums(xt)), ggplot2::aes(cluster,cells)) +
       ggplot2::geom_bar(stat='identity') + ggplot2::scale_y_continuous(trans='log10') + ggplot2::theme_bw() + ggplot2::ylab('number of cells')
     pl <- c(pl,list(szp))
   }
