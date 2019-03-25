@@ -10,6 +10,7 @@ LazyData: true
 Imports: 
   cowplot,
   dplyr,
+  reshape2,
   ggplot2,
   irlba,
   Rcpp,

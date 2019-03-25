@@ -321,7 +321,9 @@ plotClusterBarplots <- function(conos.obj=NULL,clustering=NULL, groups=NULL,samp
     if(clustering %in% names(conos.obj$clusters)) stop('specified clustering doesn\'t exist')
     groups <- as.factor(conos.obj$clusters[[clustering]]$groups)
   } else {
-    if(is.null(groups)) stop('either clustering name or groups factor on the cells needs to be specified')
+    if(is.null(conos.obj)) stop('either groups factor on the cells or a conos object needs to be specified')
+    if(is.null(conos.obj$clusters[[1]])) stop('conos object lacks any clustering. run $findCommunities() first')
+    groups <- conos.obj$clusters[[1]]$groups
   }
   if(is.null(sample.factor)) {
     sample.factor <- conos.obj$getDatasetPerCell(); # assignment to samples
@@ -330,20 +332,21 @@ plotClusterBarplots <- function(conos.obj=NULL,clustering=NULL, groups=NULL,samp
   xt <- table(sample.factor[match(names(groups),names(sample.factor))],groups)
   xt <- xt[rowSums(xt)>0,]; xt <- xt[,colSums(xt)>0]
   
-  df <- melt(xt); colnames(df) <- c("sample","cluster","f");  df$f <- df$f/colSums(xt)[as.character(df$cluster)]
+  df <- reshape2::melt(xt); colnames(df) <- c("sample","cluster","f");  df$f <- df$f/colSums(xt)[as.character(df$cluster)]
   clp <- ggplot(df,aes(x=factor(cluster,levels=1:ncol(xt)),y=f,fill=sample))+geom_bar(stat='identity')  + xlab('cluster') + ylab('fraction of cells')+theme_bw()
 
   if(!show.size && !show.entropy) return(clp);
 
   
   # extract legend
-  leg <- get_legend(clp + theme(legend.position="bottom"))
+  leg <- cowplot::get_legend(clp + theme(legend.position="bottom"))
   pl <- list(clp+ theme(legend.position="none"));  
 
   
 
   if(show.entropy) {
     require(entropy);
+    n.samples <- nrow(xt);
     ne <- 1-apply(xt,2,KL.empirical,y2=rowSums(xt),unit=c('log2'))/log2(n.samples) # relative entropy
     enp <- ggplot(data.frame(cluster=as.factor(colnames(xt)),entropy=ne),aes(cluster,entropy))+geom_bar(stat='identity',fill='grey65')+ylim(0,1) + geom_hline(yintercept=1, linetype="dashed", color = "grey30")+theme_bw()
     pl <- c(pl,list(enp))    
@@ -354,8 +357,8 @@ plotClusterBarplots <- function(conos.obj=NULL,clustering=NULL, groups=NULL,samp
     pl <- c(pl,list(szp))
   }
 
-  pp <- plot_grid(plotlist=pl,ncol=1,rel_heights=c(1,rep(0.3,length(pl)-1)))
-  pp2 <- plot_grid(leg,pp,ncol=1,rel_heights=c(legend.height,1))
+  pp <- cowplot::plot_grid(plotlist=pl,ncol=1,rel_heights=c(1,rep(0.3,length(pl)-1)))
+  pp2 <- cowplot::plot_grid(leg,pp,ncol=1,rel_heights=c(legend.height,1))
   pp2
 }
 

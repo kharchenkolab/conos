@@ -542,7 +542,7 @@ Conos <- setRefClass(
       }
 
       if(what=='all' || what=='fjc') {
-        df <- melt(st$flat$jc);
+        df <- reshape2::melt(st$flat$jc);
         colnames(df) <- c('rep','cluster','jc'); df$cluster <- factor(colnames(st$flat$jc)[df$cluster],levels=levels(clusters[[clustering]]$groups))
         p.fjc <- ggplot(df,aes(x=cluster,y=jc,color=cluster)) + geom_boxplot(aes(color=cluster),notch=T,outlier.shape=NA) + geom_jitter(shape=16, position=position_jitter(0.2),alpha=jitter.alpha) + guides(color=FALSE)  + geom_hline(yintercept=1, linetype="dashed", alpha=0.2) + ylab("Jaccard coefficient (flat)")+ylim(c(0,1))
         if(what=='fjc') return(p.fjc)
@@ -550,7 +550,7 @@ Conos <- setRefClass(
 
       if(what=='all' || what=='hjc') {
         # hierarchical
-        df <- melt(st$hierarchical$jc[,1:nclusters])
+        df <- reshape2::melt(st$hierarchical$jc[,1:nclusters])
         colnames(df) <- c('rep','cluster','jc'); df$cluster <- factor(colnames(st$flat$jc)[df$cluster],levels=levels(clusters[[clustering]]$groups))
         p.hjc <- ggplot(df,aes(x=cluster,y=jc,color=cluster)) + geom_boxplot(aes(color=cluster),notch=T,outlier.shape=NA) + geom_jitter(shape=16, position=position_jitter(0.2),alpha=jitter.alpha) + guides(color=FALSE)  + geom_hline(yintercept=1, linetype="dashed", alpha=0.2) + ylab("Jaccard coefficient (hierarchical)")+ylim(c(0,1))
         if(what=='hjc') return(p.hjc)
