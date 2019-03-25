@@ -112,7 +112,7 @@ void dfs_hitting_time(const std::vector<std::vector<int>> &adjacency_list,
                       double current_prob, int current_length, double min_prob,
                       int min_visited_verts, double min_prob_lower)
 {
-  if (current_prob < 0 || current_prob > 1 || isnan(current_prob)) {
+  if (current_prob < 0 || current_prob > 1 || std::isnan(current_prob)) {
     Rcpp::stop("Wrong current_prob: " + std::to_string(current_prob));
   }
 
@@ -132,7 +132,7 @@ void dfs_hitting_time(const std::vector<std::vector<int>> &adjacency_list,
   {
     int neighbor_id = adjacency_list.at(vertex_id).at(i);
     double transition_prob = transition_probabilities.at(vertex_id).at(i);
-    if (transition_prob < 0 || transition_prob > 1 || isnan(transition_prob)) {
+    if (transition_prob < 0 || transition_prob > 1 || std::isnan(transition_prob)) {
       Rcpp::stop("Wrong transition probability: " + std::to_string(transition_prob));
     }
 
