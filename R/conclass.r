@@ -220,7 +220,7 @@ Conos <- setRefClass(
 
       if (!is.null(alignment.strength)) {
         alignment.strength %<>% max(0) %>% min(1)
-        k1 <- sapply(samples, function(p2) nrow(p2$counts)) %>% max() %>%
+        k1 <- sapply(samples, function(sample) ncol(getCountMatrix(sample))) %>% max() %>%
           `*`(alignment.strength ^ 2) %>% round() %>% max(k)
       }
 
