@@ -28,5 +28,6 @@ RUN \
   R -e 'chooseCRANmirror(ind=52); install.packages(c("RcppEigen", "urltools","Seurat"))' && \
   R -e 'chooseCRANmirror(ind=52); source("http://bioconductor.org/biocLite.R"); biocLite(c("GO.db", "org.Hs.eg.db","org.Mm.eg.db", "pcaMethods","DESeq2"), suppressUpdates=TRUE);' && \ 
   R -e 'chooseCRANmirror(ind=52); library(devtools); install_github("jkrijthe/Rtsne",ref="openmp")' && \
+  R -e 'chooseCRANmirror(ind=52); library(devtools); install_github("jlmelville/uwot")' && \
   R -e 'chooseCRANmirror(ind=52); library(devtools); install_github("hms-dbmi/pagoda2")' && \
   R -e 'chooseCRANmirror(ind=52); library(devtools); install_github("hms-dbmi/conos")'
