@@ -36,7 +36,7 @@ any(duplicated(unlist(lapply(panel,colnames))))
 Conos is focused on integration, and relies on [pagoda2](https://github.com/hms-dbmi/pagoda2) or  [Seurat](https://satijalab.org/seurat/) to perform dataset pre-processing. 
 
 ## Pre-processing with Pagoda2
-We will generate pagoda2 apps for poorly-expressed genes from each individual sample using `basicP2proc` helper function for quick processing. As the datasets will be compared to each other we will turn off automated dropping of low-expressed genes (`min.cells.per.gene=0`), and lower the numbers of local PCs estimated for faster processing. (note: you could run the outer loop in parallel using mclapply, however if ran within RStudio this sometimes causes multithreading problems):
+We will generate pagoda2 apps for poorly-expressed genes from each individual sample using `basicP2proc` helper function for quick processing. As the datasets will be compared to each other we will turn off automated dropping of low-expressed genes (`min.cells.per.gene=0`), and lower the numbers of local PCs estimated for faster processing. (note: you could run the outer loop in parallel using mclapply, however if ran within RStudio this sometimes causes multithreading problems; also, multiprocessing must be disabled in order to obtain exactly the same individual sample embeddings from one run to another: this can be done by using `set.seed(1)` and specifying `n.cores=1` in the command below).
 ```{r}
 require(pagoda2)
 panel.preprocessed <- lapply(panel, basicP2proc, n.cores=4, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
@@ -78,15 +78,22 @@ con$buildGraph(k=15, k.self=10, k.self.weight=0.1, space='PCA', ncomps=50, n.odg
 
 Note: as pairwise comparisons may take a while, Conos will cache results for each space. If you want to recalculate, for instance PCA, pairings with different set of parameters (e.g. more components, different number of starting overdispersed genes), clear the cache first by doing `con$pairs$PCA <- NULL`.
 
-We next use the graph we identified to get global clusters. Here we use mutlievel to obtain clusters.
+We next use the graph we identified to get global clusters. Here we use Leiden community detection method to obtain clusters. Increasing the value of the resolution parameter will result in more fine-grained clusters, while decreasing it will return coarser clustering.
 ```{r}
-con$findCommunities(method=multilevel.community, min.group.size=0)
+con$findCommunities(method=leiden.community, resolution=1)
 ```
 
 We can now plot the clusters we obtained. Note that the cluster numbers between different samples now correspond to the same cell type. Also not the presence of cluster 5 in BM samples only, but not in CB.
 ```{r, fig.height=6, fig.width=6}
 con$plotPanel(font.size=4)
 ```
+
+A convenience function can be used to examine the compoistion of the clusters in terms of samples, sample entropy (middle), and cluster size (bottom):
+```{r, fig.height=8,fig.width=8}
+plotClusterBarplots(con,legend.height = 0.1)
+```
+
+
 
 Check an expression pattern of a specific gene across all the individual embeddings.
 ```{r, fig.height=6, fig.width=6}
