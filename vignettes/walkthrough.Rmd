@@ -7,14 +7,6 @@ output:
 
 In this tutorial we will go over the analysis of a panel of samples using Conos. Conos objects can be used to identify clusters of corresponding cells across panels of samples from similar or dissimilar sources, with different degrees of cell type overlap. Here we will identify corresponding clusters across a panel of bone marrow (BM) and cord blood (CB) by generating a joint graph with the cells from all the samples. We will use the graph to propagate labels from a single labelled sample to other samples and finally perform differential expression between BM and CM samples.
 
-# Preliminary
-
-Let's load Conos library to start with:
-
-```{r, message=FALSE, warning=FALSE}
-library(conos)
-```
-
 # Loading the data
 
 Next we will load a previously prepared panel of samples. This panel was made up of 16 cord blood and bone marrow samples, but here we look at a smaller subset of just 4 samples. All samples have been subset to exactly 3000 cells.
@@ -70,6 +62,13 @@ panel.preprocessed <- lapply(panel, basicSeuratProc)
 
 # Integrating datasets with Conos
 
+First, let's load Conos library to start with:
+
+```{r, message=FALSE, warning=FALSE}
+library(conos)
+```
+
+
 We will now construct a Conos object for this panel of samples. At this point we haven't calculated anything. We have just generated an object that contains the samples. Note that at this step we also set the n.cores parameter. The graph generation with Conos can take advantage of parallel processing, so use as many physical cores as you have available here.
 
 ```{r}
@@ -90,13 +89,19 @@ con$plotPanel(clustering="multilevel", use.local.clusters=T, title.size=6)
 
 Next we will build the joint graph that encompasses all the samples. We do that by pairwise projecting samples onto a common space and establishing kNN of mNN pairs between the samples. We then append within-sample kNN neighbours to the graph to ensure that all the cell are included in the graph.
 
-We will use 'PCA' space here, which is faster than the default 'CPCA' space, and in most cases gives reasonable results. If your datasets were all measured on the same platform you may also want to consider "genes" space which can give better resolution in such (simpler) cases. Other parameters passed to the `buildGraph()` function below are all default values - so are shown just for information.
+We will use 'PCA' space here, which is faster than the default 'CPCA' space, and in most cases gives good results. If your datasets were all measured on the same platform you may also want to consider "genes" space which can give better resolution in such (simpler) cases. Other parameters passed to the `buildGraph()` function below are all default values - so are shown just for information.
 
 ```{r}
-con$buildGraph(k=15, k.self=10, k.self.weight=0.1, space='PCA', ncomps=50, n.odgenes=2000, matching.method='mNN', metric='angular', verbose=TRUE)
+con$buildGraph(k=15, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
 ```
 
 Note: as pairwise comparisons may take a while, Conos will cache results for each space. If you want to recalculate, for instance PCA, pairings with different set of parameters (e.g. more components, different number of starting over-dispersed genes), clear the cache first by doing `con$pairs$PCA <- NULL`.
+
+In the `$buildGraph()` invokation above, we specified `score.component.variance=TRUE` which estimates amount of variance explained by successive PCs (by default this option is off to save time). We can visualize the results using:
+```{r}
+plotComponentVariance(con, space='PCA')
+```
+When using 'angular' distance measure (default), it is NOT recommended to reduce the number of components to a bare minimum indicated by the "elbow" inflection point - include 10-20 more (typcally 30 components work well). For 'L2' distance, using fewer components (i.e. at 'elbow' value) is sometimes better. (note: remember that if you want to recalcualte projections, clear the cache for that space, i.e. `con$pairs$PCA <- NULL`).
 
 We next use the graph we identified to get global clusters. Here we use Leiden community detection method to obtain clusters. Increasing the value of the resolution parameter will result in more fine-grained clusters, while decreasing it will return coarser clustering.
 
@@ -128,10 +133,10 @@ Next we embed and visualize the complete joint graph.
 
 Note: embedding estimation will run the first time around. Please see `$embedGraph()` function for additional embedding options.
 
-Note 2: both functions `$plotGraph` and `$plotPanel` are based on the function `conos::embeddingPlot` and forward all visualization parameters to this function. So, to get full list of the possible parameters see `?conos::embeddingPlot`.
+Note 2: both functions `$plotGraph` and `$plotPanel` are based on the function `conos::embeddingPlot` and forward all visualization parameters to this function. So, to get full list of the possible parameters see `?conos::embeddingPlot` and examples below.
 
 ```{r, fig.height=4, fig.width=4}
-con$plotGraph()
+con$plotGraph(alpha=0.1)
 ```
 
 We note that the graph captures the population structure irrespectively of the sample of origin of each cell.
@@ -149,9 +154,9 @@ con$plotGraph(gene='GZMK', title='GZMK expression')
 Other community detection methods can provide a more sensitive and hierarchical view of the subpopulation structure. Here we run walktrap community detection method on the same joint graph:
 
 ```{r}
-con$findCommunities(method = igraph::walktrap.community, steps=4)
+con$findCommunities(method = igraph::walktrap.community, steps=5)
 ```
-
+Note: it is recommended to use higher number of steps (e.g. 8-10, however these calculations take much longer). Here we'll get a lot of smaller clusters.
 Note: different clustering results are kept as a simple list under `con$clusters`.
 
 Visualize new clusters:
@@ -166,14 +171,13 @@ New clustering, as viewed on a joint graph:
 con$plotGraph(clustering='walktrap')
 ```
 
-## Better embedding parameters
+## Changing embedding parameters
 
-At the moment, Conos is able to use two methods of graph embedding: [largeVis](https://github.com/lferry007/LargeVis) (default) and [UMAP](https://github.com/jlmelville/uwot). The latest takes a bit longer to estimate, but generally gives better quality of the embedding. Though sometime UMAP makes even slightest difference (which is not detected by either largeVis or even clustering algorithms) looking perfectly distinguishable. Particularly it can work with batch effect, so if you have suspicions about real size of some effects, it's better to examine both types of embeddings.
+At the moment, Conos is able to use two methods of graph embedding: [largeVis](https://github.com/lferry007/LargeVis) (default) and [UMAP](https://github.com/jlmelville/uwot). The UMAP takes a bit longer to estimate, but generally gives better quality of the embedding. Though sometime UMAP makes even slightest difference (which is not detected by either largeVis or even clustering algorithms) looking perfectly distinguishable. It's best to examine both types of embeddings.
 
 ### largeVis
 
-For the description of largeVis parameters please look at `conos::projectKNNs` function. The most influential are `alpha` and `sgd_batched`:
-
+For the description of largeVis parameters please look at `conos::projectKNNs` function. The most influential are `alpha` and `sgd_batched`. Decreasing alpha results in less compressed clusters, and increasing sgd_batches often helps to avoid cluster intersections and spread out the clusters. Here we take alpha to a very low value, for the sake of example:
 ```{r}
 con$embedGraph(alpha=0.001, sgd_batched=1e8)
 ```
@@ -196,6 +200,7 @@ con$embedGraph(method="UMAP", min.dist=0.01, spread=15, n.cores=4)
 ```{r, fig.width=4, fig.height=4}
 con$plotGraph(clustering='walktrap', size=0.1)
 ```
+In the example above, UMAP layout makes even many of the very small subpopulations called by walktrap apparent.
 
 # Exploring hierarchical community structure
 
@@ -226,8 +231,7 @@ plot(dend)
 We can modify the dendrogram to show various properties. For instance, alter the width of the edges to reflect how many samples are contributing to it (normalized entropy). To do so, let's first define a factor specifying which samples different samples came from:
 
 ```{r}
-samf <- lapply(panel,colnames)
-samf <- as.factor(setNames(rep(names(samf),unlist(lapply(samf,length))),unlist(samf)))
+samf <- con$getDatasetPerCell()
 str(samf)
 ```
 
