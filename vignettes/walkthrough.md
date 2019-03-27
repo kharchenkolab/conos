@@ -1,40 +1,36 @@
 Conos Walkthrough
 ================
 
-In this tutorial we will go over the analysis of a panel of samples using conos. Conos objects can be used to identify clusters of corresponding cells across panels of samples from similar or dissimilar sources, with different degrees of cell type overlap. Here we will identify corresponding clusters accorss a panel of bone marrow (BM) and cord blood (CB) by generating a joint graph with the cells from all the samples. We will use the graph to propagate labels from a single labelled sample to other samples and finally perform differential expression between BM and CM samples.
+-   [Preliminary](#preliminary)
+-   [Loading the data](#loading-the-data)
+    -   [Pre-processing with Pagoda2](#pre-processing-with-pagoda2)
+    -   [Pre-processing with Seurat](#pre-processing-with-seurat)
+-   [Integrating datasets with Conos](#integrating-datasets-with-conos)
+    -   [Visualization](#visualization)
+    -   [Better embedding parameters](#better-embedding-parameters)
+        -   [largeVis](#largevis)
+        -   [UMAP](#umap)
+-   [Exploring hierarchical community structure](#exploring-hierarchical-community-structure)
+    -   [Using code](#using-code)
+    -   [Using Shiny Application](#using-shiny-application)
+-   [Label propagation](#label-propagation)
+    -   [General workflow](#general-workflow)
+-   [Differential expression](#differential-expression)
+    -   [Cluster markers](#cluster-markers)
+    -   [DE Between Sample Groups](#de-between-sample-groups)
+        -   [Simple run](#simple-run)
+        -   [With correction](#with-correction)
+
+In this tutorial we will go over the analysis of a panel of samples using Conos. Conos objects can be used to identify clusters of corresponding cells across panels of samples from similar or dissimilar sources, with different degrees of cell type overlap. Here we will identify corresponding clusters across a panel of bone marrow (BM) and cord blood (CB) by generating a joint graph with the cells from all the samples. We will use the graph to propagate labels from a single labelled sample to other samples and finally perform differential expression between BM and CM samples.
 
 Preliminary
 ===========
 
-Let's load conos library to start with:
+Let's load Conos library to start with:
 
 ``` r
 library(conos)
 ```
-
-    ## Loading required package: Matrix
-
-    ## Loading required package: igraph
-
-    ## 
-    ## Attaching package: 'igraph'
-
-    ## The following objects are masked from 'package:stats':
-    ## 
-    ##     decompose, spectrum
-
-    ## The following object is masked from 'package:base':
-    ## 
-    ##     union
-
-    ## Warning: replacing previous import 'heatmaply::normalize' by
-    ## 'igraph::normalize' when loading 'conos'
-
-    ## Warning: replacing previous import 'dendextend::%>%' by 'igraph::%>%' when
-    ## loading 'conos'
-
-    ## Warning: replacing previous import 'igraph::%>%' by 'dplyr::%>%' when
-    ## loading 'conos'
 
 Loading the data
 ================
@@ -83,13 +79,11 @@ Conos is focused on integration, and relies on [pagoda2](https://github.com/hms-
 Pre-processing with Pagoda2
 ---------------------------
 
-We will generate pagoda2 apps for poorly-expressed genes from each individual sample using `basicP2proc` helper function for quick processing. As the datasets will be compared to each other we will turn off automated dropping of low-expressed genes (`min.cells.per.gene=0`), and lower the numbers of local PCs estimated for faster processing. (note: you could run the outer loop in parallel using mclapply, however if ran within RStudio this sometimes causes multithreading problems):
+We will generate pagoda2 apps for poorly-expressed genes from each individual sample using `basicP2proc` helper function for quick processing. As the datasets will be compared to each other we will turn off automated dropping of low-expressed genes (`min.cells.per.gene=0`), and lower the numbers of local PCs estimated for faster processing. (note: you could run the outer loop in parallel using mclapply, however if ran within RStudio this sometimes causes multi-threading problems; also, multiprocessing must be disabled in order to obtain exactly the same individual sample embeddings from one run to another: this can be done by using `set.seed(1)` and specifying `n.cores=1` in the command below).
 
 ``` r
-require(pagoda2)
+library(pagoda2)
 ```
-
-    ## Loading required package: pagoda2
 
     ## 
 
@@ -146,7 +140,7 @@ Pre-processing with Seurat
 The alternative, Seurat, pre-processing can be done in a similar way using an analogous `basicSeuratProc` helper function. Alternatively, if you already have a set of Seurat objects (one per dataset), you can just skip this step and feed them directly to `Conos$new()` as shown below.
 
 ``` r
-require(Seurat)
+library(Seurat)
 panel.preprocessed <- lapply(panel, basicSeuratProc)
 ```
 
@@ -159,7 +153,7 @@ We will now construct a Conos object for this panel of samples. At this point we
 con <- Conos$new(panel.preprocessed, n.cores=4)
 ```
 
-Our original pagoda2 (or Seurat) objects are now saved in the conos object (if you are short of memory you can go ahead and delete the originals).
+Our original pagoda2 (or Seurat) objects are now saved in the Conos object (if you are short of memory you can go ahead and delete the originals).
 
 ``` r
 str(con$samples,1)
@@ -183,7 +177,9 @@ con$plotPanel(clustering="multilevel", use.local.clusters=T, title.size=6)
 
 ![](walkthrough_files/figure-markdown_github/unnamed-chunk-11-1.png)
 
-Next we will build the joint graph that emcompasses all the samples. We do that by pairwise projecting samples onto a common space and establishing kNN of mNN pairs between the samples. We then append iwthin sample kNN neighbours to the graph to ensure that all the cell are included in the graph. We will use 'PCA' space here, which is faster than the default 'CPCA' space, and in most cases gives reasonable results. If your datasets were all measured on the same platform you may also want to consider "genes" space which can give better resolution in such (simpler) cases. Other parameters passed to the `buildGraph()` function below are all default values - so are shown just for information.
+Next we will build the joint graph that encompasses all the samples. We do that by pairwise projecting samples onto a common space and establishing kNN of mNN pairs between the samples. We then append within-sample kNN neighbours to the graph to ensure that all the cell are included in the graph.
+
+We will use 'PCA' space here, which is faster than the default 'CPCA' space, and in most cases gives reasonable results. If your datasets were all measured on the same platform you may also want to consider "genes" space which can give better resolution in such (simpler) cases. Other parameters passed to the `buildGraph()` function below are all default values - so are shown just for information.
 
 ``` r
 con$buildGraph(k=15, k.self=10, k.self.weight=0.1, space='PCA', ncomps=50, n.odgenes=2000, matching.method='mNN', metric='angular', verbose=TRUE)
@@ -191,15 +187,19 @@ con$buildGraph(k=15, k.self=10, k.self.weight=0.1, space='PCA', ncomps=50, n.odg
 
     ## found 0 out of 6 cached PCA  space pairs ... running 6 additional PCA  space pairs  done
     ## inter-sample links using  mNN   done
-    ## local pairs  done
+    ## local pairs local pairs  done
+    ## building graph ..done
 
-Note: as pairwise comparisons may take a while, Conos will cache results for each space. If you want to recalculate, for instance PCA, pairings with different set of parameters (e.g. more components, different number of starting overdispersed genes), clear the cache first by doing `con$pairs$PCA <- NULL`.
+Note: as pairwise comparisons may take a while, Conos will cache results for each space. If you want to recalculate, for instance PCA, pairings with different set of parameters (e.g. more components, different number of starting over-dispersed genes), clear the cache first by doing `con$pairs$PCA <- NULL`.
 
-We next use the graph we identified to get global clusters. Here we use mutlievel to obtain clusters.
+We next use the graph we identified to get global clusters. Here we use Leiden community detection method to obtain clusters. Increasing the value of the resolution parameter will result in more fine-grained clusters, while decreasing it will return coarser clustering.
 
 ``` r
-con$findCommunities(method=multilevel.community, min.group.size=0)
+con$findCommunities(method=leiden.community, resolution=1)
 ```
+
+Visualization
+-------------
 
 We can now plot the clusters we obtained. Note that the cluster numbers between different samples now correspond to the same cell type. Also not the presence of cluster 5 in BM samples only, but not in CB.
 
@@ -209,15 +209,27 @@ con$plotPanel(font.size=4)
 
 ![](walkthrough_files/figure-markdown_github/unnamed-chunk-14-1.png)
 
+A convenience function can be used to examine the composition of the clusters in terms of samples, sample entropy (middle), and cluster size (bottom):
+
+``` r
+plotClusterBarplots(con, legend.height = 0.1)
+```
+
+![](walkthrough_files/figure-markdown_github/unnamed-chunk-15-1.png)
+
 Check an expression pattern of a specific gene across all the individual embeddings.
 
 ``` r
 con$plotPanel(gene = 'GZMK')
 ```
 
-![](walkthrough_files/figure-markdown_github/unnamed-chunk-15-1.png)
+![](walkthrough_files/figure-markdown_github/unnamed-chunk-16-1.png)
 
-Next we embed and visualize the complete joint graph: note: embedding estimation will run the first time around. Please see `$embedGraph()` function for additional embedding options.
+Next we embed and visualize the complete joint graph.
+
+Note: embedding estimation will run the first time around. Please see `$embedGraph()` function for additional embedding options.
+
+Note 2: both functions `$plotGraph` and `$plotPanel` are based on the function `conos::embeddingPlot` and forward all visualization parameters to this function. So, to get full list of the possible parameters see `?conos::embeddingPlot`.
 
 ``` r
 con$plotGraph()
@@ -225,23 +237,23 @@ con$plotGraph()
 
     ## Estimating embeddings.
 
-![](walkthrough_files/figure-markdown_github/unnamed-chunk-16-1.png)
+![](walkthrough_files/figure-markdown_github/unnamed-chunk-17-1.png)
 
-We note that the graph captures the population structure irrespecively of the sample of origin of each cell.
+We note that the graph captures the population structure irrespectively of the sample of origin of each cell.
 
 ``` r
-con$plotGraph(color.by='sample',mark.groups=F,alpha=0.1,show.legend=T)
+con$plotGraph(color.by='sample', mark.groups=F, alpha=0.1, show.legend=T)
 ```
 
-![](walkthrough_files/figure-markdown_github/unnamed-chunk-17-1.png)
+![](walkthrough_files/figure-markdown_github/unnamed-chunk-18-1.png)
 
 We can also visualize gene expression on this joint graph embedding:
 
 ``` r
-con$plotGraph(gene='GZMK',title='GZMK expression')
+con$plotGraph(gene='GZMK', title='GZMK expression')
 ```
 
-![](walkthrough_files/figure-markdown_github/unnamed-chunk-18-1.png)
+![](walkthrough_files/figure-markdown_github/unnamed-chunk-19-1.png)
 
 Other community detection methods can provide a more sensitive and hierarchical view of the subpopulation structure. Here we run walktrap community detection method on the same joint graph:
 
@@ -257,7 +269,7 @@ Visualize new clusters:
 con$plotPanel(clustering='walktrap',font.size=4)
 ```
 
-![](walkthrough_files/figure-markdown_github/unnamed-chunk-20-1.png)
+![](walkthrough_files/figure-markdown_github/unnamed-chunk-21-1.png)
 
 New clustering, as viewed on a joint graph:
 
@@ -265,26 +277,94 @@ New clustering, as viewed on a joint graph:
 con$plotGraph(clustering='walktrap')
 ```
 
-![](walkthrough_files/figure-markdown_github/unnamed-chunk-21-1.png)
+![](walkthrough_files/figure-markdown_github/unnamed-chunk-22-1.png)
+
+Better embedding parameters
+---------------------------
+
+At the moment, Conos is able to use two methods of graph embedding: [largeVis](https://github.com/lferry007/LargeVis) (default) and [UMAP](https://github.com/jlmelville/uwot). The latest takes a bit longer to estimate, but generally gives better quality of the embedding. Though sometime UMAP makes even slightest difference (which is not detected by either largeVis or even clustering algorithms) looking perfectly distinguishable. Particularly it can work with batch effect, so if you have suspicions about real size of some effects, it's better to examine both types of embeddings.
+
+### largeVis
+
+For the description of largeVis parameters please look at `conos::projectKNNs` function. The most influential are `alpha` and `sgd_batched`:
+
+``` r
+con$embedGraph(alpha=0.001, sgd_batched=1e8)
+```
+
+    ## Estimating embeddings.
+
+``` r
+con$plotGraph(clustering='walktrap', size=0.1)
+```
+
+![](walkthrough_files/figure-markdown_github/unnamed-chunk-24-1.png)
+
+### UMAP
+
+UMAP embedding supports all parameters, described in the [uwot](https://github.com/jlmelville/uwot) package. Two most important ones are `spread` and `min.dist`, which together control how tight the clusters are. According to the [python manual](https://umap-learn.readthedocs.io/en/latest/api.html):
+
+> -   **min.dist:** The effective minimum distance between embedded points. Smaller values will result in a more clustered/clumped embedding where nearby points on the manifold are drawn closer together, while larger values will result on a more even dispersal of points. The value should be set relative to the spread value, which determines the scale at which embedded points will be spread out.
+> -   **spread:** The effective scale of embedded points. In combination with min\_dist this determines how clustered/clumped the embedded points are.
+
+``` r
+con$embedGraph(method="UMAP", min.dist=0.01, spread=15, n.cores=4)
+```
+
+    ## Convert graph to adjacency list...
+    ## Done
+    ## Estimate nearest neighbors and commute times...
+    ## Estimating hitting distances: 11:31:37.
+    ## Done.
+    ## Estimating commute distances: 11:32:07.
+    ## Hashing adjacency list: 11:32:07.
+    ## Done.
+    ## Estimating distances: 11:32:09.
+    ## Done
+    ## Done.
+    ## All done!: 11:32:14.
+    ## Done
+    ## Estimate UMAP embedding...
+
+    ## 11:32:14 Read 12000 rows and found 1 numeric columns
+
+    ## 11:32:14 Commencing smooth kNN distance calibration using 4 threads
+
+    ## 11:32:15 Initializing from normalized Laplacian + noise
+
+    ## 11:32:16 Commencing optimization for 1000 epochs, with 314796 positive edges using 4 threads
+
+    ## 11:32:36 Optimization finished
+
+    ## Done
+
+``` r
+con$plotGraph(clustering='walktrap', size=0.1)
+```
+
+![](walkthrough_files/figure-markdown_github/unnamed-chunk-26-1.png)
 
 Exploring hierarchical community structure
 ==========================================
+
+Using code
+----------
 
 Walktrap clustering generates a hierarchical community structure.
 
 We can get a cut of the top dendrogram and visualize it. Here we'll cut to get 40 top clusters.
 
 ``` r
-fc <- greedy.modularity.cut(con$clusters$walktrap$result,40);
+fc <- greedyModularityCut(con$clusters$walktrap$result,40);
 ```
 
 The cut determines a finer clustering (likely overclustering) of the dataset on its leafs:
 
 ``` r
-con$plotGraph(groups=fc$groups)
+con$plotGraph(groups=fc$groups, size=0.1)
 ```
 
-![](walkthrough_files/figure-markdown_github/unnamed-chunk-23-1.png)
+![](walkthrough_files/figure-markdown_github/unnamed-chunk-28-1.png)
 
 Let's look at the hierarchical structure of these clusters:
 
@@ -294,7 +374,7 @@ dend <- as.dendrogram(fc$hc)
 plot(dend)
 ```
 
-![](walkthrough_files/figure-markdown_github/unnamed-chunk-24-1.png)
+![](walkthrough_files/figure-markdown_github/unnamed-chunk-29-1.png)
 
 We can modify the dendrogram to show various properties. For instance, alter the width of the edges to reflect how many samples are contributing to it (normalized entropy). To do so, let's first define a factor specifying which samples different samples came from:
 
@@ -307,19 +387,19 @@ str(samf)
     ##  Factor w/ 4 levels "MantonBM1_HiSeq_1",..: 1 1 1 1 1 1 1 1 1 1 ...
     ##  - attr(*, "names")= chr [1:12000] "MantonBM1_HiSeq_1-TCTATTGGTCTCTCGT-1" "MantonBM1_HiSeq_1-GAATAAGTCACGCATA-1" "MantonBM1_HiSeq_1-ACACCGGTCTAACTTC-1" "MantonBM1_HiSeq_1-TCATTTGGTACGCTGC-1" ...
 
-Now we'll use `dend.set.width.by.breadth()` function to calculate the entropies of each edge and set the width accordingly:
+Now we'll use `dendSetWidthByBreadth()` function to calculate the entropies of each edge and set the width accordingly:
 
 ``` r
-dend <- dend.set.width.by.breadth(dend,samf,fc$leafContent, min.width=1, max.width=4)
+dend <- dendSetWidthByBreadth(dend,samf,fc$leafContent, min.width=1, max.width=4)
 plot(dend)
 ```
 
-![](walkthrough_files/figure-markdown_github/unnamed-chunk-26-1.png)
+![](walkthrough_files/figure-markdown_github/unnamed-chunk-31-1.png)
 
-Similarly, we can finde a factor that labels cells by the tissue they are from (in this case BM or CB). To define the factor for this simple dataset, we'll simply parse the cell names:
+Similarly, we can find a factor that labels cells by the tissue they are from (in this case BM or CB). To define the factor for this simple dataset, we'll simply parse the cell names:
 
 ``` r
-tissue.factor <- as.factor(setNames( ifelse(grepl('BM',names(samf)),'BM','CB'), names(samf)))
+tissue.factor <- as.factor(setNames(ifelse(grepl('BM',names(samf)),'BM','CB'), names(samf)))
 str(tissue.factor)
 ```
 
@@ -329,11 +409,14 @@ str(tissue.factor)
 Now, let's color the edges according to the tissue mixture:
 
 ``` r
-dend <- dend.set.color.by.mixture(dend,tissue.factor,fc$leafContent)
+dend <- dendSetColorByMixture(dend, tissue.factor, fc$leafContent)
 plot(dend)
 ```
 
-![](walkthrough_files/figure-markdown_github/unnamed-chunk-28-1.png)
+![](walkthrough_files/figure-markdown_github/unnamed-chunk-33-1.png)
+
+Using Shiny Application
+-----------------------
 
 An alternative way to explore this the hierarchical community structure using an interactive app. The app also allows to visualize tissue composition and sample similarities:
 
@@ -344,11 +427,16 @@ conosShinyApp(con,N=30)
 Label propagation
 =================
 
-One of the uses of this graph is to propagate labels. For example in some cases we will only have information about the cell types in one of the samples and we want to automatically label the other samples. We'll load annotation from a simple text file (first column giving cell name, second - cell type), and make a named factor out of it:
+General workflow
+----------------
+
+One of the uses of this graph is to propagate labels. For example in some cases we will only have information about the cell types in one of the samples and we want to automatically label the other samples.
+
+We'll load annotation from a simple text file (first column giving cell name, second - cell type), and make a named factor out of it:
 
 ``` r
 cellannot <- read.table(file.path(find.package('conos'),'extdata','cellannot.txt'),header=F)
-cellannot <- setNames(cellannot[,2],cellannot[,1])
+cellannot <- setNames(cellannot[,2], cellannot[,1])
 ```
 
 Next we plot our panel with the annotations we made. This is to verify that the annotated cells are indeed in only one sample and that the other samples are unlabelled.
@@ -357,40 +445,114 @@ Next we plot our panel with the annotations we made. This is to verify that the 
 con$plotPanel(groups = cellannot)
 ```
 
-![](walkthrough_files/figure-markdown_github/unnamed-chunk-31-1.png)
+![](walkthrough_files/figure-markdown_github/unnamed-chunk-36-1.png)
 
-Next let's propagaes the labels from the one annotated sample to the other samples.
+Next let's propagates the labels from the one annotated sample to the other samples.
 
 ``` r
-new.label.probabilities <- con$propagateLabels(labels = cellannot,verbose = T)
+new.label.probabilities <- con$propagateLabels(labels = cellannot, verbose=T)
 ```
 
-This function returns probabilites of the cell belonging to each group, we can assign each cell to the the the cell type with the highest probability.
+This function returns probabilities of each cell belonging to each group. These probabilities can be used to estimate uncertainty of the labeling:
+
+``` r
+con$plotGraph(colors=(1 - apply(new.label.probabilities, 1, max)), show.legend=T, legend.title="Uncertainty", legend.pos=c(1, 0))
+```
+
+![](walkthrough_files/figure-markdown_github/unnamed-chunk-38-1.png)
+
+Now we can assign each cell to the the the cell type with the highest probability. Though we can see that one cluster has high uncertainty and possibly represent a cell type, not presented in the initial annotation.
 
 ``` r
 new.annot <- setNames(colnames(new.label.probabilities)[apply(new.label.probabilities,1,which.max)], rownames(new.label.probabilities))
 head(new.annot)
 ```
 
-    ## MantonBM1_HiSeq_1-AGGGATGCAGGTGCCT-1 MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 
+    ## MantonBM1_HiSeq_1-GAGGTGATCATTTGGG-1 MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 
     ##                              "Tcyto"                              "Tcyto" 
-    ## MantonBM1_HiSeq_1-GAGGTGATCATTTGGG-1 MantonBM1_HiSeq_1-CGAGCCAAGAAGGGTA-1 
+    ## MantonBM1_HiSeq_1-AGCGTCGTCAACGCTA-1 MantonBM1_HiSeq_1-GTCATTTGTCGAACAG-1 
     ##                              "Tcyto"                              "Tcyto" 
-    ## MantonBM1_HiSeq_1-GTAACTGCAGATCCAT-1 MantonBM1_HiSeq_1-GACCAATTCAACACAC-1 
+    ## MantonBM1_HiSeq_1-GAACGGACATGTAGTC-1 MantonBM1_HiSeq_1-CTGCGGAAGTGATCGG-1 
     ##                              "Tcyto"                              "Tcyto"
 
-We not see that all our samples have been labelled automagically!
+We now see that all our samples have been labelled automatically!
 
 ``` r
 con$plotPanel(groups = new.annot)
 ```
 
-![](walkthrough_files/figure-markdown_github/unnamed-chunk-34-1.png)
+![](walkthrough_files/figure-markdown_github/unnamed-chunk-40-1.png)
+
+The same effect can be achieved with parameter `return.distribution=F` (though it's recommended to always examine uncertainty):
+
+``` r
+new.annot2 <- con$propagateLabels(labels = cellannot, verbose=F, return.distribution=F)
+all(new.annot2 == new.annot)
+```
+
+    ## [1] TRUE
+
+By default, label propagation affects initial labels as well:
+
+``` r
+sum(new.annot[names(cellannot)] != cellannot)
+```
+
+    ## [1] 4
+
+Even though here the effect on this data is not that pronounced, sometimes we trust initial labeling completely and don't want to change it. In this case, option `fixed.initial.labels=T` should be used:
+
+``` r
+new.annot <- con$propagateLabels(labels = cellannot, verbose=F, return.distribution=F, fixed.initial.labels=T)
+all(new.annot[names(cellannot)] == cellannot)
+```
+
+    ## [1] TRUE
+
+``` r
+con$plotPanel(groups = new.annot)
+```
+
+![](walkthrough_files/figure-markdown_github/unnamed-chunk-44-1.png)
 
 Differential expression
 =======================
 
-Once we have identified a joint clustering of cells that captures cell relationships between samples, we want to ask what is different between the cells of these populations between specific samples types, in this case CB and BM samples. Conos provides routines to be able to do that.
+Cluster markers
+---------------
+
+The first step we can do to understand meaning of the dataset is to look at the cluster cell markers:
+
+``` r
+de.info <- con$getDifferentialGenes(groups=new.annot)
+```
+
+    ## Estimating marker genes per sample
+    ## Aggregating marker genes
+    ## All done!
+
+``` r
+head(de.info$Bcells)
+```
+
+    ##       Gene        Z        PValue          PAdj
+    ## 1     CD74 35.25185 5.669654e-271 1.220790e-266
+    ## 2  HLA-DRA 33.66362 3.319513e-247 7.147242e-243
+    ## 3    CD79A 30.83072 1.567536e-207 3.374906e-203
+    ## 4 HLA-DPB1 30.29834 1.828226e-200 3.935989e-196
+    ## 5 HLA-DPA1 29.79001 7.848811e-194 1.689692e-189
+    ## 6     IGHM 28.63077 3.987648e-179 8.584209e-175
+
+``` r
+cowplot::plot_grid(con$plotGraph(groups=new.annot), con$plotGraph(gene="CD74"))
+```
+
+![](walkthrough_files/figure-markdown_github/unnamed-chunk-46-1.png)
+
+DE Between Sample Groups
+------------------------
+
+Next, given a joint clustering of cells that captures cell relationships between samples, we can want to ask what is different between the cells of these populations between specific samples types, in this case CB and BM samples. Conos provides routines to be able to do that.
 
 First we need to define our sample groups
 
@@ -401,16 +563,18 @@ samplegroups <- list(
 )
 ```
 
+### Simple run
+
 We can then run differential expression between cells in these groups
 
 ``` r
-de.multilevel <- getPerCellTypeDE(con, groups=as.factor(new.annot),sample.groups = samplegroups, ref.level='bm', n.cores=4)
+de.info <- getPerCellTypeDE(con, groups=as.factor(new.annot), sample.groups = samplegroups, ref.level='bm', n.cores=4)
 ```
 
 ...and examine the output
 
 ``` r
-str(de.multilevel[1:3], 2)
+str(de.info[1:3], 2)
 ```
 
     ## List of 3
@@ -427,30 +591,29 @@ str(de.multilevel[1:3], 2)
     ##   ..$ cm           :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
     ##   ..$ sample.groups:List of 2
 
-Let's look at the results for the Bcells
+Let's look at the results for the B cells
 
 ``` r
-res <- de.multilevel[['Bcells']]$res
+res <- de.info[['Bcells']]$res
 head(res[order(res$padj,decreasing = FALSE),])
 ```
 
-    ##                baseMean log2FoldChange     lfcSE       stat       pvalue
-    ## IGHA1         1984.6674      -9.715954 0.7006364 -13.867327 9.993215e-44
-    ## IGKC          8624.7534      -4.024468 0.4965229  -8.105303 5.261433e-16
-    ## IGHG1          292.7849      -9.823555 1.4252729  -6.892402 5.485796e-12
-    ## RP11-386I14.4  469.5471       2.683680 0.4025364   6.666924 2.612202e-11
-    ## JCHAIN         915.7554      -4.183068 0.6434982  -6.500513 8.004659e-11
-    ## CD69           572.9540       2.435475 0.4067004   5.988376 2.119460e-09
+    ##                baseMean log2FoldChange     lfcSE      stat       pvalue
+    ## IGHG1          587.2222     -12.233932 1.5239632 -8.027708 9.931019e-16
+    ## JCHAIN         926.1326      -4.952519 0.6245896 -7.929237 2.204970e-15
+    ## IGLL5          108.5760      -5.192710 0.6940445 -7.481811 7.330513e-14
+    ## IGKC          9088.4631      -4.188824 0.5953482 -7.035923 1.979466e-12
+    ## RP11-386I14.4  436.0765       2.725236 0.4146608  6.572206 4.957516e-11
+    ## DDIT3          121.1760       2.964066 0.4864859  6.092810 1.109460e-09
     ##                       padj
-    ## IGHA1         1.480994e-39
-    ## IGKC          3.898722e-12
-    ## IGHG1         2.709983e-08
-    ## RP11-386I14.4 9.678207e-08
-    ## JCHAIN        2.372581e-07
-    ## CD69          5.235067e-06
+    ## IGHG1         1.474856e-11
+    ## JCHAIN        1.637300e-11
+    ## IGLL5         3.628848e-10
+    ## IGKC          7.349262e-09
+    ## RP11-386I14.4 1.472482e-07
+    ## DDIT3         2.746098e-06
 
-With correction
----------------
+### With correction
 
 In certain cases we observe that differential expression will result in the similar genes between multiple cell types. This may be due to genuine biological reasons (similar response), due to background, or due to other effects. Conos can calculate a mean expression vector between the two conditions and subtract this from all the comparisons, so observer the cell-type specific effect.
 
@@ -459,25 +622,25 @@ fc.correction <- getCorrectionVector(con, groups=as.factor(new.annot),sample.gro
 fc.correction[is.na(fc.correction)] <- 0
 
 ## Use corrected version
-de.multilevel.corrected <- getPerCellTypeDECorrected(con, groups=as.factor(new.annot),sample.groups = samplegroups, ref.level='bm', n.cores=4, correction = fc.correction)
+de.info.corrected <- getPerCellTypeDECorrected(con, groups=as.factor(new.annot),sample.groups = samplegroups, ref.level='bm', n.cores=4, correction = fc.correction)
 ```
 
 ``` r
-res <- as.data.frame(de.multilevel.corrected[['Mono']]$res)
+res <- as.data.frame(de.info.corrected[['Bcells']]$res)
 head(res[order(res$padj,decreasing = FALSE),])
 ```
 
-    ##         baseMean log2FoldChange     lfcSE      stat       pvalue
-    ## IGLC2 3532.27534      -3.874987 0.5487043 -7.062067 1.640443e-12
-    ## HBG2  3054.00208      13.903605 2.1877545  6.355194 2.081633e-10
-    ## IGHG1  134.94238      -7.810418 1.4875016 -5.250695 1.515262e-07
-    ## KCNH2   25.03259      -4.061895 1.0899596 -3.726648 1.940435e-04
-    ## HBG1   474.75507      12.528160 3.4951364  3.584455 3.377824e-04
-    ## ACRBP   25.52795       3.216374 0.8899378  3.614156 3.013276e-04
-    ##               padj
-    ## IGLC2 2.434417e-08
-    ## HBG2  1.544572e-06
-    ## IGHG1 7.495495e-04
-    ## KCNH2 7.199014e-01
-    ## HBG1  8.354486e-01
-    ## ACRBP 8.354486e-01
+    ##                 baseMean log2FoldChange     lfcSE       stat       pvalue
+    ## MPO           74.8375994     -6.2931489 1.1946106 -5.2679500 1.379557e-07
+    ## IGLL5         71.3574710     -3.8260112 0.7120742 -5.3730511 7.741539e-08
+    ## FO538757.2    50.4732413     -0.2477811 0.6252044 -0.3963201 6.918689e-01
+    ## AP006222.2     4.8159577     -0.9459330 1.4323505 -0.6604061 5.089933e-01
+    ## RP4-669L17.10  0.1618042     -0.1726628 4.9960750 -0.0345597 9.724308e-01
+    ## RP11-206L10.9 16.2785288      0.2537188 0.8722131  0.2908909 7.711348e-01
+    ##                     padj
+    ## MPO           0.00102439
+    ## IGLL5         0.00102439
+    ## FO538757.2    0.99997268
+    ## AP006222.2    0.99997268
+    ## RP4-669L17.10 0.99997268
+    ## RP11-206L10.9 0.99997268
