@@ -29,7 +29,7 @@ setMethod("getCountMatrix", signature("seurat"), function(sample) sample@data)
 
 setGeneric("getRawCountMatrix", function(sample, transposed=F) standardGeneric("getRawCountMatrix"))
 setMethod("getRawCountMatrix", signature("Pagoda2"), function(sample, transposed=F) if (transposed) sample$misc$rawCounts else t(sample$misc$rawCounts))
-setMethod("getRawCountMatrix", signature("seurat"), function(sample, transposed=F) if (transposed) t(sample@raw.data) else sample@raw.data)
+setMethod("getRawCountMatrix", signature("seurat"), function(sample, transposed=F) { mi <- match(sample@cell.names,colnames(sample@raw.data)); x <- sample@raw.data[,mi,drop=FALSE]; if(transposed) return(t(x)) else return(x) })
 
 setGeneric("getEmbedding", function(sample, type) standardGeneric("getEmbedding"))
 setMethod("getEmbedding", signature("Pagoda2"), function(sample, type) sample$embeddings$PCA[[type]])

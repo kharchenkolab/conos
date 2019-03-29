@@ -7,6 +7,13 @@ output:
 
 In this tutorial we will go over the analysis of a panel of samples using Conos. Conos objects can be used to identify clusters of corresponding cells across panels of samples from similar or dissimilar sources, with different degrees of cell type overlap. Here we will identify corresponding clusters across a panel of bone marrow (BM) and cord blood (CB) by generating a joint graph with the cells from all the samples. We will use the graph to propagate labels from a single labelled sample to other samples and finally perform differential expression between BM and CM samples.
 
+First, let's load Conos library to start with:
+
+```{r, message=FALSE, warning=FALSE}
+library(conos)
+```
+
+
 # Loading the data
 
 Next we will load a previously prepared panel of samples. This panel was made up of 16 cord blood and bone marrow samples, but here we look at a smaller subset of just 4 samples. All samples have been subset to exactly 3000 cells.
@@ -61,13 +68,6 @@ panel.preprocessed <- lapply(panel, basicSeuratProc)
 ```
 
 # Integrating datasets with Conos
-
-First, let's load Conos library to start with:
-
-```{r, message=FALSE, warning=FALSE}
-library(conos)
-```
-
 
 We will now construct a Conos object for this panel of samples. At this point we haven't calculated anything. We have just generated an object that contains the samples. Note that at this step we also set the n.cores parameter. The graph generation with Conos can take advantage of parallel processing, so use as many physical cores as you have available here.
 
