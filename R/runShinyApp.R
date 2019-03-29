@@ -321,7 +321,7 @@ conosShinyApp <- function(con, N=30, leaf.labels=NULL, tissue_mapping=NULL, tiss
   if(is.null(con$clusters$walktrap)) stop("please run findCommunities(method=walktrap.communities) to calculate walktrap clustering first")
   if(is.null(leaf.labels)) {
     # get sample labels for cells
-    cl <- lapply(con$samples,function(x) rownames(x$counts))
+    cl <- lapply(con$samples,getCellNames);
     leaf.labels <- as.factor(setNames(rep(1:length(cl),unlist(lapply(cl,length))),unlist(cl)))
   }
 
