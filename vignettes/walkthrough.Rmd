@@ -171,6 +171,7 @@ New clustering, as viewed on a joint graph:
 con$plotGraph(clustering='walktrap')
 ```
 
+
 ## Changing embedding parameters
 
 At the moment, Conos is able to use two methods of graph embedding: [largeVis](https://github.com/lferry007/LargeVis) (default) and [UMAP](https://github.com/jlmelville/uwot). The UMAP takes a bit longer to estimate, but generally gives better quality of the embedding. Though sometime UMAP makes even slightest difference (which is not detected by either largeVis or even clustering algorithms) looking perfectly distinguishable. It's best to examine both types of embeddings.
@@ -380,4 +381,25 @@ Let's look at the results for the B cells
 res <- de.info[['B cells']]$res
 head(res[order(res$padj,decreasing = FALSE),])
 ```
+
+# Forcing better alignment
+As can be seen from the sample distribution plot, different samples, in particular those reprsenting different tissues (BM or CB) form separate subclusters within the clusters of major cell types. Conos allows to force better alignment through i) adjustment of the `alignment.strength parameter`, and ii) through rebalancing of edge weights based on a specific factor (e.g. tissue to which the cell belongs) using `balance.edge.weights` parameter.
+
+```{r}
+con$buildGraph(k=15, k.self=5, alignment.strength=0.3, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+```
+
+re-generate the embedding and visualize the sample distribution again:
+
+```{r, fig.height=4, fig.width=6}
+con$embedGraph()
+con$plotGraph(color.by='sample', mark.groups=F, alpha=0.1, show.legend=T)
+```
+
+We can also check the entropy:
+```{r, fig.height=8,fig.width=8}
+con$findCommunities()
+plotClusterBarplots(con, legend.height = 0.1)
+```
+
 

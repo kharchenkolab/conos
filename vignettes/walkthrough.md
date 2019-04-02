@@ -18,8 +18,15 @@ Conos Walkthrough
     -   [Cluster markers](#cluster-markers)
     -   [DE Between Sample Groups](#de-between-sample-groups)
         -   [Simple run](#simple-run)
+-   [Forcing better alignment](#forcing-better-alignment)
 
 In this tutorial we will go over the analysis of a panel of samples using Conos. Conos objects can be used to identify clusters of corresponding cells across panels of samples from similar or dissimilar sources, with different degrees of cell type overlap. Here we will identify corresponding clusters across a panel of bone marrow (BM) and cord blood (CB) by generating a joint graph with the cells from all the samples. We will use the graph to propagate labels from a single labelled sample to other samples and finally perform differential expression between BM and CM samples.
+
+First, let's load Conos library to start with:
+
+``` r
+library(conos)
+```
 
 Loading the data
 ================
@@ -37,11 +44,7 @@ str(panel,1)
 ```
 
     ## List of 4
-    ##  $ MantonBM1_HiSeq_1:
-
-    ## Loading required package: Matrix
-
-    ## Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
+    ##  $ MantonBM1_HiSeq_1:Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
     ##  $ MantonBM2_HiSeq_1:Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
     ##  $ MantonCB1_HiSeq_1:Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
     ##  $ MantonCB2_HiSeq_1:Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
@@ -78,23 +81,17 @@ We will generate pagoda2 apps for poorly-expressed genes from each individual sa
 library(pagoda2)
 ```
 
-    ## Loading required package: igraph
-
-    ## 
-    ## Attaching package: 'igraph'
-
-    ## The following objects are masked from 'package:stats':
-    ## 
-    ##     decompose, spectrum
-
-    ## The following object is masked from 'package:base':
-    ## 
-    ##     union
-
     ## 
 
     ## Warning: replacing previous import 'igraph::%>%' by 'magrittr::%>%' when
     ## loading 'pagoda2'
+
+    ## 
+    ## Attaching package: 'pagoda2'
+
+    ## The following objects are masked from 'package:conos':
+    ## 
+    ##     buildWijMatrix, projectKNNs
 
 ``` r
 panel.preprocessed <- lapply(panel, basicP2proc, n.cores=4, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
@@ -145,12 +142,6 @@ panel.preprocessed <- lapply(panel, basicSeuratProc)
 
 Integrating datasets with Conos
 ===============================
-
-First, let's load Conos library to start with:
-
-``` r
-library(conos)
-```
 
 We will now construct a Conos object for this panel of samples. At this point we haven't calculated anything. We have just generated an object that contains the samples. Note that at this step we also set the n.cores parameter. The graph generation with Conos can take advantage of parallel processing, so use as many physical cores as you have available here.
 
@@ -327,27 +318,27 @@ con$embedGraph(method="UMAP", min.dist=0.01, spread=15, n.cores=4)
     ## Convert graph to adjacency list...
     ## Done
     ## Estimate nearest neighbors and commute times...
-    ## Estimating hitting distances: 13:50:28.
+    ## Estimating hitting distances: 17:29:51.
     ## Done.
-    ## Estimating commute distances: 13:50:57.
-    ## Hashing adjacency list: 13:50:57.
+    ## Estimating commute distances: 17:30:22.
+    ## Hashing adjacency list: 17:30:22.
     ## Done.
-    ## Estimating distances: 13:50:58.
+    ## Estimating distances: 17:30:23.
     ## Done
     ## Done.
-    ## All done!: 13:51:01.
+    ## All done!: 17:30:26.
     ## Done
     ## Estimate UMAP embedding...
 
-    ## 13:51:02 Read 12000 rows and found 1 numeric columns
+    ## 17:30:27 Read 12000 rows and found 1 numeric columns
 
-    ## 13:51:02 Commencing smooth kNN distance calibration using 4 threads
+    ## 17:30:27 Commencing smooth kNN distance calibration using 4 threads
 
-    ## 13:51:04 Initializing from normalized Laplacian + noise
+    ## 17:30:28 Initializing from normalized Laplacian + noise
 
-    ## 13:51:04 Commencing optimization for 1000 epochs, with 340874 positive edges using 4 threads
+    ## 17:30:29 Commencing optimization for 1000 epochs, with 340772 positive edges using 4 threads
 
-    ## 13:51:24 Optimization finished
+    ## 17:30:48 Optimization finished
 
     ## Done
 
@@ -571,7 +562,7 @@ samplegroups <- list(
 
 ### Simple run
 
-We can then run differential expression between cells in these groups
+We can then run differential expression between cells in these sample groups:
 
 ``` r
 de.info <- getPerCellTypeDE(con, groups=as.factor(new.annot), sample.groups = samplegroups, ref.level='bm', n.cores=4)
@@ -605,16 +596,53 @@ head(res[order(res$padj,decreasing = FALSE),])
 ```
 
     ##                baseMean log2FoldChange     lfcSE      stat       pvalue
-    ## JCHAIN         391.5392      -3.639800 0.4499922 -8.088584 6.036223e-16
-    ## RP11-386I14.4  401.9371       2.805213 0.3948918  7.103753 1.214140e-12
-    ## CD69           492.3824       2.581553 0.3942922  6.547310 5.858249e-11
-    ## CH17-373J23.1  322.3583       2.831850 0.4397637  6.439482 1.198818e-10
-    ## NFKBIA        1061.0469       2.580790 0.3991284  6.466064 1.005886e-10
-    ## IGLC2         3029.2323      -3.255977 0.5235416 -6.219136 4.998995e-10
+    ## JCHAIN         479.6018      -3.887334 0.3938229 -9.870768 5.573600e-23
+    ## IGHA1         2277.8051     -12.891852 1.4477642 -8.904663 5.354863e-19
+    ## IGKC          5042.9615      -3.645607 0.4358248 -8.364845 6.019378e-17
+    ## RP11-386I14.4  401.9309       2.717420 0.3821648  7.110597 1.155418e-12
+    ## NFKBIA        1070.3967       2.606460 0.3870550  6.734081 1.649696e-11
+    ## CD69           479.6158       2.505793 0.3786845  6.617101 3.663123e-11
     ##                       padj
-    ## JCHAIN        1.050906e-11
-    ## RP11-386I14.4 1.056909e-08
-    ## CD69          3.399737e-07
-    ## CH17-373J23.1 4.174286e-07
-    ## NFKBIA        4.174286e-07
-    ## IGLC2         1.450542e-06
+    ## JCHAIN        9.710883e-19
+    ## IGHA1         4.664889e-15
+    ## IGKC          3.495854e-13
+    ## RP11-386I14.4 5.032714e-09
+    ## NFKBIA        5.748532e-08
+    ## CD69          1.063710e-07
+
+Forcing better alignment
+========================
+
+As can be seen from the sample distribution plot, different samples, in particular those reprsenting different tissues (BM or CB) form separate subclusters within the clusters of major cell types. Conos allows to force better alignment through i) adjustment of the `alignment.strength parameter`, and ii) through rebalancing of edge weights based on a specific factor (e.g. tissue to which the cell belongs) using `balance.edge.weights` parameter.
+
+``` r
+con$buildGraph(k=15, k.self=5, alignment.strength=0.3, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+```
+
+    ## found 6 out of 6 cached PCA  space pairs ...  done
+    ## inter-sample links using  mNN   done
+    ## local pairs local pairs  done
+    ## building graph ..done
+
+re-generate the embedding and visualize the sample distribution again:
+
+``` r
+con$embedGraph()
+```
+
+    ## Estimating embeddings.
+
+``` r
+con$plotGraph(color.by='sample', mark.groups=F, alpha=0.1, show.legend=T)
+```
+
+![](walkthrough_files/figure-markdown_github/unnamed-chunk-53-1.png)
+
+We can also check the entropy:
+
+``` r
+con$findCommunities()
+plotClusterBarplots(con, legend.height = 0.1)
+```
+
+![](walkthrough_files/figure-markdown_github/unnamed-chunk-54-1.png)
