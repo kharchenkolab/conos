@@ -320,7 +320,7 @@ plotClusterBarplots <- function(conos.obj=NULL, clustering=NULL, groups=NULL,sam
     if(is.null(conos.obj)) stop('conos.obj must be passed if clustering name is specified');
     if(!clustering %in% names(conos.obj$clusters)) stop('specified clustering doesn\'t exist')
     groups <- as.factor(conos.obj$clusters[[clustering]]$groups)
-  } else {
+  } else if (is.null(groups)) {
     if(is.null(conos.obj)) stop('either groups factor on the cells or a conos object needs to be specified')
     if(is.null(conos.obj$clusters[[1]])) stop('conos object lacks any clustering. run $findCommunities() first')
     groups <- as.factor(conos.obj$clusters[[1]]$groups)
