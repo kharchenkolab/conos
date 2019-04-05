@@ -204,7 +204,7 @@ Conos <- setRefClass(
     buildGraph=function(k=15, k.self=10, k.self.weight=0.1, alignment.strength=NULL, space='CPCA', matching.method='mNN', metric='angular', k1=k, data.type='counts',
                         l2.sigma=1e5, var.scale =TRUE, ncomps=40, n.odgenes=2000, neighborhood.average=FALSE, neighborhood.average.k=10, matching.mask=NULL,
                         exclude.samples=NULL, common.centering=TRUE, verbose=TRUE, base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1,
-                        n.decoys=k*2, score.component.variance=FALSE, balance.edge.weights=FALSE, balancing.factors.per.cell=NULL, same.factor.downweight=1.0) {
+                        n.decoys=k*2, score.component.variance=FALSE, balance.edge.weights=FALSE, balancing.factor.per.cell=NULL, same.factor.downweight=1.0) {
       supported.spaces <- c("CPCA","JNMF","genes","PCA")
       if(!space %in% supported.spaces) {
         stop(paste0("only the following spaces are currently supported: [",paste(supported.spaces,collapse=' '),"]"))
@@ -319,15 +319,15 @@ Conos <- setRefClass(
       g <- simplify(g, edge.attr.comb=list(weight="sum", type = "first"))
       if(verbose) cat('done\n')
 
-      if (balance.edge.weights || !is.null(balancing.factors.per.cell)) {
+      if (balance.edge.weights || !is.null(balancing.factor.per.cell)) {
         if(verbose) cat('balancing edge weights ');
 
-        if (is.null(balancing.factors.per.cell)) {
-          balancing.factors.per.cell <- getDatasetPerCell()
+        if (is.null(balancing.factor.per.cell)) {
+          balancing.factor.per.cell <- getDatasetPerCell()
         }
 
         g <- igraph::as_adjacency_matrix(g, attr="weight") %>%
-          adjustWeightsByCellBalancing(factor.per.cell=balancing.factors.per.cell, balance.weights=balance.edge.weights,
+          adjustWeightsByCellBalancing(factor.per.cell=balancing.factor.per.cell, balance.weights=balance.edge.weights,
                                        same.factor.downweight=same.factor.downweight) %>%
           igraph::graph_from_adjacency_matrix(mode="undirected", weighted=T)
 
