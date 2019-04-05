@@ -201,8 +201,10 @@ Conos <- setRefClass(
       return(invisible(sn.pairs))
     },
 
-    # TODO: remove const.inner.weights option
-    buildGraph=function(k=15, k.self=10, k.self.weight=0.1, alignment.strength=NULL, space='CPCA', matching.method='mNN', metric='angular', k1=k, data.type='counts', l2.sigma=1e5, cor.base=1, var.scale =TRUE, ncomps=40, n.odgenes=2000, neighborhood.average=FALSE, neighborhood.average.k=10, matching.mask=NULL, exclude.samples=NULL, common.centering=TRUE , verbose=TRUE, const.inner.weights=FALSE, base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, score.component.variance=FALSE, balance.edge.weights=FALSE) {
+    buildGraph=function(k=15, k.self=10, k.self.weight=0.1, alignment.strength=NULL, space='CPCA', matching.method='mNN', metric='angular', k1=k, data.type='counts',
+                        l2.sigma=1e5, var.scale =TRUE, ncomps=40, n.odgenes=2000, neighborhood.average=FALSE, neighborhood.average.k=10, matching.mask=NULL,
+                        exclude.samples=NULL, common.centering=TRUE, verbose=TRUE, base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1,
+                        n.decoys=k*2, score.component.variance=FALSE, balance.edge.weights=FALSE, balancing.factors.per.cell=NULL, same.factor.downweight=1.0) {
       supported.spaces <- c("CPCA","JNMF","genes","PCA")
       if(!space %in% supported.spaces) {
         stop(paste0("only the following spaces are currently supported: [",paste(supported.spaces,collapse=' '),"]"))
@@ -283,7 +285,7 @@ Conos <- setRefClass(
 
           mnn <- getPcaBasedNeighborMatrix(samples[sn.pairs[,j]], od.genes=od.genes, rot=rot, k=k, k1=k1, data.type=data.type,
                                            var.scale=var.scale, neighborhood.average=neighborhood.average, common.centering=common.centering,
-                                           matching.method=matching.method, metric=metric, l2.sigma=l2.sigma, cor.base=cor.base,
+                                           matching.method=matching.method, metric=metric, l2.sigma=l2.sigma, cor.base=1 + min(1, alignment.strength * 10),
                                            base.groups=base.groups, append.decoys=append.decoys, samples=samples, samf=samf, decoy.threshold=decoy.threshold,
                                            n.decoys=n.decoys, append.global.axes=append.global.axes, global.proj=global.proj)
           if(verbose) cat(".")
@@ -305,7 +307,7 @@ Conos <- setRefClass(
       # append some local edges
       if(k.self>0) {
         if(verbose) cat('local pairs ')
-        x <- getLocalEdges(samples, k.self, k.self.weight, const.inner.weights, metric, l2.sigma=l2.sigma, verbose, n.cores)
+        x <- getLocalEdges(samples, k.self, k.self.weight, metric, l2.sigma=l2.sigma, verbose, n.cores)
         el <- rbind(el,x)
       }
       if(verbose) cat('building graph .')
@@ -317,15 +319,16 @@ Conos <- setRefClass(
       g <- simplify(g, edge.attr.comb=list(weight="sum", type = "first"))
       if(verbose) cat('done\n')
 
-      if (length(balance.edge.weights) > 1 || balance.edge.weights) {
+      if (balance.edge.weights || !is.null(balancing.factors.per.cell)) {
         if(verbose) cat('balancing edge weights ');
 
-        if (length(balance.edge.weights) == 1) {
-          balance.edge.weights <- getDatasetPerCell()
+        if (is.null(balancing.factors.per.cell)) {
+          balancing.factors.per.cell <- getDatasetPerCell()
         }
 
         g <- igraph::as_adjacency_matrix(g, attr="weight") %>%
-          adjustWeightsByCellBalancing(balance.edge.weights) %>%
+          adjustWeightsByCellBalancing(factor.per.cell=balancing.factors.per.cell, balance.weights=balance.edge.weights,
+                                       same.factor.downweight=same.factor.downweight) %>%
           igraph::graph_from_adjacency_matrix(mode="undirected", weighted=T)
 
         if(verbose) cat('done\n');
@@ -370,7 +373,7 @@ Conos <- setRefClass(
         MergeCountMatrices <- function(cms) {
           cms <- lapply(cms, t)
           gene.union <- lapply(cms, colnames) %>% Reduce(union, .)
-          
+
           res <- lapply(cms, ExtendMatrix, gene.union) %>% Reduce(rbind, .)
           return(Matrix::t(res))
         }
@@ -443,11 +446,11 @@ Conos <- setRefClass(
         browser()
 
         #pagoda2:::my.heatmap2(em[rev(unlist(clgo[clclo])),unlist(clco[clclo])],col=gradientPalette,Colv=NA,Rowv=NA,labRow=NA,labCol=NA,RowSideColors=genecols,ColSideColors=rbind(samfcols,cellcols),margins=c(bottomMargin,0.5),ColSideColors.unit.vsize=0.05,RowSideColors.hsize=0.05,useRaster=TRUE, box=TRUE)
-        
+
         pagoda2:::my.heatmap2(em[rev(unlist(clgo[clclo])),unlist(clco[clclo])],col=gradientPalette,Colv=NA,Rowv=NA,labRow=NA,labCol=NA,RowSideColors=genecols,ColSideColors=rbind(samfcols,cellcols),margins=c(bottomMargin,0.5),ColSideColors.unit.vsize=0.05,RowSideColors.hsize=0.05,useRaster=TRUE, box=TRUE)
         abline(v=cumsum(unlist(lapply(clco[clclo],length))),col=1,lty=3)
         abline(h=cumsum(rev(unlist(lapply(clgo[clclo],length))))+0.5,col=1,lty=3)
-        
+
     }
 
 

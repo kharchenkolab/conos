@@ -606,7 +606,7 @@ getDecoyProjections <- function(samples, samf, data.type, var.scale, cproj, neig
   return(cproj.decoys)
 }
 
-getLocalEdges <- function(samples, k.self, k.self.weight, const.inner.weights, metric, l2.sigma, verbose, n.cores) {
+getLocalEdges <- function(samples, k.self, k.self.weight, metric, l2.sigma, verbose, n.cores) {
   if(verbose) cat('local pairs ')
   x <- data.frame(do.call(rbind, papply(samples, function(x) {
     pca <- getPca(x)
@@ -619,12 +619,7 @@ getLocalEdges <- function(samples, k.self, k.self.weight, const.inner.weights, m
                w=convertDistanceToSimilarity(xk@x, metric=metric, l2.sigma=l2.sigma), stringsAsFactors=F)
   }, n.cores=n.cores, mc.preschedule=TRUE)), stringsAsFactors=F)
 
-  if (const.inner.weights) {
-    x$w <- k.self.weight
-  } else {
-    x$w <- x$w * k.self.weight
-  }
-
+  x$w <- x$w * k.self.weight
   x$type <- 0;
   if(verbose) cat(' done\n')
 
@@ -1013,20 +1008,26 @@ get.cluster.graph <- function(graph,groups,plot=FALSE,node.scale=50,edge.scale=5
   return(invisible(gcon))
 }
 
-adjustWeightsByCellBalancing <- function(adj.mtx, factor.per.cell, n.iters=50, verbose=F) {
+adjustWeightsByCellBalancing <- function(adj.mtx, factor.per.cell, balance.weights, same.factor.downweight=1.0, n.iters=50, verbose=F) {
   adj.mtx %<>% .[colnames(.), colnames(.)] %>% as("dgTMatrix")
-  factor.per.cell %<>% .[colnames(adj.mtx)] %>% as.factor()
+  factor.per.cell %<>% .[colnames(adj.mtx)] %>% as.factor() %>% droplevels()
 
   weights.adj <- adj.mtx@x
 
-  for (i in 0:(n.iters-1)) {
-    factor.frac.per.cell <- getSumWeightMatrix(weights.adj, adj.mtx@i, adj.mtx@j, as.integer(factor.per.cell))
-    w.dividers <- factor.frac.per.cell * rowSums(factor.frac.per.cell > 1e-10)
-    weights.adj <- adjustWeightsByCellBalancingC(weights.adj, adj.mtx@i, adj.mtx@j, as.integer(factor.per.cell), w.dividers)
+  if (balance.weights) {
+    for (i in 0:(n.iters-1)) {
+      factor.frac.per.cell <- getSumWeightMatrix(weights.adj, adj.mtx@i, adj.mtx@j, as.integer(factor.per.cell))
+      w.dividers <- factor.frac.per.cell * rowSums(factor.frac.per.cell > 1e-10)
+      weights.adj <- adjustWeightsByCellBalancingC(weights.adj, adj.mtx@i, adj.mtx@j, as.integer(factor.per.cell), w.dividers)
 
-    if (verbose && i %% 10 == 0) {
-      cat("Difference from balanced state:", sum(abs(w.dividers[w.dividers > 1e-10] - 1)), "\n")
+      if (verbose && i %% 10 == 0) {
+        cat("Difference from balanced state:", sum(abs(w.dividers[w.dividers > 1e-10] - 1)), "\n")
+      }
     }
+  }
+
+  if (abs(same.factor.downweight - 1) > 1e-5) {
+    weights.adj[factor.per.cell[adj.mtx@i + 1] == factor.per.cell[adj.mtx@j + 1]] %<>% `*`(same.factor.downweight)
   }
 
   mtx.res <- adj.mtx
