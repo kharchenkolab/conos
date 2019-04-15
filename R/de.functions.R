@@ -120,6 +120,7 @@ getCorrectionVector <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.
                                     n.cores=n.cores, cluster.sep.chr=cluster.sep.chr,return.details=FALSE,
                                     ref.level = ref.level);
     }
+    de.init <- de.init[!names(de.init) %in% exclude.celltypes]
     allfcs <- lapply(de.init, function(x) {
         if(!is.error(x)) {
             fc <- x$log2FoldChange
@@ -133,7 +134,6 @@ getCorrectionVector <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.
     genes <- Reduce(intersect, lapply(allfcs, names))
     ## Matrix of fold changes
     fc.mat <- do.call(rbind, lapply(allfcs, function(x) x[genes]))
-    fc.mat <- fc.mat[!rownames(fc.mat) %in% exclude.celltypes,]
     if (correction.method == 'mean') {
         correction <- apply(fc.mat, 2, mean, na.rm=TRUE)
     } else if (correction.method == 'varianceweighted') {
