@@ -3,7 +3,7 @@
 ##' @name Conos_plotPanel
 ##'
 ##' @inheritParams getClusteringGroups
-##' @inherit plotPagodas params return
+##' @inherit plotSamples params return
 NULL
 
 # initialize or append samples to the panel
@@ -613,12 +613,12 @@ Conos <- setRefClass(
         }
         coords <- conos:::projectKNNs(wij = wij, dim=target.dims, verbose = verbose,sgd_batches = sgd_batches,gamma=gamma, M=M, seed=seed, alpha=alpha, rho=1, threads=n.jobs)
         colnames(coords) <- V(graph)$name
-        embedding <<- coords;
+        embedding <<- t(coords);
       } else {
         if (!requireNamespace("uwot", quietly=T))
           stop("You need to install package 'uwot' to be able to use UMAP embedding.")
 
-        embedding <<- t(embedGraphUmap(graph, verbose=verbose, return.all=F, n.cores=n.jobs, ...))
+        embedding <<- embedGraphUmap(graph, verbose=verbose, return.all=F, n.cores=n.jobs, ...)
       }
 
       return(invisible(embedding))
@@ -736,7 +736,7 @@ Conos <- setRefClass(
         }
       }
 
-      return(embeddingPlot(t(embedding), groups=groups, colors=colors, plot.theme=adjustTheme(plot.theme), ...))
+      return(embeddingPlot(embedding, groups=groups, colors=colors, plot.theme=adjustTheme(plot.theme), ...))
     },
 
     correctGenes=function(genes=NULL, n.od.genes=500, fading=10.0, fading.const=0.5, max.iters=15, tol=5e-3, name='diffusion', verbose=TRUE, count.matrix=NULL, normalize=TRUE) {

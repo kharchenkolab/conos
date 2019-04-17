@@ -297,7 +297,6 @@ Rcpp::List commute_time_per_node(const std::vector<std::vector<int>> &adjacency_
                             Rcpp::_["dist"]=Rcpp::wrap(commute_times));
 }
 
-//' @export
 // [[Rcpp::export]]
 Rcpp::List get_nearest_neighbors(const std::vector<std::vector<int>> &adjacency_list,
                                  const std::vector<std::vector<double>> &transition_probabilities,

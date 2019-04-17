@@ -4,7 +4,8 @@
 
 - ggplot2 namespace for function calls in `plotClusterStability`
 - Renamed `stable.tree.clusters`, `get.cluster.graph` and `scan.k.modularity`
-- Removed exports of largeVis internals and `get.cluster.graph`
+- Removed exports of largeVis internals, `get.cluster.graph` and `get_nearest_neighbors`
+- `embedding` is stored with samples by rows now (i.e. not transposed anymore)
 
 ### Deprecated
 
