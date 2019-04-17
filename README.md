@@ -46,7 +46,10 @@ yum install cairo-devel pango-devel libXt-devel openssl-devel gsl-devel boost-de
 It is possible to install pagoda2 and Conos on OS X, however some users have reported issues with OpenMP configuration. For instructions see [pagoda2](https://github.com/hms-dbmi/pagoda2#mac-dependencies) readme.
 
 ## Installing Conos as Docker Container
-If your system configuration is making it difficult to install Conos natively, an alternative way to get Conos running is through a docker container. 
+If your system configuration is making it difficult to install Conos natively, an alternative way to get Conos running is through a docker container.
+
+**Note:** on MacOS, Docker Machine has Memory and CPU limit. To control it, please check instructions either for [CLI](https://stackoverflow.com/questions/32834082/how-to-increase-docker-machine-memory-mac/32834453#32834453) or for [Docker Desktop](https://docs.docker.com/docker-for-mac/#advanced).
+
 ### Ready-to-run docker image
 The docker distribution is current as of October 2018 and also includes the (Pagoda2 package)[https://github.com/hms-dbmi/pagoda2]. To start a docker container, first [install docker](https://docs.docker.com/install/) on your platform and then start the pagoda container with the following command in the shell:
 
