@@ -24,7 +24,6 @@ graphToAdjList <- function(graph) {
   return(list(idx=adj.list, probabilities=probs, names=edge.list.fact$levels))
 }
 
-#' @export
 embedKnnGraph <- function(commute.times, n.neighbors, names=NULL, verbose=TRUE, ...) {
   min.n.neighbors <- sapply(commute.times$idx, length) %>% min()
   if (min.n.neighbors < n.neighbors) {
