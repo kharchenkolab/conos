@@ -1,7 +1,6 @@
 #' @import shiny
 #' @import ggplot2
 #' @import dendextend
-
 NULL
 
 #' Perform ordering of merge matrix values by rows

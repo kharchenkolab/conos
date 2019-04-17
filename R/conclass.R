@@ -533,14 +533,14 @@ Conos <- setRefClass(
           # assess stability for that hierarchy (to visualize internal node stability)
           # for the original clustering and every subsample clustering,
           if(verbose) cat("upper clustering ... ")
-          cgraph <- get.cluster.graph(graph,cls.groups,plot=F,normalize=F)
+          cgraph <- getClusterGraph(graph,cls.groups,plot=F,normalize=F)
           chwt <- walktrap.community(cgraph,steps=9)
           clm <- igraph:::complete.dend(chwt,FALSE)
 
           if(verbose) cat("clusterTree Jaccard ... ")
           jc.hstats <- do.call(rbind,mclapply(sr,function(st1) {
             mf <- membership(st1); mf <- as.factor(setNames(as.character(mf),names(mf)))
-            st1g <- get.cluster.graph(graph,mf,plot=F,normalize=T)
+            st1g <- getClusterGraph(graph,mf,plot=F,normalize=T)
             st1w <- walktrap.community(st1g,steps=8)
 
             #merges <- st1w$merge; leaf.factor <- mf; clusters <- cls.groups

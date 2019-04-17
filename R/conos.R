@@ -70,17 +70,6 @@ scaledMatrices <- function(samples, data.type, od.genes, var.scale, neighborhood
   stop("Unknown class of sample: ", class(samples[[1]]))
 }
 
-getGeneVariance <- function(obj) {
-  if(class(obj) == 'Pagoda2') {
-
-  }
-  if(class(obj) == 'seurat') {
-    warming("Seurat doesn't support variance scaling")
-    return(NULL)
-  }
-
-}
-
 commonOverdispersedGenes <- function(samples, n.odgenes, verbose) {
   od.genes <- sort(table(unlist(lapply(samples, getOverdispersedGenes, n.odgenes))),decreasing=T)
   common.genes <- Reduce(intersect, lapply(samples, getGenes));
@@ -147,7 +136,6 @@ cpcaFast <- function(covl,ncells,ncomp=10,maxit=1000,tol=1e-6,use.irlba=TRUE,ver
   }
 }
 
-
 #' Perform cpca on two samples
 #' @param r.n list of p2 objects
 #' @param k neighborhood size to use
@@ -208,7 +196,6 @@ quickCPCA <- function(r.n,data.type='counts',k=30,ncomps=100,n.odgenes=NULL,var.
   if(verbose) cat(' done\n')
   return(res);
 }
-
 
 #' Use space of combined sample-specific PCAs as a space
 #' @param r.n list of p2 objects
@@ -437,7 +424,6 @@ getClusterRelationshipConsistency <- function(p2list, pjc) {
     )
 }
 
-
 #' Evaluate how many clusters are global
 #' @param p2list list of pagoda2 object on which clustering was generated
 #' @param pjc the result of joint clustering
@@ -463,7 +449,6 @@ getPercentGlobalClusters <- function(p2list, pjc, pc.samples.cutoff = 0.9, min.c
     ## pc global clusters
     sum(global.cluster) / length(global.cluster)
 }
-
 
 
 ## helper function for breaking down a factor into a list
@@ -627,7 +612,6 @@ getLocalEdges <- function(samples, k.self, k.self.weight, metric, l2.sigma, verb
 }
 
 
-
 ##' Find threshold of cluster detectability
 ##'
 ##' For a given clustering, walks the walktrap result tree to find
@@ -683,7 +667,6 @@ bestClusterTreeThresholds <- function(res,leaf.factor,clusters,clmerges=NULL) {
 }
 
 
-
 ##' performs a greedy top-down selective cut to optmize modularity
 ##'
 ##' @param wt walktrap rsult
@@ -733,7 +716,7 @@ greedyModularityCut <- function(wt,N,leaf.labels=NULL,minsize=0,minbreadth=0,fla
 ##' @param average.thresholds report a single number of detectable clusters for averaged detected thresholds (a list of detected clusters for each element of the tests list is returned by default)
 ##' @return number of detectable stable clusters
 ##' @export
-stable.tree.clusters <- function(refwt,tests,min.threshold=0.8,min.size=10,n.cores=30,average.thresholds=FALSE) {
+stableTreeClusters <- function(refwt,tests,min.threshold=0.8,min.size=10,n.cores=30,average.thresholds=FALSE) {
   # calculate detectability thresholds for each node against entire list of tests
   #i<- 0;
   refwt$merges <- igraph:::complete.dend(refwt,FALSE)
@@ -901,14 +884,14 @@ getNeighborMatrix <- function(p1,p2,k,k1=k,matching='mNN',metric='angular',l2.si
   adj.mtx <- drop0(adj.mtx);
 
   if(k1 > k) { # downsample edges
-    adj.mtx <- t.reduce.edges.iteratively(adj.mtx,k)
+    adj.mtx <- reduceEdgesInGraphIteratively(adj.mtx,k)
   }
 
   return(as(drop0(adj.mtx),'dgTMatrix'))
 }
 
 # 1-step edge reduction
-t.reduce.edges <- function(adj.mtx,k,klow=k,preserve.order=TRUE) {
+reduceEdgesInGraph <- function(adj.mtx,k,klow=k,preserve.order=TRUE) {
   if(preserve.order) { co <- colnames(adj.mtx); ro <- rownames(adj.mtx); }
   adj.mtx <- adj.mtx[,order(diff(adj.mtx@p),decreasing=T)]
   adj.mtx@x <- pareDownHubEdges(adj.mtx,tabulate(adj.mtx@i+1),k,klow)
@@ -917,11 +900,13 @@ t.reduce.edges <- function(adj.mtx,k,klow=k,preserve.order=TRUE) {
   adj.mtx@x <- pareDownHubEdges(adj.mtx,tabulate(adj.mtx@i+1),k,klow)
   adj.mtx <- t(drop0(adj.mtx));
   if(preserve.order) { adj.mtx <- adj.mtx[match(ro,rownames(adj.mtx)),match(co,colnames(adj.mtx))]; }
-  adj.mtx
+
+  return(adj.mtx)
 }
+
 # a simple multi-step strategy to smooth out remaining hubs
 # max.kdiff gives approximate difference in the degree of the resulting nodes that is tolerable
-t.reduce.edges.iteratively <- function(adj.mtx,k,preserve.order=TRUE,max.kdiff=5,n.steps=3) {
+reduceEdgesInGraphIteratively <- function(adj.mtx,k,preserve.order=TRUE,max.kdiff=5,n.steps=3) {
   cc <- diff(adj.mtx@p); rc <- tabulate(adj.mtx@i+1);
   maxd <- max(max(cc),max(rc));
   if(maxd<=k) return(adj.mtx); # nothing to be done - already below k
@@ -934,16 +919,16 @@ t.reduce.edges.iteratively <- function(adj.mtx,k,preserve.order=TRUE,max.kdiff=5
     ks <- c(k);
   }
   for(ki in ks) {
-    adj.mtx <- t.reduce.edges(adj.mtx,ki,preserve.order=preserve.order)
+    adj.mtx <- reduceEdgesInGraph(adj.mtx,ki,preserve.order=preserve.order)
   }
   cc <- diff(adj.mtx@p); rc <- tabulate(adj.mtx@i+1);
   maxd <- max(max(cc),max(rc));
   if(maxd-k > max.kdiff) {
     # do a cleanup step
-    adj.mtx <- t.reduce.edges(adj.mtx,k,klow=klow,preserve.order=preserve.order)
+    adj.mtx <- reduceEdgesInGraph(adj.mtx,k,klow=klow,preserve.order=preserve.order)
   }
 
-  adj.mtx
+  return(adj.mtx)
 }
 
 ##' Collapse vertices belonging to each cluster in a graph
@@ -953,8 +938,7 @@ t.reduce.edges.iteratively <- function(adj.mtx,k,preserve.order=TRUE,max.kdiff=5
 ##' @param plot whether to show collapsed graph plot
 ##' @param normalize whether recalculate edge weight as observed/oexpected
 ##' @return collapsed graph
-##' @export
-get.cluster.graph <- function(graph,groups,plot=FALSE,node.scale=50,edge.scale=50,edge.alpha=0.3,normalize=TRUE) {
+getClusterGraph <- function(graph,groups,plot=FALSE,node.scale=50,edge.scale=50,edge.alpha=0.3,normalize=TRUE) {
   V(graph)$num <- 1;
   if(is.integer(groups) && is.null(names(groups))) {
     nv <- vcount(graph)
@@ -1054,7 +1038,7 @@ adjustWeightsByCellBalancing <- function(adj.mtx, factor.per.cell, balance.weigh
 ##' @param ... other parameters will be passed to con$buildGraph()
 ##' @return a data frame with $k $m columns giving k and the corresponding modularity
 ##' @export
-scan.k.modularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.internal.edges=TRUE, verbose=TRUE, plot=TRUE, ... ) {
+scanKModularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.internal.edges=TRUE, verbose=TRUE, plot=TRUE, ... ) {
   k.seq <- seq(min,max,by=by);
   n.cores <- con$n.cores;
   con$n.cores <- 1;
@@ -1069,7 +1053,7 @@ scan.k.modularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.
     if(omit.internal.edges) {
       x <- delete_edges(x,which(E(x)$type==0))
       #adj.mtx <- as_adj(x,attr='weight')
-      #adj.mtx <- conos:::t.reduce.edges.iteratively(adj.mtx,kv)
+      #adj.mtx <- conos:::reduceEdgesInGraphIteratively(adj.mtx,kv)
       #adj.mtx <- drop0(adj.mtx*t(adj.mtx))
       #adj.mtx@x <- sqrt(adj.mtx@x)
       #x <- graph_from_adjacency_matrix(adj.mtx,mode = "undirected",weighted=TRUE)

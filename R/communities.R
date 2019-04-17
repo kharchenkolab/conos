@@ -28,7 +28,7 @@ multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=F),
   if(verbose) cat("found",length(unique(mem)),"communities\nrunning walktraps ... ")
 
   # calculate hierarchy on the multilevel clusters
-  cgraph <- get.cluster.graph(graph,mem)
+  cgraph <- getClusterGraph(graph,mem)
   chwt <- walktrap.community(cgraph,steps=8)
   d <- as.dendrogram(chwt);
 
@@ -133,7 +133,7 @@ multimulti.community <- function(graph, n.cores=parallel::detectCores(logical=F)
   if(verbose) cat("found",length(unique(mem)),"communities\nrunning multilevel 2 ... ")
 
   # calculate hierarchy on the multilevel clusters
-  cgraph <- get.cluster.graph(graph,mem)
+  cgraph <- getClusterGraph(graph,mem)
   chwt <- walktrap.community(cgraph,steps=8)
   d <- as.dendrogram(chwt);
 
@@ -257,7 +257,7 @@ rleiden.community <- function(graph, K=2, n.cores=parallel::detectCores(logical=
   if(hierarchical) {
     # calculate hierarchy on the multilevel clusters
     if(length(wtl)>1) {
-      cgraph <- get.cluster.graph(graph,mem)
+      cgraph <- getClusterGraph(graph,mem)
       chwt <- walktrap.community(cgraph,steps=8)
       d <- as.dendrogram(chwt);
 
