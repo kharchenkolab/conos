@@ -434,6 +434,7 @@ saveDEasJSON <- function(de.results = NULL, saveprefix = NULL, gene.metadata = N
 #' @export getBetweenCellTypeDE
 getBetweenCellTypeDE <- function(con.obj, sample.groups =  NULL, groups=NULL, cooks.cutoff = FALSE, refgroup = NULL, altgroup = NULL, min.cell.count = 10,
                                  independent.filtering = FALSE, cluster.sep.chr = '+',return.details=TRUE, only.paired=TRUE) {
+  # TODO: do we really need sample.groups here? They are used in the corrected version for some unknown reason.
   validateBetweenCellTypeParams(con.obj, groups, sample.groups, refgroup, altgroup, cluster.sep.chr)
   ## Get the samples from the panel to use in this comparison
   aggr2 <- rawMatricesWithCommonGenes(con.obj, sample.groups) %>%

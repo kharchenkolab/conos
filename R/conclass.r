@@ -1,5 +1,3 @@
-
-
 ##' A function for quickly plotting collections and joint clustering
 ##'
 ##' @name Conos_plotPanel
@@ -635,30 +633,56 @@ Conos <- setRefClass(
 
       if(is.null(clustering)) clustering <- names(clusters)[[1]]
 
-      if(is.null(clusters[[clustering]])) stop(paste("clustering",clustering,"doesn't exist, run findCommunity() first"))
-      if(is.null(clusters[[clustering]]$stability)) stop(paste("clustering",clustering,"doesn't have stability info. Run findCommunity( ... , test.stability=TRUE) first"))
+      if(is.null(clusters[[clustering]]))
+        stop(paste("clustering",clustering,"doesn't exist, run findCommunity() first"))
+
+      if(is.null(clusters[[clustering]]$stability))
+        stop(paste("clustering",clustering,"doesn't have stability info. Run findCommunity( ... , test.stability=TRUE) first"))
 
       st <- clusters[[clustering]]$stability
       nclusters <- ncol(st$flat$jc)
       jitter.alpha <- 0.1;
 
       if(what=='all' || what=='ari') {
-        p.fai <- ggplot(data.frame(aRI=st$flat$ari),aes(x=1,y=aRI))+geom_boxplot(notch=T,outlier.shape=NA)+  geom_point(shape=16, position = position_jitter(),alpha=jitter.alpha) + guides(color=FALSE)  + geom_hline(yintercept=1, linetype="dashed", alpha=0.2) +ylim(c(0,1)) + ylab("adjusted Rand Index") + theme(legend.position="none",axis.ticks.x=element_blank(),axis.text.x=element_blank())+xlab(" ")
-        if(what=='ari') return(p.fai)
+        p.fai <- ggplot2::ggplot(data.frame(aRI=st$flat$ari), ggplot2::aes(x=1,y=aRI)) +
+          ggplot2::geom_boxplot(notch=T,outlier.shape=NA) +
+          ggplot2::geom_point(shape=16, position = ggplot2::position_jitter(), alpha=jitter.alpha) +
+          ggplot2::guides(color=FALSE) +
+          ggplot2::geom_hline(yintercept=1, linetype="dashed", alpha=0.2) +
+          ggplot2::ylim(c(0,1)) + ggplot2::labs(x=" ", y="adjusted Rand Index") +
+          ggplot2::theme(legend.position="none", axis.ticks.x=ggplot2::element_blank(), axis.text.x=ggplot2::element_blank())
+
+        if(what=='ari')
+          return(p.fai)
       }
 
       if(what=='all' || what=='fjc') {
         df <- reshape2::melt(st$flat$jc);
-        colnames(df) <- c('rep','cluster','jc'); df$cluster <- factor(colnames(st$flat$jc)[df$cluster],levels=levels(clusters[[clustering]]$groups))
-        p.fjc <- ggplot(df,aes(x=cluster,y=jc,color=cluster)) + geom_boxplot(aes(color=cluster),notch=T,outlier.shape=NA) + geom_jitter(shape=16, position=position_jitter(0.2),alpha=jitter.alpha) + guides(color=FALSE)  + geom_hline(yintercept=1, linetype="dashed", alpha=0.2) + ylab("Jaccard coefficient (flat)")+ylim(c(0,1))
+        colnames(df) <- c('rep','cluster','jc')
+        df$cluster <- factor(colnames(st$flat$jc)[df$cluster],levels=levels(clusters[[clustering]]$groups))
+
+        p.fjc <- ggplot2::ggplot(df,aes(x=cluster,y=jc,color=cluster)) +
+          ggplot2::geom_boxplot(aes(color=cluster),notch=T,outlier.shape=NA) +
+          ggplot2::geom_jitter(shape=16, position=position_jitter(0.2),alpha=jitter.alpha) +
+          ggplot2::guides(color=FALSE) +
+          ggplot2::geom_hline(yintercept=1, linetype="dashed", alpha=0.2) +
+          ggplot2::ylab("Jaccard coefficient (flat)") + ggplot2::ylim(c(0,1))
+
         if(what=='fjc') return(p.fjc)
       }
 
       if(what=='all' || what=='hjc') {
         # hierarchical
         df <- reshape2::melt(st$hierarchical$jc[,1:nclusters])
-        colnames(df) <- c('rep','cluster','jc'); df$cluster <- factor(colnames(st$flat$jc)[df$cluster],levels=levels(clusters[[clustering]]$groups))
-        p.hjc <- ggplot(df,aes(x=cluster,y=jc,color=cluster)) + geom_boxplot(aes(color=cluster),notch=T,outlier.shape=NA) + geom_jitter(shape=16, position=position_jitter(0.2),alpha=jitter.alpha) + guides(color=FALSE)  + geom_hline(yintercept=1, linetype="dashed", alpha=0.2) + ylab("Jaccard coefficient (hierarchical)")+ylim(c(0,1))
+        colnames(df) <- c('rep','cluster','jc');
+        df$cluster <- factor(colnames(st$flat$jc)[df$cluster],levels=levels(clusters[[clustering]]$groups))
+        p.hjc <- ggplot2::ggplot(df,aes(x=cluster,y=jc,color=cluster)) +
+          ggplot2::geom_boxplot(aes(color=cluster),notch=T,outlier.shape=NA) +
+          ggplot2::geom_jitter(shape=16, position=ggplot2::position_jitter(0.2), alpha=jitter.alpha) +
+          ggplot2::guides(color=FALSE) +
+          ggplot2::geom_hline(yintercept=1, linetype="dashed", alpha=0.2) +
+          ggplot2::ylab("Jaccard coefficient (hierarchical)") + ggplot2::ylim(c(0,1))
+
         if(what=='hjc') return(p.hjc)
       }
 
@@ -689,7 +713,6 @@ Conos <- setRefClass(
       }
 
       cowplot::plot_grid(plotlist=list(p.fai,p.fjc,p.hjc),nrow=1,rel_widths=c(4,nclusters,nclusters))
-
     },
 
 

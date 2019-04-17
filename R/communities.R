@@ -11,8 +11,9 @@
 ##' @param level what level of multitrap clustering to use in the starting step. By default, uses the top level. An integer can be specified for a lower level (i.e. 1).
 ##' @param ... passed to walktrap
 ##' @return a fakeCommunities object that has methods membership() and as.dendrogram() to mimic regular igraph returns
-##' @export
 multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=F), hclust.link='single', min.community.size=10, verbose=FALSE, level=NULL, ...) {
+  .Deprecated()
+
   if(verbose) cat("running multilevel ... ");
   mt <- multilevel.community(graph);
 
@@ -115,8 +116,9 @@ multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=F),
 ##' @param level what level of multitrap clustering to use in the starting step. By default, uses the top level. An integer can be specified for a lower level (i.e. 1).
 ##' @param ... passed to walktrap
 ##' @return a fakeCommunities object that has methods membership() and as.dendrogram() to mimic regular igraph returns
-##' @export
 multimulti.community <- function(graph, n.cores=parallel::detectCores(logical=F), hclust.link='single', min.community.size=10, verbose=FALSE, level=NULL, ...) {
+  .Deprecated()
+
   if(verbose) cat("running multilevel 1 ... ");
   mt <- multilevel.community(graph);
 
@@ -200,14 +202,14 @@ leiden.community <- function(graph, resolution=1.0, n.iterations=2) {
 ##' @return a fakeCommunities object that has methods membership() ... does not return a dendrogram ... see cltrap.community() to constructo that
 ##' @export
 rleiden.community <- function(graph, K=2, n.cores=parallel::detectCores(logical=F), min.community.size=10, verbose=FALSE, resolution=1, K.current=1, hierarchical=TRUE, ...) {
-  
+
   if(verbose & K.current==1) cat(paste0("running ",K,"-recursive Leiden clustering: "));
-  if(length(resolution)>1) { 
+  if(length(resolution)>1) {
     if(length(resolution)!=K) { stop("resolution value must be either a single number or a vector of length K")}
-    res <- resolution[K.current] 
+    res <- resolution[K.current]
   } else { res <- resolution }
   mt <- leiden.community(graph, resolution=res, ...);
-  
+
   mem <- membership(mt);
   tx <- table(mem)
   ivn <- names(tx)[tx<min.community.size]
@@ -215,10 +217,10 @@ rleiden.community <- function(graph, K=2, n.cores=parallel::detectCores(logical=
     mem[mem %in% ivn] <- as.integer(ivn[1]); # collapse into one group
   }
   if(verbose) cat(length(unique(mem)),' ');
-  
+
   if(K.current<K) {
     # start recursive run
-    if(n.cores>1) { 
+    if(n.cores>1) {
       wtl <- mclapply(conos:::sn(unique(mem)), function(cluster) {
         cn <- names(mem)[which(mem==cluster)]
         sg <- induced.subgraph(graph,cn)
@@ -237,7 +239,7 @@ rleiden.community <- function(graph, K=2, n.cores=parallel::detectCores(logical=
     fv <- unlist(lapply(conos:::sn(names(wtl)),function(cn) {
       paste(cn,as.character(mbl[[cn]]),sep='-')
     }))
-    names(fv) <- unlist(lapply(mbl,names))  
+    names(fv) <- unlist(lapply(mbl,names))
   } else {
     fv <- mem;
     if(hierarchical) {
@@ -251,23 +253,23 @@ rleiden.community <- function(graph, K=2, n.cores=parallel::detectCores(logical=
       },n.cores=n.cores)
     }
   }
-  
+
   if(hierarchical) {
     # calculate hierarchy on the multilevel clusters
     if(length(wtl)>1) {
       cgraph <- get.cluster.graph(graph,mem)
       chwt <- walktrap.community(cgraph,steps=8)
       d <- as.dendrogram(chwt);
-      
+
       # merge hierarchical portions
       wtld <- lapply(wtl,as.dendrogram)
       max.height <- max(unlist(lapply(wtld,attr,'height')))
-      
+
       # shift leaf ids to fill in 1..N range
       mn <- unlist(lapply(wtld,attr,'members'))
       shift.leaf.ids <- function(l,v) { if(is.leaf(l)) { la <- attributes(l); l <- as.integer(l)+v; attributes(l) <- la; }; l  }
       nshift <- cumsum(c(0,mn))[-(length(mn)+1)]; names(nshift) <- names(mn); # how much to shift ids in each tree
-      
+
       get.heights <- function(l) {
         if(is.leaf(l)) {
           return(attr(l,'height'))
@@ -278,15 +280,15 @@ rleiden.community <- function(graph, K=2, n.cores=parallel::detectCores(logical=
       min.d.height <- min(get.heights(d))
       height.scale <- length(wtld)*2
       height.shift <- 2
-      
+
       shift.heights <- function(l,s) { attr(l,'height') <- attr(l,'height')+s; l }
-      
+
       glue.dends <- function(l) {
         if(is.leaf(l)) {
           nam <- as.character(attr(l,'label'));
           id <- dendrapply(wtld[[nam]], shift.leaf.ids, v=nshift[nam])
           return(dendrapply(id,shift.heights,s=max.height-attr(id,'height')))
-          
+
         }
         attr(l,'height') <- (attr(l,'height')-min.d.height)*height.scale + max.height + height.shift;
         l[[1]] <- glue.dends(l[[1]]); l[[2]] <- glue.dends(l[[2]])
@@ -300,15 +302,15 @@ rleiden.community <- function(graph, K=2, n.cores=parallel::detectCores(logical=
   } else {
     combd <- NULL;
   }
-  
-  
+
+
   if(K.current==1) {
     if(verbose) {
       cat(paste0(' detected a total of ',length(unique(fv)),' clusters '));
       cat("done\n");
     }
   }
-  
+
   # enclose in a masquerading class
   res <- list(membership=fv,dendrogram=combd,algorithm='rleiden');
   if(K.current==K) {
