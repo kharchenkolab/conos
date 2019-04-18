@@ -25,7 +25,7 @@ setMethod("edgeMat", signature("seurat"), function(sample) sample@misc$edgeMat)
 
 setGeneric("getCountMatrix", function(sample) standardGeneric("getCountMatrix"))
 setMethod("getCountMatrix", signature("Pagoda2"), function(sample) t(sample$counts))
-setMethod("getCountMatrix", signature("seurat"), function(sample) sample@data)
+setMethod("getCountMatrix", signature("seurat"), function(sample) if (is.null(sample@scale.data)) sample@data else sample@scale.data)
 
 setGeneric("getRawCountMatrix", function(sample, transposed=F) standardGeneric("getRawCountMatrix"))
 setMethod("getRawCountMatrix", signature("Pagoda2"), function(sample, transposed=F) if (transposed) sample$misc$rawCounts else t(sample$misc$rawCounts))

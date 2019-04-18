@@ -1,8 +1,13 @@
 Package: conos
 Title: Clustering on Netowrk of Samples
-Version: 0.0.0.9002
-Authors@R: c( person("Peter", "Kharchenko", email = "peter_kharchenko@hms.harvard.edu", role = c("aut", "cre")), person("Nikolas","Barkas", email="nikolas_barkas@hms.harvard.edu", role="aut")) 
-Description: What the package does (one paragraph).
+Version: 1.0.0
+Authors@R: c(person("Peter", "Kharchenko", email = "peter_kharchenko@hms.harvard.edu", role = c("aut", "cre")), 
+             person("Nikolas","Barkas", email="nikolas_barkas@hms.harvard.edu", role="aut"),
+             person("Viktor","Petukhov", email="viktor.s.petuhov@ya.ru", role="aut"))
+Description: Wire together large collections of single-cell RNA-seq datasets. The package focuses on uniform 
+  mapping of homologous cell types across heterogeneous sample collections. For instance, a collection of 
+  dozens of peripheral blood samples from cancer patients, combined with dozens of controls. And perhaps also 
+  including samples of a related tissue, such as lymph nodes.
 Depends: R (>= 3.2.1), Matrix, igraph
 License: GPL3
 Encoding: UTF-8

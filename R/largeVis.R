@@ -14,16 +14,14 @@
 #'    unlike most other matrices in this package.}
 #'    \item{'k'}{The number of nearest neighbors.}
 #'  }
-#' @export
 buildWijMatrix <- function(x, threads = NULL, perplexity = 50) UseMethod("buildWijMatrix")
-#' @export
+
 #' @rdname buildWijMatrix
 buildWijMatrix.TsparseMatrix <- function(x, threads = NULL, perplexity = 50) {
   wij <- referenceWij(x@j, x@i, x@x^2, as.integer(threads), perplexity);
   return(wij)
 }
 
-#' @export
 #' @rdname buildWijMatrix
 buildWijMatrix.CsparseMatrix <- function(x, threads = NULL, perplexity = 50) {
   is <- rep(0:(ncol(x) - 1), diff(x@p))
@@ -80,7 +78,6 @@ buildWijMatrix.CsparseMatrix <- function(x, threads = NULL, perplexity = 50) {
 #' is to use the edge weights, consistent with the reference implementation.
 #'
 #' @return A dense [N,D] matrix of the coordinates projecting the w_ij matrix into the lower-dimensional space.
-#' @export
 #' @importFrom stats runif
 #' @examples
 #' \dontrun{
@@ -162,7 +159,6 @@ projectKNNs <- function(wij, # symmetric sparse matrix
 #' @param E Number of edges.
 #'
 #' @return The recommended number of sgd batches.
-#' @export
 #'
 #' @examples
 #' # Observe that increasing K has no effect on processing time
