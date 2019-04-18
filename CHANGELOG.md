@@ -1,4 +1,4 @@
-## [Unreleased]
+## [1.0.0] - 2019-04-17
 
 ### Fixed
 
@@ -12,7 +12,7 @@
 
 - multitrap.community and multimulti.community functions
 
-## [0.1.0] - 2017-09-04
+## [0.1.0] - 2019-04-17
 
 ### Added
 
