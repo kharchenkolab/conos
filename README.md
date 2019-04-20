@@ -71,7 +71,9 @@ docker run -d -p 8787:8787 -e PASSWORD=pass --name conos -it conos
 ```
 
 ## Usage example
-Please see [Conos tutorial](vignettes/walkthrough.md) for detailed usage. The overall runtime of the tutorial should be ~3minutes.
+Please see [Conos tutorial](vignettes/walkthrough.md) for detailed usage. The overall runtime of the tutorial should be ~5 minutes.
+
+Additional examples: [forcing better alignment](vignettes/adjust_alignment_strength.md), [integrating RNA-seq and ATAC-seq](http://pklab.med.harvard.edu/peterk/conos/atac_rna/example.html).
 
 Given a list of individual processed samples (`pl`), Conos processing can be as simple as this:
 ```r
