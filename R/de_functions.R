@@ -110,7 +110,7 @@ is.error <- function (x) {
 #' @param correction.method 'varianceweighted' or 'mean' specifies way to merge the fold changes from different cell types
 #' @export getCorrectionVector
 getCorrectionVector <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cutoff=FALSE, independent.filtering = FALSE,
-                                n.cores=1, cluster.sep.chr = '+', return.details=FALSE,de.init=NULL,exclude.celltypes=c(),
+                                n.cores=1, cluster.sep.chr = '<!!>', return.details=FALSE,de.init=NULL,exclude.celltypes=c(),
                                 correction.method='varianceweighted',ref.level=NULL) {
   validatePerCellTypeParams(con.obj, groups, sample.groups, ref.level, cluster.sep.chr)
     ## Main function
@@ -164,7 +164,7 @@ getCorrectionVector <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.
 #' @param return.details return detals
 #' @export getPerCellTypeDE
 getPerCellTypeDE <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cutoff = FALSE, ref.level = NULL, min.cell.count = 10,
-                             independent.filtering = FALSE, n.cores=1, cluster.sep.chr = '+',return.details=TRUE) {
+                             independent.filtering = FALSE, n.cores=1, cluster.sep.chr = '<!!>',return.details=TRUE) {
   validatePerCellTypeParams(con.obj, groups, sample.groups, ref.level, cluster.sep.chr)
 
   ## Generate a summary dataset collapsing the cells of the same type in each sample
@@ -219,7 +219,7 @@ getPerCellTypeDE <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cut
 #' @param correction correction vector obtained from getCorrectionVector
 #' @export getPerCellTypeDECorrected
 getPerCellTypeDECorrected <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cutoff = FALSE,
-                                      independent.filtering = FALSE, n.cores=1,cluster.sep.chr = '+',
+                                      independent.filtering = FALSE, n.cores=1,cluster.sep.chr = '<!!>',
                                       correction=NULL, return.details=TRUE, ref.level=NULL) {
   validatePerCellTypeParams(con.obj, groups, sample.groups, ref.level, cluster.sep.chr)
 
@@ -330,8 +330,9 @@ saveDEasCSV <- function(de.results=NULL,saveprefix=NULL,gene.metadata=NULL) {
 #' @param de.results differential expression results
 #' @param saveprefix prefix for the differential expression output
 #' @param gene.metadata data.frame with gene metadata
+#' @param cluster.sep.chr character string of length 1 specifying a delimiter to separate cluster and app names
 #' @export saveDEasJSON
-saveDEasJSON <- function(de.results = NULL, saveprefix = NULL, gene.metadata = NULL) {
+saveDEasJSON <- function(de.results = NULL, saveprefix = NULL, gene.metadata = NULL, cluster.sep.chr='<!!>') {
     ## ### DEVEL
     ## de.results <- all.percl.TvsW
     ## saveprefix <- 'json/'
@@ -377,8 +378,7 @@ saveDEasJSON <- function(de.results = NULL, saveprefix = NULL, gene.metadata = N
         ## Get the count matrix
         cm <-res.celltype$cm
         ## remove the cell type suffix
-        ## TODO make '+' a parameter
-        colnames(cm) <- strpart(colnames(cm),'+',1,fixed=TRUE)
+        colnames(cm) <- strpart(colnames(cm),cluster.sep.chr,1,fixed=TRUE)
         ## ilev entry (submatrices of cps)
         ilev <- lapply(res.celltype$sample.groups, function(sg) {
             ## In certain cases columns may be missing,skip
@@ -433,7 +433,7 @@ saveDEasJSON <- function(de.results = NULL, saveprefix = NULL, gene.metadata = N
 #' @param only.paired only keep samples that that both cell types above the min.cell.count threshold
 #' @export getBetweenCellTypeDE
 getBetweenCellTypeDE <- function(con.obj, sample.groups =  NULL, groups=NULL, cooks.cutoff = FALSE, refgroup = NULL, altgroup = NULL, min.cell.count = 10,
-                                 independent.filtering = FALSE, cluster.sep.chr = '+',return.details=TRUE, only.paired=TRUE) {
+                                 independent.filtering = FALSE, cluster.sep.chr = '<!!>',return.details=TRUE, only.paired=TRUE) {
   # TODO: do we really need sample.groups here? They are used in the corrected version for some unknown reason.
   validateBetweenCellTypeParams(con.obj, groups, sample.groups, refgroup, altgroup, cluster.sep.chr)
   ## Get the samples from the panel to use in this comparison
@@ -492,7 +492,7 @@ generateDEMatrixMetadata <- function(mtx, refgroup, altgroup, cluster.sep.chr) {
 #' @param ref.level reference level on the basis of which the correction was calculated
 #' @export getBetweenCellTypeCorrectedDE
 getBetweenCellTypeCorrectedDE <- function(con.obj, sample.groups =  NULL, groups=NULL, cooks.cutoff = FALSE, refgroup = NULL, altgroup = NULL, min.cell.count = 10,
-                                          independent.filtering = FALSE, cluster.sep.chr = '+',return.details=TRUE, only.paired=TRUE, correction = NULL, ref.level=NULL) {
+                                          independent.filtering = FALSE, cluster.sep.chr = '<!!>',return.details=TRUE, only.paired=TRUE, correction = NULL, ref.level=NULL) {
   validateBetweenCellTypeParams(con.obj, groups, sample.groups, refgroup, altgroup, cluster.sep.chr)
   ## Get the samples from the panel to use in this comparison
   aggr2 <- rawMatricesWithCommonGenes(con.obj, sample.groups) %>%

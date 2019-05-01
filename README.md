@@ -8,14 +8,14 @@ It's a package to wire together large collections of single-cell RNA-seq dataset
 Conos applies one of many error-prone methods to align each pair of samples in a collection, establishing weighted inter-sample cell-to-cell links, creating a global joint graph. Cells of the same type will tend to map to each other across many such pair-wise comparisons, forming cliques, that can be recognized as clusters (graph communities). 
 
 * What does it produce?
-In essense, Conos will take a large, potentially heterogeneous panel of samples and will produce clustering grouping similar cell subpopulations togehter in a way that will be robust to inter-sample variation:
+In essense, Conos will take a large, potentially heterogeneous panel of samples and will produce clustering grouping similar cell subpopulations togehter in a way that will be robust to inter-sample variation:  
 ![example](http://pklab.med.harvard.edu/peterk/conos/bm_uniform_labels_trim.png)
 
 * What are the advantages over existing alignment methods? 
 Conos is robust to heterogeneity of samples within collection, as well as noise. The ability to resolve finer subpopulation structure improves as the size of the panel increases.
 
 * What do I need to run it?
-Conos is an R package. Currently, it supports pre-processing (filtering, normalization, etc.) of the individual datasets using [pagoda2](https://github.com/hms-dbmi/pagoda2) or [Seurat](https://satijalab.org/seurat/).
+Conos is an R package. Currently, it supports pre-processing (filtering, normalization, etc.) of the individual datasets using [pagoda2](https://github.com/hms-dbmi/pagoda2) or [Seurat](https://satijalab.org/seurat/) (**Note: only Seurat < 3.0.0 is currently supported**).
 
 ## Installation
 Native installations have been tested in Linux. Normal installation should take <10min.

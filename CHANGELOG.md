@@ -1,3 +1,12 @@
+## [Unreleased]
+
+## Fixed
+
+- Default value for `cluster.sep.chr` in DE functions is changed from '+' to '<!!>', 
+  as it shouldn't be normally present in cluster names
+- Removed Boost dependency
+- Fixed version of Seurat and fpc packages in Docker
+
 ## [1.0.0] - 2019-04-17
 
 ### Fixed
