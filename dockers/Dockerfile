@@ -7,10 +7,8 @@ RUN apt-get update --yes && apt-get install --no-install-recommends --yes \
   less \
   libcurl4-openssl-dev \
   libssl-dev \
-  gsl-bin \
   libgsl0-dev \
   libeigen3-dev \
-  libboost-all-dev \ 
   libssl-dev \
   libcurl4-openssl-dev \
   libssl-dev \
@@ -19,15 +17,16 @@ RUN apt-get update --yes && apt-get install --no-install-recommends --yes \
   libgtk2.0-dev \
   libcairo2-dev \
   xvfb  \
-  xauth \ 
+  xauth \
   xfonts-base \
   libz-dev \
-  libhdf5-dev 
+  libhdf5-dev
 
 RUN \
-  R -e 'chooseCRANmirror(ind=52); install.packages(c("RcppEigen", "urltools","Seurat"))' && \
-  R -e 'chooseCRANmirror(ind=52); source("http://bioconductor.org/biocLite.R"); biocLite(c("GO.db", "org.Hs.eg.db","org.Mm.eg.db", "pcaMethods","DESeq2"), suppressUpdates=TRUE);' && \ 
-  R -e 'chooseCRANmirror(ind=52); library(devtools); install_github("jkrijthe/Rtsne",ref="openmp")' && \
-  R -e 'chooseCRANmirror(ind=52); library(devtools); install_github("jlmelville/uwot")' && \
-  R -e 'chooseCRANmirror(ind=52); library(devtools); install_github("hms-dbmi/pagoda2")' && \
-  R -e 'chooseCRANmirror(ind=52); library(devtools); install_github("hms-dbmi/conos")'
+  R -e 'chooseCRANmirror(ind=52); install.packages(c("RcppEigen", "urltools", "Rtsne"))' && \
+  R -e 'devtools::install_url("https://cran.r-project.org/src/contrib/Archive/fpc/fpc_2.1-11.tar.gz")' && \
+  R -e 'devtools::install_github("satijalab/seurat", ref="v2.3.3")' && \
+  R -e 'source("http://bioconductor.org/biocLite.R"); biocLite(c("GO.db", "org.Hs.eg.db","org.Mm.eg.db", "pcaMethods","DESeq2"), suppressUpdates=TRUE);' && \
+  R -e 'devtools::install_github("jlmelville/uwot")' && \
+  R -e 'devtools::install_github("hms-dbmi/pagoda2")' && \
+  R -e 'devtools::install_github("hms-dbmi/conos", ref="dev")'

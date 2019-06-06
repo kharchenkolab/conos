@@ -1,6 +1,6 @@
 Package: conos
 Title: Clustering on Netowrk of Samples
-Version: 1.0.0
+Version: 1.0.1
 Authors@R: c(person("Peter", "Kharchenko", email = "peter_kharchenko@hms.harvard.edu", role = c("aut", "cre")), 
              person("Nikolas","Barkas", email="nikolas_barkas@hms.harvard.edu", role="aut"),
              person("Viktor","Petukhov", email="viktor.s.petuhov@ya.ru", role="aut"))
