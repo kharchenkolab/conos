@@ -8,7 +8,7 @@ It's a package to wire together large collections of single-cell RNA-seq dataset
 Conos applies one of many error-prone methods to align each pair of samples in a collection, establishing weighted inter-sample cell-to-cell links, creating a global joint graph. Cells of the same type will tend to map to each other across many such pair-wise comparisons, forming cliques, that can be recognized as clusters (graph communities). 
 
 * What does it produce?
-In essense, Conos will take a large, potentially heterogeneous panel of samples and will produce clustering grouping similar cell subpopulations togehter in a way that will be robust to inter-sample variation:  
+In essense, Conos will take a large, potentially heterogeneous panel of samples and will produce clustering grouping similar cell subpopulations together in a way that will be robust to inter-sample variation:  
 ![example](http://pklab.med.harvard.edu/peterk/conos/bm_uniform_labels_trim.png)
 
 * What are the advantages over existing alignment methods? 
@@ -60,7 +60,7 @@ docker run -p 8787:8787 -e PASSWORD=pass docker.io/vpetukhov/conos:latest
 The first time you run the command it will download several images so make sure that you have fast internet access setup. You can then point your browser to http://localhost:8787/ to get an Rstudio environment with pagoda2 and conos installed (log in using credentials rstudio/pass). Explore the docker [--mount option]([https://docs.docker.com/storage/volumes/) to allow access of the docker image to your local files.
 
 ### Building docker image on the fly
-If you want to run an up-to-date version of Conos (recommended), download the [Dockerfile](https://github.com/hms-dbmi/conos/blob/master/dockers/Dockerfile) (available in this repo under /dockers) and run to following command to build it:
+If you want to run an up-to-date version of Conos (recommended), download the [Dockerfile](https://github.com/hms-dbmi/conos/blob/master/dockers/Dockerfile) (available in this repo under `/dockers`) and run to following command to build it:
 ```
 docker build -t conos .
 ```
