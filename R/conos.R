@@ -830,7 +830,7 @@ basicSeuratProc <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do
     so <- NormalizeData(object = so, verbose = verbose)
     so <- FindVariableFeatures(object = so, verbose = verbose)
     so <- ScaleData(object = so, vars.to.regress = vars.to.regress, verbose = verbose)
-    so <- RunPCA(object = so, npcs = n.pcs)
+    so <- RunPCA(object = so, npcs = n.pcs, verbose = verbose)
     if (cluster) {
       so <- FindNeighbors(object = so, dims = 1:n.pcs, verbose = verbose)
       so <- FindClusters(object = so, n.iter = 500, n.start = 10, verbose = verbose)
