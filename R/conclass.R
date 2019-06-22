@@ -66,8 +66,7 @@ Conos <- setRefClass(
           if(!is.list(x)) {
             stop("x is not a list of pagoda2 or Seurat objects")
           }
-
-          if (class(x[[1]]) %in% c('Pagoda2', 'seurat')) {
+          if (inherits(x = x[[1]], what = c('Pagoda2', 'seurat', 'Seurat'))) {
             addSamples(x);
           } else {
             stop("only Pagoda2 or Seurat result lists are currently supported");
@@ -570,7 +569,7 @@ Conos <- setRefClass(
 
     plotPanel=function(clustering=NULL, groups=NULL, colors=NULL, gene=NULL, use.local.clusters=FALSE, plot.theme=NULL, ...) {
       if (use.local.clusters) {
-        if (is.null(clustering) && !("seurat" %in% class(samples[[1]]))) {
+        if (is.null(clustering) && !(inherits(x = samples[[1]], what = c('seurat', 'Seurat')))) {
           stop("You have to provide 'clustering' parameter to be able to use local clusters")
         }
 
@@ -844,4 +843,4 @@ Conos <- setRefClass(
       return(rep(names(cl), sapply(cl, length)) %>% stats::setNames(unlist(cl)) %>% as.factor())
     }
   )
-);
+)
