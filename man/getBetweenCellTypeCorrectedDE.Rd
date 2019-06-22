@@ -7,7 +7,7 @@
 getBetweenCellTypeCorrectedDE(con.obj, sample.groups = NULL,
   groups = NULL, cooks.cutoff = FALSE, refgroup = NULL,
   altgroup = NULL, min.cell.count = 10,
-  independent.filtering = FALSE, cluster.sep.chr = "+",
+  independent.filtering = FALSE, cluster.sep.chr = "<!!>",
   return.details = TRUE, only.paired = TRUE, correction = NULL,
   ref.level = NULL)
 }

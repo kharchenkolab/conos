@@ -6,7 +6,7 @@
 \usage{
 getCorrectionVector(con.obj, groups = NULL, sample.groups = NULL,
   cooks.cutoff = FALSE, independent.filtering = FALSE, n.cores = 1,
-  cluster.sep.chr = "+", return.details = FALSE, de.init = NULL,
+  cluster.sep.chr = "<!!>", return.details = FALSE, de.init = NULL,
   exclude.celltypes = c(), correction.method = "varianceweighted",
   ref.level = NULL)
 }

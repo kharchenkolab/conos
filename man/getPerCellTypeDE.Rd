@@ -6,8 +6,8 @@
 \usage{
 getPerCellTypeDE(con.obj, groups = NULL, sample.groups = NULL,
   cooks.cutoff = FALSE, ref.level = NULL, min.cell.count = 10,
-  independent.filtering = FALSE, n.cores = 1, cluster.sep.chr = "+",
-  return.details = TRUE)
+  independent.filtering = FALSE, n.cores = 1,
+  cluster.sep.chr = "<!!>", return.details = TRUE)
 }
 \arguments{
 \item{con.obj}{conos object}
