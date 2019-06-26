@@ -42,3 +42,5 @@ rsconnect/
 *.a
 *~
 inst/doc
+
+*.ipynb_checkpoints*

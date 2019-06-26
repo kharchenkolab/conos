@@ -743,42 +743,6 @@ stableTreeClusters <- function(refwt,tests,min.threshold=0.8,min.size=10,n.cores
   }
 }
 
-#' @description Create Seurat object from gene count matrix
-#'
-#' @param count.matrix gene count matrix
-#' @param vars.to.regress variables to regress with Seurat
-#' @param verbose verbose mode
-#' @param do.par use parallel processing for regressing out variables faster
-#' @param n.pcs number of principal components
-#' @param cluster do clustering
-#' @param tsne do tSNE embedding
-#' @return Seurat object
-#' @export
-basicSeuratProc <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do.par=TRUE, n.pcs=100, cluster=TRUE, tsne=TRUE) {
-  if (!requireNamespace("Seurat")) {
-    stop("You need to install 'Seurat' package to be able to use this function")
-  }
-
-  rownames(count.matrix) <- make.unique(rownames(count.matrix))
-
-  max.n.pcs <- min(nrow(count.matrix) - 1, ncol(count.matrix) - 1, n.pcs)
-  so <- Seurat::CreateSeuratObject(count.matrix, display.progress=verbose) %>%
-    Seurat::NormalizeData(display.progress=verbose) %>%
-    Seurat::ScaleData(vars.to.regress=vars.to.regress, display.progress=verbose, do.par=do.par) %>%
-    Seurat::FindVariableGenes(do.plot = FALSE, display.progress=verbose) %>%
-    Seurat::RunPCA(pcs.compute=max.n.pcs, do.print=FALSE)
-
-  if (cluster) {
-    so <- Seurat::FindClusters(so, n.iter=500, n.start=10, dims.use=1:n.pcs, print.output = F)
-  }
-
-  if (tsne) {
-    so <- Seurat::RunTSNE(so, dims.use=1:n.pcs)
-  }
-
-  return(so)
-}
-
 convertDistanceToSimilarity <- function(distances, metric, l2.sigma=1e5, cor.base=1) {
   if(metric=='angular') {
     return(pmax(0, cor.base - distances))
