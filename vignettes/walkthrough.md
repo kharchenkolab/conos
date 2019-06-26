@@ -402,27 +402,27 @@ con$embedGraph(method="UMAP", min.dist=0.01, spread=15, n.cores=4)
     ## Convert graph to adjacency list...
     ## Done
     ## Estimate nearest neighbors and commute times...
-    ## Estimating hitting distances: 21:00:03.
+    ## Estimating hitting distances: 07:08:04.
     ## Done.
-    ## Estimating commute distances: 21:00:09.
-    ## Hashing adjacency list: 21:00:09.
+    ## Estimating commute distances: 07:08:11.
+    ## Hashing adjacency list: 07:08:11.
     ## Done.
-    ## Estimating distances: 21:00:10.
+    ## Estimating distances: 07:08:11.
     ## Done
     ## Done.
-    ## All done!: 21:00:12.
+    ## All done!: 07:08:14.
     ## Done
     ## Estimate UMAP embedding...
 
-    ## 21:00:13 Read 12000 rows and found 1 numeric columns
+    ## 07:08:14 Read 12000 rows and found 1 numeric columns
 
-    ## 21:00:13 Commencing smooth kNN distance calibration using 4 threads
+    ## 07:08:14 Commencing smooth kNN distance calibration using 4 threads
 
-    ## 21:00:14 Initializing from normalized Laplacian + noise
+    ## 07:08:16 Initializing from normalized Laplacian + noise
 
-    ## 21:00:15 Commencing optimization for 1000 epochs, with 359138 positive edges using 4 threads
+    ## 07:08:17 Commencing optimization for 1000 epochs, with 359242 positive edges using 4 threads
 
-    ## 21:00:34 Optimization finished
+    ## 07:08:36 Optimization finished
 
     ## Done
 
@@ -680,13 +680,13 @@ str( con$getClusterCountMatrices() , 1)
 ```
 
     ## List of 4
-    ##  $ MantonBM1_HiSeq_1: num [1:33694, 1:23] 0 0 0 1 0 0 0 0 41 5 ...
+    ##  $ MantonBM1_HiSeq_1: num [1:33694, 1:19] 0 0 0 1 0 0 0 0 41 5 ...
     ##   ..- attr(*, "dimnames")=List of 2
-    ##  $ MantonBM2_HiSeq_1: num [1:33694, 1:23] 0 0 0 0 0 0 0 0 53 3 ...
+    ##  $ MantonBM2_HiSeq_1: num [1:33694, 1:19] 0 0 0 0 0 0 0 0 72 4 ...
     ##   ..- attr(*, "dimnames")=List of 2
-    ##  $ MantonCB1_HiSeq_1: num [1:33694, 1:23] 0 0 0 1 0 0 0 0 107 8 ...
+    ##  $ MantonCB1_HiSeq_1: num [1:33694, 1:19] 0 0 0 1 0 0 0 0 98 6 ...
     ##   ..- attr(*, "dimnames")=List of 2
-    ##  $ MantonCB2_HiSeq_1: num [1:33694, 1:23] 0 0 0 0 0 0 0 0 156 21 ...
+    ##  $ MantonCB2_HiSeq_1: num [1:33694, 1:19] 0 0 0 0 0 0 0 0 62 10 ...
     ##   ..- attr(*, "dimnames")=List of 2
 
 The list above, returns pooled count matrix for each sample, where the
@@ -739,20 +739,20 @@ res <- de.info[['B cells']]$res
 head(res[order(res$padj,decreasing = FALSE),])
 ```
 
-    ##                baseMean log2FoldChange     lfcSE      stat       pvalue
-    ## JCHAIN         392.5728      -3.447127 0.4513098 -7.638052 2.205330e-14
-    ## RP11-386I14.4  400.3292       2.762257 0.4019961  6.871352 6.359638e-12
-    ## CD69           504.7442       2.616618 0.4081196  6.411399 1.441904e-10
-    ## NFKBIA        1095.4470       2.648835 0.4145070  6.390325 1.655332e-10
-    ## CH17-373J23.1  332.2345       2.854616 0.4522132  6.312543 2.744863e-10
-    ## MPO             75.4997      -5.873521 0.9833194 -5.973157 2.327063e-09
+    ##                 baseMean log2FoldChange     lfcSE      stat       pvalue
+    ## JCHAIN         394.51245      -3.396684 0.4477261 -7.586524 3.286026e-14
+    ## RP11-386I14.4  397.42964       2.718649 0.4030503  6.745185 1.528324e-11
+    ## CD69           508.16469       2.587829 0.4039742  6.405928 1.494578e-10
+    ## NFKBIA        1089.69234       2.617462 0.4101491  6.381733 1.750947e-10
+    ## CH17-373J23.1  325.23043       2.827490 0.4552153  6.211324 5.253998e-10
+    ## MPO             83.80674      -6.025703 0.9881456 -6.097991 1.074097e-09
     ##                       padj
-    ## JCHAIN        3.848742e-10
-    ## RP11-386I14.4 5.549420e-08
-    ## CD69          7.222215e-07
-    ## NFKBIA        7.222215e-07
-    ## CH17-373J23.1 9.580670e-07
-    ## MPO           5.076488e-06
+    ## JCHAIN        5.738059e-10
+    ## RP11-386I14.4 1.334380e-07
+    ## CD69          7.643758e-07
+    ## NFKBIA        7.643758e-07
+    ## CH17-373J23.1 1.834906e-06
+    ## MPO           2.993422e-06
 
 # Forcing better alignment
 
