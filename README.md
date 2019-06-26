@@ -1,5 +1,19 @@
 # conos
 
+- [Clustering on Network of Samples](#clustering-on-network-of-samples)
+- [Installation](#installation)
+  * [Native installation](#native-installation)
+    + [System dependencies](#system-dependencies)
+      - [Ubuntu Dependencies](#ubuntu-dependencies)
+      - [Red-Hat-based distributions Dependencies](#red-hat-based-distributions-dependencies)
+      - [OS X](#os-x)
+- [Installing Conos as Docker Container](#installing-conos-as-docker-container)
+  * [Ready-to-run docker image](#ready-to-run-docker-image)
+  * [Building docker image on the fly](#building-docker-image-on-the-fly)
+- [Usage example](#usage-example)
+  * [Alignment of datasets](#alignment-of-datasets)
+  * [Integration with ScanPy](#integration-with-scanpy)
+  
 ## Clustering on Network of Samples
 
 * What is Conos? 
@@ -84,6 +98,8 @@ docker run -d -p 8787:8787 -e PASSWORD=pass --name conos -it conos
 
 ## Usage example
 
+### Alignment of datasets
+
 Please see [Conos tutorial](vignettes/walkthrough.md) for detailed usage. The overall runtime of the tutorial should be ~5 minutes.
 
 Additional examples: [forcing better alignment](vignettes/adjust_alignment_strength.md), [integrating RNA-seq and ATAC-seq](http://pklab.med.harvard.edu/peterk/conos/atac_rna/example.html).
@@ -105,3 +121,10 @@ con$plotGraph()
 # plot panel with joint clustering results
 con$plotPanel()
 ```
+
+### Integration with ScanPy
+
+For integration with ScanPy you need to save Conos files on disk from R session, 
+than upload these files from Python. See the following tutorials:
+- [Save Conos for ScanPy](vignettes/scanpy_integration.Rmd)
+- [Load ScanPy from Conos](vignettes/scanpy_integration.ipynb)
