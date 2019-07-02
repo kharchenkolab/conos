@@ -1,48 +1,52 @@
 Package: conos
 Title: Clustering on Netowrk of Samples
-Version: 1.0.2
-Authors@R: c(person("Peter", "Kharchenko", email = "peter_kharchenko@hms.harvard.edu", role = c("aut", "cre")), 
+Version: 1.0.3
+Authors@R: c(person("Peter", "Kharchenko", email = "peter_kharchenko@hms.harvard.edu", role = c("aut", "cre")),
              person("Nikolas","Barkas", email="nikolas_barkas@hms.harvard.edu", role="aut"),
              person("Viktor","Petukhov", email="viktor.s.petuhov@ya.ru", role="aut"))
-Description: Wire together large collections of single-cell RNA-seq datasets. The package focuses on uniform 
-  mapping of homologous cell types across heterogeneous sample collections. For instance, a collection of 
-  dozens of peripheral blood samples from cancer patients, combined with dozens of controls. And perhaps also 
+Description: Wire together large collections of single-cell RNA-seq datasets. The package focuses on uniform
+  mapping of homologous cell types across heterogeneous sample collections. For instance, a collection of
+  dozens of peripheral blood samples from cancer patients, combined with dozens of controls. And perhaps also
   including samples of a related tissue, such as lymph nodes.
 Depends: R (>= 3.2.1), Matrix, igraph
 License: GPL3
 Encoding: UTF-8
 LazyData: true
 Imports:
+  abind,
   cowplot,
+  d3heatmap,
+  dendextend,
   dplyr,
-  reshape2,
+  entropy,
   ggplot2,
+  ggrepel,
+  gridExtra,
+  heatmaply,
   irlba,
+  magrittr,
+  Matrix.utils,
+  methods,
+  parallel,
+  reshape2,
   Rcpp,
   RcppArmadillo,
   RcppProgress,
+  rlang,
   Rtsne,
-  parallel,
+  shiny,
   stats,
   utils,
-  abind,
-  ggrepel,
-  shiny,
-  gridExtra,
-  dendextend,
-  heatmaply,
-  d3heatmap,
-  viridis,
-  entropy,
-  Matrix.utils
+  viridis
 Suggests:
+  DESeq2,
   entropy,
   ggrastr,
-  shinycssloaders,
-  DESeq2,
   knitr,
+  pbapply,
   rmarkdown,
-  pbapply
+  Seurat,
+  shinycssloaders
 VignetteBuilder: knitr
 RoxygenNote: 6.1.1
 LinkingTo: Rcpp, RcppArmadillo, RcppEigen, RcppProgress, igraph

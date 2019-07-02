@@ -5,7 +5,7 @@
 \title{Save differential expression results as JSON}
 \usage{
 saveDEasJSON(de.results = NULL, saveprefix = NULL,
-  gene.metadata = NULL)
+  gene.metadata = NULL, cluster.sep.chr = "<!!>")
 }
 \arguments{
 \item{de.results}{differential expression results}
@@ -13,6 +13,8 @@ saveDEasJSON(de.results = NULL, saveprefix = NULL,
 \item{saveprefix}{prefix for the differential expression output}
 
 \item{gene.metadata}{data.frame with gene metadata}
+
+\item{cluster.sep.chr}{character string of length 1 specifying a delimiter to separate cluster and app names}
 }
 \description{
 Save differential expression results as JSON

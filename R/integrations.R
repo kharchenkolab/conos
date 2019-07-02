@@ -19,6 +19,61 @@ mergeCountMatrices <- function(cms, transposed=F) {
   return(res)
 }
 
+checkSeuratV3 <- function() {
+  if (!requireNamespace('Seurat', quietly = TRUE) || packageVersion('Seurat') < package_version(x = '3.0.0')) {
+    stop("Use of Seurat v3-backed Conos objects requires Seurat v3.X installed")
+  }
+}
+
+seuratProcV2 <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do.par=TRUE, n.pcs=100, cluster=TRUE, tsne=TRUE, umap=FALSE) {
+  if (verbose) {
+    message("Running Seurat v2 workflow")
+  }
+  rownames(count.matrix) <- make.unique(rownames(count.matrix))
+  max.n.pcs <- min(nrow(count.matrix) - 1, ncol(count.matrix) - 1, n.pcs)
+  so <- Seurat::CreateSeuratObject(count.matrix, display.progress=verbose) %>%
+    Seurat::NormalizeData(display.progress=verbose) %>%
+    Seurat::ScaleData(vars.to.regress=vars.to.regress, display.progress=verbose, do.par=do.par) %>%
+    Seurat::FindVariableGenes(do.plot = FALSE, display.progress=verbose) %>%
+    Seurat::RunPCA(pcs.compute=max.n.pcs, do.print=FALSE)
+  if (cluster) {
+    so <- Seurat::FindClusters(so, n.iter=500, n.start=10, dims.use=1:n.pcs, print.output = F)
+  }
+  if (tsne) {
+    so <- Seurat::RunTSNE(so, dims.use=1:n.pcs)
+  }
+  if (umap) {
+    if (packageVersion('Seurat') < package_version(x = '2.3.1')) {
+      warning("UMAP support in Seurat came in v2.3.1, please update to a newer version of Seurt to enable UMAP functionality", immediate. = TRUE)
+    } else {
+      so <- Seurat::RunUMAP(object = so, dims.use = 1:n.pcs)
+    }
+  }
+  return(so)
+}
+
+seuratProcV3 <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, n.pcs=100, cluster=TRUE, tsne=TRUE, umap=FALSE, ...) {
+  if (verbose) {
+    message("Running Seurat v3 workflow")
+  }
+  so <- Seurat::CreateSeuratObject(counts = count.matrix)
+  so <- Seurat::NormalizeData(object = so, verbose = verbose)
+  so <- Seurat::FindVariableFeatures(object = so, verbose = verbose)
+  so <- Seurat::ScaleData(object = so, vars.to.regress = vars.to.regress, verbose = verbose)
+  so <- Seurat::RunPCA(object = so, npcs = n.pcs, verbose = verbose)
+  if (cluster) {
+    so <- Seurat::FindNeighbors(object = so, dims = 1:n.pcs, verbose = verbose)
+    so <- Seurat::FindClusters(object = so, n.iter = 500, n.start = 10, verbose = verbose)
+  }
+  if (tsne) {
+    so <- Seurat::RunTSNE(object = so, dims = 1:n.pcs)
+  }
+  if (umap) {
+    so <- Seurat::RunUMAP(object = so, dims = 1:n.pcs, verbose = verbose)
+  }
+  return(so)
+}
+
 #' Save Conos object on disk to read it from ScanPy
 #'
 #' @param con conos object
@@ -67,42 +122,42 @@ saveConosForScanPy <- function(con, output.path, metadata.df=NULL, n.dims=100, v
   if (verbose) cat("Done\n")
 }
 
-#' Create Seurat object from gene count matrix
+#' Create and preprocess a Seurat object
+#'
+#' @description Create Seurat object from gene count matrix
 #'
 #' @param count.matrix gene count matrix
 #' @param vars.to.regress variables to regress with Seurat
 #' @param verbose verbose mode
-#' @param do.par use parallel processing for regressing out variables faster
+#' @param do.par use parallel processing for regressing out variables faster, for
+#' Seurat v3, use \code{\link[future]{plan}} instead
 #' @param n.pcs number of principal components
 #' @param cluster do clustering
 #' @param tsne do tSNE embedding
+#' @param umap do UMAP embedding, works only for Seurat v2.3.1 or higher
 #'
 #' @return Seurat object
 #'
-#' @example basicSeuratProc(countMatrix)
 #'
 #' @export
-basicSeuratProc <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do.par=TRUE, n.pcs=100, cluster=TRUE, tsne=TRUE) {
+#'
+basicSeuratProc <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do.par=TRUE, n.pcs=100, cluster=TRUE, tsne=TRUE, umap=FALSE) {
   if (!requireNamespace("Seurat")) {
     stop("You need to install 'Seurat' package to be able to use this function")
   }
-
-  rownames(count.matrix) <- make.unique(rownames(count.matrix))
-
-  max.n.pcs <- min(nrow(count.matrix) - 1, ncol(count.matrix) - 1, n.pcs)
-  so <- Seurat::CreateSeuratObject(count.matrix, display.progress=verbose) %>%
-    Seurat::NormalizeData(display.progress=verbose) %>%
-    Seurat::ScaleData(vars.to.regress=vars.to.regress, display.progress=verbose, do.par=do.par) %>%
-    Seurat::FindVariableGenes(do.plot = FALSE, display.progress=verbose) %>%
-    Seurat::RunPCA(pcs.compute=max.n.pcs, do.print=FALSE)
-
-  if (cluster) {
-    so <- Seurat::FindClusters(so, n.iter=500, n.start=10, dims.use=1:n.pcs, print.output = F)
-  }
-
-  if (tsne) {
-    so <- Seurat::RunTSNE(so, dims.use=1:n.pcs)
-  }
-
-  return(so)
+  proc.fxn <- ifelse(
+    test = packageVersion('Seurat') < package_version(x = '3.0.0'),
+    yes = seuratProcV2,
+    no = seuratProcV3
+  )
+  so <- proc.fxn(
+    count.matrix = count.matrix,
+    vars.to.regress = vars.to.regress,
+    verbose = verbose,
+    do.par = do.par,
+    n.pcs = n.pcs,
+    cluster = cluster,
+    tsne = tsne,
+    umap = umap
+  )
 }

@@ -66,8 +66,7 @@ Conos <- setRefClass(
           if(!is.list(x)) {
             stop("x is not a list of pagoda2 or Seurat objects")
           }
-
-          if (class(x[[1]]) %in% c('Pagoda2', 'seurat')) {
+          if (inherits(x = x[[1]], what = c('Pagoda2', 'seurat', 'Seurat'))) {
             addSamples(x);
           } else {
             stop("only Pagoda2 or Seurat result lists are currently supported");
@@ -199,39 +198,31 @@ Conos <- setRefClass(
       return(invisible(sn.pairs))
     },
 
-    buildGraph=function(k=15, k.self=10, k.self.weight=0.1, alignment.strength=NULL, space='CPCA', matching.method='mNN', metric='angular', k1=k, data.type='counts',
-                        l2.sigma=1e5, var.scale =TRUE, ncomps=40, n.odgenes=2000, neighborhood.average=FALSE, neighborhood.average.k=10, matching.mask=NULL,
-                        exclude.samples=NULL, common.centering=TRUE, verbose=TRUE, base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1,
-                        n.decoys=k*2, score.component.variance=FALSE, balance.edge.weights=FALSE, balancing.factor.per.cell=NULL, same.factor.downweight=1.0) {
+    buildGraph=function(k=15, k.self=10, k.self.weight=0.1, alignment.strength=NULL, space='CPCA', matching.method='mNN', metric='angular', k1=k, data.type='counts', l2.sigma=1e5, var.scale =TRUE, ncomps=40, n.odgenes=2000, neighborhood.average=FALSE, neighborhood.average.k=10, matching.mask=NULL, exclude.samples=NULL, common.centering=TRUE, verbose=TRUE, base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, score.component.variance=FALSE, balance.edge.weights=FALSE, balancing.factor.per.cell=NULL, same.factor.downweight=1.0) {
       supported.spaces <- c("CPCA","JNMF","genes","PCA")
       if(!space %in% supported.spaces) {
         stop(paste0("only the following spaces are currently supported: [",paste(supported.spaces,collapse=' '),"]"))
       }
-
       supported.matching.methods <- c("mNN", "NN");
       if(!matching.method %in% supported.matching.methods) {
         stop(paste0("only the following matching methods are currently supported: ['",paste(supported.matching.methods,collapse="' '"),"']"))
       }
-
       supported.metrics <- c("L2","angular");
       if(!metric %in% supported.metrics) {
         stop(paste0("only the following distance metrics are currently supported: ['",paste(supported.metrics,collapse="' '"),"']"))
       }
-
       if (!is.null(alignment.strength)) {
         alignment.strength %<>% max(0) %>% min(1)
         k1 <- sapply(samples, function(sample) ncol(getCountMatrix(sample))) %>% max() %>%
           `*`(alignment.strength ^ 2) %>% round() %>% max(k)
       }
-
       if(k1<k) { stop("k1 must be >= k") }
-
       # calculate or update pairwise alignments
-      sn.pairs <- updatePairs(space=space, ncomps=ncomps, n.odgenes=n.odgenes, verbose=verbose, var.scale=var.scale, neighborhood.average=neighborhood.average,
-                              neighborhood.average.k=10, matching.mask=matching.mask, exclude.samples=exclude.samples, score.component.variance=score.component.variance)
-
+      sn.pairs <- updatePairs(
+        space=space, ncomps=ncomps, n.odgenes=n.odgenes, verbose=verbose, var.scale=var.scale, neighborhood.average=neighborhood.average,
+        neighborhood.average.k=10, matching.mask=matching.mask, exclude.samples=exclude.samples, score.component.variance=score.component.variance
+      )
       if(ncol(sn.pairs)<1) { stop("insufficient number of comparable pairs") }
-
       if(!is.null(base.groups)) {
         samf <- lapply(samples,getCellNames)
         base.groups <- as.factor(base.groups[names(base.groups) %in% unlist(samf)]) # clean up the group factor
@@ -243,7 +234,6 @@ Conos <- setRefClass(
           global.proj <- projectSamplesOnGlobalAxes(samples, cms.clust, data.type, neighborhood.average, verbose, n.cores)
         }
       }
-
       # determine inter-sample mapping
       if(verbose) cat('inter-sample links using ',matching.method,' ');
       cached.pairs <- pairs[[space]]
@@ -301,7 +291,6 @@ Conos <- setRefClass(
       ## Merge the results into a edge table
       el <- do.call(rbind,mnnres)
       el$type <- 1; # encode connection type 1- intersample, 0- intrasample
-
       # append some local edges
       if(k.self>0) {
         if(verbose) cat('local pairs ')
@@ -316,7 +305,6 @@ Conos <- setRefClass(
       # collapse duplicate edges
       g <- simplify(g, edge.attr.comb=list(weight="sum", type = "first"))
       if(verbose) cat('done\n')
-
       if (balance.edge.weights || !is.null(balancing.factor.per.cell)) {
         if(verbose) cat('balancing edge weights ');
 
@@ -331,7 +319,6 @@ Conos <- setRefClass(
 
         if(verbose) cat('done\n');
       }
-
       graph <<- g;
       return(invisible(g))
     },
@@ -570,7 +557,7 @@ Conos <- setRefClass(
 
     plotPanel=function(clustering=NULL, groups=NULL, colors=NULL, gene=NULL, use.local.clusters=FALSE, plot.theme=NULL, ...) {
       if (use.local.clusters) {
-        if (is.null(clustering) && !("seurat" %in% class(samples[[1]]))) {
+        if (is.null(clustering) && !(inherits(x = samples[[1]], what = c('seurat', 'Seurat')))) {
           stop("You have to provide 'clustering' parameter to be able to use local clusters")
         }
 
@@ -844,4 +831,4 @@ Conos <- setRefClass(
       return(rep(names(cl), sapply(cl, length)) %>% stats::setNames(unlist(cl)) %>% as.factor())
     }
   )
-);
+)

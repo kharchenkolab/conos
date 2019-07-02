@@ -51,22 +51,59 @@ scaledMatricesSeurat <- function(so.objs, data.type, od.genes, var.scale, neighb
   } else if (data.type == 'counts') {
     x.data <- lapply(so.objs, function(so) t(so@data)[,od.genes])
   } else {
-    stop("Unknown data type for Seurat: ", data.type)
-  }
 
   res <- mapply(function(so, x) if(neighborhood.average) Matrix::t(edgeMat(so)$mat) %*% x else x,
                 so.objs, x.data)
 
   return(res)
+  }
+}
+
+scaledMatricesSeuratV3 <- function(so.objs, data.type, od.genes, var.scale, neighborhood.average) {
+  checkSeuratV3()
+  if (var.scale) {
+    warning("Seurat doesn't support variance scaling")
+  }
+  slot <- switch(
+    EXPR = data.type,
+    'scaled' = 'scale.data',
+    'counts' = 'data',
+    stop("Unknown Seurat data type: ", data.type)
+  )
+  x.data <- lapply(
+    X = so.objs,
+    FUN = function(so) {
+      return(t(x = Seurat::GetAssayData(object = so, slot = slot))[, od.genes])
+    }
+  )
+  res <- mapply(
+    FUN = function(so, x) {
+      return(if (neighborhood.average) {
+        Matrix::t(x = edgeMat(so)$mat) %*% x
+      } else {
+        x
+      })
+    },
+    so.objs,
+    x.data
+  )
+  return(res)
 }
 
 scaledMatrices <- function(samples, data.type, od.genes, var.scale, neighborhood.average) {
-  if (class(samples[[1]]) == "Pagoda2")
-    return(scaledMatricesP2(samples, data.type=data.type, od.genes, var.scale, neighborhood.average))
-
-  if (class(samples[[1]]) == "seurat")
-    return(scaledMatricesSeurat(samples, data.type=data.type, od.genes, var.scale, neighborhood.average))
-
+  if (class(samples[[1]]) == "Pagoda2") {
+    return(scaledMatricesP2(samples, data.type = data.type, od.genes, var.scale, neighborhood.average))
+  } else if (class(samples[[1]]) == "seurat") {
+    return(scaledMatricesSeurat(samples, data.type = data.type, od.genes, var.scale, neighborhood.average))
+  } else if (inherits(x = samples[[1]], what = 'Seurat')) {
+    return(scaledMatricesSeuratV3(
+      so.objs = samples,
+      data.type = data.type,
+      od.genes = od.genes,
+      var.scale = var.scale,
+      neighborhood.average = neighborhood.average
+    ))
+  }
   stop("Unknown class of sample: ", class(samples[[1]]))
 }
 
