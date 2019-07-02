@@ -78,14 +78,15 @@ saveConosForScanPy <- function(con, output.path, metadata.df=NULL, n.dims=100, v
 #' Seurat v3, use \code{\link[future]{plan}} instead
 #' @param n.pcs number of principal components
 #' @param cluster do clustering
-#' @param tsne do tSNE embedding, for Seurat v3, will default to UMAP if available
+#' @param tsne do tSNE embedding
+#' @param umap do UMAP embedding, works only for Seurat v2.3.1 or higher
 #'
 #' @return Seurat object
 #'
 #'
 #' @export
 #'
-basicSeuratProc <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do.par=TRUE, n.pcs=100, cluster=TRUE, tsne=TRUE) {
+basicSeuratProc <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do.par=TRUE, n.pcs=100, cluster=TRUE, tsne=TRUE, umap=TRUE) {
   if (!requireNamespace("Seurat")) {
     stop("You need to install 'Seurat' package to be able to use this function")
   }
@@ -106,6 +107,13 @@ basicSeuratProc <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do
     if (tsne) {
       so <- Seurat::RunTSNE(so, dims.use=1:n.pcs)
     }
+    if (umap) {
+      if (packageVersion('Seurat') < package_version(x = '2.3.1')) {
+        warning("UMAP support in Seurat came in v2.3.1, please update to a newer version of Seurt to enable UMAP functionality", immediate. = TRUE)
+      } else {
+        so <- Seurat::RunUMAP(object = so, dims.use = 1:n.pcs)
+      }
+    }
   } else {
     if (verbose) {
       message("Running Seurat v3 workflow")
@@ -120,13 +128,10 @@ basicSeuratProc <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do
       so <- Seurat::FindClusters(object = so, n.iter = 500, n.start = 10, verbose = verbose)
     }
     if (tsne) {
-      so <- tryCatch(
-        expr = Seurat::RunUMAP(object = so, dims = 1:n.pcs, verbose = verbose),
-        error = function(...) {
-          warning("UMAP not found, using tSNE instead", call. = FALSE, immediate. = TRUE)
-          return(Seurat::RunTSNE(object = so, dims = 1:n.pcs))
-        }
-      )
+      so <- Seurat::RunTSNE(object = so, dims = 1:n.pcs)
+    }
+    if (umap) {
+      so <- Seurat::RunUMAP(object = so, dims = 1:n.pcs, verbose = verbose)
     }
   }
   return(so)
