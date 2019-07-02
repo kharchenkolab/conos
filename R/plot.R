@@ -98,10 +98,8 @@ plotSamples <- function(samples, groups=NULL, colors=NULL, gene=NULL, embedding.
   }
 
   if (is.null(x = embedding.type)) {
-    embedding.type <- if (inherits(x = samples[[1]], what = 'seurat')) {
+    embedding.type <- if (inherits(x = samples[[1]], what = c('seurat', 'Seurat'))) {
       'tsne'
-    } else if (inherits(x = samples[[1]], what = 'Seurat')) {
-      'umap'
     } else {
       'tSNE'
     }
