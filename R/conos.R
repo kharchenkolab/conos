@@ -801,12 +801,12 @@ stableTreeClusters <- function(refwt,tests,min.threshold=0.8,min.size=10,n.cores
 #' @export
 #'
 basicSeuratProc <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do.par=TRUE, n.pcs=100, cluster=TRUE, tsne=TRUE) {
-  if (!requireNamespace("Seurat", quietly = TRUE)) {
+  if (!requireNamespace("Seurat")) {
     stop("You need to install 'Seurat' package to be able to use this function")
   }
   if (packageVersion('Seurat') < package_version(x = '3.0.0')) {
     if (verbose) {
-      warning("Running Seurat v2 workflow", call. = FALSE, immediate. = TRUE)
+      message("Running Seurat v2 workflow")
     }
     rownames(count.matrix) <- make.unique(rownames(count.matrix))
     max.n.pcs <- min(nrow(count.matrix) - 1, ncol(count.matrix) - 1, n.pcs)
