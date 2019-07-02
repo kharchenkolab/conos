@@ -801,7 +801,7 @@ stableTreeClusters <- function(refwt,tests,min.threshold=0.8,min.size=10,n.cores
 #' @export
 #'
 basicSeuratProc <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do.par=TRUE, n.pcs=100, cluster=TRUE, tsne=TRUE) {
-  if (!requireNamespace("Seurat")) {
+  if (!requireNamespace("Seurat", quietly = TRUE)) {
     stop("You need to install 'Seurat' package to be able to use this function")
   }
   if (packageVersion('Seurat') < package_version(x = '3.0.0')) {
