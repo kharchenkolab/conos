@@ -19,6 +19,12 @@ mergeCountMatrices <- function(cms, transposed=F) {
   return(res)
 }
 
+checkSeuratV3 <- function() {
+  if (!requireNamespace('Seurat', quietly = TRUE) || packageVersion('Seurat') < package_version(x = '3.0.0')) {
+    stop("Use of Seurat v3-backed Conos objects requires Seurat v3.X installed")
+  }
+}
+
 #' Save Conos object on disk to read it from ScanPy
 #'
 #' @param con conos object

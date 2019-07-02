@@ -60,9 +60,7 @@ scaledMatricesSeurat <- function(so.objs, data.type, od.genes, var.scale, neighb
 }
 
 scaledMatricesSeuratV3 <- function(so.objs, data.type, od.genes, var.scale, neighborhood.average) {
-  if (!requireNamespace('Seurat', quietly = TRUE) || packageVersion('Seurat') < package_version(x = '3.0.0')) {
-    stop("Use of Seurat v3-backed Conos objects requires Seurat v3.X installed")
-  }
+  checkSeuratV3()
   if (var.scale) {
     warning("Seurat doesn't support variance scaling")
   }

@@ -5,9 +5,7 @@ setMethod(
   f = 'getPca',
   signature = signature('Seurat'),
   definition = function(sample) {
-    if (!requireNamespace('Seurat', quietly = TRUE) || packageVersion('Seurat') < package_version(x = '3.0.0')) {
-      stop("Use of Seurat v3-backed Conos objects requires Seurat v3.X installed")
-    }
+    checkSeuratV3()
     return(Seurat::Embeddings(object = sample))
   }
 )
@@ -23,9 +21,7 @@ setMethod(
   f = 'getOverdispersedGenes',
   signature = signature('Seurat'),
   definition = function(sample, n.odgenes = NULL) {
-    if (!requireNamespace('Seurat', quietly = TRUE) || packageVersion('Seurat') < package_version(x = '3.0.0')) {
-      stop("Use of Seurat v3-backed Conos objects requires Seurat v3.X installed")
-    }
+    checkSeuratV3()
     vf <- Seurat::VariableFeatures(object = sample) %||% rownames(x = sample)
     n.odgenes <- n.odgenes %||% length(x = vf)
     return(head(x = vf, n = n.odgenes))
@@ -49,6 +45,7 @@ setMethod(
   f = 'edgeMat<-',
   signature = signature('Seurat'),
   definition = function(sample, value) {
+    checkSeuratV3()
     Seurat::Misc(object = sample, slot = 'edgeMat') <- value
     return(sample)
   }
@@ -61,6 +58,7 @@ setMethod(
   f = 'edgeMat',
   signature = signature('Seurat'),
   definition = function(sample) {
+    checkSeuratV3()
     return(Seurat::Misc(object = sample, slot = 'edgeMat'))
   }
 )
@@ -72,6 +70,7 @@ setMethod(
   f = 'getCountMatrix',
   signature = signature('Seurat'),
   definition = function(sample) {
+    checkSeuratV3()
     dat <- Seurat::GetAssayData(object = sample, slot = 'scale.data')
     dims <- dim(x = dat)
     dat.na <- all(dims == 1) && all(is.na(x = dat))
@@ -101,6 +100,7 @@ setMethod(
   f = 'getRawCountMatrix',
   signature = signature('Seurat'),
   definition = function(sample, transposed = FALSE) {
+    checkSeuratV3()
     rd <- Seurat::GetAssayData(object = sample, slot = 'counts')
     # Raw data can be empty in Seurat v3
     # If it is, use data instead
@@ -125,6 +125,7 @@ setMethod(
   f = 'getEmbedding',
   signature = signature('Seurat'),
   definition = function(sample, type) {
+    checkSeuratV3()
     emb <- tryCatch(
       expr = Seurat::Embeddings(object = sample, reduction = type),
       error = function(...) {
@@ -142,6 +143,7 @@ setMethod(
   f = 'getClustering',
   signature = signature('Seurat'),
   definition = function(sample, type) {
+    checkSeuratV3()
     if (missing(x = type)) {
       type <- NULL
     } else if (!is.null(x = type) && !type %in% colnames(x = sample[[]])) {
