@@ -1,3 +1,9 @@
+## [1.0.3] - 2019-07-02
+
+## Added
+
+ - Support for Seurat v3 objects
+
 ## [1.0.2] - 2019-06-26
 
 ## Added
