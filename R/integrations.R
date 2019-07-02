@@ -86,7 +86,7 @@ saveConosForScanPy <- function(con, output.path, metadata.df=NULL, n.dims=100, v
 #'
 #' @export
 #'
-basicSeuratProc <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do.par=TRUE, n.pcs=100, cluster=TRUE, tsne=TRUE, umap=TRUE) {
+basicSeuratProc <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do.par=TRUE, n.pcs=100, cluster=TRUE, tsne=TRUE, umap=FALSE) {
   if (!requireNamespace("Seurat")) {
     stop("You need to install 'Seurat' package to be able to use this function")
   }
