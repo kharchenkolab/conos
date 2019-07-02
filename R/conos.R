@@ -59,9 +59,10 @@ scaledMatricesSeurat <- function(so.objs, data.type, od.genes, var.scale, neighb
   }
 }
 
-#' @importFrom Seurat GetAssayData
-#'
 scaledMatricesSeuratV3 <- function(so.objs, data.type, od.genes, var.scale, neighborhood.average) {
+  if (!requireNamespace('Seurat', quietly = TRUE) || packageVersion('Seurat') < package_version(x = '3.0.0')) {
+    stop("Use of Seurat v3-backed Conos objects requires Seurat v3.X installed")
+  }
   if (var.scale) {
     warning("Seurat doesn't support variance scaling")
   }
@@ -74,7 +75,7 @@ scaledMatricesSeuratV3 <- function(so.objs, data.type, od.genes, var.scale, neig
   x.data <- lapply(
     X = so.objs,
     FUN = function(so) {
-      return(t(x = GetAssayData(object = so, slot = slot))[, od.genes])
+      return(t(x = Seurat::GetAssayData(object = so, slot = slot))[, od.genes])
     }
   )
   res <- mapply(
@@ -796,8 +797,6 @@ stableTreeClusters <- function(refwt,tests,min.threshold=0.8,min.size=10,n.cores
 #'
 #' @return Seurat object
 #'
-#' @importFrom Seurat CreateSeuratObject NormalizeData FindVariableFeatures
-#' ScaleData RunPCA FindNeighbors FindClusters RunUMAP RunTSNE
 #'
 #' @export
 #'
@@ -826,21 +825,21 @@ basicSeuratProc <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do
     if (verbose) {
       message("Running Seurat v3 workflow")
     }
-    so <- CreateSeuratObject(counts = count.matrix)
-    so <- NormalizeData(object = so, verbose = verbose)
-    so <- FindVariableFeatures(object = so, verbose = verbose)
-    so <- ScaleData(object = so, vars.to.regress = vars.to.regress, verbose = verbose)
-    so <- RunPCA(object = so, npcs = n.pcs, verbose = verbose)
+    so <- Seurat::CreateSeuratObject(counts = count.matrix)
+    so <- Seurat::NormalizeData(object = so, verbose = verbose)
+    so <- Seurat::FindVariableFeatures(object = so, verbose = verbose)
+    so <- Seurat::ScaleData(object = so, vars.to.regress = vars.to.regress, verbose = verbose)
+    so <- Seurat::RunPCA(object = so, npcs = n.pcs, verbose = verbose)
     if (cluster) {
-      so <- FindNeighbors(object = so, dims = 1:n.pcs, verbose = verbose)
-      so <- FindClusters(object = so, n.iter = 500, n.start = 10, verbose = verbose)
+      so <- Seurat::FindNeighbors(object = so, dims = 1:n.pcs, verbose = verbose)
+      so <- Seurat::FindClusters(object = so, n.iter = 500, n.start = 10, verbose = verbose)
     }
     if (tsne) {
       so <- tryCatch(
-        expr = RunUMAP(object = so, dims = 1:n.pcs, verbose = verbose),
+        expr = Seurat::RunUMAP(object = so, dims = 1:n.pcs, verbose = verbose),
         error = function(...) {
           warning("UMAP not found, using tSNE instead", call. = FALSE, immediate. = TRUE)
-          return(RunTSNE(object = so, dims = 1:n.pcs))
+          return(Seurat::RunTSNE(object = so, dims = 1:n.pcs))
         }
       )
     }

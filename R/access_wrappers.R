@@ -1,14 +1,14 @@
 setGeneric("getPca", function(sample) standardGeneric("getPca"))
 setMethod("getPca", signature("Pagoda2"), function(sample) sample$reductions$PCA)
 setMethod("getPca", signature("seurat"), function(sample) sample@dr$pca@cell.embeddings)
-
-#' @importFrom Seurat Embeddings
-#'
 setMethod(
   f = 'getPca',
   signature = signature('Seurat'),
   definition = function(sample) {
-    return(Embeddings(object = sample))
+    if (!requireNamespace('Seurat', quietly = TRUE) || packageVersion('Seurat') < package_version(x = '3.0.0')) {
+      stop("Use of Seurat v3-backed Conos objects requires Seurat v3.X installed")
+    }
+    return(Seurat::Embeddings(object = sample))
   }
 )
 
@@ -18,13 +18,15 @@ setMethod("getOverdispersedGenes", signature("seurat"), function(sample, n.odgen
   if (is.null(NULL)) sample@var.genes else head(rownames(sample@hvg.info), n.odgenes))
 
 #' @importFrom rlang %||%
-#' @importFrom Seurat VariableFeatures
 #'
 setMethod(
   f = 'getOverdispersedGenes',
   signature = signature('Seurat'),
   definition = function(sample, n.odgenes = NULL) {
-    vf <- VariableFeatures(object = sample) %||% rownames(x = sample)
+    if (!requireNamespace('Seurat', quietly = TRUE) || packageVersion('Seurat') < package_version(x = '3.0.0')) {
+      stop("Use of Seurat v3-backed Conos objects requires Seurat v3.X installed")
+    }
+    vf <- Seurat::VariableFeatures(object = sample) %||% rownames(x = sample)
     n.odgenes <- n.odgenes %||% length(x = vf)
     return(head(x = vf, n = n.odgenes))
   }
@@ -43,14 +45,11 @@ setMethod(f = 'getGenes', signature = signature('Seurat'), definition = function
 setGeneric("edgeMat<-", function(sample, value) standardGeneric("edgeMat<-"))
 setMethod("edgeMat<-", signature("Pagoda2"), function(sample, value) {sample$misc$edgeMat <- value; sample})
 setMethod("edgeMat<-", signature("seurat"), function(sample, value) {sample@misc$edgeMat <- value; sample})
-
-#' @importFrom Seurat Misc<-
-#'
 setMethod(
   f = 'edgeMat<-',
   signature = signature('Seurat'),
   definition = function(sample, value) {
-    Misc(object = sample, slot = 'edgeMat') <- value
+    Seurat::Misc(object = sample, slot = 'edgeMat') <- value
     return(sample)
   }
 )
@@ -58,32 +57,26 @@ setMethod(
 setGeneric("edgeMat", function(sample, value) standardGeneric("edgeMat"))
 setMethod("edgeMat", signature("Pagoda2"), function(sample) sample$misc$edgeMat)
 setMethod("edgeMat", signature("seurat"), function(sample) sample@misc$edgeMat)
-
-#' @importFrom Seurat Misc
-#'
 setMethod(
   f = 'edgeMat',
   signature = signature('Seurat'),
   definition = function(sample) {
-    return(Misc(object = sample, slot = 'edgeMat'))
+    return(Seurat::Misc(object = sample, slot = 'edgeMat'))
   }
 )
 
 setGeneric("getCountMatrix", function(sample) standardGeneric("getCountMatrix"))
 setMethod("getCountMatrix", signature("Pagoda2"), function(sample) t(sample$counts))
 setMethod("getCountMatrix", signature("seurat"), function(sample) if (is.null(sample@scale.data)) sample@data else sample@scale.data)
-
-#' @importFrom Seurat GetAssayData
-#'
 setMethod(
   f = 'getCountMatrix',
   signature = signature('Seurat'),
   definition = function(sample) {
-    dat <- GetAssayData(object = sample, slot = 'scale.data')
+    dat <- Seurat::GetAssayData(object = sample, slot = 'scale.data')
     dims <- dim(x = dat)
     dat.na <- all(dims == 1) && all(is.na(x = dat))
     if (all(dims == 0) || dat.na) {
-      dat <- GetAssayData(object = sample, slot = 'data')
+      dat <- Seurat::GetAssayData(object = sample, slot = 'data')
     }
     return(dat)
   }
@@ -104,20 +97,17 @@ setMethod(
     }
   }
 )
-
-#' @importFrom Seurat GetAssayData
-#'
 setMethod(
   f = 'getRawCountMatrix',
   signature = signature('Seurat'),
   definition = function(sample, transposed = FALSE) {
-    rd <- GetAssayData(object = sample, slot = 'counts')
+    rd <- Seurat::GetAssayData(object = sample, slot = 'counts')
     # Raw data can be empty in Seurat v3
     # If it is, use data instead
     dims <- dim(x = rd)
     rd.na <- all(dims == 1) && all(is.na(x = rd))
     if (all(dims == 0) || rd.na) {
-      rd <- GetAssayData(object = sample, slot = 'data')
+      rd <- Seurat::GetAssayData(object = sample, slot = 'data')
     }
     mi <- match(x = colnames(x = sample), table = colnames(x = rd))
     rd <- rd[, mi, drop = FALSE]
@@ -131,15 +121,12 @@ setMethod(
 setGeneric("getEmbedding", function(sample, type) standardGeneric("getEmbedding"))
 setMethod("getEmbedding", signature("Pagoda2"), function(sample, type) sample$embeddings$PCA[[type]])
 setMethod("getEmbedding", signature("seurat"), function(sample, type) if (is.null(sample@dr[[type]])) NULL else as.data.frame(sample@dr[[type]]@cell.embeddings))
-
-#' @importFrom Seurat Embeddings
-#'
 setMethod(
   f = 'getEmbedding',
   signature = signature('Seurat'),
   definition = function(sample, type) {
     emb <- tryCatch(
-      expr = Embeddings(object = sample, reduction = type),
+      expr = Seurat::Embeddings(object = sample, reduction = type),
       error = function(...) {
         return(NULL)
       }
@@ -151,9 +138,6 @@ setMethod(
 setGeneric("getClustering", function(sample, type) standardGeneric("getClustering"))
 setMethod("getClustering", signature("Pagoda2"), function(sample, type) sample$clusters$PCA[[type]])
 setMethod("getClustering", signature("seurat"), function(sample, type) {if (!is.null(type)) warning("Seurat support only single type of clustering"); sample@ident})
-
-#' @importFrom Seurat Idents
-#'
 setMethod(
   f = 'getClustering',
   signature = signature('Seurat'),
@@ -171,7 +155,7 @@ setMethod(
       type <- NULL
     }
     idents <- if (is.null(x = type)) {
-      Idents(object = sample)
+      Seurat::Idents(object = sample)
     } else {
       ids <- sample[[type]]
       if (!is.factor(x = ids)) {
