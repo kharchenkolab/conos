@@ -175,6 +175,8 @@ Conos <- setRefClass(
             xcp <- quickNULL(p2.objs = samples[sn.pairs[,i]], data.type=data.type, n.odgenes=n.odgenes, var.scale = var.scale, verbose = FALSE, neighborhood.average=neighborhood.average);
           } else if (space == 'PCA') {
             xcp <- quickPlainPCA(samples[sn.pairs[,i]], data.type=data.type, k=k,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale,neighborhood.average=neighborhood.average, score.component.variance=score.component.variance)
+          } else if (space == 'PMA') {
+            xcp <- quickPMA(samples[sn.pairs[,i]],data.type=data.type,k=k,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale,neighborhood.average=neighborhood.average, score.component.variance=score.component.variance)
           }
           if(verbose) cat('.')
           xcp
@@ -203,7 +205,7 @@ Conos <- setRefClass(
                         l2.sigma=1e5, var.scale =TRUE, ncomps=40, n.odgenes=2000, neighborhood.average=FALSE, neighborhood.average.k=10, matching.mask=NULL,
                         exclude.samples=NULL, common.centering=TRUE, verbose=TRUE, base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1,
                         n.decoys=k*2, score.component.variance=FALSE, balance.edge.weights=FALSE, balancing.factor.per.cell=NULL, same.factor.downweight=1.0) {
-      supported.spaces <- c("CPCA","JNMF","genes","PCA")
+      supported.spaces <- c("CPCA","JNMF","genes","PCA","PMA")
       if(!space %in% supported.spaces) {
         stop(paste0("only the following spaces are currently supported: [",paste(supported.spaces,collapse=' '),"]"))
       }
@@ -294,6 +296,9 @@ Conos <- setRefClass(
           ## Overdispersed Gene space
           mnn <- getNeighborMatrix(as.matrix(cached.pairs[[i]]$genespace1), as.matrix(cached.pairs[[i]]$genespace2),k,matching=matching.method,metric=metric,l2.sigma=l2.sigma)
           return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=mnn@x,stringsAsFactors=F))
+        } else if(space=='PMA') {
+          mnn <- getNeighborMatrix(cached.pairs[[i]]$u,cached.pairs[[i]]$v,k,k1=k1,matching=matching.method,metric=metric,l2.sigma=l2.sigma,cor.base=1 + min(1, alignment.strength * 10));
+          return(data.frame('mA.lab'=rownames(cached.pairs[[i]]$u)[mnn@i+1],'mB.lab'=rownames(cached.pairs[[i]]$v)[mnn@j+1],'w'=mnn@x,stringsAsFactors=F))
         }
         mnnres
       },n.cores=n.cores,mc.preschedule=TRUE)

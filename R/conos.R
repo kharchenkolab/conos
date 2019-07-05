@@ -242,6 +242,29 @@ quickPlainPCA <- function(r.n,data.type='counts',k=30,ncomps=30,n.odgenes=NULL,v
 }
 
 
+# Perform CCA (using PMA package) on two samples
+#' @param r.n list of p2 objects
+#' @param k neighborhood size to use
+#' @param ncomps number of components to calculate (default=100)
+#' @param n.odgenes number of overdispersed genes to take from each dataset
+#' @param var.scale whether to scale variance (default=TRUE)
+#' @param verbose whether to be verbose
+#' @param neighborhood.average use neighborhood average values
+#' @param n.cores number of cores to use
+quickPMA <- function(r.n,data.type='counts',k=30,ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=TRUE,neighborhood.average=FALSE, score.component.variance=FALSE) {
+  require(PMA);
+  od.genes <- commonOverdispersedGenes(r.n, n.odgenes, verbose=verbose)
+  if(length(od.genes)<5) return(NULL);
+
+  ncomps <- min(ncomps, length(od.genes) - 1)
+  sm <- scaledMatrices(r.n, data.type=data.type, od.genes=od.genes, var.scale=var.scale, neighborhood.average=neighborhood.average)
+  res <- CCA(t(sm[[1]]),t(sm[[2]]),K=ncomps,trace=FALSE)
+  rownames(res$u) <- rownames(sm[[1]])
+  rownames(res$v) <- rownames(sm[[2]])
+  return(res);
+}
+
+
 # dendrogram modification functions
 #' Set dendrogram node width by breadth of the provided factor
 #' @param d dendrogram
