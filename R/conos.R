@@ -275,9 +275,7 @@ quickCCA <- function(r.n,data.type='counts',k=30,ncomps=100,n.odgenes=NULL,var.s
   # end DEBUG
   
   # adjust component weighting
-  cw <- sqrt(rowSums(t(res$u) %*% sm[[1]] *t(res$v) %*% sm[[2]]))
-  cw <- cw/max(cw)
-  res$cw <- cw;
+  cw <- sqrt(res$d); cw <- cw/max(cw)
   res$u <- res$u %*% diag(cw)
   res$v <- res$v %*% diag(cw)
   
