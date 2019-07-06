@@ -258,6 +258,7 @@ quickPMA <- function(r.n,data.type='counts',k=30,ncomps=100,n.odgenes=NULL,var.s
 
   ncomps <- min(ncomps, length(od.genes) - 1)
   sm <- scaledMatrices(r.n, data.type=data.type, od.genes=od.genes, var.scale=var.scale, neighborhood.average=neighborhood.average)
+  sm <- lapply(sm,function(m) m[rowSums(m)>0,])
   res <- CCA(t(sm[[1]]),t(sm[[2]]),K=ncomps,trace=FALSE)
   rownames(res$u) <- rownames(sm[[1]])
   rownames(res$v) <- rownames(sm[[2]])
