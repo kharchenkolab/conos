@@ -261,18 +261,25 @@ quickCCA <- function(r.n,data.type='counts',k=30,ncomps=100,n.odgenes=NULL,var.s
   sm <- lapply(sm,function(m) m[rowSums(m)>0,])
   sm <- lapply(sm,scale,scale=F) # center
   if(PMA) {
-    require(PMA);
-    res <- CCA(t(sm[[1]]),t(sm[[2]]),K=ncomps,trace=FALSE,standardize=FALSE)
+    res <- PMA::CCA(t(sm[[1]]),t(sm[[2]]),K=ncomps,trace=FALSE,standardize=FALSE)
   } else {
     res <- irlba::irlba(sm[[1]] %*% t(sm[[2]]),ncomps)
-  }  
+  }
   rownames(res$u) <- rownames(sm[[1]])
   rownames(res$v) <- rownames(sm[[2]])
   
   # DEBUG: record gene projections and the original data
-  res$ul <- t(sm[[1]]) %*% res$u
+  res$ul <- t(sm[[1]]) %*% res$u # MASS::ginv(sm[[1]]) %*% res$u
   res$vl <- t(sm[[2]]) %*% res$v
   res$sm <- sm;
+  # end DEBUG
+  
+  # adjust component weighting
+  cw <- sqrt(rowSums(t(res$u) %*% sm[[1]] *t(res$v) %*% sm[[2]]))
+  cw <- cw/max(cw)
+  res$cw <- cw;
+  res$u <- res$u %*% diag(cw)
+  res$v <- res$v %*% diag(cw)
   
   return(res);
 }
