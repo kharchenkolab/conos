@@ -97,26 +97,26 @@ plotSamples <- function(samples, groups=NULL, colors=NULL, gene=NULL, embedding.
     groups <- as.factor(groups)
   }
 
-  if (is.null(embedding.type)) {
-    embedding.type <- if ('seurat' %in% class(samples[[1]])) "tsne" else "tSNE"
+  if (is.null(x = embedding.type)) {
+    embedding.type <- if (inherits(x = samples[[1]], what = c('seurat', 'Seurat'))) {
+      'tsne'
+    } else {
+      'tSNE'
+    }
   }
-
   embeddings <- lapply(samples, getEmbedding, embedding.type)
   no.embedding <- sapply(embeddings, is.null)
   if (all(no.embedding)) {
     stop(paste0("No '", embedding.type, "' embedding presented in the samples"))
   }
-
   if (any(no.embedding)) {
     warning(paste0(sum(no.embedding), " of your samples doesn't have '", embedding.type, "' embedding"))
     embeddings <- embeddings[!no.embedding]
   }
-
   if (!is.null(gene)) {
     colors <- lapply(samples, getCountMatrix) %>% lapply(getGeneExpression, gene) %>% Reduce(c, .)
   }
-
-  return(plotEmbeddings(embeddings, groups=groups, colors=colors, ...))
+  return(plotEmbeddings(embeddings, groups = groups, colors = colors, ...))
 }
 
 ##' Plot embedding with provided labels / colors using ggplot2

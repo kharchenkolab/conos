@@ -1,10 +1,23 @@
-## [Unreleased]
+## [1.0.3] - 2019-07-02
+
+## Added
+
+ - Support for Seurat v3 objects
+
+## [1.0.2] - 2019-06-26
+
+## Added
+
+- Functions to export Conos object to ScanPy
+
+## [1.0.1] - 2019-05-1
 
 ## Fixed
 
 - Default value for `cluster.sep.chr` in DE functions is changed from '+' to '<!!>', 
   as it shouldn't be normally present in cluster names
 - Removed Boost dependency
+- Fixed version of Seurat and fpc packages in Docker
 
 ## [1.0.0] - 2019-04-17
 

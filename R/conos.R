@@ -51,22 +51,59 @@ scaledMatricesSeurat <- function(so.objs, data.type, od.genes, var.scale, neighb
   } else if (data.type == 'counts') {
     x.data <- lapply(so.objs, function(so) t(so@data)[,od.genes])
   } else {
-    stop("Unknown data type for Seurat: ", data.type)
-  }
 
   res <- mapply(function(so, x) if(neighborhood.average) Matrix::t(edgeMat(so)$mat) %*% x else x,
                 so.objs, x.data)
 
   return(res)
+  }
+}
+
+scaledMatricesSeuratV3 <- function(so.objs, data.type, od.genes, var.scale, neighborhood.average) {
+  checkSeuratV3()
+  if (var.scale) {
+    warning("Seurat doesn't support variance scaling")
+  }
+  slot <- switch(
+    EXPR = data.type,
+    'scaled' = 'scale.data',
+    'counts' = 'data',
+    stop("Unknown Seurat data type: ", data.type)
+  )
+  x.data <- lapply(
+    X = so.objs,
+    FUN = function(so) {
+      return(t(x = Seurat::GetAssayData(object = so, slot = slot))[, od.genes])
+    }
+  )
+  res <- mapply(
+    FUN = function(so, x) {
+      return(if (neighborhood.average) {
+        Matrix::t(x = edgeMat(so)$mat) %*% x
+      } else {
+        x
+      })
+    },
+    so.objs,
+    x.data
+  )
+  return(res)
 }
 
 scaledMatrices <- function(samples, data.type, od.genes, var.scale, neighborhood.average) {
-  if (class(samples[[1]]) == "Pagoda2")
-    return(scaledMatricesP2(samples, data.type=data.type, od.genes, var.scale, neighborhood.average))
-
-  if (class(samples[[1]]) == "seurat")
-    return(scaledMatricesSeurat(samples, data.type=data.type, od.genes, var.scale, neighborhood.average))
-
+  if (class(samples[[1]]) == "Pagoda2") {
+    return(scaledMatricesP2(samples, data.type = data.type, od.genes, var.scale, neighborhood.average))
+  } else if (class(samples[[1]]) == "seurat") {
+    return(scaledMatricesSeurat(samples, data.type = data.type, od.genes, var.scale, neighborhood.average))
+  } else if (inherits(x = samples[[1]], what = 'Seurat')) {
+    return(scaledMatricesSeuratV3(
+      so.objs = samples,
+      data.type = data.type,
+      od.genes = od.genes,
+      var.scale = var.scale,
+      neighborhood.average = neighborhood.average
+    ))
+  }
   stop("Unknown class of sample: ", class(samples[[1]]))
 }
 
@@ -782,42 +819,6 @@ stableTreeClusters <- function(refwt,tests,min.threshold=0.8,min.size=10,n.cores
       return(unlist(lapply(xl,function(x) length(x$terminalnodes))))
     }
   }
-}
-
-#' @description Create Seurat object from gene count matrix
-#'
-#' @param count.matrix gene count matrix
-#' @param vars.to.regress variables to regress with Seurat
-#' @param verbose verbose mode
-#' @param do.par use parallel processing for regressing out variables faster
-#' @param n.pcs number of principal components
-#' @param cluster do clustering
-#' @param tsne do tSNE embedding
-#' @return Seurat object
-#' @export
-basicSeuratProc <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do.par=TRUE, n.pcs=100, cluster=TRUE, tsne=TRUE) {
-  if (!requireNamespace("Seurat")) {
-    stop("You need to install 'Seurat' package to be able to use this function")
-  }
-
-  rownames(count.matrix) <- make.unique(rownames(count.matrix))
-
-  max.n.pcs <- min(nrow(count.matrix) - 1, ncol(count.matrix) - 1, n.pcs)
-  so <- Seurat::CreateSeuratObject(count.matrix, display.progress=verbose) %>%
-    Seurat::NormalizeData(display.progress=verbose) %>%
-    Seurat::ScaleData(vars.to.regress=vars.to.regress, display.progress=verbose, do.par=do.par) %>%
-    Seurat::FindVariableGenes(do.plot = FALSE, display.progress=verbose) %>%
-    Seurat::RunPCA(pcs.compute=max.n.pcs, do.print=FALSE)
-
-  if (cluster) {
-    so <- Seurat::FindClusters(so, n.iter=500, n.start=10, dims.use=1:n.pcs, print.output = F)
-  }
-
-  if (tsne) {
-    so <- Seurat::RunTSNE(so, dims.use=1:n.pcs)
-  }
-
-  return(so)
 }
 
 convertDistanceToSimilarity <- function(distances, metric, l2.sigma=1e5, cor.base=1) {

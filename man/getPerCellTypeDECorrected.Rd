@@ -7,7 +7,7 @@ applying the specified correction vector}
 \usage{
 getPerCellTypeDECorrected(con.obj, groups = NULL, sample.groups = NULL,
   cooks.cutoff = FALSE, independent.filtering = FALSE, n.cores = 1,
-  cluster.sep.chr = "+", correction = NULL, return.details = TRUE,
+  cluster.sep.chr = "<!!>", correction = NULL, return.details = TRUE,
   ref.level = NULL)
 }
 \arguments{
