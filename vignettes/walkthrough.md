@@ -199,12 +199,18 @@ establishing kNN of mNN pairs between the samples. We then append
 within-sample kNN neighbours to the graph to ensure that all the cell
 are included in the graph.
 
-We will use ‘PCA’ space here, which is faster than the default ‘CPCA’
-space, and in most cases gives good results. If your datasets were all
-measured on the same platform you may also want to consider “genes”
-space which can give better resolution in such (simpler) cases. Other
-parameters passed to the `buildGraph()` function below are all default
-values - so are shown just for
+  - We will use ‘PCA’ space here, which is faster than the default
+    ‘CPCA’ space, and in most cases gives good results.
+  - CPCA space should provide more accurate alignment under greater
+    dataset-specific distortions.
+  - CCA space optimizes conservation of correlation of components
+    between datasets.
+  - If your datasets were all measured on the same platform you may also
+    want to consider “genes” space which can give better resolution in
+    such (simpler) cases.
+
+Other parameters passed to the `buildGraph()` function below are all
+default values - so are shown just for
 information.
 
 ``` r
@@ -402,27 +408,27 @@ con$embedGraph(method="UMAP", min.dist=0.01, spread=15, n.cores=4)
     ## Convert graph to adjacency list...
     ## Done
     ## Estimate nearest neighbors and commute times...
-    ## Estimating hitting distances: 07:08:04.
+    ## Estimating hitting distances: 16:04:59.
     ## Done.
-    ## Estimating commute distances: 07:08:11.
-    ## Hashing adjacency list: 07:08:11.
+    ## Estimating commute distances: 16:05:12.
+    ## Hashing adjacency list: 16:05:12.
     ## Done.
-    ## Estimating distances: 07:08:11.
+    ## Estimating distances: 16:05:13.
     ## Done
     ## Done.
-    ## All done!: 07:08:14.
+    ## All done!: 16:05:16.
     ## Done
     ## Estimate UMAP embedding...
 
-    ## 07:08:14 Read 12000 rows and found 1 numeric columns
+    ## 16:05:17 Read 12000 rows and found 1 numeric columns
 
-    ## 07:08:14 Commencing smooth kNN distance calibration using 4 threads
+    ## 16:05:17 Commencing smooth kNN distance calibration using 4 threads
 
-    ## 07:08:16 Initializing from normalized Laplacian + noise
+    ## 16:05:18 Initializing from normalized Laplacian + noise
 
-    ## 07:08:17 Commencing optimization for 1000 epochs, with 359242 positive edges using 4 threads
+    ## 16:05:18 Commencing optimization for 1000 epochs, with 351902 positive edges using 4 threads
 
-    ## 07:08:36 Optimization finished
+    ## 16:05:38 Optimization finished
 
     ## Done
 
@@ -578,11 +584,11 @@ new.annot <- setNames(colnames(new.label.probabilities)[apply(new.label.probabil
 head(new.annot)
 ```
 
-    ## MantonBM1_HiSeq_1-GAGGTGATCATTTGGG-1 MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 
+    ## MantonBM1_HiSeq_1-CGATTGACACCTCGGA-1 MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 
     ##                                 "NK"                                 "NK" 
-    ## MantonBM1_HiSeq_1-GAACCTAAGACAATAC-1 MantonBM2_HiSeq_1-GAACCTAAGCTAGTGG-1 
+    ## MantonBM1_HiSeq_1-AGGTCCGTCTCTGCTG-1 MantonBM2_HiSeq_1-CGCGGTATCCAAACTG-1 
     ##                                 "NK"                                 "NK" 
-    ## MantonBM2_HiSeq_1-ATTACTCTCTCGTTTA-1 MantonBM1_HiSeq_1-GTCATTTGTCGAACAG-1 
+    ## MantonBM1_HiSeq_1-GACCAATTCAACACAC-1 MantonBM2_HiSeq_1-AGGCCGTTCTCGCTTG-1 
     ##                                 "NK"                                 "NK"
 
 We now see that all our samples have been labelled automatically\!
@@ -680,13 +686,13 @@ str( con$getClusterCountMatrices() , 1)
 ```
 
     ## List of 4
-    ##  $ MantonBM1_HiSeq_1: num [1:33694, 1:19] 0 0 0 1 0 0 0 0 41 5 ...
+    ##  $ MantonBM1_HiSeq_1: num [1:33694, 1:24] 0 0 0 1 0 0 0 0 42 5 ...
     ##   ..- attr(*, "dimnames")=List of 2
-    ##  $ MantonBM2_HiSeq_1: num [1:33694, 1:19] 0 0 0 0 0 0 0 0 72 4 ...
+    ##  $ MantonBM2_HiSeq_1: num [1:33694, 1:24] 0 0 0 0 0 0 0 0 66 4 ...
     ##   ..- attr(*, "dimnames")=List of 2
-    ##  $ MantonCB1_HiSeq_1: num [1:33694, 1:19] 0 0 0 1 0 0 0 0 98 6 ...
+    ##  $ MantonCB1_HiSeq_1: num [1:33694, 1:24] 0 0 0 0 0 0 0 0 69 7 ...
     ##   ..- attr(*, "dimnames")=List of 2
-    ##  $ MantonCB2_HiSeq_1: num [1:33694, 1:19] 0 0 0 0 0 0 0 0 62 10 ...
+    ##  $ MantonCB2_HiSeq_1: num [1:33694, 1:24] 0 0 0 0 0 0 0 0 135 17 ...
     ##   ..- attr(*, "dimnames")=List of 2
 
 The list above, returns pooled count matrix for each sample, where the
@@ -739,20 +745,20 @@ res <- de.info[['B cells']]$res
 head(res[order(res$padj,decreasing = FALSE),])
 ```
 
-    ##                 baseMean log2FoldChange     lfcSE      stat       pvalue
-    ## JCHAIN         394.51245      -3.396684 0.4477261 -7.586524 3.286026e-14
-    ## RP11-386I14.4  397.42964       2.718649 0.4030503  6.745185 1.528324e-11
-    ## CD69           508.16469       2.587829 0.4039742  6.405928 1.494578e-10
-    ## NFKBIA        1089.69234       2.617462 0.4101491  6.381733 1.750947e-10
-    ## CH17-373J23.1  325.23043       2.827490 0.4552153  6.211324 5.253998e-10
-    ## MPO             83.80674      -6.025703 0.9881456 -6.097991 1.074097e-09
+    ##                baseMean log2FoldChange     lfcSE      stat       pvalue
+    ## IGKC          9448.2506      -4.258307 0.5067577 -8.403044 4.350519e-17
+    ## JCHAIN         883.8022      -4.949328 0.6766929 -7.313994 2.593158e-13
+    ## IGHG1          507.2094     -10.687915 1.4670663 -7.285229 3.211238e-13
+    ## CD69           448.8482       2.651048 0.3795444  6.984817 2.852278e-12
+    ## RP11-386I14.4  354.9975       2.620012 0.3885886  6.742380 1.558126e-11
+    ## CH17-373J23.1  257.3942       2.715040 0.4427534  6.132172 8.668748e-10
     ##                       padj
-    ## JCHAIN        5.738059e-10
-    ## RP11-386I14.4 1.334380e-07
-    ## CD69          7.643758e-07
-    ## NFKBIA        7.643758e-07
-    ## CH17-373J23.1 1.834906e-06
-    ## MPO           2.993422e-06
+    ## IGKC          7.508996e-13
+    ## JCHAIN        1.847532e-09
+    ## IGHG1         1.847532e-09
+    ## CD69          1.230758e-08
+    ## RP11-386I14.4 5.378651e-08
+    ## CH17-373J23.1 2.137465e-06
 
 # Forcing better alignment
 

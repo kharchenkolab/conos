@@ -11,8 +11,7 @@ scaledMatricesP2 <- function(p2.objs, data.type, od.genes, var.scale, neighborho
   ## Common variance scaling
   if (var.scale) {
     # use geometric means for variance, as we're trying to focus on the common variance components
-    cgsf <- do.call(cbind, lapply(p2.objs,function(x) x$misc$varinfo[od.genes,]$gsf)) %>%  log() %>% rowMeans() %>% exp()
-    #cgsf <- do.call(cbind, lapply(p2.objs,function(x) x$misc$varinfo[od.genes,]$gsf)) %>% rowMeans()
+    cqv <- do.call(cbind, lapply(p2.objs,function(x) x$misc$varinfo[od.genes,]$qv)) %>%  log() %>% rowMeans() %>% exp()
   }
   ## Prepare the matrices
   cproj <- lapply(p2.objs,function(r) {
@@ -28,7 +27,8 @@ scaledMatricesP2 <- function(p2.objs, data.type, od.genes, var.scale, neighborho
     }
 
     if(var.scale) {
-      # x@x <- x@x*rep(r$misc$varinfo[od.genes,]$gsf,diff(x@p))
+      cgsf <- sqrt(cqv/exp(r$misc$varinfo[od.genes,]$v))
+      cgsf[is.na(cgsf) | !is.finite(cgsf)] <- 0;
       x@x <- x@x*rep(cgsf,diff(x@p))
     }
     if(neighborhood.average) {
