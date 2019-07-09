@@ -91,9 +91,9 @@ con$plotPanel(clustering="multilevel", use.local.clusters=T, title.size=6)
 
 Next we will build the joint graph that encompasses all the samples. We do that by pairwise projecting samples onto a common space and establishing kNN of mNN pairs between the samples. We then append within-sample kNN neighbours to the graph to ensure that all the cell are included in the graph.
 
-* We will use 'PCA' space here, which is faster than the default 'CPCA' space, and in most cases gives good results. 
+* We use 'PCA' space here which is very fast and will yield good integration in most cases. 
 * CPCA space should provide more accurate alignment under greater dataset-specific distortions.
-* CCA space optimizes conservation of correlation of components between datasets.
+* CCA space optimizes conservation of correlation between datasets and can give yield very good alignments in low-similarity cases (e.g. large evolutionary distances).
 * If your datasets were all measured on the same platform you may also want to consider "genes" space which can give better resolution in such (simpler) cases. 
 
 Other parameters passed to the `buildGraph()` function below are all default values - so are shown just for information.

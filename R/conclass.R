@@ -110,7 +110,7 @@ Conos <- setRefClass(
       samples <<- c(samples,x);
     },
 
-    updatePairs=function(space='CPCA', data.type='counts', ncomps=50, n.odgenes=1e3, var.scale=TRUE, neighborhood.average=FALSE, neighborhood.average.k=10, matching.mask=NULL, exclude.samples=NULL, score.component.variance=FALSE, verbose=FALSE) {
+    updatePairs=function(space='PCA', data.type='counts', ncomps=50, n.odgenes=1e3, var.scale=TRUE, neighborhood.average=FALSE, neighborhood.average.k=10, matching.mask=NULL, exclude.samples=NULL, score.component.variance=FALSE, verbose=FALSE) {
       if(neighborhood.average) {
         # pre-calculate averaging matrices for each sample
         if(verbose)  cat("calculating local averaging neighborhoods ")
@@ -201,7 +201,7 @@ Conos <- setRefClass(
     },
 
 
-    buildGraph=function(k=15, k.self=10, k.self.weight=0.1, alignment.strength=NULL, space='CPCA', matching.method='mNN', metric='angular', k1=k, data.type='counts', l2.sigma=1e5, var.scale =TRUE, ncomps=40, n.odgenes=2000, neighborhood.average=FALSE, neighborhood.average.k=10, matching.mask=NULL, exclude.samples=NULL, common.centering=TRUE, verbose=TRUE, base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, score.component.variance=FALSE, balance.edge.weights=FALSE, balancing.factor.per.cell=NULL, same.factor.downweight=1.0) {
+    buildGraph=function(k=15, k.self=10, k.self.weight=0.1, alignment.strength=NULL, space='PCA', matching.method='mNN', metric='angular', k1=k, data.type='counts', l2.sigma=1e5, var.scale =TRUE, ncomps=40, n.odgenes=2000, neighborhood.average=FALSE, neighborhood.average.k=10, matching.mask=NULL, exclude.samples=NULL, common.centering=TRUE, verbose=TRUE, base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, score.component.variance=FALSE, balance.edge.weights=FALSE, balancing.factor.per.cell=NULL, same.factor.downweight=1.0) {
       supported.spaces <- c("CPCA","JNMF","genes","PCA","PMA","CCA")
       if(!space %in% supported.spaces) {
         stop(paste0("only the following spaces are currently supported: [",paste(supported.spaces,collapse=' '),"]"))

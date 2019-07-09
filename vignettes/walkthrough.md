@@ -199,12 +199,13 @@ establishing kNN of mNN pairs between the samples. We then append
 within-sample kNN neighbours to the graph to ensure that all the cell
 are included in the graph.
 
-  - We will use ‘PCA’ space here, which is faster than the default
-    ‘CPCA’ space, and in most cases gives good results.
+  - We use ‘PCA’ space here which is very fast and will yield good
+    integration in most cases.
   - CPCA space should provide more accurate alignment under greater
     dataset-specific distortions.
-  - CCA space optimizes conservation of correlation of components
-    between datasets.
+  - CCA space optimizes conservation of correlation between datasets and
+    can give yield very good alignments in low-similarity cases
+    (e.g. large evolutionary distances).
   - If your datasets were all measured on the same platform you may also
     want to consider “genes” space which can give better resolution in
     such (simpler) cases.
@@ -408,27 +409,27 @@ con$embedGraph(method="UMAP", min.dist=0.01, spread=15, n.cores=4)
     ## Convert graph to adjacency list...
     ## Done
     ## Estimate nearest neighbors and commute times...
-    ## Estimating hitting distances: 16:04:59.
+    ## Estimating hitting distances: 17:38:34.
     ## Done.
-    ## Estimating commute distances: 16:05:12.
-    ## Hashing adjacency list: 16:05:12.
+    ## Estimating commute distances: 17:38:49.
+    ## Hashing adjacency list: 17:38:49.
     ## Done.
-    ## Estimating distances: 16:05:13.
+    ## Estimating distances: 17:38:50.
     ## Done
     ## Done.
-    ## All done!: 16:05:16.
+    ## All done!: 17:38:53.
     ## Done
     ## Estimate UMAP embedding...
 
-    ## 16:05:17 Read 12000 rows and found 1 numeric columns
+    ## 17:38:53 Read 12000 rows and found 1 numeric columns
 
-    ## 16:05:17 Commencing smooth kNN distance calibration using 4 threads
+    ## 17:38:53 Commencing smooth kNN distance calibration using 4 threads
 
-    ## 16:05:18 Initializing from normalized Laplacian + noise
+    ## 17:38:55 Initializing from normalized Laplacian + noise
 
-    ## 16:05:18 Commencing optimization for 1000 epochs, with 351902 positive edges using 4 threads
+    ## 17:38:55 Commencing optimization for 1000 epochs, with 352038 positive edges using 4 threads
 
-    ## 16:05:38 Optimization finished
+    ## 17:39:17 Optimization finished
 
     ## Done
 
@@ -686,13 +687,13 @@ str( con$getClusterCountMatrices() , 1)
 ```
 
     ## List of 4
-    ##  $ MantonBM1_HiSeq_1: num [1:33694, 1:24] 0 0 0 1 0 0 0 0 42 5 ...
+    ##  $ MantonBM1_HiSeq_1: num [1:33694, 1:30] 0 0 0 1 0 0 0 0 50 6 ...
     ##   ..- attr(*, "dimnames")=List of 2
-    ##  $ MantonBM2_HiSeq_1: num [1:33694, 1:24] 0 0 0 0 0 0 0 0 66 4 ...
+    ##  $ MantonBM2_HiSeq_1: num [1:33694, 1:30] 0 0 0 0 0 0 0 0 93 6 ...
     ##   ..- attr(*, "dimnames")=List of 2
-    ##  $ MantonCB1_HiSeq_1: num [1:33694, 1:24] 0 0 0 0 0 0 0 0 69 7 ...
+    ##  $ MantonCB1_HiSeq_1: num [1:33694, 1:30] 0 0 0 0 0 0 0 0 80 7 ...
     ##   ..- attr(*, "dimnames")=List of 2
-    ##  $ MantonCB2_HiSeq_1: num [1:33694, 1:24] 0 0 0 0 0 0 0 0 135 17 ...
+    ##  $ MantonCB2_HiSeq_1: num [1:33694, 1:30] 0 0 0 0 0 0 0 0 155 22 ...
     ##   ..- attr(*, "dimnames")=List of 2
 
 The list above, returns pooled count matrix for each sample, where the
@@ -746,19 +747,19 @@ head(res[order(res$padj,decreasing = FALSE),])
 ```
 
     ##                baseMean log2FoldChange     lfcSE      stat       pvalue
-    ## IGKC          9448.2506      -4.258307 0.5067577 -8.403044 4.350519e-17
-    ## JCHAIN         883.8022      -4.949328 0.6766929 -7.313994 2.593158e-13
-    ## IGHG1          507.2094     -10.687915 1.4670663 -7.285229 3.211238e-13
-    ## CD69           448.8482       2.651048 0.3795444  6.984817 2.852278e-12
-    ## RP11-386I14.4  354.9975       2.620012 0.3885886  6.742380 1.558126e-11
-    ## CH17-373J23.1  257.3942       2.715040 0.4427534  6.132172 8.668748e-10
+    ## IGKC          9387.6799      -4.264838 0.4835895 -8.819130 1.153528e-18
+    ## JCHAIN         877.8266      -4.969888 0.6400805 -7.764474 8.198480e-15
+    ## IGHG1          504.3409     -10.663036 1.4619686 -7.293615 3.017469e-13
+    ## CD69           452.5682       2.655559 0.3841495  6.912827 4.750885e-12
+    ## RP11-386I14.4  361.0105       2.658088 0.3942781  6.741657 1.565905e-11
+    ## CH17-373J23.1  259.9071       2.740779 0.4431345  6.184983 6.210927e-10
     ##                       padj
-    ## IGKC          7.508996e-13
-    ## JCHAIN        1.847532e-09
-    ## IGHG1         1.847532e-09
-    ## CD69          1.230758e-08
-    ## RP11-386I14.4 5.378651e-08
-    ## CH17-373J23.1 2.137465e-06
+    ## IGKC          1.989951e-14
+    ## JCHAIN        7.071599e-11
+    ## IGHG1         1.735145e-09
+    ## CD69          2.048938e-08
+    ## RP11-386I14.4 5.402686e-08
+    ## CH17-373J23.1 1.530639e-06
 
 # Forcing better alignment
 
