@@ -31,7 +31,7 @@ In essense, Conos will take a large, potentially heterogeneous panel of samples 
 Conos is robust to heterogeneity of samples within collection, as well as noise. The ability to resolve finer subpopulation structure improves as the size of the panel increases.
 
 * What do I need to run it?
-Conos is an R package. Currently, it supports pre-processing (filtering, normalization, etc.) of the individual datasets using [pagoda2](https://github.com/hms-dbmi/pagoda2) or [Seurat](https://satijalab.org/seurat/) (**Note: only Seurat < 3.0.0 is currently supported**).
+Conos is an R package. Currently, it supports pre-processing (filtering, normalization, etc.) of the individual datasets using [pagoda2](https://github.com/hms-dbmi/pagoda2) or [Seurat](https://satijalab.org/seurat/).
 
 ## Installation
 
