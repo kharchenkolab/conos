@@ -1,8 +1,19 @@
+## [1.1.0] - 2019-07-02
+
+## Added
+
+- Support for CCA space
+
+## Changed
+
+- `buildGraph` now use PCA space as the default
+- fixed common variance rescaling to use geometric mean of the target
+
 ## [1.0.3] - 2019-07-02
 
 ## Added
 
- - Support for Seurat v3 objects
+- Support for Seurat v3 objects
 
 ## [1.0.2] - 2019-06-26
 
