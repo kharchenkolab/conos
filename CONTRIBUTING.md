@@ -1,9 +1,9 @@
 ## Contribution guidelines
 
-When you do a pull request, please open it to the `develop` branch (not `master`).
+When you do a pull request, please open it to the `dev` branch (not `master`).
 
 Each time you make a changes in the code, please write a note in the [CHANGELOG.md](CHANGELOG.md) file. 
-We follow the format from [KeepChangelog.com](https://keepachangelog.com/en/). So, if it's a change in the `develop` branch, 
+We follow the format from [KeepChangelog.com](https://keepachangelog.com/en/). So, if it's a change in the `dev` branch, 
 please write about your changes in `## [Unreleased]` section. Then, when the changes are merged to `master`, the title is 
 changed to the corresponding version number.
 
