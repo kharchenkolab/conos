@@ -82,7 +82,12 @@ The docker distribution has the latest version and also includes the [Pagoda2 pa
 docker run -p 8787:8787 -e PASSWORD=pass docker.io/vpetukhov/conos:latest
 ```
 
-The first time you run the command it will download several images so make sure that you have fast internet access setup. You can then point your browser to http://localhost:8787/ to get an Rstudio environment with pagoda2 and conos installed (log in using credentials rstudio/pass). Explore the docker [--mount option]([https://docs.docker.com/storage/volumes/) to allow access of the docker image to your local files.
+The first time you run the command it will download several images so make sure that you have fast internet access setup. You can then point your browser to http://localhost:8787/ to get an Rstudio environment with pagoda2 and conos installed (log in using credentials *rstudio* / *pass*). Explore the docker [--mount option]([https://docs.docker.com/storage/volumes/) to allow access of the docker image to your local files.
+
+**Note:** if you already downloaded the docker image and want to update it, please run 
+```
+docker pull vpetukhov/conos:latest
+```
 
 ### Building docker image on the fly
 
