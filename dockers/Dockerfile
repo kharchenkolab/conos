@@ -23,10 +23,10 @@ RUN apt-get update --yes && apt-get install --no-install-recommends --yes \
   libhdf5-dev
 
 RUN \
-  R -e 'chooseCRANmirror(ind=52); install.packages(c("RcppEigen", "urltools", "Rtsne"))' && \
+  R -e 'chooseCRANmirror(ind=52); install.packages(c("RcppEigen", "urltools", "Rtsne","BiocManager"))' && \
   R -e 'devtools::install_url("https://cran.r-project.org/src/contrib/Archive/fpc/fpc_2.1-11.tar.gz")' && \
   R -e 'devtools::install_github("satijalab/seurat", ref="v2.3.3")' && \
-  R -e 'source("http://bioconductor.org/biocLite.R"); biocLite(c("GO.db", "org.Hs.eg.db","org.Mm.eg.db", "pcaMethods","DESeq2"), suppressUpdates=TRUE);' && \
   R -e 'devtools::install_github("jlmelville/uwot")' && \
   R -e 'devtools::install_github("hms-dbmi/pagoda2")' && \
-  R -e 'devtools::install_github("hms-dbmi/conos", ref="dev")'
+  R -e 'BiocManager::install(c("GO.db", "org.Hs.eg.db","org.Mm.eg.db", "pcaMethods","DESeq2","BiocGenerics"), suppressUpdates=TRUE);' && \
+  R -e 'devtools::install_github("hms-dbmi/conos", ref="master")'

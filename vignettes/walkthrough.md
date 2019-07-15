@@ -191,6 +191,9 @@ clusters in other sample (for example note cluster
 con$plotPanel(clustering="multilevel", use.local.clusters=T, title.size=6)
 ```
 
+    ## Warning: The `printer` argument is deprecated as of rlang 0.3.0.
+    ## This warning is displayed once per session.
+
 ![](walkthrough_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
 
 Next we will build the joint graph that encompasses all the samples. We
@@ -215,7 +218,7 @@ default values - so are shown just for
 information.
 
 ``` r
-con$buildGraph(k=15, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
 ```
 
     ## found 0 out of 6 cached PCA  space pairs ... running 6 additional PCA  space pairs  done
@@ -409,27 +412,27 @@ con$embedGraph(method="UMAP", min.dist=0.01, spread=15, n.cores=4)
     ## Convert graph to adjacency list...
     ## Done
     ## Estimate nearest neighbors and commute times...
-    ## Estimating hitting distances: 17:38:34.
+    ## Estimating hitting distances: 18:21:33.
     ## Done.
-    ## Estimating commute distances: 17:38:49.
-    ## Hashing adjacency list: 17:38:49.
+    ## Estimating commute distances: 18:21:46.
+    ## Hashing adjacency list: 18:21:46.
     ## Done.
-    ## Estimating distances: 17:38:50.
+    ## Estimating distances: 18:21:47.
     ## Done
     ## Done.
-    ## All done!: 17:38:53.
+    ## All done!: 18:21:51.
     ## Done
     ## Estimate UMAP embedding...
 
-    ## 17:38:53 Read 12000 rows and found 1 numeric columns
+    ## 18:21:51 Read 12000 rows and found 1 numeric columns
 
-    ## 17:38:53 Commencing smooth kNN distance calibration using 4 threads
+    ## 18:21:51 Commencing smooth kNN distance calibration using 4 threads
 
-    ## 17:38:55 Initializing from normalized Laplacian + noise
+    ## 18:21:52 Initializing from normalized Laplacian + noise
 
-    ## 17:38:55 Commencing optimization for 1000 epochs, with 352038 positive edges using 4 threads
+    ## 18:21:53 Commencing optimization for 1000 epochs, with 368044 positive edges using 4 threads
 
-    ## 17:39:17 Optimization finished
+    ## 18:22:14 Optimization finished
 
     ## Done
 
@@ -587,9 +590,9 @@ head(new.annot)
 
     ## MantonBM1_HiSeq_1-CGATTGACACCTCGGA-1 MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 
     ##                                 "NK"                                 "NK" 
-    ## MantonBM1_HiSeq_1-AGGTCCGTCTCTGCTG-1 MantonBM2_HiSeq_1-CGCGGTATCCAAACTG-1 
+    ## MantonBM1_HiSeq_1-AGGTCCGTCTCTGCTG-1 MantonBM2_HiSeq_1-GGAAAGCCAGACGCCT-1 
     ##                                 "NK"                                 "NK" 
-    ## MantonBM1_HiSeq_1-GACCAATTCAACACAC-1 MantonBM2_HiSeq_1-AGGCCGTTCTCGCTTG-1 
+    ## MantonBM2_HiSeq_1-GGGTTGCGTAGCTGCC-1 MantonBM2_HiSeq_1-GACAGAGGTCACAAGG-1 
     ##                                 "NK"                                 "NK"
 
 We now see that all our samples have been labelled automatically\!
@@ -687,13 +690,13 @@ str( con$getClusterCountMatrices() , 1)
 ```
 
     ## List of 4
-    ##  $ MantonBM1_HiSeq_1: num [1:33694, 1:30] 0 0 0 1 0 0 0 0 50 6 ...
+    ##  $ MantonBM1_HiSeq_1: num [1:33694, 1:15] 0 0 0 1 0 0 0 0 38 4 ...
     ##   ..- attr(*, "dimnames")=List of 2
-    ##  $ MantonBM2_HiSeq_1: num [1:33694, 1:30] 0 0 0 0 0 0 0 0 93 6 ...
+    ##  $ MantonBM2_HiSeq_1: num [1:33694, 1:15] 0 0 0 0 0 0 0 0 66 4 ...
     ##   ..- attr(*, "dimnames")=List of 2
-    ##  $ MantonCB1_HiSeq_1: num [1:33694, 1:30] 0 0 0 0 0 0 0 0 80 7 ...
+    ##  $ MantonCB1_HiSeq_1: num [1:33694, 1:15] 0 0 0 0 0 0 0 0 73 5 ...
     ##   ..- attr(*, "dimnames")=List of 2
-    ##  $ MantonCB2_HiSeq_1: num [1:33694, 1:30] 0 0 0 0 0 0 0 0 155 22 ...
+    ##  $ MantonCB2_HiSeq_1: num [1:33694, 1:15] 0 0 0 0 0 0 0 0 136 17 ...
     ##   ..- attr(*, "dimnames")=List of 2
 
 The list above, returns pooled count matrix for each sample, where the
@@ -730,10 +733,7 @@ str(de.info[1:3], 2)
     ##   ..$ res          :'data.frame':    33694 obs. of  6 variables:
     ##   ..$ cm           :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
     ##   ..$ sample.groups:List of 2
-    ##  $ DC         :List of 3
-    ##   ..$ res          :'data.frame':    33694 obs. of  6 variables:
-    ##   ..$ cm           :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-    ##   ..$ sample.groups:List of 2
+    ##  $ DC         : logi NA
     ##  $ dying cells:List of 3
     ##   ..$ res          :'data.frame':    33694 obs. of  6 variables:
     ##   ..$ cm           :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
@@ -747,19 +747,19 @@ head(res[order(res$padj,decreasing = FALSE),])
 ```
 
     ##                baseMean log2FoldChange     lfcSE      stat       pvalue
-    ## IGKC          9387.6799      -4.264838 0.4835895 -8.819130 1.153528e-18
-    ## JCHAIN         877.8266      -4.969888 0.6400805 -7.764474 8.198480e-15
-    ## IGHG1          504.3409     -10.663036 1.4619686 -7.293615 3.017469e-13
-    ## CD69           452.5682       2.655559 0.3841495  6.912827 4.750885e-12
-    ## RP11-386I14.4  361.0105       2.658088 0.3942781  6.741657 1.565905e-11
-    ## CH17-373J23.1  259.9071       2.740779 0.4431345  6.184983 6.210927e-10
+    ## IGLL1          150.9805      -5.521811 0.7013839 -7.872737 3.469662e-15
+    ## JCHAIN         342.3496      -3.328696 0.4428750 -7.516106 5.643192e-14
+    ## IGHG1          558.5807     -10.827820 1.4442727 -7.497075 6.525766e-14
+    ## IGLC2         3351.0226      -3.506702 0.5181883 -6.767236 1.312659e-11
+    ## RP11-386I14.4  362.2495       2.771804 0.4179236  6.632323 3.304455e-11
+    ## IGKC          2621.3799      -2.514947 0.3824759 -6.575439 4.850972e-11
     ##                       padj
-    ## IGKC          1.989951e-14
-    ## JCHAIN        7.071599e-11
-    ## IGHG1         1.735145e-09
-    ## CD69          2.048938e-08
-    ## RP11-386I14.4 5.402686e-08
-    ## CH17-373J23.1 1.530639e-06
+    ## IGLL1         6.064968e-11
+    ## JCHAIN        3.802346e-10
+    ## IGHG1         3.802346e-10
+    ## IGLC2         5.736319e-08
+    ## RP11-386I14.4 1.155238e-07
+    ## IGKC          1.413250e-07
 
 # Forcing better alignment
 

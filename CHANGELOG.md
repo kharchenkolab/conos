@@ -1,3 +1,10 @@
+## [1.1.1] - 2019-07-15
+
+## Changed
+
+- Fixed docker build: use of BiocManager, reference to master instead of dev
+- Updated src/Makevars to remove the CXX directive, which trips up older versions of R (3.2.x)
+
 ## [1.1.0] - 2019-07-02
 
 ## Added
