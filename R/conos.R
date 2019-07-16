@@ -437,7 +437,7 @@ papply <- function(...,n.cores=parallel::detectCores(), mc.preschedule=FALSE) {
 ## Benchmarks
 ##################################
 
-#' Get % of clusters that are private to one sample
+#' Get percent of clusters that are private to one sample
 #' @param p2list list of pagoda2 objects on which the panelClust() was run
 #' @param pjc result of panelClust()
 #' @param priv.cutoff percent of total cells of a cluster that have to come from a single cluster

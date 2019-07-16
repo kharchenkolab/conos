@@ -2,7 +2,7 @@
 % Please edit documentation in R/conos.R
 \name{getClusterPrivacy}
 \alias{getClusterPrivacy}
-\title{Get % of clusters that are private to one sample}
+\title{Get percent of clusters that are private to one sample}
 \usage{
 getClusterPrivacy(p2list, pjc, priv.cutoff = 0.99)
 }
@@ -15,5 +15,5 @@ getClusterPrivacy(p2list, pjc, priv.cutoff = 0.99)
 for it to be called private}
 }
 \description{
-Get % of clusters that are private to one sample
+Get percent of clusters that are private to one sample
 }
