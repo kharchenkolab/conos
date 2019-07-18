@@ -13,6 +13,7 @@
 - [Usage example](#usage-example)
   * [Alignment of datasets](#alignment-of-datasets)
   * [Integration with ScanPy](#integration-with-scanpy)
+- [Reference](#reference)
   
 ## Clustering on Network of Samples
 
@@ -133,3 +134,9 @@ For integration with ScanPy you need to save Conos files on disk from R session,
 than upload these files from Python. See the following tutorials:
 - [Save Conos for ScanPy](vignettes/scanpy_integration.Rmd)
 - [Load ScanPy from Conos](vignettes/scanpy_integration.ipynb)
+
+## Reference
+
+If you find this pipeline useful for your research, please consider citing the paper:
+
+Barkas N., Petukhov V., Nikolaeva D., Lozinsky Y., Demharter S., Khodosevich K. & Kharchenko P.V. Joint analysis of heterogeneous single-cell RNA-seq dataset collections. Nat. Methods, (2019). [doi:10.1038/s41592-019-0466-z](https://doi.org/10.1038/s41592-019-0466-z)
