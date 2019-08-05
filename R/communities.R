@@ -313,7 +313,7 @@ rleiden.community <- function(graph, K=2, n.cores=parallel::detectCores(logical=
 
   # enclose in a masquerading class
   res <- list(membership=fv,dendrogram=combd,algorithm='rleiden');
-  if(K.current==K) {
+  if(hierarchical & K.current==K) {
     # reconstruct merges matrix
     hc <- as.hclust(as.dendrogram(combd))
     # translate hclust $merge to walktrap-like $merges
