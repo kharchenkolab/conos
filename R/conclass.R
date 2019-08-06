@@ -462,7 +462,11 @@ Conos <- setRefClass(
 
       ## Extract groups from this graph
       cls.mem <- membership(cls)
-      cls.groups <- factor(setNames(as.character(cls.mem),names(cls.mem)),levels=1:max(cls.mem))
+      if(suppressWarnings(any(is.na(as.numeric(cls.mem))))) {
+        cls.groups <- as.factor(cls.mem)
+      } else {
+        cls.groups <- factor(setNames(as.character(cls.mem),names(cls.mem)),levels=sort(as.numeric(unique(as.character(cls.mem))),decreasing=FALSE))
+      }
       cls.levs <- levels(cls.groups)
       res <- list(groups=cls.groups,result=cls)
 
@@ -561,7 +565,7 @@ Conos <- setRefClass(
 
     },
 
-    plotPanel=function(clustering=NULL, groups=NULL, colors=NULL, gene=NULL, use.local.clusters=FALSE, plot.theme=NULL, ...) {
+    plotPanel=function(clustering=NULL, groups=NULL, colors=NULL, gene=NULL, use.local.clusters=FALSE, plot.theme=NULL, use.common.embedding=FALSE, embedding.type=NULL, ...) {
       if (use.local.clusters) {
         if (is.null(clustering) && !(inherits(x = samples[[1]], what = c('seurat', 'Seurat')))) {
           stop("You have to provide 'clustering' parameter to be able to use local clusters")
@@ -571,12 +575,11 @@ Conos <- setRefClass(
         if (is.null(groups)) {
           stop(paste0("No clustering '", clustering, "' presented in the samples"))
         }
-      }
-      else if (is.null(groups) && is.null(colors) && is.null(gene)) {
+      } else if (is.null(groups) && is.null(colors) && is.null(gene)) {
         groups <- getClusteringGroups(clusters, clustering)
       }
-
-      gg <- plotSamples(samples, groups=groups, colors=colors, gene=gene, plot.theme=adjustTheme(plot.theme), ...)
+      if(use.common.embedding) { embedding.type <- embedding }
+      gg <- plotSamples(samples, groups=groups, colors=colors, gene=gene, plot.theme=adjustTheme(plot.theme), embedding.type=embedding.type, ...)
 
       return(gg)
     },

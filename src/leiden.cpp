@@ -46,7 +46,7 @@ std::vector<size_t> leiden_community(SEXP graph, std::vector<double>& edge_weigh
   
   R_SEXP_to_igraph(graph, &g);
   Graph og(&g,edge_weights);
-  Optimiser o;
+  Optimiser o( (int) (R::runif(0,1)*(double)RAND_MAX) );
   RBConfigurationVertexPartition p(&og,resolution);
     //RBERVertexPartition p(&og,resolution);
   //o.find_partition(og,resolution);

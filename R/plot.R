@@ -90,7 +90,7 @@ plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow
 ##' @inheritParams plotEmbeddings
 ##' @param samples list of pagoda2 or Seurat objects
 ##' @param gene gene name. If this parameter is provided, points are colored by expression of this gene.
-##' @param embedding.type type of embedding. Default: tSNE.
+##' @param embedding.type type of embedding. Default: tSNE. If a numeric matrix is passed, interpreted as an actual embedding.
 ##' @return ggplot2 object with the panel of plots
 plotSamples <- function(samples, groups=NULL, colors=NULL, gene=NULL, embedding.type=NULL, ...) {
   if (!is.null(groups)) {
@@ -104,7 +104,12 @@ plotSamples <- function(samples, groups=NULL, colors=NULL, gene=NULL, embedding.
       'tSNE'
     }
   }
-  embeddings <- lapply(samples, getEmbedding, embedding.type)
+  if(class(embedding.type)=='matrix') { # actual embedding was passed
+    embeddings <- lapply(samples,function(r) embedding.type[rownames(embedding.type) %in% getCellNames(r),,drop=F])
+    embeddings <- embeddings[unlist(lapply(embeddings,function(x) nrow(x)>0))]
+  } else { # extract embeddings from samples
+    embeddings <- lapply(samples, getEmbedding, embedding.type)
+  }
   no.embedding <- sapply(embeddings, is.null)
   if (all(no.embedding)) {
     stop(paste0("No '", embedding.type, "' embedding presented in the samples"))

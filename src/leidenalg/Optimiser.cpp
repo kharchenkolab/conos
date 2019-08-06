@@ -33,6 +33,19 @@ Optimiser::Optimiser()
   igraph_rng_seed(&rng, rand());
 }
 
+Optimiser::Optimiser(int seed)
+{
+  this->consider_comms = Optimiser::ALL_NEIGH_COMMS;
+  this->optimise_routine = Optimiser::MOVE_NODES;
+  this->refine_consider_comms = Optimiser::ALL_NEIGH_COMMS;
+  this->refine_routine = Optimiser::MERGE_NODES;
+  this->refine_partition = true;
+  this->consider_empty_community = true;
+  
+  igraph_rng_init(&rng, &igraph_rngtype_mt19937);
+  igraph_rng_seed(&rng, seed);
+}
+
 Optimiser::~Optimiser()
 {
   igraph_rng_destroy(&rng);

@@ -198,7 +198,6 @@ quickCPCA <- function(r.n,data.type='counts',k=30,ncomps=100,n.odgenes=NULL,var.
 
   sm <- scaledMatrices(r.n, data.type=data.type, od.genes=od.genes, var.scale=var.scale, neighborhood.average=neighborhood.average)
   covl <- lapply(sm,function(x) spcov(as(x, "dgCMatrix"), Matrix::colMeans(x)))
-
   ## # centering
   ## if(common.centering) {
   ##   ncells <- unlist(lapply(covl,nrow));
@@ -257,7 +256,7 @@ quickPlainPCA <- function(r.n,data.type='counts',k=30,ncomps=30,n.odgenes=NULL,v
     res <- irlba::irlba(x, nv=ncomps, nu =0, center=cm, right_only = F, reorth = T);
     if(score.component.variance) {
       # calculate projection
-      rot <- as.matrix(t(t(x %*% res$v) - t(cm %*% res$v)))
+      rot <- as.matrix(t(t(x %*% res$v) - as.vector(t(cm %*% res$v))))
       # note: this could be calculated a lot faster, but would need to account for the variable matrix format
       v0 <- apply(x,2,var)
       v1 <- apply(rot,2,var)/sum(v0)
@@ -305,10 +304,18 @@ quickCCA <- function(r.n,data.type='counts',k=30,ncomps=100,n.odgenes=NULL,var.s
   rownames(res$u) <- rownames(sm[[1]])
   rownames(res$v) <- rownames(sm[[2]])
   
-  # DEBUG: record gene projections and the original data
   res$ul <- t(sm[[1]]) %*% res$u # MASS::ginv(sm[[1]]) %*% res$u
   res$vl <- t(sm[[2]]) %*% res$v
-  res$sm <- sm;
+
+  res$ul <- apply(res$ul,2,function(x) x/sqrt(sum(x*x)))
+  res$vl <- apply(res$vl,2,function(x) x/sqrt(sum(x*x)))
+  
+  v0 <- lapply(sm,function(x) sum(apply(x,2,var)))
+  res$nv <- list(apply(sm[[1]] %*% res$ul,2,var)/v0[[1]],
+                 apply(sm[[2]] %*% res$vl,2,var)/v0[[2]]);
+  names(res$nv) <- names(sm);
+                 
+  #res$sm <- sm;
   # end DEBUG
   
   # adjust component weighting
