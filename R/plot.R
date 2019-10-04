@@ -22,14 +22,6 @@ getClusteringGroups <- function(clusters, clustering) {
   return(clusters[[clustering]]$groups)
 }
 
-getGeneExpression <- function(count.matrix, gene) {
-  if(gene %in% rownames(count.matrix)) {
-    return(count.matrix[gene,])
-  }
-
-  return(stats::setNames(rep(NA, ncol(count.matrix)), colnames(count.matrix)))
-}
-
 ##' Plot panel of specified embeddings
 ##'
 ##' @inheritParams embeddingPlot
@@ -119,7 +111,7 @@ plotSamples <- function(samples, groups=NULL, colors=NULL, gene=NULL, embedding.
     embeddings <- embeddings[!no.embedding]
   }
   if (!is.null(gene)) {
-    colors <- lapply(samples, getCountMatrix) %>% lapply(getGeneExpression, gene) %>% Reduce(c, .)
+    colors <- lapply(samples, getGeneExpression, gene) %>% Reduce(c, .)
   }
   return(plotEmbeddings(embeddings, groups = groups, colors = colors, ...))
 }

@@ -66,10 +66,7 @@ setMethod(
 setGeneric("getCountMatrix", function(sample) standardGeneric("getCountMatrix"))
 setMethod("getCountMatrix", signature("Pagoda2"), function(sample) t(sample$counts))
 setMethod("getCountMatrix", signature("seurat"), function(sample) if (is.null(sample@scale.data)) sample@data else sample@scale.data)
-setMethod(
-  f = 'getCountMatrix',
-  signature = signature('Seurat'),
-  definition = function(sample) {
+setMethod('getCountMatrix', signature('Seurat'), function(sample) {
     checkSeuratV3()
     dat <- Seurat::GetAssayData(object = sample, slot = 'scale.data')
     dims <- dim(x = dat)
@@ -80,6 +77,24 @@ setMethod(
     return(dat)
   }
 )
+
+setGeneric("getGeneExpression", function(sample, gene) standardGeneric("getGeneExpression"))
+setMethod("getGeneExpression", signature("Pagoda2"), function(sample, gene) {
+  if(gene %in% colnames(sample$counts)) {
+    return(sample$counts[, gene])
+  }
+
+  return(stats::setNames(rep(NA, nrow(sample$counts)), rownames(sample$counts)))
+})
+
+getGeneExpression.default <- function(sample, gene) {
+  count.matrix <- getCountMatrix(sample)
+  if(gene %in% rownames(count.matrix)) {
+    return(count.matrix[gene,])
+  }
+
+  return(stats::setNames(rep(NA, ncol(count.matrix)), colnames(count.matrix)))
+}
 
 setGeneric("getRawCountMatrix", function(sample, transposed=F) standardGeneric("getRawCountMatrix"))
 setMethod("getRawCountMatrix", signature("Pagoda2"), function(sample, transposed=F) if (transposed) sample$misc$rawCounts else t(sample$misc$rawCounts))
