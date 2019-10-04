@@ -341,8 +341,9 @@ Conos <- setRefClass(
         groups <- clusters[[1]]$groups
       }
 
+      groups %<>% as.factor()
       if (class(samples[[1]]) != 'Pagoda2') # TODO: add Seurat
-        stop("Only Pagoda onjects are supported for marker genes")
+        stop("Only Pagoda objects are supported for marker genes")
 
       n.jobs <- if (is.null(n.cores)) .self$n.cores else n.cores
 
