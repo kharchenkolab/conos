@@ -591,7 +591,7 @@ getDifferentialGenesP2 <- function(p2.samples, groups, z.threshold=3.0, upregula
 appendSpecifisityMetricsToDE <- function(de.df, clusters, cluster.id, p2.counts, low.expression.threshold=0, append.auc=FALSE) {
   cluster.mask <- setNames(clusters == cluster.id, names(clusters))
 
-  counts.bin <- (p2.counts[names(cluster.mask), rownames(de.df)] > low.expression.threshold)
+  counts.bin <- (p2.counts[names(cluster.mask), rownames(de.df), drop=F] > low.expression.threshold)
   counts.bin.sums <- Matrix::colSums(counts.bin)
   counts.bin.clust.sums <- Matrix::colSums(counts.bin & cluster.mask)
 
@@ -599,9 +599,9 @@ appendSpecifisityMetricsToDE <- function(de.df, clusters, cluster.id, p2.counts,
     de.df$AUC <- apply(counts.bin, 2, function(col) pROC::auc(as.integer(cluster.mask), as.integer(col)))
   }
 
-  de.df$specifisity <- (length(cluster.mask) - counts.bin.sums) / (length(cluster.mask) - counts.bin.clust.sums)
-  de.df$precision <- counts.bin.clust.sums / counts.bin.sums
-  de.df$expression.fraction <- Matrix::colMeans(counts.bin[cluster.mask,])
+  de.df$Specifisity <- (length(cluster.mask) - counts.bin.sums) / (length(cluster.mask) - counts.bin.clust.sums)
+  de.df$Precision <- counts.bin.clust.sums / counts.bin.sums
+  de.df$ExpressionFraction <- Matrix::colMeans(counts.bin[cluster.mask,, drop=F])
 
   return(de.df)
 }
