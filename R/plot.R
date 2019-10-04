@@ -511,3 +511,72 @@ fac2col <- function(x,s=1,v=1,shuffle=FALSE,min.group.size=1,return.details=F,un
     return(y);
   }
 }
+
+plotDEGenes <- function(de.genes, samples, groups, n.genes.to.show=10, inner.clustering=FALSE, gradient.range.quantile=0.95) {
+  # genes to show
+  vi <- unlist(lapply(de.genes, class))=='data.frame';
+  x <- lapply(de.genes[vi],function(d) {  if(!is.null(d) && nrow(d)>0) { d[1:min(nrow(d),n.genes.to.show),] } else { NULL } })
+  x <- lapply(x,rownames);
+  genes <- unique(unlist(x))
+  # make expression matrix
+  cl <- lapply(samples, function(y) getCountMatrix(y) %>% .[rownames(.) %in% genes,,drop=F] )
+
+  em <- mergeCountMatrices(cl, transposed=T)
+
+  # renormalize rows
+  if(all(sign(em)>=0)) {
+    gradientPalette <- colorRampPalette(c('gray90','red'), space = "Lab")(1024)
+    em <- t(apply(em,1,function(x) {
+      zlim <- as.numeric(quantile(x,p=c(1-gradient.range.quantile,gradient.range.quantile)))
+      if(diff(zlim)==0) {
+        zlim <- as.numeric(range(x))
+      }
+      x[x<zlim[1]] <- zlim[1]; x[x>zlim[2]] <- zlim[2];
+      x <- (x-zlim[1])/(zlim[2]-zlim[1])
+    }))
+  } else {
+    gradientPalette <- colorRampPalette(c("blue", "grey90", "red"), space = "Lab")(1024)
+    em <- t(apply(em,1,function(x) {
+      zlim <- c(-1,1)*as.numeric(quantile(abs(x),p=gradient.range.quantile))
+      if(diff(zlim)==0) {
+        zlim <- c(-1,1)*as.numeric(max(abs(x)))
+      }
+      x[x<zlim[1]] <- zlim[1]; x[x>zlim[2]] <- zlim[2];
+      x <- (x-zlim[1])/(zlim[2]-zlim[1])
+    }))
+  }
+
+  # cluster cell types by averages
+  gmap <- data.frame(gene=unlist(x),cl=rep(names(x),unlist(lapply(x,length))));
+  rowfac <- factor(gmap$cl[match(rownames(em),gmap$gene)],levels=names(x))
+  if(inner.clustering) {
+    clclo <- hclust(as.dist(1-cor(do.call(cbind,tapply(1:nrow(em),rowfac,function(ii) Matrix::colMeans(em[ii,,drop=FALSE]))))),method='complete')$order
+    clgo <- tapply(1:nrow(em),rowfac,function(ii) ii[hclust(as.dist(1-cor(t(em[ii,]))),method='complete')$order])
+    clco <- tapply(1:ncol(em),groups[colnames(em)],function(ii) {
+      if(length(ii)>3) ii[hclust(as.dist(1-cor(em[,ii,drop=F])),method='complete')$order] else ii
+    })
+  } else {
+    clclo <- 1:length(levels(rowfac))
+    clgo <- tapply(1:nrow(em),rowfac,I)
+    clco <- tapply(1:ncol(em),groups[colnames(em)],I)
+  }
+
+  #clco <- clco[names(clgo)]
+  # filter down to the clusters that are included
+  #vic <- cols %in% clclo
+  colors <- fac2col(groups[colnames(em)],v=0.95,s=0.95,return.details=TRUE)
+  samf <- fac2col(getSampleNamePerCell(samples),v=0.75,s=0.9,return.details=TRUE);
+  cellcols <- colors$colors[unlist(clco[clclo])]
+  samfcols <- samf$colors[unlist(clco[clclo])]
+  genecols <- rev(rep(colors$palette,unlist(lapply(clgo,length)[clclo])))
+  drawGroupNames <- FALSE;
+  bottomMargin <- ifelse(drawGroupNames,4,0.5);
+
+  # browser()
+
+  #pagoda2:::my.heatmap2(em[rev(unlist(clgo[clclo])),unlist(clco[clclo])],col=gradientPalette,Colv=NA,Rowv=NA,labRow=NA,labCol=NA,RowSideColors=genecols,ColSideColors=rbind(samfcols,cellcols),margins=c(bottomMargin,0.5),ColSideColors.unit.vsize=0.05,RowSideColors.hsize=0.05,useRaster=TRUE, box=TRUE)
+
+  pagoda2:::my.heatmap2(em[rev(unlist(clgo[clclo])),unlist(clco[clclo])],col=gradientPalette,Colv=NA,Rowv=NA,labRow=NA,labCol=NA,RowSideColors=genecols,ColSideColors=rbind(samfcols,cellcols),margins=c(bottomMargin,0.5),ColSideColors.unit.vsize=0.05,RowSideColors.hsize=0.05,useRaster=TRUE, box=TRUE)
+  abline(v=cumsum(unlist(lapply(clco[clclo],length))),col=1,lty=3)
+  abline(h=cumsum(rev(unlist(lapply(clgo[clclo],length))))+0.5,col=1,lty=3)
+}

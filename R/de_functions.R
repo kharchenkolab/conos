@@ -585,7 +585,23 @@ getDifferentialGenesP2 <- function(p2.samples, groups, z.threshold=3.0, upregula
     lapply(function(id) lapply(markers.per.sample, `[[`, id) %>% .[!sapply(., is.null)]) %>%
     lapply.func(aggregateDEMarkersAcrossDatasets, z.threshold=z.threshold, upregulated.only=upregulated.only)
 
-  if (verbose) cat("All done!\n")
-
   return(markers.per.type)
+}
+
+appendSpecifisityMetricsToDE <- function(de.df, clusters, cluster.id, p2.counts, low.expression.threshold=0, append.auc=FALSE) {
+  cluster.mask <- setNames(clusters == cluster.id, names(clusters))
+
+  counts.bin <- (p2.counts[names(cluster.mask), rownames(de.df)] > low.expression.threshold)
+  counts.bin.sums <- Matrix::colSums(counts.bin)
+  counts.bin.clust.sums <- Matrix::colSums(counts.bin & cluster.mask)
+
+  if (append.auc) {
+    de.df$AUC <- apply(counts.bin, 2, function(col) pROC::auc(as.integer(cluster.mask), as.integer(col)))
+  }
+
+  de.df$specifisity <- (length(cluster.mask) - counts.bin.sums) / (length(cluster.mask) - counts.bin.clust.sums)
+  de.df$precision <- counts.bin.clust.sums / counts.bin.sums
+  de.df$expression.fraction <- Matrix::colMeans(counts.bin[cluster.mask,])
+
+  return(de.df)
 }

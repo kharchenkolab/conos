@@ -288,7 +288,7 @@ quickPlainPCA <- function(r.n,data.type='counts',k=30,ncomps=30,n.odgenes=NULL,v
 #' @param neighborhood.average use neighborhood average values
 #' @param n.cores number of cores to use
 quickCCA <- function(r.n,data.type='counts',k=30,ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=TRUE,neighborhood.average=FALSE, PMA=FALSE, score.component.variance=FALSE) {
-  
+
   od.genes <- commonOverdispersedGenes(r.n, n.odgenes, verbose=verbose)
   if(length(od.genes)<5) return(NULL);
 
@@ -303,26 +303,26 @@ quickCCA <- function(r.n,data.type='counts',k=30,ncomps=100,n.odgenes=NULL,var.s
   }
   rownames(res$u) <- rownames(sm[[1]])
   rownames(res$v) <- rownames(sm[[2]])
-  
+
   res$ul <- t(sm[[1]]) %*% res$u # MASS::ginv(sm[[1]]) %*% res$u
   res$vl <- t(sm[[2]]) %*% res$v
 
   res$ul <- apply(res$ul,2,function(x) x/sqrt(sum(x*x)))
   res$vl <- apply(res$vl,2,function(x) x/sqrt(sum(x*x)))
-  
+
   v0 <- lapply(sm,function(x) sum(apply(x,2,var)))
   res$nv <- list(apply(sm[[1]] %*% res$ul,2,var)/v0[[1]],
                  apply(sm[[2]] %*% res$vl,2,var)/v0[[2]]);
   names(res$nv) <- names(sm);
-                 
+
   #res$sm <- sm;
   # end DEBUG
-  
+
   # adjust component weighting
   cw <- sqrt(res$d); cw <- cw/max(cw)
   res$u <- res$u %*% diag(cw)
   res$v <- res$v %*% diag(cw)
-  
+
   return(res);
 }
 
@@ -1119,4 +1119,32 @@ scanKModularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.in
   }
 
   return(k.sens);
+}
+
+##' Merge into a common matrix, entering 0s for the missing ones
+mergeCountMatrices <- function(cms, transposed=F) {
+  extendMatrix <- function(mtx, col.names) {
+    new.names <- setdiff(col.names, colnames(mtx))
+    ext.mtx <- Matrix::Matrix(0, nrow=nrow(mtx), ncol=length(new.names), sparse=T) %>%
+      as(class(mtx)) %>% `colnames<-`(new.names)
+    return(cbind(mtx, ext.mtx)[,col.names])
+  }
+
+  if (!transposed) {
+    cms %<>% lapply(Matrix::t)
+  }
+
+  gene.union <- lapply(cms, colnames) %>% Reduce(union, .)
+  res <- lapply(cms, extendMatrix, gene.union) %>% Reduce(rbind, .)
+
+  if (!transposed) {
+    res %<>% Matrix::t()
+  }
+
+  return(res)
+}
+
+getSampleNamePerCell=function(samples) {
+  cl <- lapply(samples, getCellNames)
+  return(rep(names(cl), sapply(cl, length)) %>% stats::setNames(unlist(cl)) %>% as.factor())
 }

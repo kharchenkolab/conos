@@ -3,7 +3,8 @@
 ## Changed
 
 - Optimized plotting with coloring by genes
-- 'getDifferentialGenes' uses first clustering by default
+- `getDifferentialGenes` uses first clustering by default
+- Added metrics to masure specifisity of cell type markers to DE info in `getDifferentialGenes` (parameters `append.specifisity.metrics` and `append.auc`)
 
 ## [1.1.2] - 2019-07-16
 
