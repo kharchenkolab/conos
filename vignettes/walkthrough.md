@@ -15,6 +15,7 @@ First, let’s load Conos library to start with:
 
 ``` r
 library(conos)
+library(dplyr)
 ```
 
 # Loading the data
@@ -88,11 +89,6 @@ below).
 
 ``` r
 library(pagoda2)
-```
-
-    ## 
-
-``` r
 panel.preprocessed <- lapply(panel, basicP2proc, n.cores=4, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
 ```
 
@@ -122,13 +118,13 @@ str(panel.preprocessed,1)
 ```
 
     ## List of 4
-    ##  $ MantonBM1_HiSeq_1:Reference class 'Pagoda2' [package "pagoda2"] with 14 fields
+    ##  $ MantonBM1_HiSeq_1:Reference class 'Pagoda2' [package "pagoda2"] with 16 fields
     ##   ..and 34 methods, of which 20 are  possibly relevant
-    ##  $ MantonBM2_HiSeq_1:Reference class 'Pagoda2' [package "pagoda2"] with 14 fields
+    ##  $ MantonBM2_HiSeq_1:Reference class 'Pagoda2' [package "pagoda2"] with 16 fields
     ##   ..and 34 methods, of which 20 are  possibly relevant
-    ##  $ MantonCB1_HiSeq_1:Reference class 'Pagoda2' [package "pagoda2"] with 14 fields
+    ##  $ MantonCB1_HiSeq_1:Reference class 'Pagoda2' [package "pagoda2"] with 16 fields
     ##   ..and 34 methods, of which 20 are  possibly relevant
-    ##  $ MantonCB2_HiSeq_1:Reference class 'Pagoda2' [package "pagoda2"] with 14 fields
+    ##  $ MantonCB2_HiSeq_1:Reference class 'Pagoda2' [package "pagoda2"] with 16 fields
     ##   ..and 34 methods, of which 20 are  possibly relevant
 
 ## Pre-processing with Seurat
@@ -172,13 +168,13 @@ str(con$samples,1)
 ```
 
     ## List of 4
-    ##  $ MantonBM1_HiSeq_1:Reference class 'Pagoda2' [package "pagoda2"] with 14 fields
+    ##  $ MantonBM1_HiSeq_1:Reference class 'Pagoda2' [package "pagoda2"] with 16 fields
     ##   ..and 34 methods, of which 20 are  possibly relevant
-    ##  $ MantonBM2_HiSeq_1:Reference class 'Pagoda2' [package "pagoda2"] with 14 fields
+    ##  $ MantonBM2_HiSeq_1:Reference class 'Pagoda2' [package "pagoda2"] with 16 fields
     ##   ..and 34 methods, of which 20 are  possibly relevant
-    ##  $ MantonCB1_HiSeq_1:Reference class 'Pagoda2' [package "pagoda2"] with 14 fields
+    ##  $ MantonCB1_HiSeq_1:Reference class 'Pagoda2' [package "pagoda2"] with 16 fields
     ##   ..and 34 methods, of which 20 are  possibly relevant
-    ##  $ MantonCB2_HiSeq_1:Reference class 'Pagoda2' [package "pagoda2"] with 14 fields
+    ##  $ MantonCB2_HiSeq_1:Reference class 'Pagoda2' [package "pagoda2"] with 16 fields
     ##   ..and 34 methods, of which 20 are  possibly relevant
 
 We can now plot a panel of these samples using the clusters we
@@ -190,9 +186,6 @@ clusters in other sample (for example note cluster
 ``` r
 con$plotPanel(clustering="multilevel", use.local.clusters=T, title.size=6)
 ```
-
-    ## Warning: The `printer` argument is deprecated as of rlang 0.3.0.
-    ## This warning is displayed once per session.
 
 ![](walkthrough_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
 
@@ -235,15 +228,16 @@ of starting over-dispersed genes), clear the cache first by doing
 In the `$buildGraph()` invokation above, we specified
 `score.component.variance=TRUE` which estimates amount of variance
 explained by successive PCs (by default this option is off to save
-time). We can visualize the results using:
+time). We can visualize the results
+using:
 
 ``` r
 plotComponentVariance(con, space='PCA')
 ```
 
-![](walkthrough_files/figure-gfm/unnamed-chunk-13-1.png)<!-- --> When
-using ‘angular’ distance measure (default), it is NOT recommended to
-reduce the number of components to a bare minimum indicated by the
+![](walkthrough_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+When using ‘angular’ distance measure (default), it is NOT recommended
+to reduce the number of components to a bare minimum indicated by the
 “elbow” inflection point - include 10-20 more (typcally 30 components
 work well). For ‘L2’ distance, using fewer components (i.e. at ‘elbow’
 value) is sometimes better. (note: remember that if you want to
@@ -263,7 +257,8 @@ con$findCommunities(method=leiden.community, resolution=1)
 
 We can now plot the clusters we obtained. Note that the cluster numbers
 between different samples now correspond to the same cell type. Also not
-the presence of cluster 5 in BM samples only, but not in CB.
+the presence of cluster 5 in BM samples only, but not in
+CB.
 
 ``` r
 con$plotPanel(font.size=4)
@@ -298,7 +293,8 @@ Note: embedding estimation will run the first time around. Please see
 Note 2: both functions `$plotGraph` and `$plotPanel` are based on the
 function `conos::embeddingPlot` and forward all visualization parameters
 to this function. So, to get full list of the possible parameters see
-`?conos::embeddingPlot` and examples below.
+`?conos::embeddingPlot` and examples
+below.
 
 ``` r
 con$plotGraph(alpha=0.1)
@@ -318,7 +314,8 @@ con$plotGraph(color.by='sample', mark.groups=F, alpha=0.1, show.legend=T)
 
 ![](walkthrough_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
 
-We can also visualize gene expression on this joint graph embedding:
+We can also visualize gene expression on this joint graph
+embedding:
 
 ``` r
 con$plotGraph(gene='GZMK', title='GZMK expression')
@@ -339,7 +336,8 @@ however these calculations take much longer). Here we’ll get a lot of
 smaller clusters. Note: different clustering results are kept as a
 simple list under `con$clusters`.
 
-Visualize new clusters:
+Visualize new
+clusters:
 
 ``` r
 con$plotPanel(clustering='walktrap',font.size=4)
@@ -347,7 +345,8 @@ con$plotPanel(clustering='walktrap',font.size=4)
 
 ![](walkthrough_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
 
-New clustering, as viewed on a joint graph:
+New clustering, as viewed on a joint
+graph:
 
 ``` r
 con$plotGraph(clustering='walktrap')
@@ -372,7 +371,8 @@ For the description of largeVis parameters please look at
 `sgd_batched`. Decreasing alpha results in less compressed clusters, and
 increasing sgd\_batches often helps to avoid cluster intersections and
 spread out the clusters. Here we take alpha to a very low value, for the
-sake of example:
+sake of
+example:
 
 ``` r
 con$embedGraph(alpha=0.001, sgd_batched=1e8)
@@ -412,27 +412,27 @@ con$embedGraph(method="UMAP", min.dist=0.01, spread=15, n.cores=4)
     ## Convert graph to adjacency list...
     ## Done
     ## Estimate nearest neighbors and commute times...
-    ## Estimating hitting distances: 18:21:33.
+    ## Estimating hitting distances: 14:25:18.
     ## Done.
-    ## Estimating commute distances: 18:21:46.
-    ## Hashing adjacency list: 18:21:46.
+    ## Estimating commute distances: 14:25:30.
+    ## Hashing adjacency list: 14:25:30.
     ## Done.
-    ## Estimating distances: 18:21:47.
+    ## Estimating distances: 14:25:31.
     ## Done
     ## Done.
-    ## All done!: 18:21:51.
+    ## All done!: 14:25:35.
     ## Done
     ## Estimate UMAP embedding...
 
-    ## 18:21:51 Read 12000 rows and found 1 numeric columns
+    ## 14:25:35 Read 12000 rows and found 1 numeric columns
 
-    ## 18:21:51 Commencing smooth kNN distance calibration using 4 threads
+    ## 14:25:35 Commencing smooth kNN distance calibration using 4 threads
 
-    ## 18:21:52 Initializing from normalized Laplacian + noise
+    ## 14:25:36 Initializing from normalized Laplacian + noise
 
-    ## 18:21:53 Commencing optimization for 1000 epochs, with 368044 positive edges using 4 threads
+    ## 14:25:36 Commencing optimization for 1000 epochs, with 368064 positive edges
 
-    ## 18:22:14 Optimization finished
+    ## 14:26:27 Optimization finished
 
     ## Done
 
@@ -440,8 +440,8 @@ con$embedGraph(method="UMAP", min.dist=0.01, spread=15, n.cores=4)
 con$plotGraph(clustering='walktrap', size=0.1)
 ```
 
-![](walkthrough_files/figure-gfm/unnamed-chunk-27-1.png)<!-- --> In the
-example above, UMAP layout makes even many of the very small
+![](walkthrough_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
+In the example above, UMAP layout makes even many of the very small
 subpopulations called by walktrap apparent.
 
 # Exploring hierarchical community structure
@@ -458,7 +458,8 @@ fc <- greedyModularityCut(con$clusters$walktrap$result,40);
 ```
 
 The cut determines a finer clustering (likely overclustering) of the
-dataset on its leafs:
+dataset on its
+leafs:
 
 ``` r
 con$plotGraph(groups=fc$groups, size=0.1)
@@ -558,6 +559,30 @@ other samples are unlabelled.
 con$plotPanel(groups = cellannot)
 ```
 
+    ## Warning: Factor `Group` contains implicit NA, consider using
+    ## `forcats::fct_explicit_na`
+    
+    ## Warning: Factor `Group` contains implicit NA, consider using
+    ## `forcats::fct_explicit_na`
+    
+    ## Warning: Factor `Group` contains implicit NA, consider using
+    ## `forcats::fct_explicit_na`
+    
+    ## Warning: Factor `Group` contains implicit NA, consider using
+    ## `forcats::fct_explicit_na`
+    
+    ## Warning: Factor `Group` contains implicit NA, consider using
+    ## `forcats::fct_explicit_na`
+    
+    ## Warning: Factor `Group` contains implicit NA, consider using
+    ## `forcats::fct_explicit_na`
+
+    ## Warning: Removed 1 rows containing missing values (geom_label_repel).
+    
+    ## Warning: Removed 1 rows containing missing values (geom_label_repel).
+    
+    ## Warning: Removed 1 rows containing missing values (geom_label_repel).
+
 ![](walkthrough_files/figure-gfm/unnamed-chunk-37-1.png)<!-- -->
 
 Next let’s propagates the labels from the one annotated sample to the
@@ -595,7 +620,8 @@ head(new.annot)
     ## MantonBM2_HiSeq_1-GGGTTGCGTAGCTGCC-1 MantonBM2_HiSeq_1-GACAGAGGTCACAAGG-1 
     ##                                 "NK"                                 "NK"
 
-We now see that all our samples have been labelled automatically\!
+We now see that all our samples have been labelled
+automatically\!
 
 ``` r
 con$plotPanel(groups = new.annot)
@@ -645,27 +671,79 @@ con$plotPanel(groups = new.annot)
 ## Cluster markers
 
 The first step we can do to understand meaning of the dataset is to look
-at the cluster cell markers:
+at the cluster cell
+markers:
 
 ``` r
-de.info <- con$getDifferentialGenes(groups=new.annot)
+de.info <- con$getDifferentialGenes(groups=new.annot, n.cores=1, append.auc=T)
 ```
 
     ## Estimating marker genes per sample
     ## Aggregating marker genes
+    ## Estimating specifisity metrics
     ## All done!
 
 ``` r
-head(de.info$Bcells)
+head(de.info$`B cells`)
 ```
 
-    ## NULL
+    ##              Gene        Z        PValue          PAdj       AUC
+    ## CD74         CD74 31.08898 5.281036e-211 1.779392e-206 0.7303074
+    ## HLA-DRA   HLA-DRA 29.19202 3.578157e-186 1.205589e-181 0.8684703
+    ## HLA-DPA1 HLA-DPA1 27.61553 1.001564e-166 3.374470e-162 0.8736300
+    ## CD79A       CD79A 27.32259 3.128115e-163 1.053893e-158 0.9060196
+    ## HLA-DPB1 HLA-DPB1 27.16493 2.294348e-161 7.729658e-157 0.8721094
+    ## HLA-DRB1 HLA-DRB1 26.37008 3.989024e-152 1.343862e-147 0.8560714
+    ##          Specifisity Precision ExpressionFraction
+    ## CD74       0.4636631 0.2463529          0.9972145
+    ## HLA-DRA    0.7636328 0.4192234          0.9743733
+    ## HLA-DPA1   0.8361004 0.4913122          0.9136490
+    ## CD79A      0.9177252 0.6528624          0.8958217
+    ## HLA-DPB1   0.8240526 0.4764097          0.9225627
+    ## HLA-DRB1   0.8026443 0.4447461          0.9125348
 
 ``` r
 cowplot::plot_grid(con$plotGraph(groups=new.annot), con$plotGraph(gene="CD74"))
 ```
 
 ![](walkthrough_files/figure-gfm/unnamed-chunk-47-1.png)<!-- -->
+
+In addition to `getDifferentialGenes` estimates
+[specificity](https://en.wikipedia.org/wiki/Sensitivity_and_specificity),
+[precision](https://en.wikipedia.org/wiki/Precision_and_recall),
+expression fraction (sum expression of the gene within the cluster
+divided by the total expression of this gene). If `append.auc` flag is
+set, it can estimate [ROC
+AUC](https://en.wikipedia.org/wiki/Receiver_operating_characteristic#Area_under_the_curve),
+but it can take some time. To find the most meaningful markers, it’s
+recommended to filter the data by some lower value for AUC and then
+order the results by Z-score or
+precision.
+
+``` r
+de.info$monocytes %>% filter(AUC > 0.75) %>% arrange(-Precision) %>% head()
+```
+
+    ##       Gene        Z        PValue          PAdj       AUC Specifisity
+    ## 1     CD14 15.50412  2.532526e-53  8.504727e-49 0.7702102   0.9919610
+    ## 2 SERPINA1 21.10573  7.451968e-98  2.507513e-93 0.8833554   0.9836050
+    ## 3    RAB31 13.86033  7.673831e-43  2.575184e-38 0.7845012   0.9849228
+    ## 4     CSTA 23.86964 7.571871e-125 2.549979e-120 0.9107458   0.9763459
+    ## 5     FCN1 26.74742 1.771985e-156 5.968932e-152 0.9514647   0.9712175
+    ## 6     G0S2 16.27406  1.231903e-58  4.138207e-54 0.7984214   0.9810150
+    ##   Precision ExpressionFraction
+    ## 1 0.9125737          0.5490544
+    ## 2 0.8834111          0.7836879
+    ## 3 0.8564014          0.5851064
+    ## 4 0.8512790          0.8457447
+    ## 5 0.8401705          0.9320331
+    ## 6 0.8338658          0.6170213
+
+``` r
+con$plotGraph(gene="CD14")
+```
+
+![](walkthrough_files/figure-gfm/unnamed-chunk-49-1.png)<!-- -->
 
 ## DE Between Sample Groups
 
@@ -690,13 +768,13 @@ str( con$getClusterCountMatrices() , 1)
 ```
 
     ## List of 4
-    ##  $ MantonBM1_HiSeq_1: num [1:33694, 1:15] 0 0 0 1 0 0 0 0 38 4 ...
+    ##  $ MantonBM1_HiSeq_1: num [1:33694, 1:16] 0 0 0 1 0 0 0 0 54 5 ...
     ##   ..- attr(*, "dimnames")=List of 2
-    ##  $ MantonBM2_HiSeq_1: num [1:33694, 1:15] 0 0 0 0 0 0 0 0 66 4 ...
+    ##  $ MantonBM2_HiSeq_1: num [1:33694, 1:16] 0 0 0 0 0 0 0 0 98 6 ...
     ##   ..- attr(*, "dimnames")=List of 2
-    ##  $ MantonCB1_HiSeq_1: num [1:33694, 1:15] 0 0 0 0 0 0 0 0 73 5 ...
+    ##  $ MantonCB1_HiSeq_1: num [1:33694, 1:16] 0 0 0 1 0 0 0 0 96 9 ...
     ##   ..- attr(*, "dimnames")=List of 2
-    ##  $ MantonCB2_HiSeq_1: num [1:33694, 1:15] 0 0 0 0 0 0 0 0 136 17 ...
+    ##  $ MantonCB2_HiSeq_1: num [1:33694, 1:16] 0 0 0 0 0 0 0 0 161 22 ...
     ##   ..- attr(*, "dimnames")=List of 2
 
 The list above, returns pooled count matrix for each sample, where the
@@ -747,19 +825,19 @@ head(res[order(res$padj,decreasing = FALSE),])
 ```
 
     ##                baseMean log2FoldChange     lfcSE      stat       pvalue
-    ## IGLL1          150.9805      -5.521811 0.7013839 -7.872737 3.469662e-15
-    ## JCHAIN         342.3496      -3.328696 0.4428750 -7.516106 5.643192e-14
-    ## IGHG1          558.5807     -10.827820 1.4442727 -7.497075 6.525766e-14
-    ## IGLC2         3351.0226      -3.506702 0.5181883 -6.767236 1.312659e-11
-    ## RP11-386I14.4  362.2495       2.771804 0.4179236  6.632323 3.304455e-11
-    ## IGKC          2621.3799      -2.514947 0.3824759 -6.575439 4.850972e-11
+    ## JCHAIN         384.6065      -3.634016 0.4187310 -8.678642 4.005232e-18
+    ## IGHG1          563.9063     -12.293955 1.5171046 -8.103565 5.337190e-16
+    ## IGLL1          157.1023      -5.507407 0.7207191 -7.641545 2.146308e-14
+    ## RP11-386I14.4  365.9781       2.744466 0.3994704  6.870262 6.408388e-12
+    ## IGKC          2651.7030      -2.643596 0.3864201 -6.841250 7.850533e-12
+    ## IGLL5          104.4105      -4.507296 0.6877616 -6.553572 5.617667e-11
     ##                       padj
-    ## IGLL1         6.064968e-11
-    ## JCHAIN        3.802346e-10
-    ## IGHG1         3.802346e-10
-    ## IGLC2         5.736319e-08
-    ## RP11-386I14.4 1.155238e-07
-    ## IGKC          1.413250e-07
+    ## JCHAIN        6.997541e-14
+    ## IGHG1         4.662302e-12
+    ## IGLL1         1.249938e-10
+    ## RP11-386I14.4 2.743133e-08
+    ## IGKC          2.743133e-08
+    ## IGLL5         1.635771e-07
 
 # Forcing better alignment
 
@@ -794,7 +872,7 @@ con$embedGraph()
 con$plotGraph(color.by='sample', mark.groups=F, alpha=0.1, show.legend=T)
 ```
 
-![](walkthrough_files/figure-gfm/unnamed-chunk-54-1.png)<!-- -->
+![](walkthrough_files/figure-gfm/unnamed-chunk-56-1.png)<!-- -->
 
 We can also check the entropy:
 
@@ -803,4 +881,4 @@ con$findCommunities()
 plotClusterBarplots(con, legend.height = 0.1)
 ```
 
-![](walkthrough_files/figure-gfm/unnamed-chunk-55-1.png)<!-- -->
+![](walkthrough_files/figure-gfm/unnamed-chunk-57-1.png)<!-- -->

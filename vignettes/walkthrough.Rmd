@@ -11,6 +11,7 @@ First, let's load Conos library to start with:
 
 ```{r, message=FALSE, warning=FALSE}
 library(conos)
+library(dplyr)
 ```
 
 
@@ -347,12 +348,22 @@ con$plotPanel(groups = new.annot)
 The first step we can do to understand meaning of the dataset is to look at the cluster cell markers:
 
 ```{r}
-de.info <- con$getDifferentialGenes(groups=new.annot)
-head(de.info$Bcells)
+de.info <- con$getDifferentialGenes(groups=new.annot, n.cores=1, append.auc=T)
+head(de.info$`B cells`)
 ```
 
 ```{r, fig.width=8, fig.height=4}
 cowplot::plot_grid(con$plotGraph(groups=new.annot), con$plotGraph(gene="CD74"))
+```
+
+In addition to `getDifferentialGenes` estimates [specificity](https://en.wikipedia.org/wiki/Sensitivity_and_specificity), [precision](https://en.wikipedia.org/wiki/Precision_and_recall), expression fraction (sum expression of the gene within the cluster divided by the total expression of this gene). If `append.auc` flag is set, it can estimate [ROC AUC](https://en.wikipedia.org/wiki/Receiver_operating_characteristic#Area_under_the_curve), but it can take some time. To find the most meaningful markers, it's recommended to filter the data by some lower value for AUC and then order the results by Z-score or precision.
+
+```{r}
+de.info$monocytes %>% filter(AUC > 0.75) %>% arrange(-Precision) %>% head()
+```
+
+```{r, fig.width=4, fig.height=4}
+con$plotGraph(gene="CD14")
 ```
 
 ## DE Between Sample Groups
