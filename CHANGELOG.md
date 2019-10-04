@@ -3,6 +3,7 @@
 ## Changed
 
 - Optimized plotting with coloring by genes
+- 'getDifferentialGenes' uses first clustering by default
 
 ## [1.1.2] - 2019-07-16
 

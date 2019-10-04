@@ -334,8 +334,12 @@ Conos <- setRefClass(
         groups <- clusters[[clustering]]$groups
       }
 
-      if (is.null(groups))
-        stop("Either 'clustering' or 'groups' must be provided")
+      if (is.null(groups)) {
+        if (length(clusters) == 0)
+          stop("Either 'groups' be provided or clustering must be estimated (see 'findCommunities')")
+
+        groups <- clusters[[1]]$groups
+      }
 
       if (class(samples[[1]]) != 'Pagoda2') # TODO: add Seurat
         stop("Only Pagoda onjects are supported for marker genes")
