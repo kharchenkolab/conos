@@ -44,6 +44,7 @@ Suggests:
   ggrastr,
   knitr,
   pbapply,
+  PMA,
   rmarkdown,
   Seurat,
   shinycssloaders

@@ -297,6 +297,9 @@ quickCCA <- function(r.n,data.type='counts',k=30,ncomps=100,n.odgenes=NULL,var.s
   sm <- lapply(sm,function(m) m[rowSums(m)>0,])
   sm <- lapply(sm,scale,scale=F) # center
   if(PMA) {
+    if (!requireNamespace("PMA", quietly=T))
+      stop("You need to install package 'PMA' to use the PMA flag.")
+
     res <- PMA::CCA(t(sm[[1]]),t(sm[[2]]),K=ncomps,trace=FALSE,standardize=FALSE)
   } else {
     res <- irlba::irlba(sm[[1]] %*% t(sm[[2]]),ncomps)
