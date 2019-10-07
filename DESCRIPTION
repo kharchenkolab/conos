@@ -45,6 +45,7 @@ Suggests:
   knitr,
   pbapply,
   PMA,
+  pROC,
   rmarkdown,
   Seurat,
   shinycssloaders

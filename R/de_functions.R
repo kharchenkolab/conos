@@ -596,7 +596,11 @@ appendSpecifisityMetricsToDE <- function(de.df, clusters, cluster.id, p2.counts,
   counts.bin.clust.sums <- Matrix::colSums(counts.bin & cluster.mask)
 
   if (append.auc) {
-    de.df$AUC <- apply(counts.bin, 2, function(col) pROC::auc(as.integer(cluster.mask), as.integer(col)))
+    if (requireNamespace("pROC", quietly = TRUE)) {
+      de.df$AUC <- apply(counts.bin, 2, function(col) pROC::auc(as.integer(cluster.mask), as.integer(col)))
+    } else {
+      warning("You have to install pROC package to use append.auc")
+    }
   }
 
   de.df$Specifisity <- (length(cluster.mask) - counts.bin.sums) / (length(cluster.mask) - counts.bin.clust.sums)
