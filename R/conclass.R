@@ -359,6 +359,14 @@ Conos <- setRefClass(
         if (verbose) cat("Estimating specifisity metrics\n")
 
         cm.merged <- lapply(samples, getRawCountMatrix, transposed=T) %>% mergeCountMatrices(transposed=T)
+
+        if (length(intersect(rownames(cm.merged), names(groups))) != nrow(cm.merged))
+          stop("`groups` must contain values for all cells in the samples")
+
+        if (nrow(cm.merged) < length(groups)) {
+          groups %<>% .[rownames(cm.merged)]
+        }
+
         de.genes %<>% names() %>% setNames(., .) %>%
           lapply.func(function(n) appendSpecifisityMetricsToDE(de.genes[[n]], groups, n, p2.counts=cm.merged, append.auc=append.auc))
       }
