@@ -13,6 +13,7 @@
 - [Usage example](#usage-example)
   * [Alignment of datasets](#alignment-of-datasets)
   * [Integration with ScanPy](#integration-with-scanpy)
+- [Reference](#reference)
   
 ## Clustering on Network of Samples
 
@@ -54,14 +55,13 @@ The dependencies are inherited from [pagoda2](https://github.com/hms-dbmi/pagoda
 Install system dependencies, example here provided for Ubuntu
 ```sh
 sudo apt-get update
-sudo apt-get -y install build-essential cmake gsl-bin libgsl0-dev libeigen3-dev libboost-all-dev libssl-dev libcurl4-openssl-dev libssl-dev libcairo2-dev libxt-dev libgtk2.0-dev libcairo2-dev xvfb xauth xfonts-base
+sudo apt-get -y install libcurl4-openssl-dev libssl-dev
 ```
 
 ##### Red-Hat-based distributions Dependencies
 
-Was tested on AWS linux and Centos 7
 ```sh
-yum install cairo-devel pango-devel libXt-devel openssl-devel gsl-devel boost-devel libcurl-devel
+yum install openssl-devel libcurl-devel
 ```
 
 ##### OS X
@@ -133,3 +133,9 @@ For integration with ScanPy you need to save Conos files on disk from R session,
 than upload these files from Python. See the following tutorials:
 - [Save Conos for ScanPy](vignettes/scanpy_integration.Rmd)
 - [Load ScanPy from Conos](vignettes/scanpy_integration.ipynb)
+
+## Reference
+
+If you find this pipeline useful for your research, please consider citing the paper:
+
+Barkas N., Petukhov V., Nikolaeva D., Lozinsky Y., Demharter S., Khodosevich K. & Kharchenko P.V. Joint analysis of heterogeneous single-cell RNA-seq dataset collections. Nat. Methods, (2019). [doi:10.1038/s41592-019-0466-z](https://doi.org/10.1038/s41592-019-0466-z)

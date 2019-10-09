@@ -1,3 +1,6 @@
+## [1.1.2] - 2017-07-16
+ - Changed a description line in the getClusterPrivacy() doc to fix installation under some R3.6 versions (issue 32)
+
 ## [1.1.1] - 2019-07-15
 
 ## Changed
