@@ -148,7 +148,7 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
                           show.legend=FALSE, alpha=0.4, size=0.8, title=NULL, plot.theme=NULL, palette=NULL, color.range="all",
                           font.size=c(3, 7), show.ticks=FALSE, show.labels=FALSE, legend.position=NULL, legend.title=NULL,
                           gradient.range.quantile=1, raster=FALSE, raster.width=NULL, raster.height=NULL, raster.dpi=300,
-                          shuffle.colors=FALSE,
+                          shuffle.colors=FALSE, keep.limits=TRUE,
                           ...) {
   if(is.numeric(colors) && gradient.range.quantile < 1) {
     x <- colors;
@@ -296,6 +296,9 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
     gg <- gg + ggplot2::theme(axis.title=ggplot2::element_blank())
   }
 
+  if (!plot.na && keep.limits) {
+    gg <- gg + limits(x=range(embedding[,1]),y=range(embedding[,2]))
+  }
   return(gg)
 }
 
