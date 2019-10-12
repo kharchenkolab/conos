@@ -646,10 +646,13 @@ Conos <- setRefClass(
       }
 
       if(!is.null(groups) && !is.null(subcluster)) {
-        message("Can only plot 'groups' or 'subcluster', continuing with 'subcluster'.")
+        message("Can only plot either 'groups' or 'subcluster', continuing with 'subcluster'.")
+        if(is.null(gene)) {
         groups <- subcluster
-      } else if(!is.null(subcluster)) {
-        groups <- subcluster
+        subcluster <- NULL
+        } else {
+          groups <- NULL
+        }
       }
 
       if (!is.null(gene)) {
@@ -683,7 +686,7 @@ Conos <- setRefClass(
         keep.limits <- F
       }
 
-      return(embeddingPlot(embedding, groups=groups, colors=colors, plot.theme=adjustTheme(plot.theme), plot.na, keep.limits, ...))
+      return(embeddingPlot(embedding, groups=groups, colors=colors, plot.theme=adjustTheme(plot.theme), plot.na=plot.na, keep.limits=keep.limits, subcluster=subcluster, ...))
     },
 
     correctGenes=function(genes=NULL, n.od.genes=500, fading=10.0, fading.const=0.5, max.iters=15, tol=5e-3, name='diffusion', verbose=TRUE, count.matrix=NULL, normalize=TRUE) {
