@@ -645,6 +645,22 @@ Conos <- setRefClass(
         embedGraph();
       }
 
+      if(!is.null(subcluster) && is.null(plot.na)) {
+        plot.na <- F
+      } else if(!is.null(plot.na)) {
+        plot.na <- plot.na
+      } else {
+        plot.na <- T
+      }
+
+      if(!is.null(subcluster) && is.null(keep.limits)) {
+        keep.limits <- T
+      } else if(!is.null(keep.limits)) {
+        keep.limits <- keep.limits
+      } else {
+        keep.limits <- F
+      }
+
       if(!is.null(groups) && !is.null(subcluster)) {
         message("Can only plot either 'groups' or 'subcluster', continuing with 'subcluster'.")
         if(is.null(gene)) {
@@ -653,6 +669,9 @@ Conos <- setRefClass(
         } else {
           groups <- NULL
         }
+      } else if(!is.null(subcluster)) {
+        groups <- subcluster
+        subcluster <- NULL
       }
 
       if (!is.null(gene)) {
@@ -668,22 +687,6 @@ Conos <- setRefClass(
         } else {
           stop('supported values of color.by are ("cluster" and "sample")')
         }
-      }
-
-      if(!is.null(subcluster) && is.null(plot.na)) {
-        plot.na <- F
-      } else if(!is.null(plot.na)) {
-        plot.na <- plot.na
-      } else {
-        plot.na <- T
-      }
-
-      if(!is.null(subcluster) && is.null(keep.limits)) {
-        keep.limits <- T
-      } else if(!is.null(keep.limits)) {
-        keep.limits <- keep.limits
-      } else {
-        keep.limits <- F
       }
 
       return(embeddingPlot(embedding, groups=groups, colors=colors, plot.theme=adjustTheme(plot.theme), plot.na=plot.na, keep.limits=keep.limits, subcluster=subcluster, ...))
