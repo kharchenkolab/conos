@@ -645,8 +645,29 @@ Conos <- setRefClass(
         embedGraph();
       }
 
-      if(!is.null(groups) && !is.null(subcluster)) {
-        message("Can only plot either 'groups' or 'subcluster', continuing with 'subcluster'.")
+      if(!is.null(subcluster)) {
+        message("Ignoring 'color.by' since 'subcluster' is provided.")
+
+        if(!is.null(groups)) {
+          message("Ignoring 'groups' since 'subcluster' is provided.")
+        }
+
+        if(is.null(keep.limits)) {
+          keep.limits <- T
+        } else if(!is.null(keep.limits)) {
+          keep.limits <- keep.limits
+        } else {
+          keep.limits <- F
+        }
+
+        if(is.null(plot.na)) {
+          plot.na <- F
+        } else if(!is.null(plot.na)) {
+          plot.na <- plot.na
+        } else {
+          plot.na <- T
+        }
+
         if(is.null(gene)) {
         groups <- subcluster
         subcluster <- NULL
@@ -660,6 +681,10 @@ Conos <- setRefClass(
         if(all(is.na(colors))) warning(paste("gene",gene,"is not found in any of the samples"))
       }
 
+      if(!is.null(groups) && !is.null(color.by)) {
+
+      }
+
       if(is.null(groups) && is.null(colors)) {
         if(color.by == 'cluster') {
           groups <- getClusteringGroups(clusters, clustering)
@@ -668,22 +693,6 @@ Conos <- setRefClass(
         } else {
           stop('supported values of color.by are ("cluster" and "sample")')
         }
-      }
-
-      if(!is.null(subcluster) && is.null(plot.na)) {
-        plot.na <- F
-      } else if(!is.null(plot.na)) {
-        plot.na <- plot.na
-      } else {
-        plot.na <- T
-      }
-
-      if(!is.null(subcluster) && is.null(keep.limits)) {
-        keep.limits <- T
-      } else if(!is.null(keep.limits)) {
-        keep.limits <- keep.limits
-      } else {
-        keep.limits <- F
       }
 
       return(embeddingPlot(embedding, groups=groups, colors=colors, plot.theme=adjustTheme(plot.theme), plot.na=plot.na, keep.limits=keep.limits, subcluster=subcluster, ...))
