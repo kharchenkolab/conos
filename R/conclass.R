@@ -640,9 +640,16 @@ Conos <- setRefClass(
     },
 
 
-    plotGraph=function(color.by='cluster', clustering=NULL, groups=NULL, colors=NULL, gene=NULL, plot.theme=NULL, ...) {
+    plotGraph=function(color.by='cluster', clustering=NULL, groups=NULL, colors=NULL, gene=NULL, plot.theme=NULL, subcluster=NULL, ...) {
       if(class(embedding)[1] == "uninitializedField") {
         embedGraph();
+      }
+
+      if(!is.null(groups) && !is.null(subcluster)) {
+        message("Can only plot 'groups' or 'subcluster', continuing with 'subcluster'.")
+        groups <- subcluster
+      } else if(!is.null(subcluster)) {
+        groups <- subcluster
       }
 
       if (!is.null(gene)) {
@@ -660,7 +667,23 @@ Conos <- setRefClass(
         }
       }
 
-      return(embeddingPlot(embedding, groups=groups, colors=colors, plot.theme=adjustTheme(plot.theme), ...))
+      if(!is.null(subcluster) && missing(plot.na)) {
+        plot.na <- F
+      } else if(!missing(plot.na)) {
+        plot.na <- plot.na
+      } else {
+        plot.na <- T
+      }
+
+      if(!is.null(subcluster) && missing(keep.limits)) {
+        plot.na <- T
+      } else if(!missing(keep.limits)) {
+        keep.limits <- keep.limits
+      } else {
+        keep.limits <- F
+      }
+
+      return(embeddingPlot(embedding, groups=groups, colors=colors, plot.theme=adjustTheme(plot.theme), plot.na, keep.limits, ...))
     },
 
     correctGenes=function(genes=NULL, n.od.genes=500, fading=10.0, fading.const=0.5, max.iters=15, tol=5e-3, name='diffusion', verbose=TRUE, count.matrix=NULL, normalize=TRUE) {
