@@ -674,6 +674,9 @@ Conos <- setRefClass(
         } else {
           groups <- NULL
         }
+      } else if(!is.null(subcluster)) {
+        groups <- subcluster
+        subcluster <- NULL
       }
 
       if (!is.null(gene)) {
