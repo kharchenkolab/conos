@@ -373,6 +373,8 @@ Conos <- setRefClass(
           groups %<>% .[rownames(cm.merged)]
         }
 
+        de.genes %<>% lapply(function(x) x %<>% .[complete.cases(.),])
+
         de.genes %<>% names() %>% setNames(., .) %>%
           lapply.func(function(n) appendSpecificityMetricsToDE(de.genes[[n]], groups, n, p2.counts=cm.merged, append.auc=append.auc))
       }
