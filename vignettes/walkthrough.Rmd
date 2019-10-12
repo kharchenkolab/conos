@@ -341,6 +341,32 @@ all(new.annot[names(cellannot)] == cellannot)
 con$plotPanel(groups = new.annot)
 ```
 
+## Manual annotation
+
+This proposed workflow for manual annotation using Leiden clustering is based on the final graph embedding. It maintains this embedding, but enables subclustering.
+Inial clusters are named using known marker genes.
+
+```{r}
+cowplot::plot_grid(con$plotGraph(), con$plotGraph(gene="CD74"))
+```
+
+Eventually, an annotation factor for intial clusters is made.
+
+```{r}
+annot <- con$clusters$leiden$groups
+levels(annot) <- c("Uknown",
+                   "B-cells",
+                   ,)
+```
+
+Then, subclusters can be created.
+
+```{r}
+bcells <- findSubcommunities(con, "B-cells", annot, resolution=1)
+cowplot::plot_grid(con$plotGraph(), con$plotGraph(gene="CD74"))
+```
+
+
 # Differential expression
 
 ## Cluster markers
