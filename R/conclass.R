@@ -640,7 +640,11 @@ Conos <- setRefClass(
     },
 
 
+<<<<<<< HEAD
     plotGraph=function(color.by='cluster', clustering=NULL, groups=NULL, colors=NULL, gene=NULL, plot.theme=NULL, subcluster=NULL, plot.na=NULL, keep.limits=NULL, ...) {
+=======
+    plotGraph=function(color.by='cluster', clustering=NULL, groups=NULL, colors=NULL, gene=NULL, plot.theme=NULL, subcluster=NULL, ...) {
+>>>>>>> 5ab61e0fff224c71e80710786e8f3076e37d3a85
       if(class(embedding)[1] == "uninitializedField") {
         embedGraph();
       }
@@ -667,17 +671,29 @@ Conos <- setRefClass(
         }
       }
 
+<<<<<<< HEAD
       if(!is.null(subcluster) && is.null(plot.na)) {
         plot.na <- F
       } else if(!is.null(plot.na)) {
+=======
+      if(!is.null(subcluster) && missing(plot.na)) {
+        plot.na <- F
+      } else if(!missing(plot.na)) {
+>>>>>>> 5ab61e0fff224c71e80710786e8f3076e37d3a85
         plot.na <- plot.na
       } else {
         plot.na <- T
       }
 
+<<<<<<< HEAD
       if(!is.null(subcluster) && is.null(keep.limits)) {
         keep.limits <- T
       } else if(!is.null(keep.limits)) {
+=======
+      if(!is.null(subcluster) && missing(keep.limits)) {
+        plot.na <- T
+      } else if(!missing(keep.limits)) {
+>>>>>>> 5ab61e0fff224c71e80710786e8f3076e37d3a85
         keep.limits <- keep.limits
       } else {
         keep.limits <- F
