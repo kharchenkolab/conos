@@ -682,7 +682,7 @@ Conos <- setRefClass(
 
       if (!is.null(gene)) {
         colors <- lapply(samples, getGeneExpression, gene) %>% Reduce(c, .)
-        if(all(is.na(colors))) warning(paste("gene",gene,"is not found in any of the samples"))
+        if(all(is.na(colors))) stop(paste("gene",gene,"is not found in any of the samples"))
       }
 
       if(!is.null(groups) && !is.null(color.by)) {
