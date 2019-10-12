@@ -654,18 +654,10 @@ Conos <- setRefClass(
 
         if(is.null(keep.limits)) {
           keep.limits <- T
-        } else if(!is.null(keep.limits)) {
-          keep.limits <- keep.limits
-        } else {
-          keep.limits <- F
         }
 
         if(is.null(plot.na)) {
           plot.na <- F
-        } else if(!is.null(plot.na)) {
-          plot.na <- plot.na
-        } else {
-          plot.na <- T
         }
 
         if(is.null(gene)) {
@@ -674,9 +666,14 @@ Conos <- setRefClass(
         } else {
           groups <- NULL
         }
-      } else if(!is.null(subcluster)) {
-        groups <- subcluster
-        subcluster <- NULL
+      } else {
+        if(is.null(plot.na)) {
+          plot.na <- T
+        }
+
+        if(is.null(keep.limits)) {
+          keep.limits <- F
+        }
       }
 
       if (!is.null(gene)) {
