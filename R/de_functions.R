@@ -73,6 +73,7 @@ collapseCellsByType <- function(cm, groups, min.cell.count) {
   names(g1) <- g1.n
   g1[g1 %in% droplevels] <- NA
   g1 <- as.factor(g1)
+  cm %<>% .[rownames(.) %in% names(g1),]
   aggr <- Matrix.utils::aggregate.Matrix(cm, g1)
   aggr <- aggr[rownames(aggr) != "NA",]
   return(aggr)
