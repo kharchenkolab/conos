@@ -71,11 +71,3 @@ embedGraphUmap <- function(graph, verbose=T, min.prob=1e-3, min.visited.verts=10
 
   return(umap)
 }
-
-findSubcommunities <- function(con, cluster, annot=NULL, ...) {
-  if(is.null(annot)) {
-    conos::leiden.community(induced_subgraph(con$graph, which(con$clusters$leiden$groups %<>% .[match(names(V(con$graph)),names(.))] %in% cluster)), ...)$membership
-  } else {
-    conos::leiden.community(induced_subgraph(con$graph, which(annot %<>% .[match(names(V(con$graph)),names(.))] %in% cluster)), ...)$membership
-  }
-}

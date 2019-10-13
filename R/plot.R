@@ -148,7 +148,7 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
                           show.legend=FALSE, alpha=0.4, size=0.8, title=NULL, plot.theme=NULL, palette=NULL, color.range="all",
                           font.size=c(3, 7), show.ticks=FALSE, show.labels=FALSE, legend.position=NULL, legend.title=NULL,
                           gradient.range.quantile=1, raster=FALSE, raster.width=NULL, raster.height=NULL, raster.dpi=300,
-                          shuffle.colors=FALSE, keep.limits=FALSE, subcluster=NULL,
+                          shuffle.colors=FALSE, keep.limits=FALSE, subgroup=NULL,
                           ...) {
   if(is.numeric(colors) && gradient.range.quantile < 1) {
     x <- colors;
@@ -229,8 +229,8 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
       ggplot2::guides(color=ggplot2::guide_legend(override.aes=list(alpha=1.0)))
   } else if (!is.null(colors)) {
     plot.df <- plot.df %>% dplyr::mutate(Color=colors[CellName])
-    if(!is.null(subcluster)) {
-      plot.df$Color[!plot.df$CellName %in% names(subcluster)] <- NA
+    if(!is.null(subgroup)) {
+      plot.df$Color[!plot.df$CellName %in% names(subgroup)] <- NA
     }
     na.plot.df <- plot.df %>% dplyr::filter(is.na(Color))
     plot.df <- plot.df %>% dplyr::filter(!is.na(Color))

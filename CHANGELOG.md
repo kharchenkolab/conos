@@ -2,6 +2,15 @@
 
 ## Changed
 
+- Added findSubcommunities function
+- Added arguments to plotGraph/embeddingPlot (subgroup, keep.limits)
+- Removed errors caused by NAs for getDifferentialGenes, getPerCellTypeDE
+- Removed warning when plotting shorter group than no. cells
+
+## [1.1.3] - 2019-10-13
+
+## Changed
+
 - Optimized plotting with coloring by genes
 - `getDifferentialGenes` uses first clustering by default
 - Added metrics to masure specifisity of cell type markers to DE info in `getDifferentialGenes` (parameters `append.specifisity.metrics` and `append.auc`)

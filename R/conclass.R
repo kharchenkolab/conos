@@ -360,17 +360,17 @@ Conos <- setRefClass(
 
         cm.merged <- lapply(samples, getRawCountMatrix, transposed=T) %>% mergeCountMatrices(transposed=T)
         groups <- groups[!is.na(groups)]
-        dif <- length(intersect(rownames(cm.merged), names(groups)))
+        dif <- intersect(rownames(cm.merged), names(groups))
 
-        if (dif < nrow(cm.merged)) {
-          message("Excluding ",nrow(cm.merged)-dif," cells missing from 'groups'.")
-          cm.merged %<>% .[rownames(.) %in% names(groups),]
-        }
-
-
-        if (nrow(cm.merged) < length(groups)) {
-          message("'groups' is defined for ",length(groups)-nrow(cm.merged)," unknown cells.")
-          groups %<>% .[rownames(cm.merged)]
+        if (nrow(cm.merged) != length(groups) | length(dif) != nrow(cm.merged)) {
+          if(nrow(cm.merged) < length(groups)) {
+            message("'groups' is defined for ",length(groups)-nrow(cm.merged)," unknown cells.")
+          groups %<>% subset(rownames %in% rownames(cm.merged))
+          }
+          if (length(dif) < nrow(cm.merged)) {
+            message("Excluding ",nrow(cm.merged)-length(dif)," cells missing from 'groups'.")
+            cm.merged %<>% .[rownames(.) %in% dif,]
+          }
         }
 
         de.genes %<>% lapply(function(x) x %<>% subset(complete.cases(.)))
@@ -648,15 +648,15 @@ Conos <- setRefClass(
     },
 
 
-    plotGraph=function(color.by='cluster', clustering=NULL, groups=NULL, colors=NULL, gene=NULL, plot.theme=NULL, subcluster=NULL, plot.na=NULL, keep.limits=NULL, ...) {
+    plotGraph=function(color.by='cluster', clustering=NULL, groups=NULL, colors=NULL, gene=NULL, plot.theme=NULL, subgroup=NULL, plot.na=NULL, keep.limits=NULL, ...) {
       if(class(embedding)[1] == "uninitializedField") {
         embedGraph();
       }
 
-      if(!is.null(subcluster)) {
+      if(!is.null(subgroup)) {
 
         if(!is.null(groups)) {
-          message("Ignoring 'groups' since 'subcluster' is provided.")
+          message("Ignoring 'groups' since 'subgroup' is provided.")
         }
 
         if(is.null(keep.limits)) {
@@ -668,8 +668,8 @@ Conos <- setRefClass(
         }
 
         if(is.null(gene)) {
-        groups <- subcluster
-        subcluster <- NULL
+          groups <- subgroup
+          subgroup <- NULL
         } else {
           groups <- NULL
         }
@@ -702,7 +702,7 @@ Conos <- setRefClass(
         }
       }
 
-      return(embeddingPlot(embedding, groups=groups, colors=colors, plot.theme=adjustTheme(plot.theme), plot.na=plot.na, keep.limits=keep.limits, subcluster=subcluster, ...))
+      return(embeddingPlot(embedding, groups=groups, colors=colors, plot.theme=adjustTheme(plot.theme), plot.na=plot.na, keep.limits=keep.limits, subgroup=subgroup, ...))
     },
 
     correctGenes=function(genes=NULL, n.od.genes=500, fading=10.0, fading.const=0.5, max.iters=15, tol=5e-3, name='diffusion', verbose=TRUE, count.matrix=NULL, normalize=TRUE) {
