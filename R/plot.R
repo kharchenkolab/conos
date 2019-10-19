@@ -179,14 +179,14 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
     geom_point_w <- ggplot2::geom_point
   }
 
-  if (!is.null(groups)) {
+  if (!is.null(groups) && is.null(colors)) {
     groups <- as.factor(groups)
 
     plot.df$Group <- factor(NA, levels=levels(groups))
     arr.ids <- match(names(groups), plot.df$CellName)
     plot.df$Group[arr.ids[!is.na(arr.ids)]] <- groups[!is.na(arr.ids)]
 
-    big.clusts <- (plot.df %>% dplyr::group_by(Group) %>% dplyr::summarise(Size=n()) %>%
+    big.clusts <- (plot.df %>% subset(!is.na(Groups)) %>% dplyr::group_by(Group) %>% dplyr::summarise(Size=n()) %>%
                      dplyr::filter(Size >= min.cluster.size))$Group %>% as.vector()
 
     plot.df$Group[!(plot.df$Group %in% big.clusts)] <- NA
@@ -228,6 +228,9 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
       ggplot2::guides(color=ggplot2::guide_legend(override.aes=list(alpha=1.0)))
   } else if (!is.null(colors)) {
     plot.df <- plot.df %>% dplyr::mutate(Color=colors[CellName])
+    if(!is.null(groups)) {
+      plot.df$Color[!plot.df$CellName %in% names(groups)] <- NA
+    }
     na.plot.df <- plot.df %>% dplyr::filter(is.na(Color))
     plot.df <- plot.df %>% dplyr::filter(!is.na(Color))
 

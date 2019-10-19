@@ -2,6 +2,13 @@
 
 ## Changed
 
+- Fixed problems caused by NAs for appendSpecificityMetrics
+- Fixed plotting 'groups' and 'genes' together, fixed warning when plotting shorter 'groups' than no. cells (embeddingPlot)
+
+## [1.1.3] - 2019-10-19
+
+## Changed
+
 - Optimized plotting with coloring by genes
 - `getDifferentialGenes` uses first clustering by default
 - Added metrics to masure specifisity of cell type markers to DE info in `getDifferentialGenes` (parameters `append.specifisity.metrics` and `append.auc`)
