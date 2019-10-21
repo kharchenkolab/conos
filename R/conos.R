@@ -1154,3 +1154,25 @@ getSampleNamePerCell=function(samples) {
   cl <- lapply(samples, getCellNames)
   return(rep(names(cl), sapply(cl, length)) %>% stats::setNames(unlist(cl)) %>% as.factor())
 }
+
+findSubcommunities <- function(con, groups=NULL, subgroups=NULL, clustering=NULL, ...) {
+  if(!is.null(clustering)) {
+    stop("'clustering' is not supported yet.")
+  }
+
+  if(is.null(groups)) {
+    if(is.null(subgroups)) {
+      stop("Need either 'groups' or 'subgroups' as input.")
+    }
+    conos::leiden.community(induced_subgraph(con$graph, which(con$clusters$leiden$groups %<>% .[match(names(V(con$graph)), names(.))] %in% subgroups)), ...)$membership
+  } else {
+    if(is.null(subgroups)) {
+      conos::leiden.community(induced_subgraph(con$graph, which(groups %<>% .[match(names(V(con$graph)), names(.))])), ...)$membership
+    } else {
+      new.annot <- conos::leiden.community(induced_subgraph(con$graph, which(groups %<>% .[match(names(V(con$graph)), names(.))] %in% subgroups)), ...)$membership
+      levels(new.annot) %<>% lapply(function(x) paste0(subgroups,"_",x)) %>% unlist
+      groups <- list(groups %>% .[names(.) %in% setdiff(names(.), names(new.annot))] %>% factor, new.annot) %>% unlist
+      return(groups)
+    }
+  }
+}
