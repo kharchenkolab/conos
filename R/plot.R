@@ -187,7 +187,8 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
     arr.ids <- match(names(groups), plot.df$CellName)
     plot.df$Group[arr.ids[!is.na(arr.ids)]] <- groups[!is.na(arr.ids)]
 
-    big.clusts <- (plot.df %>% subset(!is.na(Groups)) %>% dplyr::group_by(Group) %>% dplyr::summarise(Size=n()) %>%
+
+    big.clusts <- (plot.df %>% subset(!is.na(Group)) %>% dplyr::group_by(Group) %>% dplyr::summarise(Size=n()) %>%
                      dplyr::filter(Size >= min.cluster.size))$Group %>% as.vector()
 
     plot.df$Group[!(plot.df$Group %in% big.clusts)] <- NA
