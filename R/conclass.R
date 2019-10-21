@@ -647,9 +647,20 @@ Conos <- setRefClass(
     },
 
 
-    plotGraph=function(color.by='cluster', clustering=NULL, groups=NULL, colors=NULL, gene=NULL, plot.theme=NULL, ...) {
+    plotGraph=function(color.by='cluster', clustering=NULL, groups=NULL, colors=NULL, gene=NULL, plot.theme=NULL, subgroups=NULL, ...) {
       if(class(embedding)[1] == "uninitializedField") {
         embedGraph();
+      }
+
+      if(!is.null(subgroups)) {
+        if(is.null(groups)) {
+          stop("'subgroups' depends on 'groups', need input.")
+        } else {
+          groups %<>% .[. %in% subgroups]
+          if(length(groups==0)) {
+            stop("'groups' is empty after sorting by 'subgroups'.")
+          }
+        }
       }
 
       if (!is.null(gene)) {

@@ -2,6 +2,14 @@
 
 ## Changed
 
+- Added findSubcommunities function
+- Added 'subgroups' argument (plotGraph)
+- Added 'keep.limits' argument (embeddingPlot)
+
+## [1.1.4] - 2019-10-21
+
+## Changed
+
 - Fixed problems caused by NAs for appendSpecificityMetrics
 - Fixed plotting 'groups' and 'genes' together, fixed warning when plotting shorter 'groups' than no. cells (embeddingPlot)
 
