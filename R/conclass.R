@@ -657,7 +657,7 @@ Conos <- setRefClass(
           stop("'subgroups' depends on 'groups', need input.")
         } else {
           groups %<>% .[. %in% subgroups]
-          if(length(groups==0)) {
+          if(length(groups)==0) {
             stop("'groups' is empty after sorting by 'subgroups'.")
           }
         }

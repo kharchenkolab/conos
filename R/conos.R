@@ -1164,11 +1164,22 @@ findSubcommunities <- function(con, groups=NULL, subgroups=NULL, clustering=NULL
     if(is.null(subgroups)) {
       stop("Need either 'groups' or 'subgroups' as input.")
     }
+    if(!subgroups %in% con$clusters$leiden$groups) {
+      stop("'subgroups' not in Leiden clusters.")
+    }
     conos::leiden.community(induced_subgraph(con$graph, which(con$clusters$leiden$groups %<>% .[match(names(V(con$graph)), names(.))] %in% subgroups)), ...)$membership
   } else {
     if(is.null(subgroups)) {
+      if(any(names(groups) %in% names(V(con$graph)))) {
+        stop("'groups' not defined for graph object.")
+      }
       conos::leiden.community(induced_subgraph(con$graph, which(groups %>% .[match(names(V(con$graph)), names(.))] %>% names %in% names(V(con$graph)))), ...)$membership
     } else {
+      if(!any(subgroups %in% groups)) {
+        stop("'subgroups' not in 'groups'.")
+      } else if(!any(names(groups) %in% names(V(con$graph)))) {
+        stop("'groups' not defined for graph object.")
+      }
       new.annot <- conos::leiden.community(induced_subgraph(con$graph, which(groups %<>% .[match(names(V(con$graph)), names(.))] %in% subgroups)), ...)$membership
       levels(new.annot) %<>% lapply(function(x) paste0(subgroups,"_",x)) %>% unlist
       groups <- list(groups %>% .[names(.) %in% setdiff(names(.), names(new.annot))] %>% factor, new.annot) %>% unlist
