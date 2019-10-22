@@ -63,19 +63,12 @@ rawMatricesWithCommonGenes <- function(con.obj, sample.groups=NULL) {
   return(lapply(raw.mats, function(x) {x[,common.genes]}))
 }
 
-collapseCellsByType <- function(cm, groups, min.cell.count) {
-  g1 <- groups[intersect(names(groups), rownames(cm))]
-  t1 <- as.numeric(table(g1))
-  names(t1) <- levels(g1);
-  droplevels <- names(t1)[t1 < min.cell.count]
-  g1.n <- names(g1)
-  g1 <- as.character(g1)
-  names(g1) <- g1.n
-  g1[g1 %in% droplevels] <- NA
-  g1 <- as.factor(g1)
-  aggr <- Matrix.utils::aggregate.Matrix(cm, g1)
-  aggr <- aggr[rownames(aggr) != "NA",]
-  return(aggr)
+collapseCellsByType <- function(cm, groups, min.cell.count=10) {
+  groups <- as.factor(groups);
+  cl <- factor(groups[match(rownames(cm),names(groups))],levels=levels(groups));
+  tc <- colSumByFactor(cm,cl);
+  tc <- tc[-1,,drop=F]  # omit NA cells
+  tc[table(cl)>=min.cell.count,]
 }
 
 adjustMatrixRownames <- function(name, cm, cluster.sep.chr) {rownames(cm) <- paste0(name, cluster.sep.chr, rownames(cm)); return(cm)}
