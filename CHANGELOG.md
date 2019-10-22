@@ -1,50 +1,54 @@
 ## Upcoming
 
-## Changed
+### Changed
 
 - Optimized plotting with coloring by genes
 - `getDifferentialGenes` uses first clustering by default
+- Fixed bug with `collapseCellsByType`. **Note:** probably will affect DE results.
+
+### Added
+
 - Added metrics to masure specifisity of cell type markers to DE info in `getDifferentialGenes` (parameters `append.specifisity.metrics` and `append.auc`)
 
 ## [1.1.2] - 2019-07-16
 
-## Changed
+### Changed
 
 - Changed a description line in the getClusterPrivacy() doc to fix installation under some R3.6 versions (issue 32)
 
 ## [1.1.1] - 2019-07-15
 
-## Changed
+### Changed
 
 - Fixed docker build: use of BiocManager, reference to master instead of dev
 - Updated src/Makevars to remove the CXX directive, which trips up older versions of R (3.2.x)
 
 ## [1.1.0] - 2019-07-02
 
-## Added
+### Added
 
 - Support for CCA space
 
-## Changed
+### Changed
 
 - `buildGraph` now use PCA space as the default
 - fixed common variance rescaling to use geometric mean of the target
 
 ## [1.0.3] - 2019-07-02
 
-## Added
+### Added
 
 - Support for Seurat v3 objects
 
 ## [1.0.2] - 2019-06-26
 
-## Added
+### Added
 
 - Functions to export Conos object to ScanPy
 
 ## [1.0.1] - 2019-05-1
 
-## Fixed
+### Fixed
 
 - Default value for `cluster.sep.chr` in DE functions is changed from '+' to '<!!>', 
   as it shouldn't be normally present in cluster names
