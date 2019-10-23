@@ -1,21 +1,21 @@
 ## Upcoming
 
-### Added 
-
-- Added findSubcommunities function
-- Added 'subgroups' argument (plotGraph)
-- Added 'keep.limits' argument (embeddingPlot)
-
-## Changed
+### Changed
 
 - Optimized plotting with coloring by genes
 - `getDifferentialGenes` uses first clustering by default
 - Fixed bug with `collapseCellsByType`. **Note:** probably will affect DE results.
-- Added re-normalization of edges to fix problem with negative edge weights during label propagation
+- Added re-normalization of edge weights to fix problem with negative edge weights during label propagation
+- Fixed problems caused by NAs for appendSpecificityMetrics
+- Now in plotting 'groups' aren't ignoted if 'gene' is provided: it's used to subset cells for plotting.
+- Fixed warning when plotting shorter 'groups' than no. cells (`embeddingPlot`)
 
 ### Added
 
 - Added metrics to masure specifisity of cell type markers to DE info in `getDifferentialGenes` (parameters `append.specifisity.metrics` and `append.auc`)
+- Added findSubcommunities function
+- Added 'subgroups' argument (plotGraph)
+- Added 'keep.limits' argument (embeddingPlot)
 
 ## [1.1.2] - 2019-07-16
 
