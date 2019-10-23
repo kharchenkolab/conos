@@ -20,7 +20,11 @@ public:
 
   Edge(size_t v_start, size_t v_end, double weight)
     : v_start(v_start), v_end(v_end), weight(weight), length(1 - weight)
-  {}
+  {
+    if (this->length < 0) {
+      Rcpp::stop("Negative edge length " + std::to_string(this->length) + " for weight " + std::to_string(weight));
+    }
+  }
 };
 
 void smooth_count_matrix(const std::vector<Edge> &edges, Mat &count_matrix, int max_n_iters, double diffusion_fading, double diffusion_fading_const, double tol, bool verbose, bool normalize, const std::vector<bool> &is_label_fixed=std::vector<bool>());
@@ -38,6 +42,10 @@ si_map_t parse_edges(const Rcpp::StringMatrix &edge_verts, const std::vector<dou
   if (edge_verts.nrow() != edge_weights.size() || edge_verts.ncol() != 2)
     Rcpp::stop("Incorrect dimension of input vectors");
 
+  auto min_max = std::minmax_element(edge_weights.begin(), edge_weights.end());
+  double min_w = std::max(*min_max.first, 0.0);
+  double max_w = *min_max.second - min_w;
+
   if (vertex_names.empty()) {
     for (size_t i = 0; i < edge_verts.nrow(); ++i) {
       vertex_names.push_back(Rcpp::as<std::string>(edge_verts(i, 0)));
@@ -47,7 +55,7 @@ si_map_t parse_edges(const Rcpp::StringMatrix &edge_verts, const std::vector<dou
 
   auto vertex_ids = order_strings(vertex_names);
   for (size_t i = 0; i < edge_verts.nrow(); ++i) { // TODO: add informative message in case vertex name is not presented in the map
-    edges.emplace_back(vertex_ids.at(Rcpp::as<std::string>(edge_verts(i, 0))), vertex_ids.at(Rcpp::as<std::string>(edge_verts(i, 1))), edge_weights.at(i));
+    edges.emplace_back(vertex_ids.at(Rcpp::as<std::string>(edge_verts(i, 0))), vertex_ids.at(Rcpp::as<std::string>(edge_verts(i, 1))), (edge_weights.at(i) - min_w) / max_w);
   }
 
   return vertex_ids;
