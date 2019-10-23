@@ -1155,35 +1155,50 @@ getSampleNamePerCell=function(samples) {
   return(rep(names(cl), sapply(cl, length)) %>% stats::setNames(unlist(cl)) %>% as.factor())
 }
 
-findSubcommunities <- function(con, groups=NULL, subgroups=NULL, clustering=NULL, ...) {
+sgraph <- function(con, method, idx, ...) {
+  if(method=="walktrap") {
+    g <- igraph::walktrap.community(induced_subgraph(con$graph, idx), ...)
+    cl <- g$membership %>% factor %>% setNames(g$names)
+  } else if(method=="leiden") {
+    cl <- conos::leiden.community(induced_subgraph(con$graph, idx), ...)$membership
+  } else {
+    stop("Unknown method.")
+  }
+  return(cl)
+}
+
+findSubcommunities <- function(con, clustering=NULL, groups=NULL, subgroups=NULL, method="leiden", ...) {
   if(!is.null(clustering)) {
-    stop("'clustering' is not supported yet.")
+    if(clustering=="leiden") {
+      groups <- con$clusters$leiden$groups
+    } else if(clustering=="walktrap") {
+      groups <- con$clusters$walktrap$groups
+    } else {
+      stop("Unknown 'clustering'.")
+    }
   }
 
   if(is.null(groups)) {
-    if(is.null(subgroups)) {
-      stop("Need either 'groups' or 'subgroups' as input.")
-    }
-    if(!subgroups %in% con$clusters$leiden$groups) {
-      stop("'subgroups' not in Leiden clusters.")
-    }
-    conos::leiden.community(induced_subgraph(con$graph, which(con$clusters$leiden$groups %<>% .[match(names(V(con$graph)), names(.))] %in% subgroups)), ...)$membership
-  } else {
-    if(is.null(subgroups)) {
-      if(any(names(groups) %in% names(V(con$graph)))) {
-        stop("'groups' not defined for graph object.")
-      }
-      conos::leiden.community(induced_subgraph(con$graph, which(groups %>% .[match(names(V(con$graph)), names(.))] %>% names %in% names(V(con$graph)))), ...)$membership
-    } else {
-      if(!any(subgroups %in% groups)) {
-        stop("'subgroups' not in 'groups'.")
-      } else if(!any(names(groups) %in% names(V(con$graph)))) {
-        stop("'groups' not defined for graph object.")
-      }
-      new.annot <- conos::leiden.community(induced_subgraph(con$graph, which(groups %<>% .[match(names(V(con$graph)), names(.))] %in% subgroups)), ...)$membership
-      levels(new.annot) %<>% lapply(function(x) paste0(subgroups,"_",x)) %>% unlist
-      groups <- list(groups %>% .[names(.) %in% setdiff(names(.), names(new.annot))] %>% factor, new.annot) %>% unlist
-      return(groups)
-    }
+    stop("Need 'groups' argument.")
+  } else if(!any(names(groups) %in% names(V(con$graph)))) {
+    stop("'groups' not defined for graph object.")
   }
+
+  if(is.null(subgroups)) {
+    idx <- which(groups %>% .[match(names(V(con$graph)), names(.))] %>% names %in% names(V(con$graph)))
+    cl <- sgraph(con=con, method=method, idx=idx, ...)
+  } else {
+    if(!any(subgroups %in% groups)) {
+      if(!is.null(clustering)) {
+        stop("'subgroups' not in 'clustering'.")
+      } else {
+        stop("'subgroups' not in 'groups'.")
+      }
+    }
+    idx <- which(groups %>% .[match(names(V(con$graph)), names(.))] %in% subgroups)
+    new.annot <- sgraph(con=con, method=method, idx=idx, ...) %>% factor
+    levels(new.annot) %<>% lapply(function(x) paste0(subgroups,"_",x)) %>% unlist
+    cl <- list(groups %>% .[names(.) %in% setdiff(names(.), names(new.annot))] %>% factor, new.annot) %>% unlist
+  }
+  return(cl)
 }

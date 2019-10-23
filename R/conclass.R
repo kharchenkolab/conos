@@ -373,14 +373,14 @@ Conos <- setRefClass(
           }
         }
 
-        de.genes.clean <- de.genes %<>% lapply(function(x) x %<>% subset(complete.cases(.)))
-        de.genes.clean %<>% names() %>% setNames(., .) %>%
-          lapply.func(function(n) appendSpecificityMetricsToDE(de.genes.clean[[n]], groups.clean, n, p2.counts=cm.merged, append.auc=append.auc))
+        de.genes %<>% lapply(function(x) x %<>% subset(complete.cases(.)))
+        de.genes %<>% names() %>% setNames(., .) %>%
+          lapply.func(function(n) appendSpecificityMetricsToDE(de.genes[[n]], groups.clean, n, p2.counts=cm.merged, append.auc=append.auc))
       }
 
       if (verbose) cat("All done!\n")
 
-      return(de.genes.clean)
+      return(de.genes)
     },
 
     findCommunities=function(method=leiden.community, min.group.size=0, name=NULL, test.stability=FALSE, stability.subsampling.fraction=0.95, stability.subsamples=100, verbose=TRUE, cls=NULL, sr=NULL, ...) {
