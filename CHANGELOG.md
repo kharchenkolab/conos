@@ -1,6 +1,9 @@
 ## Upcoming
 
-### Changed
+- Fixed problems caused by NAs for appendSpecificityMetrics
+- Fixed plotting 'groups' and 'genes' together, fixed warning when plotting shorter 'groups' than no. cells (embeddingPlot)
+
+## Changed
 
 - Optimized plotting with coloring by genes
 - `getDifferentialGenes` uses first clustering by default

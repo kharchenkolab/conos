@@ -329,7 +329,7 @@ Conos <- setRefClass(
       return(invisible(g))
     },
 
-    getDifferentialGenes=function(clustering=NULL, groups=NULL, z.threshold=3.0, upregulated.only=F, verbose=T, plot=FALSE, n.genes.to.show=10, inner.clustering=FALSE, append.specifisity.metrics=TRUE, append.auc=FALSE, n.cores=NULL) {
+    getDifferentialGenes=function(clustering=NULL, groups=NULL, z.threshold=3.0, upregulated.only=F, verbose=T, plot=FALSE, n.genes.to.show=10, inner.clustering=FALSE, append.specificity.metrics=TRUE, append.auc=FALSE, n.cores=NULL) {
       if (!is.null(clustering)) {
         groups <- clusters[[clustering]]$groups
       }
@@ -354,21 +354,28 @@ Conos <- setRefClass(
         plotDEGenes(de.genes, samples, groups=groups, n.genes.to.show=n.genes.to.show, inner.clustering=inner.clustering)
       }
 
-      if (append.specifisity.metrics) {
+      if (append.specificity.metrics) {
         lapply.func <- if (verbose) function(...) pbapply::pblapply(..., cl=n.jobs) else function(...) papply(..., n.cores=n.jobs)
-        if (verbose) cat("Estimating specifisity metrics\n")
+        if (verbose) cat("Estimating specificity metrics\n")
 
         cm.merged <- lapply(samples, getRawCountMatrix, transposed=T) %>% mergeCountMatrices(transposed=T)
+        groups.clean <- groups[!is.na(groups)]
+        dif <- intersect(rownames(cm.merged),names(groups.clean))
 
-        if (length(intersect(rownames(cm.merged), names(groups))) != nrow(cm.merged))
-          stop("`groups` must contain values for all cells in the samples")
-
-        if (nrow(cm.merged) < length(groups)) {
-          groups %<>% .[rownames(cm.merged)]
+        if(nrow(cm.merged) != length(groups.clean) | length(dif) != nrow(cm.merged)) {
+          if(nrow(cm.merged) < length(groups.clean)) {
+            if(verbose) message("'groups' is defined for ",length(groups.clean)-nrow(cm.merged)," unknown cells.")
+            groups.clean %<>% subset(rownames %in% rownames(cm.merged))
+          }
+          if(length(dif) < nrow(cm.merged)) {
+            if(verbose) message("Excluding ",nrow(cm.merged)-length(dif)," cells missing from 'groups'.")
+            cm.merged %<>% .[rownames(.) %in% dif,]
+          }
         }
 
+        de.genes %<>% lapply(function(x) x %<>% subset(complete.cases(.)))
         de.genes %<>% names() %>% setNames(., .) %>%
-          lapply.func(function(n) appendSpecifisityMetricsToDE(de.genes[[n]], groups, n, p2.counts=cm.merged, append.auc=append.auc))
+          lapply.func(function(n) appendSpecificityMetricsToDE(de.genes[[n]], groups.clean, n, p2.counts=cm.merged, append.auc=append.auc))
       }
 
       if (verbose) cat("All done!\n")
@@ -647,7 +654,7 @@ Conos <- setRefClass(
 
       if (!is.null(gene)) {
         colors <- lapply(samples, getGeneExpression, gene) %>% Reduce(c, .)
-        if(all(is.na(colors))) warning(paste("gene",gene,"is not found in any of the samples"))
+        if(all(is.na(colors))) stop(paste("gene",gene,"is not found in any of the samples"))
       }
 
       if(is.null(groups) && is.null(colors)) {

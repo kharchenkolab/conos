@@ -581,7 +581,7 @@ getDifferentialGenesP2 <- function(p2.samples, groups, z.threshold=3.0, upregula
   return(markers.per.type)
 }
 
-appendSpecifisityMetricsToDE <- function(de.df, clusters, cluster.id, p2.counts, low.expression.threshold=0, append.auc=FALSE) {
+appendSpecificityMetricsToDE <- function(de.df, clusters, cluster.id, p2.counts, low.expression.threshold=0, append.auc=FALSE) {
   cluster.mask <- setNames(clusters == cluster.id, names(clusters))
 
   counts.bin <- (p2.counts[names(cluster.mask), de.df$Gene, drop=F] > low.expression.threshold)
@@ -596,7 +596,7 @@ appendSpecifisityMetricsToDE <- function(de.df, clusters, cluster.id, p2.counts,
     }
   }
 
-  de.df$Specifisity <- (length(cluster.mask) - counts.bin.sums) / (length(cluster.mask) - counts.bin.clust.sums)
+  de.df$Specificity <- (length(cluster.mask) - counts.bin.sums) / (length(cluster.mask) - counts.bin.clust.sums)
   de.df$Precision <- counts.bin.clust.sums / counts.bin.sums
   de.df$ExpressionFraction <- Matrix::colMeans(counts.bin[cluster.mask,, drop=F])
 
