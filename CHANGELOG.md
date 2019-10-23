@@ -1,11 +1,7 @@
 ## Upcoming
 
-### Changed
-
 - Fixed problems caused by NAs for appendSpecificityMetrics
 - Fixed plotting 'groups' and 'genes' together, fixed warning when plotting shorter 'groups' than no. cells (embeddingPlot)
-
-## [1.1.3] - 2019-10-19
 
 ## Changed
 
