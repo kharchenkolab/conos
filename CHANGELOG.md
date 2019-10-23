@@ -1,14 +1,14 @@
 ## Upcoming
 
-- Fixed problems caused by NAs for appendSpecificityMetrics
-- Fixed plotting 'groups' and 'genes' together, fixed warning when plotting shorter 'groups' than no. cells (embeddingPlot)
-
-## Changed
+### Changed
 
 - Optimized plotting with coloring by genes
 - `getDifferentialGenes` uses first clustering by default
 - Fixed bug with `collapseCellsByType`. **Note:** probably will affect DE results.
-- Added re-normalization of edges to fix problem with negative edge weights during label propagation
+- Added re-normalization of edge weights to fix problem with negative edge weights during label propagation
+- Fixed problems caused by NAs for appendSpecificityMetrics
+- Now in plotting 'groups' aren't ignoted if 'gene' is provided: it's used to subset cells for plotting.
+- Fixed warning when plotting shorter 'groups' than no. cells (`embeddingPlot`)
 
 ### Added
 
