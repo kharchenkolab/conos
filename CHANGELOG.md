@@ -9,6 +9,8 @@
 - Fixed problems caused by NAs for appendSpecificityMetrics
 - Now in plotting 'groups' aren't ignoted if 'gene' is provided: it's used to subset cells for plotting.
 - Fixed warning when plotting shorter 'groups' than no. cells (`embeddingPlot`)
+- UMAP now set `n_sgd_threads` from `uwot` to `n.cores` by default. It gives much better parallelization, but kills reproducibility. 
+  Use `n.sgd.cores=1` to get reproducible embeddings.
 
 ### Added
 
