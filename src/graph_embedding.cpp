@@ -210,6 +210,9 @@ std::pair<std::vector<std::vector<int>>, std::vector<std::vector<double>>>
 }
   }
 
+  if (Progress::check_abort())
+    Rcpp::stop("Aborted");
+
   return std::make_pair(res_idx, res_times);
 }
 
@@ -248,7 +251,7 @@ Rcpp::List commute_time_per_node(const std::vector<std::vector<int>> &adjacency_
     }
 
     if (Progress::check_abort())
-      return Rcpp::List();
+      Rcpp::stop("Aborted");
   }
 
   std::vector<std::vector<double>> commute_times(adjacency_list.size());
@@ -286,6 +289,9 @@ Rcpp::List commute_time_per_node(const std::vector<std::vector<int>> &adjacency_
       commute_time_idx[v1] = reorder(cur_ids, sorted_ids, max_adj_num);
     }
   }
+
+  if (Progress::check_abort())
+    Rcpp::stop("Aborted");
 
   if (verbose) {
     Rcpp::Rcout << "Done" << std::endl;
