@@ -686,6 +686,10 @@ getLocalEdges <- function(samples, k.self, k.self.weight, metric, l2.sigma, verb
   if(verbose) cat('local pairs ')
   x <- data.frame(do.call(rbind, papply(samples, function(x) {
     pca <- getPca(x)
+    if (is.null(pca)) {
+      stop("PCA must be estimated for all samples")
+    }
+
     xk <- n2Knn(pca, k.self + 1, 1, verbose=FALSE, indexType=metric) # +1 accounts for self-edges that will be removed in the next line
     diag(xk) <- 0; # no self-edges
     xk <- as(drop0(xk),'dgTMatrix')
