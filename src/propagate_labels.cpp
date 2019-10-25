@@ -120,6 +120,10 @@ Rcpp::NumericMatrix propagate_labels(const Rcpp::StringMatrix &edge_verts, const
 
 void smooth_count_matrix(const std::vector<Edge> &edges, Mat &count_matrix, int max_n_iters, double diffusion_fading, double diffusion_fading_const, double tol,
                          bool verbose, bool normalize, const std::vector<bool> &is_label_fixed) {
+  if ((count_matrix.rows() == 0) || (count_matrix.cols() == 0)) {
+    Rcpp::warning("Empty matrix passed");
+    return;
+  }
   std::vector<double> sum_weights(count_matrix.rows(), 1);
   Progress p(max_n_iters * edges.size(), verbose);
   double min_weight = 1e10, max_weight = 0;
@@ -180,6 +184,22 @@ void smooth_count_matrix(const std::vector<Edge> &edges, Mat &count_matrix, int 
 SEXP smooth_count_matrix(const Rcpp::StringMatrix &edge_verts, const std::vector<double> &edge_weights, const Rcpp::NumericMatrix &count_matrix,
                          int max_n_iters=10, double diffusion_fading=1.0, double diffusion_fading_const=0.1, double tol=1e-3, bool verbose=true,
                          bool normalize=false) {
+  if ((count_matrix.nrow() == 0) || (count_matrix.ncol() == 0)) {
+    Rcpp::warning("Empty matrix passed");
+    return count_matrix;
+  }
+
+  if (edge_verts.nrow() != edge_weights.size())
+    Rcpp::stop("Size of edge_verts must match size of edge_weights");
+
+  if (edge_verts.nrow() == 0) {
+    Rcpp::warning("Empty graph passed");
+    return count_matrix;
+  }
+
+  if (edge_verts.ncol() != 2)
+    Rcpp::stop("Matrix edge_verts must have exactly 2 columns");
+
   // Parse data
   Mat cm_eigen(Rcpp::as<Mat>(count_matrix));
 
