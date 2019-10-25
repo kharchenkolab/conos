@@ -549,7 +549,7 @@ Conos <- setRefClass(
         if (!requireNamespace("uwot", quietly=T))
           stop("You need to install package 'uwot' to be able to use UMAP embedding.")
 
-        embedding <<- embedGraphUmap(graph, verbose=verbose, return.all=F, n.cores=n.jobs, ...)
+        embedding <<- embedGraphUmap(graph, verbose=verbose, return.all=F, n.cores=n.jobs, target.dims=target.dims, ...)
       }
 
       return(invisible(embedding))

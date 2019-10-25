@@ -12,6 +12,7 @@
 - UMAP now set `n_sgd_threads` from `uwot` to `n.cores` by default. It gives much better parallelization, but kills reproducibility. 
   Use `n.sgd.cores=1` to get reproducible embeddings.
 - Meaningful error if one of samples doesn't have PCA; warnings in getPerCellTypeDE
+- Account for `target.dims` in UMAP embedding
 
 ### Added
 

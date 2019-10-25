@@ -24,7 +24,7 @@ graphToAdjList <- function(graph) {
   return(list(idx=adj.list, probabilities=probs, names=edge.list.fact$levels))
 }
 
-embedKnnGraph <- function(commute.times, n.neighbors, names=NULL, verbose=TRUE, ...) {
+embedKnnGraph <- function(commute.times, n.neighbors, names=NULL, verbose=TRUE, target.dims=2, ...) {
   min.n.neighbors <- sapply(commute.times$idx, length) %>% min()
   if (min.n.neighbors < n.neighbors) {
     n.neighbors <- min.n.neighbors
@@ -37,7 +37,8 @@ embedKnnGraph <- function(commute.times, n.neighbors, names=NULL, verbose=TRUE, 
   ct.top.ids <- cbind(1:nrow(ct.top.ids), ct.top.ids)
   ct.top <- cbind(rep(0, nrow(ct.top)), ct.top)
 
-  umap <- uwot::umap(data.frame(x=rep(0, nrow(ct.top))), nn_method=list(idx=ct.top.ids, dist=ct.top), verbose=verbose, ...)
+  umap <- uwot::umap(data.frame(x=rep(0, nrow(ct.top))), nn_method=list(idx=ct.top.ids, dist=ct.top),
+                     n_components=target.dims, verbose=verbose, ...)
   rownames(umap) <- names
   return(umap)
 }
