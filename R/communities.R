@@ -97,7 +97,7 @@ multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=F),
   names(fv) <- unlist(lapply(mbl,names))
 
   # enclose in a masquerading class
-  res <- list(membership=fv,dendrogram=combd,algorithm='multitrap');
+  res <- list(membership=fv, dendrogram=combd, algorithm='multitrap', names=names(fv));
   class(res) <- rev("fakeCommunities");
   return(res);
 
@@ -164,7 +164,7 @@ multimulti.community <- function(graph, n.cores=parallel::detectCores(logical=F)
   names(fv) <- unlist(lapply(mbl,names))
 
   # enclose in a masquerading class
-  res <- list(membership=fv,dendrogram=NULL,algorithm='multimulti');
+  res <- list(membership=fv, dendrogram=NULL, algorithm='multimulti', names=names(fv));
   class(res) <- rev("fakeCommunities");
   return(res);
 
@@ -184,7 +184,8 @@ leiden.community <- function(graph, resolution=1.0, n.iterations=2) {
 
   # enclose in a masquerading class
   fv <- as.factor(setNames(x,V(graph)$name))
-  res <- list(membership=fv,dendrogram=NULL,algorithm='leiden',resolution=resolution,n.iter=n.iterations);
+  res <- list(membership=fv, dendrogram=NULL, algorithm='leiden', resolution=resolution,
+              n.iter=n.iterations, names=names(fv));
   class(res) <- rev("fakeCommunities");
   return(res);
 }
