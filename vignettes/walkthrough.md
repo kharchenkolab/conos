@@ -206,7 +206,7 @@ clusters in other sample (for example note cluster
 con$plotPanel(clustering="multilevel", use.local.clusters=T, title.size=6)
 ```
 
-![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+![](walkthrough_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
 
 Next we will build the joint graph that encompasses all the samples. We
 do that by pairwise projecting samples onto a common space and
@@ -254,7 +254,7 @@ using:
 plotComponentVariance(con, space='PCA')
 ```
 
-![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+![](walkthrough_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
 When using ‘angular’ distance measure (default), it is NOT recommended
 to reduce the number of components to a bare minimum indicated by the
 “elbow” inflection point - include 10-20 more (typcally 30 components
@@ -283,7 +283,7 @@ CB.
 con$plotPanel(font.size=4)
 ```
 
-![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+![](walkthrough_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
 
 A convenience function can be used to examine the composition of the
 clusters in terms of samples, sample entropy (middle), and cluster size
@@ -293,7 +293,7 @@ clusters in terms of samples, sample entropy (middle), and cluster size
 plotClusterBarplots(con, legend.height = 0.1)
 ```
 
-![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+![](walkthrough_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
 Check an expression pattern of a specific gene across all the individual
 embeddings.
@@ -302,7 +302,7 @@ embeddings.
 con$plotPanel(gene = 'GZMK')
 ```
 
-![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+![](walkthrough_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
 
 Next we embed and visualize the complete joint graph.
 
@@ -321,7 +321,7 @@ con$plotGraph(alpha=0.1)
 
     ## Estimating embeddings.
 
-![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+![](walkthrough_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
 
 We note that the graph captures the population structure irrespectively
 of the sample of origin of each
@@ -331,7 +331,7 @@ cell.
 con$plotGraph(color.by='sample', mark.groups=F, alpha=0.1, show.legend=T)
 ```
 
-![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+![](walkthrough_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
 
 We can also visualize gene expression on this joint graph
 embedding:
@@ -340,7 +340,7 @@ embedding:
 con$plotGraph(gene='GZMK', title='GZMK expression')
 ```
 
-![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+![](walkthrough_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
 
 Other community detection methods can provide a more sensitive and
 hierarchical view of the subpopulation structure. Here we run walktrap
@@ -362,7 +362,7 @@ clusters:
 con$plotPanel(clustering='walktrap',font.size=4)
 ```
 
-![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
+![](walkthrough_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
 
 New clustering, as viewed on a joint
 graph:
@@ -371,7 +371,7 @@ graph:
 con$plotGraph(clustering='walktrap')
 ```
 
-![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
+![](walkthrough_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
 
 ## Changing embedding parameters
 
@@ -403,7 +403,7 @@ con$embedGraph(alpha=0.001, sgd_batched=1e8)
 con$plotGraph(clustering='walktrap', size=0.1)
 ```
 
-![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
+![](walkthrough_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
 
 ### UMAP
 
@@ -466,7 +466,7 @@ con$embedGraph(method="UMAP", min.dist=0.01, spread=15, n.cores=4, min.prob.lowe
 con$plotGraph(clustering='walktrap', size=0.1)
 ```
 
-![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
+![](walkthrough_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
 
 In the example above, UMAP layout makes even many of the very small
 subpopulations called by walktrap apparent.
@@ -492,7 +492,7 @@ leafs:
 con$plotGraph(groups=fc$groups, size=0.1)
 ```
 
-![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
+![](walkthrough_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
 
 Let’s look at the hierarchical structure of these
 clusters:
@@ -503,7 +503,7 @@ dend <- as.dendrogram(fc$hc)
 plot(dend)
 ```
 
-![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-30-1.png)<!-- -->
+![](walkthrough_files/figure-gfm/unnamed-chunk-30-1.png)<!-- -->
 
 We can modify the dendrogram to show various properties. For instance,
 alter the width of the edges to reflect how many samples are
@@ -527,7 +527,7 @@ dend <- dendSetWidthByBreadth(dend,samf,fc$leafContent, min.width=1, max.width=4
 plot(dend)
 ```
 
-![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-32-1.png)<!-- -->
+![](walkthrough_files/figure-gfm/unnamed-chunk-32-1.png)<!-- -->
 
 Similarly, we can find a factor that labels cells by the tissue they are
 from (in this case BM or CB). To define the factor for this simple
@@ -549,7 +549,7 @@ dend <- dendSetColorByMixture(dend, tissue.factor, fc$leafContent)
 plot(dend)
 ```
 
-![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-34-1.png)<!-- -->
+![](walkthrough_files/figure-gfm/unnamed-chunk-34-1.png)<!-- -->
 
 ## Using Shiny Application
 
@@ -610,7 +610,7 @@ con$plotPanel(groups = cellannot)
     
     ## Warning: Removed 1 rows containing missing values (geom_label_repel).
 
-![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-37-1.png)<!-- -->
+![](walkthrough_files/figure-gfm/unnamed-chunk-37-1.png)<!-- -->
 
 Next let’s propagates the labels from the one annotated sample to the
 other samples.
@@ -627,13 +627,13 @@ group:
 con$plotPanel(colors=new.label.info$uncertainty, show.legend=T, legend.title="Uncertainty", legend.pos=c(1, 0))
 ```
 
-![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-39-1.png)<!-- -->
+![](walkthrough_files/figure-gfm/unnamed-chunk-39-1.png)<!-- -->
 
 ``` r
 con$plotPanel(groups=new.label.info$labels, show.legend=F)
 ```
 
-![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-39-2.png)<!-- -->
+![](walkthrough_files/figure-gfm/unnamed-chunk-39-2.png)<!-- -->
 
 ``` r
 head(new.label.info$label.distribution)
@@ -722,7 +722,7 @@ head(de.info$`B cells`)
 cowplot::plot_grid(con$plotGraph(groups=new.annot), con$plotGraph(gene="CD74"))
 ```
 
-![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-42-1.png)<!-- -->
+![](walkthrough_files/figure-gfm/unnamed-chunk-42-1.png)<!-- -->
 
 In addition to `getDifferentialGenes` estimates
 [specificity](https://en.wikipedia.org/wiki/Sensitivity_and_specificity),
@@ -759,7 +759,7 @@ de.info$monocytes %>% filter(AUC > 0.75) %>% arrange(-Precision) %>% head()
 con$plotGraph(gene="CD14")
 ```
 
-![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-44-1.png)<!-- -->
+![](walkthrough_files/figure-gfm/unnamed-chunk-44-1.png)<!-- -->
 
 ## DE Between Sample Groups
 
@@ -890,7 +890,7 @@ con$embedGraph()
 con$plotGraph(color.by='sample', mark.groups=F, alpha=0.1, show.legend=T)
 ```
 
-![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-51-1.png)<!-- -->
+![](walkthrough_files/figure-gfm/unnamed-chunk-51-1.png)<!-- -->
 
 We can also check the entropy:
 
@@ -899,4 +899,4 @@ con$findCommunities()
 plotClusterBarplots(con, legend.height = 0.1)
 ```
 
-![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-52-1.png)<!-- -->
+![](walkthrough_files/figure-gfm/unnamed-chunk-52-1.png)<!-- -->
