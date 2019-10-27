@@ -116,7 +116,7 @@ plotSamples <- function(samples, groups=NULL, colors=NULL, gene=NULL, embedding.
   return(plotEmbeddings(embeddings, groups = groups, colors = colors, ...))
 }
 
-embeddingGroupPlot <- function(plot.df, groups, geom_point_w, min.cluster.size, mark.groups, font.size, legend.title, shuffle.colors) {
+embeddingGroupPlot <- function(plot.df, groups, geom_point_w, min.cluster.size, mark.groups, font.size, legend.title, shuffle.colors, palette, ...) {
   groups <- as.factor(groups)
 
   plot.df$Group <- factor(NA, levels=levels(groups))
@@ -166,7 +166,7 @@ embeddingGroupPlot <- function(plot.df, groups, geom_point_w, min.cluster.size, 
   return(list(gg=gg, na.plot.df=na.plot.df))
 }
 
-embeddingColorsPlot <- function(plot.df, colors, groups, geom_point_w, gradient.range.quantile, color.range, legend.title) {
+embeddingColorsPlot <- function(plot.df, colors, groups, geom_point_w, gradient.range.quantile, color.range, legend.title, palette) {
   if(is.numeric(colors) && gradient.range.quantile < 1) {
     x <- colors;
     zlim <- as.numeric(quantile(x, p=c(1 - gradient.range.quantile, gradient.range.quantile), na.rm=TRUE))
@@ -216,7 +216,7 @@ embeddingColorsPlot <- function(plot.df, colors, groups, geom_point_w, gradient.
   return(list(gg=gg, na.plot.df=na.plot.df))
 }
 
-styleEmbeddingPlot <- function(gg, plot.theme=NULL, legend.position=NULL, show.legend=NULL, show.ticks=NULL, show.labels=NULL) {
+styleEmbeddingPlot <- function(gg, plot.theme=NULL, title=NULL, legend.position=NULL, show.legend=NULL, show.ticks=NULL, show.labels=NULL) {
   gg <- gg + ggplot2::labs(x='Component 1', y='Component 2')
 
   if (!is.null(plot.theme)) {
@@ -289,20 +289,20 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, subgroups=NULL, p
 
   if (raster && requireNamespace("ggrastr", quietly = TRUE)) {
     if (packageVersion("ggrastr") <= "0.1.6") {
-      geom_point_w <- function(...)
+      geom_point_w0 <- function(...)
         ggrastr::geom_point_rast(..., width=raster.width, height=raster.height, dpi=raster.dpi)
     } else {
-      geom_point_w <- function(...)
+      geom_point_w0 <- function(...)
         ggrastr::geom_point_rast(..., raster.width=raster.width, raster.height=raster.height, raster.dpi=raster.dpi)
     }
   } else {
     if (raster) {
       warning("You have to install ggrastr package to be able to use 'raster' parameter")
     }
-    geom_point_w <- ggplot2::geom_point
+    geom_point_w0 <- ggplot2::geom_point
   }
 
-  geom_point_w <- function(...) geom_point_w(..., size=size, alpha=alpha)
+  geom_point_w <- function(...) geom_point_w0(..., size=size, alpha=alpha)
 
   if(!is.null(subgroups) && !is.null(groups)) {
     groups %<>% .[. %in% subgroups]
@@ -312,10 +312,11 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, subgroups=NULL, p
   }
 
   if (!is.null(groups) && is.null(colors)) {
-    plot.info <- embeddingGroupPlot(plot.df, groups, geom_point_w, min.cluster.size,
-                                    mark.groups, font.size, legend.title, shuffle.colors)
+    plot.info <- embeddingGroupPlot(plot.df, groups, geom_point_w, min.cluster.size, mark.groups,
+                                    font.size, legend.title, shuffle.colors, palette, ...)
   } else if (!is.null(colors)) {
-    plot.info <- embeddingColorsPlot(plot.df, colors, groups, geom_point_w, gradient.range.quantile, color.range, legend.title)
+    plot.info <- embeddingColorsPlot(plot.df, colors, groups, geom_point_w, gradient.range.quantile,
+                                     color.range, legend.title, palette)
   } else {
     plot.info <- list(gg=ggplot2::ggplot(plot.df, ggplot2::aes(x=x, y=y)) +
                         geom_point_w(alpha=alpha, size=size))
@@ -329,7 +330,7 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, subgroups=NULL, p
     gg <- gg + lims(x=range(embedding[,1]), y=range(embedding[,2]))
   }
 
-  gg <- styleEmbeddingPlot(plot.info$gg, plot.theme=plot.theme, legend.position=legend.position,
+  gg <- styleEmbeddingPlot(plot.info$gg, plot.theme=plot.theme, title=title, legend.position=legend.position,
                            show.legend=show.legend, show.ticks=show.ticks, show.labels=show.labels)
   return(gg)
 }
