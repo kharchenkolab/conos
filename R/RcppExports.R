@@ -73,8 +73,8 @@ propagate_labels <- function(edge_verts, edge_weights, vert_labels, max_n_iters 
     .Call('_conos_propagate_labels', PACKAGE = 'conos', edge_verts, edge_weights, vert_labels, max_n_iters, verbose, diffusion_fading, diffusion_fading_const, tol, fixed_initial_labels)
 }
 
-smooth_count_matrix <- function(edge_verts, edge_weights, count_matrix, max_n_iters = 10L, diffusion_fading = 1.0, diffusion_fading_const = 0.1, tol = 1e-3, verbose = TRUE, normalize = FALSE) {
-    .Call('_conos_smooth_count_matrix', PACKAGE = 'conos', edge_verts, edge_weights, count_matrix, max_n_iters, diffusion_fading, diffusion_fading_const, tol, verbose, normalize)
+smooth_count_matrix <- function(edge_verts, edge_weights, count_matrix, is_label_fixed, max_n_iters = 10L, diffusion_fading = 1.0, diffusion_fading_const = 0.1, tol = 1e-3, verbose = TRUE, normalize = FALSE) {
+    .Call('_conos_smooth_count_matrix', PACKAGE = 'conos', edge_verts, edge_weights, count_matrix, is_label_fixed, max_n_iters, diffusion_fading, diffusion_fading_const, tol, verbose, normalize)
 }
 
 adjacent_vertices <- function(edge_verts) {

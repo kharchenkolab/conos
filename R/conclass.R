@@ -706,7 +706,8 @@ Conos <- setRefClass(
         count.matrix <- t(count.matrix)
       }
 
-      cm <- smooth_count_matrix(edges, edge.weights, count.matrix, max_n_iters=max.iters, diffusion_fading=fading, diffusion_fading_const=fading.const, verbose=verbose, normalize=normalize)
+      cm <- smoothMatrixOnGraph(edges, edge.weights, count.matrix, max_n_iters=max.iters, diffusion_fading=fading,
+                              diffusion_fading_const=fading.const, verbose=verbose, normalize=normalize)
       return(invisible(expression.adj[[name]] <<- cm))
     },
 
