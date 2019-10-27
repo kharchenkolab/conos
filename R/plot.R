@@ -275,13 +275,14 @@ styleEmbeddingPlot <- function(gg, plot.theme=NULL, legend.position=NULL, show.l
 #' @param raster.height height of the plot in inches. Ignored if raster == FALSE.
 #' @param raster.dpi dpi of the rasterized plot. Ignored if raster == FALSE.
 #' @param shuffle.colors shuffle colors
+#' @param keep.limits Keep axis limits from original plot, useful when plotting subgroups, only meaningful it plot.na=F
 #' @return ggplot2 object
 #' @export
 embeddingPlot <- function(embedding, groups=NULL, colors=NULL, subgroups=NULL, plot.na=is.null(subgroups), min.cluster.size=0, mark.groups=TRUE,
                           show.legend=FALSE, alpha=0.4, size=0.8, title=NULL, plot.theme=NULL, palette=NULL, color.range="all",
                           font.size=c(3, 7), show.ticks=FALSE, show.labels=FALSE, legend.position=NULL, legend.title=NULL,
                           gradient.range.quantile=1, raster=FALSE, raster.width=NULL, raster.height=NULL, raster.dpi=300,
-                          shuffle.colors=FALSE,
+                          shuffle.colors=FALSE, keep.limits=FALSE,
                           ...) {
   plot.df <- tibble::rownames_to_column(as.data.frame(embedding), "CellName")
   colnames(plot.df)[2:3] <- c("x", "y")
@@ -322,6 +323,10 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, subgroups=NULL, p
 
   if (plot.na && !is.null(plot.info$na.plot.df)) {
     plot.info$gg <- plot.info$gg + geom_point_w(data=plot.info$na.plot.df, color='black', shape=4)
+  }
+
+  if(keep.limits) {
+    gg <- gg + lims(x=range(embedding[,1]), y=range(embedding[,2]))
   }
 
   gg <- styleEmbeddingPlot(plot.info$gg, plot.theme=plot.theme, legend.position=legend.position,

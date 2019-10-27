@@ -12,15 +12,16 @@
 - Account for `target.dims` in UMAP embedding
 - Fixed estimation of `cor.based` with `alingnment.strength == 0`. It removes edges with negative correlation and reduce down-weight of inter-sample edges, which can change results of the alignment.
 - Changed default value of `fixed.initial.labels` in `propagateLabels` from `FALSE` to `TRUE`. Presumably, `FALSE` should never be used.
-- New output format for label propagation (list of "labels", "uncertainty" and "label.distribution") 
+- New output format for label propagation (list of "labels", "uncertainty" and "label.distribution")
 - Numerous small bug fixes and small validations for correct arguments
 
 ### Added
 
-- Added metrics to masure specifisity of cell type markers to DE info in `getDifferentialGenes` (parameters `append.specifisity.metrics` and `append.auc`)
+- Metrics to masure specifisity of cell type markers to DE info in `getDifferentialGenes` (parameters `append.specifisity.metrics` and `append.auc`)
 - Implementation of label propagateion based on matrix equations (*occured to be too slow*)
-- Added `findSubcommunities` function to increase resolution for specific clusters
-- Added `subgroups` parameter to `embeddingPlot`. It allows to plot only cells, belonging to the specified subgroups
+- Function `findSubcommunities` to increase resolution for specific clusters
+- Parameter `subgroups` to `embeddingPlot`. It allows to plot only cells, belonging to the specified subgroups
+- Parameter `keep.limits` to `embeddingPlot`
 
 ## [1.1.2] - 2019-07-16
 
