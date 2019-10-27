@@ -288,10 +288,10 @@ Rcpp::List commute_time_per_node(const std::vector<std::vector<int>> &adjacency_
       commute_times[v1] = reorder(cur_times, sorted_ids, max_adj_num);
       commute_time_idx[v1] = reorder(cur_ids, sorted_ids, max_adj_num);
     }
-  }
 
-  if (Progress::check_abort())
-    Rcpp::stop("Aborted");
+    if (Progress::check_abort())
+      Rcpp::stop("Aborted");
+  }
 
   if (verbose) {
     Rcpp::Rcout << "Done" << std::endl;
