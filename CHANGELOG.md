@@ -12,6 +12,7 @@
 - UMAP now set `n_sgd_threads` from `uwot` to `n.cores` by default. It gives much better parallelization, but kills reproducibility. 
   Use `n.sgd.cores=1` to get reproducible embeddings.
 - Account for `target.dims` in UMAP embedding
+- Fixed estimation of `cor.based` with `alingnment.strength == 0`. It removes edges with negative correlation and reduce down-weight of inter-sample edges, which can change results of the alignment.
 - Numerous small bug fixes and small validations for correct arguments
 
 ### Added

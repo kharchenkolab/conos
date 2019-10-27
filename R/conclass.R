@@ -218,7 +218,10 @@ Conos <- setRefClass(
         alignment.strength %<>% max(0) %>% min(1)
         k1 <- sapply(samples, function(sample) ncol(getCountMatrix(sample))) %>% max() %>%
           `*`(alignment.strength ^ 2) %>% round() %>% max(k)
+      } else {
+        alignment.strength <- 0 # otherwise, estimation of cor.base uses NULL value
       }
+
       if(k1<k) { stop("k1 must be >= k") }
       # calculate or update pairwise alignments
       sn.pairs <- updatePairs(
