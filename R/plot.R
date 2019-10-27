@@ -254,6 +254,7 @@ styleEmbeddingPlot <- function(gg, plot.theme=NULL, legend.position=NULL, show.l
 #' @param embedding two-column matrix with x and y coordinates of the embedding, rownames contain cell names and are used to match coordinates with groups or colors
 #' @param groups vector of cluster labels, names contain cell names
 #' @param colors vector of numbers, which must be shouwn with point colors, names contain cell names. This argument is ignored if groups are provided.
+#' @param subgroups subset of 'groups', selecting the cells for plot. Ignored if 'groups' is NULL
 #' @param plot.na plot points, for which groups / colors are missed (TRUE / FALSE)
 #' @param min.cluster.size labels for all groups with number of cells fewer than this parameter are considered as missed. This argument is ignored if groups aren't provided
 #' @param mark.groups plot cluster labels above points
@@ -276,7 +277,7 @@ styleEmbeddingPlot <- function(gg, plot.theme=NULL, legend.position=NULL, show.l
 #' @param shuffle.colors shuffle colors
 #' @return ggplot2 object
 #' @export
-embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min.cluster.size=0, mark.groups=TRUE,
+embeddingPlot <- function(embedding, groups=NULL, colors=NULL, subgroups=NULL, plot.na=is.null(subgroups), min.cluster.size=0, mark.groups=TRUE,
                           show.legend=FALSE, alpha=0.4, size=0.8, title=NULL, plot.theme=NULL, palette=NULL, color.range="all",
                           font.size=c(3, 7), show.ticks=FALSE, show.labels=FALSE, legend.position=NULL, legend.title=NULL,
                           gradient.range.quantile=1, raster=FALSE, raster.width=NULL, raster.height=NULL, raster.dpi=300,
@@ -301,6 +302,13 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, plot.na=TRUE, min
   }
 
   geom_point_w <- function(...) geom_point_w(..., size=size, alpha=alpha)
+
+  if(!is.null(subgroups) && !is.null(groups)) {
+    groups %<>% .[. %in% subgroups]
+    if(length(groups)==0) {
+      stop("'groups' is empty after filtering by 'subgroups'.")
+    }
+  }
 
   if (!is.null(groups) && is.null(colors)) {
     plot.info <- embeddingGroupPlot(plot.df, groups, geom_point_w, min.cluster.size,

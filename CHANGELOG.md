@@ -20,6 +20,7 @@
 - Added metrics to masure specifisity of cell type markers to DE info in `getDifferentialGenes` (parameters `append.specifisity.metrics` and `append.auc`)
 - Implementation of label propagateion based on matrix equations (*occured to be too slow*)
 - Added `findSubcommunities` function to increase resolution for specific clusters
+- Added `subgroups` parameter to `embeddingPlot`. It allows to plot only cells, belonging to the specified subgroups
 
 ## [1.1.2] - 2019-07-16
 
