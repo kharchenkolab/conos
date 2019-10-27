@@ -4,14 +4,15 @@
 \alias{rleiden.community}
 \title{recursive leiden communities}
 \usage{
-rleiden.community(graph, K = 2, n.cores = parallel::detectCores(logical
-  = F), min.community.size = 10, verbose = FALSE, resolution = 1,
-  K.current = 1, hierarchical = TRUE, ...)
+rleiden.community(graph, max.depth = 2,
+  n.cores = parallel::detectCores(logical = F),
+  min.community.size = 10, verbose = FALSE, resolution = 1,
+  cur.depth = 1, hierarchical = TRUE, ...)
 }
 \arguments{
 \item{graph}{graph}
 
-\item{K}{recursive depth}
+\item{max.depth}{recursive depth}
 
 \item{n.cores}{number of cores to use}
 
@@ -19,7 +20,7 @@ rleiden.community(graph, K = 2, n.cores = parallel::detectCores(logical
 
 \item{verbose}{whether to output progress messages}
 
-\item{resolution}{resolution parameter passed to leiden.communities (either a single value, or a value equivalent to K)}
+\item{resolution}{resolution parameter passed to leiden.communities (either a single value, or a value equivalent to max.depth)}
 
 \item{...}{passed to leiden.communities}
 }

@@ -1217,3 +1217,49 @@ propagateLabelsSolver <- function(graph, labels, solver="mumps") {
   rownames(res) <- unlabeled.cbs
   return(rbind(res, type.scores))
 }
+
+#' Increase resolution for a specific set of clusters
+#'
+#' @param con conos object
+#' @param target.clusters clusters for which the resolution should be increased
+#' @param clustering name of clustering in the conos object to use. Either 'clustering' or 'groups' must be provided. Default: NULL
+#' @param groups set of clusters to use. Ignored if 'clustering' is not NULL. Default: NULL
+#' @param method function, used to find communities. Default: leiden.community
+#' @param ... additional params passed to the community function
+#' @export
+findSubcommunities <- function(con, target.clusters, clustering=NULL, groups=NULL, method=leiden.community, ...) {
+  if(!is.null(clustering)) {
+    if (clustering %in% names(con$clusters)) {
+      groups <- con$clusters[[clustering]]$groups
+    } else {
+      stop("Conos object doesn't contain clustering ", clustering)
+    }
+  }
+
+  if(is.null(groups)) {
+    stop("Either 'groups' or 'clustering' must be provided")
+  }
+
+  groups.raw <- as.character(groups) %>% setNames(names(groups))
+  groups <- groups[intersect(names(groups), V(con$graph)$name)]
+
+  if(length(groups) == 0) {
+    stop("'groups' not defined for graph object.")
+  }
+
+  groups <- droplevels(groups[groups %in% target.clusters])
+  if(length(groups) == 0) {
+    stop("None of 'target.clusters' can be found in 'groups'.")
+  }
+
+  subgroups <- split(names(groups), groups)
+  for (n in names(subgroups)) {
+    if (length(subgroups[[n]]) < 2)
+      next
+
+    new.clusts <- method(induced_subgraph(con$graph, subgroups[[n]]), ...)
+    groups.raw[new.clusts$names] <- paste0(n, "_", new.clusts$membership)
+  }
+
+  return(groups.raw)
+}
