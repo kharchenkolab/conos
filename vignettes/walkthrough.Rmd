@@ -216,6 +216,15 @@ con$plotGraph(clustering='walktrap', size=0.1)
 
 In the example above, UMAP layout makes even many of the very small subpopulations called by walktrap apparent.
 
+### plotPanel with common embedding
+
+Now we can use this common embedding in `plotPanel` as well:
+
+```{r}
+con$plotPanel(clustering='walktrap', size=0.1, use.common.embedding=T)
+```
+
+
 # Exploring hierarchical community structure
 
 ## Using code

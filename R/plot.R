@@ -32,7 +32,7 @@ getClusteringGroups <- function(clusters, clustering) {
 ##' @param adjust.func function to adjust plots before combining them to single panel. Can be used, for example, to provide color pallette of guides of the plots.
 ##' @return ggplot2 object with the panel of plots
 plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow=NULL, raster=FALSE, panel.size=NULL, adjust.func=NULL, title.size=6,
-                           raster.width=NULL, raster.height=NULL, ...) {
+                           raster.width=NULL, raster.height=NULL, adj.list=NULL, ...) {
   if (is.null(panel.size)) {
     panel.size <- dev.size(units="in")
   } else if (length(panel.size) == 1) {
@@ -69,6 +69,10 @@ plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow
                           fill=ggplot2::alpha("white", 0.6), hjust=0, vjust=1, size=title.size,
                           label.padding=ggplot2::unit(title.size / 4, "pt"), label.size = NA)
     )
+
+  for (adj in adj.list) {
+    plot.list %<>% lapply(`+`, adj)
+  }
 
   if (!is.null(adjust.func)) {
     plot.list <- lapply(plot.list, adjust.func)

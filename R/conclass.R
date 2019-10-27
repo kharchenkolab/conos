@@ -503,7 +503,7 @@ Conos <- setRefClass(
 
     },
 
-    plotPanel=function(clustering=NULL, groups=NULL, colors=NULL, gene=NULL, use.local.clusters=FALSE, plot.theme=NULL, use.common.embedding=FALSE, embedding.type=NULL, ...) {
+    plotPanel=function(clustering=NULL, groups=NULL, colors=NULL, gene=NULL, use.local.clusters=FALSE, plot.theme=NULL, use.common.embedding=FALSE, embedding.type=NULL, adj.list=NULL, ...) {
       if (use.local.clusters) {
         if (is.null(clustering) && !(inherits(x = samples[[1]], what = c('seurat', 'Seurat')))) {
           stop("You have to provide 'clustering' parameter to be able to use local clusters")
@@ -516,8 +516,12 @@ Conos <- setRefClass(
       } else if (is.null(groups) && is.null(colors) && is.null(gene)) {
         groups <- getClusteringGroups(clusters, clustering)
       }
-      if(use.common.embedding) { embedding.type <- embedding }
-      gg <- plotSamples(samples, groups=groups, colors=colors, gene=gene, plot.theme=adjustTheme(plot.theme), embedding.type=embedding.type, ...)
+      if(use.common.embedding) {
+        embedding.type <- embedding
+        adj.list <- c(ggplot2::lims(x=range(embedding[,1]), y=range(embedding[,2])), adj.list)
+      }
+
+      gg <- plotSamples(samples, groups=groups, colors=colors, gene=gene, plot.theme=adjustTheme(plot.theme), embedding.type=embedding.type, adj.list=adj.list, ...)
 
       return(gg)
     },
