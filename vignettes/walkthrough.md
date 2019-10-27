@@ -1,6 +1,25 @@
 Conos Walkthrough
 ================
 
+- [Loading the data](#loading-the-data)
+  * [Pre-processing with Pagoda2](#pre-processing-with-pagoda2)
+  * [Pre-processing with Seurat](#pre-processing-with-seurat)
+- [Integrating datasets with Conos](#integrating-datasets-with-conos)
+  * [Visualization](#visualization)
+  * [Changing embedding parameters](#changing-embedding-parameters)
+    + [largeVis](#largevis)
+    + [UMAP](#umap)
+- [Exploring hierarchical community structure](#exploring-hierarchical-community-structure)
+  * [Using code](#using-code)
+  * [Using Shiny Application](#using-shiny-application)
+- [Label propagation](#label-propagation)
+  * [General workflow](#general-workflow)
+- [Differential expression](#differential-expression)
+  * [Cluster markers](#cluster-markers)
+  * [DE Between Sample Groups](#de-between-sample-groups)
+    + [Simple run](#simple-run)
+- [Forcing better alignment](#forcing-better-alignment)
+
 In this tutorial we will go over the analysis of a panel of samples
 using Conos. Conos objects can be used to identify clusters of
 corresponding cells across panels of samples from similar or dissimilar
@@ -9,7 +28,7 @@ identify corresponding clusters across a panel of bone marrow (BM) and
 cord blood (CB) by generating a joint graph with the cells from all the
 samples. We will use the graph to propagate labels from a single
 labelled sample to other samples and finally perform differential
-expression between BM and CM samples.
+expression between BM and CB samples.
 
 First, let’s load Conos library to start with:
 
@@ -187,7 +206,7 @@ clusters in other sample (for example note cluster
 con$plotPanel(clustering="multilevel", use.local.clusters=T, title.size=6)
 ```
 
-![](walkthrough_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
 
 Next we will build the joint graph that encompasses all the samples. We
 do that by pairwise projecting samples onto a common space and
@@ -235,7 +254,7 @@ using:
 plotComponentVariance(con, space='PCA')
 ```
 
-![](walkthrough_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
 When using ‘angular’ distance measure (default), it is NOT recommended
 to reduce the number of components to a bare minimum indicated by the
 “elbow” inflection point - include 10-20 more (typcally 30 components
@@ -264,7 +283,7 @@ CB.
 con$plotPanel(font.size=4)
 ```
 
-![](walkthrough_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
 
 A convenience function can be used to examine the composition of the
 clusters in terms of samples, sample entropy (middle), and cluster size
@@ -274,7 +293,7 @@ clusters in terms of samples, sample entropy (middle), and cluster size
 plotClusterBarplots(con, legend.height = 0.1)
 ```
 
-![](walkthrough_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
 Check an expression pattern of a specific gene across all the individual
 embeddings.
@@ -283,7 +302,7 @@ embeddings.
 con$plotPanel(gene = 'GZMK')
 ```
 
-![](walkthrough_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
 
 Next we embed and visualize the complete joint graph.
 
@@ -302,7 +321,7 @@ con$plotGraph(alpha=0.1)
 
     ## Estimating embeddings.
 
-![](walkthrough_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
 
 We note that the graph captures the population structure irrespectively
 of the sample of origin of each
@@ -312,7 +331,7 @@ cell.
 con$plotGraph(color.by='sample', mark.groups=F, alpha=0.1, show.legend=T)
 ```
 
-![](walkthrough_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
 
 We can also visualize gene expression on this joint graph
 embedding:
@@ -321,7 +340,7 @@ embedding:
 con$plotGraph(gene='GZMK', title='GZMK expression')
 ```
 
-![](walkthrough_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
 
 Other community detection methods can provide a more sensitive and
 hierarchical view of the subpopulation structure. Here we run walktrap
@@ -343,7 +362,7 @@ clusters:
 con$plotPanel(clustering='walktrap',font.size=4)
 ```
 
-![](walkthrough_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
+![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
 
 New clustering, as viewed on a joint
 graph:
@@ -352,7 +371,7 @@ graph:
 con$plotGraph(clustering='walktrap')
 ```
 
-![](walkthrough_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
+![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
 
 ## Changing embedding parameters
 
@@ -384,7 +403,7 @@ con$embedGraph(alpha=0.001, sgd_batched=1e8)
 con$plotGraph(clustering='walktrap', size=0.1)
 ```
 
-![](walkthrough_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
+![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
 
 ### UMAP
 
@@ -405,34 +424,41 @@ manual](https://umap-learn.readthedocs.io/en/latest/api.html):
 >     with min\_dist this determines how clustered/clumped the embedded
 >     points are.
 
+There is also a parametr, responsible for trade-off between performance
+and accuracy: \> - **min.prob.lower:** minimal probability of hitting a
+neighbor, after which the random walk stops. Default:
+1e-7.
+
 ``` r
-con$embedGraph(method="UMAP", min.dist=0.01, spread=15, n.cores=4)
+con$embedGraph(method="UMAP", min.dist=0.01, spread=15, n.cores=4, min.prob.lower=1e-3)
 ```
 
     ## Convert graph to adjacency list...
     ## Done
     ## Estimate nearest neighbors and commute times...
-    ## Estimating hitting distances: 14:25:18.
+    ## Estimating hitting distances: 08:46:59.
     ## Done.
-    ## Estimating commute distances: 14:25:30.
-    ## Hashing adjacency list: 14:25:30.
+    ## Estimating commute distances: 08:47:02.
+    ## Hashing adjacency list: 08:47:02.
     ## Done.
-    ## Estimating distances: 14:25:31.
+    ## Estimating distances: 08:47:03.
     ## Done
     ## Done.
-    ## All done!: 14:25:35.
+    ## All done!: 08:47:05.
     ## Done
     ## Estimate UMAP embedding...
 
-    ## 14:25:35 Read 12000 rows and found 1 numeric columns
+    ## 08:47:05 UMAP embedding parameters a = 0.02659 b = 0.7912
 
-    ## 14:25:35 Commencing smooth kNN distance calibration using 4 threads
+    ## 08:47:05 Read 12000 rows and found 1 numeric columns
 
-    ## 14:25:36 Initializing from normalized Laplacian + noise
+    ## 08:47:05 Commencing smooth kNN distance calibration using 4 threads
 
-    ## 14:25:36 Commencing optimization for 1000 epochs, with 368064 positive edges
+    ## 08:47:06 Initializing from normalized Laplacian + noise
 
-    ## 14:26:27 Optimization finished
+    ## 08:47:07 Commencing optimization for 1000 epochs, with 349810 positive edges using 4 threads
+
+    ## 08:47:24 Optimization finished
 
     ## Done
 
@@ -440,7 +466,8 @@ con$embedGraph(method="UMAP", min.dist=0.01, spread=15, n.cores=4)
 con$plotGraph(clustering='walktrap', size=0.1)
 ```
 
-![](walkthrough_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
+![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
+
 In the example above, UMAP layout makes even many of the very small
 subpopulations called by walktrap apparent.
 
@@ -465,7 +492,7 @@ leafs:
 con$plotGraph(groups=fc$groups, size=0.1)
 ```
 
-![](walkthrough_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
+![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
 
 Let’s look at the hierarchical structure of these
 clusters:
@@ -476,7 +503,7 @@ dend <- as.dendrogram(fc$hc)
 plot(dend)
 ```
 
-![](walkthrough_files/figure-gfm/unnamed-chunk-30-1.png)<!-- -->
+![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-30-1.png)<!-- -->
 
 We can modify the dendrogram to show various properties. For instance,
 alter the width of the edges to reflect how many samples are
@@ -500,7 +527,7 @@ dend <- dendSetWidthByBreadth(dend,samf,fc$leafContent, min.width=1, max.width=4
 plot(dend)
 ```
 
-![](walkthrough_files/figure-gfm/unnamed-chunk-32-1.png)<!-- -->
+![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-32-1.png)<!-- -->
 
 Similarly, we can find a factor that labels cells by the tissue they are
 from (in this case BM or CB). To define the factor for this simple
@@ -522,7 +549,7 @@ dend <- dendSetColorByMixture(dend, tissue.factor, fc$leafContent)
 plot(dend)
 ```
 
-![](walkthrough_files/figure-gfm/unnamed-chunk-34-1.png)<!-- -->
+![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-34-1.png)<!-- -->
 
 ## Using Shiny Application
 
@@ -583,104 +610,93 @@ con$plotPanel(groups = cellannot)
     
     ## Warning: Removed 1 rows containing missing values (geom_label_repel).
 
-![](walkthrough_files/figure-gfm/unnamed-chunk-37-1.png)<!-- -->
+![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-37-1.png)<!-- -->
 
 Next let’s propagates the labels from the one annotated sample to the
-other
-samples.
+other samples.
 
 ``` r
-new.label.probabilities <- con$propagateLabels(labels = cellannot, verbose=T)
+new.label.info <- con$propagateLabels(labels = cellannot, verbose=T)
 ```
 
-This function returns probabilities of each cell belonging to each
-group. These probabilities can be used to estimate uncertainty of the
-labeling:
+This function returns probabilities, uncertainty scores and final labels
+in the dataset of each cell belonging to each
+group:
 
 ``` r
-con$plotGraph(colors=(1 - apply(new.label.probabilities, 1, max)), show.legend=T, legend.title="Uncertainty", legend.pos=c(1, 0))
+con$plotPanel(colors=new.label.info$uncertainty, show.legend=T, legend.title="Uncertainty", legend.pos=c(1, 0))
 ```
 
-![](walkthrough_files/figure-gfm/unnamed-chunk-39-1.png)<!-- -->
-
-Now we can assign each cell to the the the cell type with the highest
-probability. Though we can see that one cluster has high uncertainty and
-possibly represent a cell type, not presented in the initial
-annotation.
+![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-39-1.png)<!-- -->
 
 ``` r
-new.annot <- setNames(colnames(new.label.probabilities)[apply(new.label.probabilities,1,which.max)], rownames(new.label.probabilities))
-head(new.annot)
+con$plotPanel(groups=new.label.info$labels, show.legend=F)
 ```
 
-    ## MantonBM1_HiSeq_1-CGATTGACACCTCGGA-1 MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 
-    ##                                 "NK"                                 "NK" 
-    ## MantonBM1_HiSeq_1-AGGTCCGTCTCTGCTG-1 MantonBM2_HiSeq_1-GGAAAGCCAGACGCCT-1 
-    ##                                 "NK"                                 "NK" 
-    ## MantonBM2_HiSeq_1-GGGTTGCGTAGCTGCC-1 MantonBM2_HiSeq_1-GACAGAGGTCACAAGG-1 
-    ##                                 "NK"                                 "NK"
-
-We now see that all our samples have been labelled
-automatically\!
+![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-39-2.png)<!-- -->
 
 ``` r
-con$plotPanel(groups = new.annot)
+head(new.label.info$label.distribution)
 ```
 
-![](walkthrough_files/figure-gfm/unnamed-chunk-41-1.png)<!-- -->
-
-The same effect can be achieved with parameter `return.distribution=F`
-(though it’s recommended to always examine
-uncertainty):
-
-``` r
-new.annot2 <- con$propagateLabels(labels = cellannot, verbose=F, return.distribution=F)
-all(new.annot2 == new.annot)
-```
-
-    ## [1] TRUE
-
-By default, label propagation affects initial labels as well:
-
-``` r
-sum(new.annot[names(cellannot)] != cellannot)
-```
-
-    ## [1] NA
-
-Even though here the effect on this data is not that pronounced,
-sometimes we trust initial labeling completely and don’t want to change
-it. In this case, option `fixed.initial.labels=T` should be
-used:
-
-``` r
-new.annot <- con$propagateLabels(labels = cellannot, verbose=F, return.distribution=F, fixed.initial.labels=T)
-all(new.annot[names(cellannot)] == cellannot)
-```
-
-    ## [1] NA
-
-``` r
-con$plotPanel(groups = new.annot)
-```
-
-![](walkthrough_files/figure-gfm/unnamed-chunk-45-1.png)<!-- -->
+    ##                                        T CD4-CD8-  progenitors
+    ## MantonBM1_HiSeq_1-CGATTGACACCTCGGA-1 0.000000e+00 0.000000e+00
+    ## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 2.535900e-05 6.687121e-08
+    ## MantonBM1_HiSeq_1-AGGTCCGTCTCTGCTG-1 0.000000e+00 0.000000e+00
+    ## MantonBM2_HiSeq_1-GGAAAGCCAGACGCCT-1 3.708583e-06 4.243359e-08
+    ## MantonBM2_HiSeq_1-GGGTTGCGTAGCTGCC-1 2.445961e-06 1.553090e-09
+    ## MantonBM1_HiSeq_1-AGCTCTCCAATCGAAA-1 0.000000e+00 0.000000e+00
+    ##                                           B cells        NK       T cyto
+    ## MantonBM1_HiSeq_1-CGATTGACACCTCGGA-1 0.000000e+00 1.0000000 0.000000e+00
+    ## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 5.808125e-10 0.9998261 1.479500e-04
+    ## MantonBM1_HiSeq_1-AGGTCCGTCTCTGCTG-1 0.000000e+00 1.0000000 0.000000e+00
+    ## MantonBM2_HiSeq_1-GGAAAGCCAGACGCCT-1 2.857331e-10 0.9999793 1.685559e-05
+    ## MantonBM2_HiSeq_1-GGGTTGCGTAGCTGCC-1 4.165895e-10 0.9999579 3.956955e-05
+    ## MantonBM1_HiSeq_1-AGCTCTCCAATCGAAA-1 0.000000e+00 1.0000000 0.000000e+00
+    ##                                         monocytes monomyelocytes
+    ## MantonBM1_HiSeq_1-CGATTGACACCTCGGA-1 0.000000e+00   0.000000e+00
+    ## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 3.968241e-07   1.250679e-09
+    ## MantonBM1_HiSeq_1-AGGTCCGTCTCTGCTG-1 0.000000e+00   0.000000e+00
+    ## MantonBM2_HiSeq_1-GGAAAGCCAGACGCCT-1 6.368194e-08   2.926159e-10
+    ## MantonBM2_HiSeq_1-GGGTTGCGTAGCTGCC-1 4.817185e-09   4.750674e-11
+    ## MantonBM1_HiSeq_1-AGCTCTCCAATCGAAA-1 0.000000e+00   0.000000e+00
+    ##                                      plasma cells  dying cells
+    ## MantonBM1_HiSeq_1-CGATTGACACCTCGGA-1 0.000000e+00 0.000000e+00
+    ## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 8.293878e-09 7.235308e-08
+    ## MantonBM1_HiSeq_1-AGGTCCGTCTCTGCTG-1 0.000000e+00 0.000000e+00
+    ## MantonBM2_HiSeq_1-GGAAAGCCAGACGCCT-1 1.540018e-09 3.812076e-08
+    ## MantonBM2_HiSeq_1-GGGTTGCGTAGCTGCC-1 1.195837e-10 9.342454e-08
+    ## MantonBM1_HiSeq_1-AGCTCTCCAATCGAAA-1 0.000000e+00 0.000000e+00
+    ##                                         erythroid          HSC
+    ## MantonBM1_HiSeq_1-CGATTGACACCTCGGA-1 0.000000e+00 0.000000e+00
+    ## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 2.379138e-09 3.423899e-10
+    ## MantonBM1_HiSeq_1-AGGTCCGTCTCTGCTG-1 0.000000e+00 0.000000e+00
+    ## MantonBM2_HiSeq_1-GGAAAGCCAGACGCCT-1 9.261100e-10 2.149885e-10
+    ## MantonBM2_HiSeq_1-GGGTTGCGTAGCTGCC-1 5.537512e-11 2.621960e-10
+    ## MantonBM1_HiSeq_1-AGCTCTCCAATCGAAA-1 0.000000e+00 0.000000e+00
+    ##                                               pDC           DC
+    ## MantonBM1_HiSeq_1-CGATTGACACCTCGGA-1 0.000000e+00 0.000000e+00
+    ## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 6.210116e-08 5.769375e-09
+    ## MantonBM1_HiSeq_1-AGGTCCGTCTCTGCTG-1 0.000000e+00 0.000000e+00
+    ## MantonBM2_HiSeq_1-GGAAAGCCAGACGCCT-1 1.063985e-08 1.057879e-09
+    ## MantonBM2_HiSeq_1-GGGTTGCGTAGCTGCC-1 8.238824e-10 8.165298e-11
+    ## MantonBM1_HiSeq_1-AGCTCTCCAATCGAAA-1 0.000000e+00 0.000000e+00
 
 # Differential expression
 
 ## Cluster markers
 
 The first step we can do to understand meaning of the dataset is to look
-at the cluster cell
-markers:
+at the cluster cell markers:
 
 ``` r
-de.info <- con$getDifferentialGenes(groups=new.annot, n.cores=1, append.auc=T)
+new.annot <- new.label.info$labels
+de.info <- con$getDifferentialGenes(groups=new.annot, n.cores=4, append.auc=T)
 ```
 
     ## Estimating marker genes per sample
     ## Aggregating marker genes
-    ## Estimating specifisity metrics
+    ## Estimating specificity metrics
     ## All done!
 
 ``` r
@@ -688,25 +704,25 @@ head(de.info$`B cells`)
 ```
 
     ##              Gene        Z        PValue          PAdj       AUC
-    ## CD74         CD74 31.08898 5.281036e-211 1.779392e-206 0.7303074
-    ## HLA-DRA   HLA-DRA 29.19202 3.578157e-186 1.205589e-181 0.8684703
-    ## HLA-DPA1 HLA-DPA1 27.61553 1.001564e-166 3.374470e-162 0.8736300
-    ## CD79A       CD79A 27.32259 3.128115e-163 1.053893e-158 0.9060196
-    ## HLA-DPB1 HLA-DPB1 27.16493 2.294348e-161 7.729658e-157 0.8721094
-    ## HLA-DRB1 HLA-DRB1 26.37008 3.989024e-152 1.343862e-147 0.8560714
-    ##          Specifisity Precision ExpressionFraction
-    ## CD74       0.4636631 0.2463529          0.9972145
-    ## HLA-DRA    0.7636328 0.4192234          0.9743733
-    ## HLA-DPA1   0.8361004 0.4913122          0.9136490
-    ## CD79A      0.9177252 0.6528624          0.8958217
-    ## HLA-DPB1   0.8240526 0.4764097          0.9225627
-    ## HLA-DRB1   0.8026443 0.4447461          0.9125348
+    ## CD74         CD74 31.07438 8.313211e-211 2.801053e-206 0.7302839
+    ## HLA-DRA   HLA-DRA 29.18043 5.018019e-186 1.690721e-181 0.8684258
+    ## HLA-DPA1 HLA-DPA1 27.60902 1.198650e-166 4.038491e-162 0.8735651
+    ## CD79A       CD79A 27.31567 3.778823e-163 1.273123e-158 0.9059457
+    ## HLA-DPB1 HLA-DPB1 27.13642 4.975666e-161 1.676302e-156 0.8717198
+    ## HLA-DRB1 HLA-DRB1 26.35791 5.497062e-152 1.851905e-147 0.8560079
+    ##          Specificity Precision ExpressionFraction
+    ## CD74       0.4636177 0.2462152          0.9972129
+    ## HLA-DRA    0.7635583 0.4189837          0.9743590
+    ## HLA-DPA1   0.8360197 0.4910126          0.9136009
+    ## CD79A      0.9176369 0.6524564          0.8957637
+    ## HLA-DPB1   0.8238933 0.4758343          0.9219621
+    ## HLA-DRB1   0.8025668 0.4444746          0.9124861
 
 ``` r
 cowplot::plot_grid(con$plotGraph(groups=new.annot), con$plotGraph(gene="CD74"))
 ```
 
-![](walkthrough_files/figure-gfm/unnamed-chunk-47-1.png)<!-- -->
+![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-42-1.png)<!-- -->
 
 In addition to `getDifferentialGenes` estimates
 [specificity](https://en.wikipedia.org/wiki/Sensitivity_and_specificity),
@@ -724,13 +740,13 @@ precision.
 de.info$monocytes %>% filter(AUC > 0.75) %>% arrange(-Precision) %>% head()
 ```
 
-    ##       Gene        Z        PValue          PAdj       AUC Specifisity
-    ## 1     CD14 15.50412  2.532526e-53  8.504727e-49 0.7702102   0.9919610
-    ## 2 SERPINA1 21.10573  7.451968e-98  2.507513e-93 0.8833554   0.9836050
-    ## 3    RAB31 13.86033  7.673831e-43  2.575184e-38 0.7845012   0.9849228
-    ## 4     CSTA 23.86964 7.571871e-125 2.549979e-120 0.9107458   0.9763459
-    ## 5     FCN1 26.74742 1.771985e-156 5.968932e-152 0.9514647   0.9712175
-    ## 6     G0S2 16.27406  1.231903e-58  4.138207e-54 0.7984214   0.9810150
+    ##       Gene        Z        PValue          PAdj       AUC Specificity
+    ## 1     CD14 15.50441  2.520960e-53  8.465888e-49 0.7702102   0.9919610
+    ## 2 SERPINA1 21.10589  7.426641e-98  2.498990e-93 0.8833554   0.9836050
+    ## 3    RAB31 13.86084  7.619598e-43  2.556985e-38 0.7845012   0.9849228
+    ## 4     CSTA 23.86952 7.592441e-125 2.556906e-120 0.9107458   0.9763459
+    ## 5     FCN1 26.74712 1.786229e-156 6.016911e-152 0.9514647   0.9712175
+    ## 6     G0S2 16.27406  1.231885e-58  4.138147e-54 0.7984214   0.9810150
     ##   Precision ExpressionFraction
     ## 1 0.9125737          0.5490544
     ## 2 0.8834111          0.7836879
@@ -743,7 +759,7 @@ de.info$monocytes %>% filter(AUC > 0.75) %>% arrange(-Precision) %>% head()
 con$plotGraph(gene="CD14")
 ```
 
-![](walkthrough_files/figure-gfm/unnamed-chunk-49-1.png)<!-- -->
+![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-44-1.png)<!-- -->
 
 ## DE Between Sample Groups
 
@@ -768,13 +784,13 @@ str( con$getClusterCountMatrices() , 1)
 ```
 
     ## List of 4
-    ##  $ MantonBM1_HiSeq_1: num [1:33694, 1:16] 0 0 0 1 0 0 0 0 54 5 ...
+    ##  $ MantonBM1_HiSeq_1: num [1:33694, 1:13] 0 0 0 1 0 0 0 0 43 4 ...
     ##   ..- attr(*, "dimnames")=List of 2
-    ##  $ MantonBM2_HiSeq_1: num [1:33694, 1:16] 0 0 0 0 0 0 0 0 98 6 ...
+    ##  $ MantonBM2_HiSeq_1: num [1:33694, 1:13] 0 0 0 0 0 0 0 0 71 4 ...
     ##   ..- attr(*, "dimnames")=List of 2
-    ##  $ MantonCB1_HiSeq_1: num [1:33694, 1:16] 0 0 0 1 0 0 0 0 96 9 ...
+    ##  $ MantonCB1_HiSeq_1: num [1:33694, 1:13] 0 0 0 0 0 0 0 0 84 5 ...
     ##   ..- attr(*, "dimnames")=List of 2
-    ##  $ MantonCB2_HiSeq_1: num [1:33694, 1:16] 0 0 0 0 0 0 0 0 161 22 ...
+    ##  $ MantonCB2_HiSeq_1: num [1:33694, 1:13] 0 0 0 0 0 0 0 0 135 17 ...
     ##   ..- attr(*, "dimnames")=List of 2
 
 The list above, returns pooled count matrix for each sample, where the
@@ -809,12 +825,14 @@ str(de.info[1:3], 2)
     ## List of 3
     ##  $ B cells    :List of 3
     ##   ..$ res          :'data.frame':    33694 obs. of  6 variables:
-    ##   ..$ cm           :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
+    ##   ..$ cm           : num [1:33694, 1:4] 0 0 0 1 0 0 0 0 22 1 ...
+    ##   .. ..- attr(*, "dimnames")=List of 2
     ##   ..$ sample.groups:List of 2
     ##  $ DC         : logi NA
     ##  $ dying cells:List of 3
     ##   ..$ res          :'data.frame':    33694 obs. of  6 variables:
-    ##   ..$ cm           :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
+    ##   ..$ cm           : num [1:33694, 1:4] 0 0 0 0 0 0 0 0 9 1 ...
+    ##   .. ..- attr(*, "dimnames")=List of 2
     ##   ..$ sample.groups:List of 2
 
 Let’s look at the results for the B cells
@@ -825,19 +843,19 @@ head(res[order(res$padj,decreasing = FALSE),])
 ```
 
     ##                baseMean log2FoldChange     lfcSE      stat       pvalue
-    ## JCHAIN         384.6065      -3.634016 0.4187310 -8.678642 4.005232e-18
-    ## IGHG1          563.9063     -12.293955 1.5171046 -8.103565 5.337190e-16
-    ## IGLL1          157.1023      -5.507407 0.7207191 -7.641545 2.146308e-14
-    ## RP11-386I14.4  365.9781       2.744466 0.3994704  6.870262 6.408388e-12
-    ## IGKC          2651.7030      -2.643596 0.3864201 -6.841250 7.850533e-12
-    ## IGLL5          104.4105      -4.507296 0.6877616 -6.553572 5.617667e-11
+    ## RP11-386I14.4 633.00092       3.590611 0.2906414 12.354092 4.629512e-35
+    ## HBA2          440.35042       3.378324 0.3707656  9.111752 8.106231e-20
+    ## CH17-373J23.1 440.57697       3.406280 0.3884377  8.769179 1.799740e-18
+    ## CD69          627.05296       2.480220 0.2966294  8.361342 6.200897e-17
+    ## IGHA1          94.44757      -6.211823 0.7615539 -8.156773 3.440928e-16
+    ## HMGB2         175.18363      -3.126746 0.4015545 -7.786606 6.883331e-15
     ##                       padj
-    ## JCHAIN        6.997541e-14
-    ## IGHG1         4.662302e-12
-    ## IGLL1         1.249938e-10
-    ## RP11-386I14.4 2.743133e-08
-    ## IGKC          2.743133e-08
-    ## IGLL5         1.635771e-07
+    ## RP11-386I14.4 7.252131e-31
+    ## HBA2          6.349206e-16
+    ## CH17-373J23.1 9.397643e-15
+    ## CD69          2.428426e-13
+    ## IGHA1         1.078043e-12
+    ## HMGB2         1.797123e-11
 
 # Forcing better alignment
 
@@ -872,7 +890,7 @@ con$embedGraph()
 con$plotGraph(color.by='sample', mark.groups=F, alpha=0.1, show.legend=T)
 ```
 
-![](walkthrough_files/figure-gfm/unnamed-chunk-56-1.png)<!-- -->
+![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-51-1.png)<!-- -->
 
 We can also check the entropy:
 
@@ -881,4 +899,4 @@ con$findCommunities()
 plotClusterBarplots(con, legend.height = 0.1)
 ```
 
-![](walkthrough_files/figure-gfm/unnamed-chunk-57-1.png)<!-- -->
+![](/tmp/RtmpW6S0vq/preview-b89161985a5.dir/walkthrough_files/figure-gfm/unnamed-chunk-52-1.png)<!-- -->
