@@ -282,7 +282,7 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, subgroups=NULL, p
                           show.legend=FALSE, alpha=0.4, size=0.8, title=NULL, plot.theme=NULL, palette=NULL, color.range="all",
                           font.size=c(3, 7), show.ticks=FALSE, show.labels=FALSE, legend.position=NULL, legend.title=NULL,
                           gradient.range.quantile=1, raster=FALSE, raster.width=NULL, raster.height=NULL, raster.dpi=300,
-                          shuffle.colors=FALSE, keep.limits=FALSE,
+                          shuffle.colors=FALSE, keep.limits=!is.null(subgroups),
                           ...) {
   plot.df <- tibble::rownames_to_column(as.data.frame(embedding), "CellName")
   colnames(plot.df)[2:3] <- c("x", "y")
@@ -322,15 +322,16 @@ embeddingPlot <- function(embedding, groups=NULL, colors=NULL, subgroups=NULL, p
                         geom_point_w(alpha=alpha, size=size))
   }
 
+  gg <- plot.info$gg
   if (plot.na && !is.null(plot.info$na.plot.df)) {
-    plot.info$gg <- plot.info$gg + geom_point_w(data=plot.info$na.plot.df, color='black', shape=4)
+    gg <- gg + geom_point_w(data=plot.info$na.plot.df, color='black', shape=4)
   }
 
   if(keep.limits) {
-    gg <- gg + lims(x=range(embedding[,1]), y=range(embedding[,2]))
+    gg <- gg + ggplot2::lims(x=range(embedding[,1]), y=range(embedding[,2]))
   }
 
-  gg <- styleEmbeddingPlot(plot.info$gg, plot.theme=plot.theme, title=title, legend.position=legend.position,
+  gg <- styleEmbeddingPlot(gg, plot.theme=plot.theme, title=title, legend.position=legend.position,
                            show.legend=show.legend, show.ticks=show.ticks, show.labels=show.labels)
   return(gg)
 }
