@@ -85,21 +85,14 @@ The class encompasses sample collections, providing methods for calculating and 
        - what : show a specific plot (ari - adjusted rand index, fjc - flat Jaccard, hjc - hierarchical Jaccard, dend - cluster dendrogram)
       }
 
-\item{\code{propagateLabels(labels, max.iters = 50, diffusion.fading = 10,
-  diffusion.fading.const = 0.5, tol = 0.005, return.distribution = TRUE,
-  verbose = TRUE, fixed.initial.labels = FALSE)}}{Estimate labeling distribution for each vertex, based on provided labels.
+\item{\code{propagateLabels(labels, method = "diffusion", ...)}}{Estimate labeling distribution for each vertex, based on provided labels.
 
      Params:
 
-     - labels: vector of factor or character labels, named by cell names
+     - method: type of propagation. Either 'diffusion' or 'solver'. 'solver' gives better results,
+      but has bad asymptotics, so is inappropriate for datasets > 20k cells. Default: 'diffusion.'
 
-     - max.iters: maximal number of iterations. Default: 50.
-
-     - return.distribution: return distribution of labeling, but not single label for each vertex. Default: TRUE.
-
-     - verbose: verbose mode. Default: TRUE.
-
-     - fixed.initial.labels: prohibit changes of initial labels during diffusion.
+     - ...: additional arguments for conos:::propagateLabels* functions
 
      
 

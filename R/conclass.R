@@ -706,34 +706,29 @@ Conos <- setRefClass(
       return(invisible(expression.adj[[name]] <<- cm))
     },
 
-    propagateLabels=function(labels, max.iters=50, diffusion.fading=10.0, diffusion.fading.const=0.5, tol=5e-3, return.distribution=TRUE, verbose=TRUE, fixed.initial.labels=FALSE) {
+    propagateLabels=function(labels, method="diffusion", ...) {
     "Estimate labeling distribution for each vertex, based on provided labels.\n
      Params:\n
-     - labels: vector of factor or character labels, named by cell names\n
-     - max.iters: maximal number of iterations. Default: 50.\n
-     - return.distribution: return distribution of labeling, but not single label for each vertex. Default: TRUE.\n
-     - verbose: verbose mode. Default: TRUE.\n
-     - fixed.initial.labels: prohibit changes of initial labels during diffusion.\n
+     - method: type of propagation. Either 'diffusion' or 'solver'. 'solver' gives better results,
+      but has bad asymptotics, so is inappropriate for datasets > 20k cells. Default: 'diffusion.'\n
+     - ...: additional arguments for conos:::propagateLabels* functions\n
      \n
      Return: matrix with distribution of label probabilities for each vertex by rows.
     "
-      if (is.factor(labels)) {
-        labels <- as.character(labels) %>% setNames(names(labels))
-      }
-      edges <- igraph::as_edgelist(graph)
-      edge.weights <- igraph::edge.attributes(graph)$weight
-      labels <- labels[intersect(names(labels), igraph::vertex.attributes(graph)$name)]
-
-      label.distribution <- propagate_labels(edges, edge.weights, vert_labels=labels, max_n_iters=max.iters, verbose=verbose,
-                                             diffusion_fading=diffusion.fading, diffusion_fading_const=diffusion.fading.const,
-                                             tol=tol, fixed_initial_labels=fixed.initial.labels)
-      if (return.distribution) {
-        return(label.distribution)
+      if (method == "solver") {
+        label.dist <- propagateLabelsSolver(graph, labels, ...)
+      } else if (method == "diffusion") {
+        label.dist <- propagateLabelsDiffusion(graph, labels, ...)
+      } else {
+        stop("Unknown method: ", method, ". Only 'solver' and 'diffusion' are supported.")
       }
 
-      label.distribution <- colnames(label.distribution)[apply(label.distribution, 1, which.max)] %>%
-        setNames(rownames(label.distribution))
-      return(label.distribution)
+      labels <- colnames(label.dist)[apply(label.dist, 1, which.max)] %>%
+        setNames(rownames(label.dist))
+
+      confidence <- apply(label.dist, 1, max) %>% setNames(rownames(label.dist))
+
+      return(list(labels=labels, uncertainty=(1 - confidence), label.distribution=label.dist))
     },
 
     getClusterCountMatrices=function(clustering=NULL, groups=NULL,common.genes=TRUE,omit.na.cells=TRUE) {

@@ -6,18 +6,19 @@
 - `getDifferentialGenes` uses first clustering by default
 - Fixed bug with `collapseCellsByType`. **Note:** probably will affect DE results.
 - Added re-normalization of edge weights to fix problem with negative edge weights during label propagation
-- Fixed problems caused by NAs for appendSpecificityMetrics
 - Now in plotting 'groups' aren't ignoted if 'gene' is provided: it's used to subset cells for plotting.
-- Fixed warning when plotting shorter 'groups' than no. cells (`embeddingPlot`)
 - UMAP now set `n_sgd_threads` from `uwot` to `n.cores` by default. It gives much better parallelization, but kills reproducibility. 
   Use `n.sgd.cores=1` to get reproducible embeddings.
 - Account for `target.dims` in UMAP embedding
 - Fixed estimation of `cor.based` with `alingnment.strength == 0`. It removes edges with negative correlation and reduce down-weight of inter-sample edges, which can change results of the alignment.
+- Changed default value of `fixed.initial.labels` in `propagateLabels` from `FALSE` to `TRUE`. Presumably, `FALSE` should never be used.
+- New output format for label propagation (list of "labels", "uncertainty" and "label.distribution") 
 - Numerous small bug fixes and small validations for correct arguments
 
 ### Added
 
 - Added metrics to masure specifisity of cell type markers to DE info in `getDifferentialGenes` (parameters `append.specifisity.metrics` and `append.auc`)
+- Implementation of label propagateion based on matrix equations (*occured to be too slow*)
 
 ## [1.1.2] - 2019-07-16
 
