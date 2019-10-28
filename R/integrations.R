@@ -161,3 +161,115 @@ basicSeuratProc <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do
     umap = umap
   )
 }
+
+#' RNA velocity analysis on samples integrated with conos
+#'
+#' @description Create a list of objects to pass into gene.relative.velocity.estimates function from the velocyto.R package
+#'
+#' @param cms.list list of velocity files written out as cell.counts.matrices.rds files by running dropest with -V option
+#' @param con conos object (after creating an embedding and running leiden clustering)
+#' @param n.odgenes number of overdispersed genes to use for PCA
+#' @param verbose verbose mode
+#'
+#'
+#' @return List with cell distances, combined spliced expression matrix, combined unspliced expression matrix, combined matrix of spanning reads, cell colors for clusters and embedding (taken from conos)
+#'
+#'
+#'
+#' @export
+#'
+velocityInfoConos <- function(cms.list, con, n.odgenes = 2e3, verbose = TRUE, min.max.cluster.average.emat=0.2, min.max.cluster.average.nmat=0.05, min.max.cluster.average.smat=0.01) {
+  if (!requireNamespace("velocyto.R")) {
+    stop("You need to install 'velocyto.R' package to be able to use this function")
+  }
+
+  if (verbose) cat("Merging raw count matrices...\n")
+  # Merge samples to get names of relevant cells and genes 
+  raw.count.matrix.merged <- lapply(con$samples, getRawCountMatrix) %>% mergeCountMatrices()
+  
+  if (verbose) cat("Merging velocity files...\n")
+  # Intersect genes and cells between the conos object and all the velocity files
+  cms.list <- lapply(cms.list, prepareVelocity, rownames(raw.count.matrix.merged), colnames(raw.count.matrix.merged))
+  # Keep only genes present in velocity files from all the samples
+  common.genes <-  Reduce(intersect, lapply(cms.list, function(x) {rownames(x[[1]])}))
+  cms.list <- lapply(cms.list, function(x) {lapply(x, function(y) {y[row.names(y) %in% common.genes,]} )} )
+  
+  # Merge velocity files from different samples
+  emat <- do.call(cbind, lapply(cms.list, function(x) {x[[1]]}))
+  nmat <- do.call(cbind, lapply(cms.list, function(x) {x[[2]]}))
+  smat <- do.call(cbind, lapply(cms.list, function(x) {x[[3]]}))
+  
+  cluster.label <- con$clusters$leiden$groups
+  cell.colors <- fac2col(cluster.label)
+  emb <- con$embedding
+  
+  # Keep the order of cells consistent between velocity matrices and the embedding (not really sure whether it's necessary...)
+  emat <- emat[,order(match(colnames(emat), rownames(emb)))]
+  nmat <- nmat[,order(match(colnames(nmat), rownames(emb)))]
+  smat <- smat[,order(match(colnames(smat), rownames(emb)))]
+  
+  if (verbose) cat("Calculating cell distances...\n")
+  # Get PCA results for all the samples from the conos object
+  pcs <- pcaForVelo(con$samples, n.odgenes = n.odgenes)
+  # Again, keep the order of cells consistent
+  pcs <- pcs[order(match(rownames(pcs), rownames(emb))),]
+  # Calculate the cell distances based on correlation
+  cell.dist <- as.dist(1 - velocyto.R::armaCor(t(pcs)))
+  
+  if (verbose) cat("Filtering velocity...\n")
+  emat %<>% velocyto.R::filter.genes.by.cluster.expression(cluster.label, min.max.cluster.average = min.max.cluster.average.emat)
+  nmat %<>% velocyto.R::filter.genes.by.cluster.expression(cluster.label, min.max.cluster.average = min.max.cluster.average.nmat)
+  smat %<>% velocyto.R::filter.genes.by.cluster.expression(cluster.label, min.max.cluster.average = min.max.cluster.average.smat)
+  
+  if (verbose) cat("All Done!")
+  return(list(cell.dist = cell.dist, emat = emat, nmat = nmat, smat = smat, cell.colors = cell.colors, emb = emb))
+}
+
+# Intersect genes and cells between all the velocity files and the conos object
+prepareVelocity <- function(cms.file, genes, cells) {
+  exon.genes <- rownames(cms.file$exon)
+  intron.genes <- rownames(cms.file$intron)
+  spanning.genes <- rownames(cms.file$spanning)
+  # Only common genes between the 3 files and conos object
+  common.genes <- intersect(exon.genes, intron.genes) %>% intersect(spanning.genes) %>% intersect(genes)
+  
+  exon.cells <- colnames(cms.file$exon)
+  intron.cells <- colnames(cms.file$intron)
+  spanning.cells <- colnames(cms.file$spanning)
+  # Only common cells between the 3 files and conos object
+  common.cells <- intersect(exon.cells, intron.cells) %>% intersect(spanning.cells) %>% intersect(cells)
+  
+  cms.file$exon <- cms.file$exon[common.genes,common.cells]
+  cms.file$intron <- cms.file$intron[common.genes,common.cells]
+  cms.file$spanning <- cms.file$spanning[common.genes,common.cells]
+  return(cms.file)
+}
+
+# Get PCA results for all the samples from the conos object
+# This is a modification of the quickPlainPCA function
+pcaForVelo <- function(p2.list, data.type = 'counts', k = 30, ncomps = 100, n.odgenes = NULL, verbose = TRUE) {
+  od.genes <- commonOverdispersedGenes(p2.list, n.odgenes, verbose = FALSE)
+  if(length(od.genes)<5) return(NULL)
+  
+  if(verbose) cat('Calculating PCs for',length(p2.list),' datasets ...')
+  
+  # Get scaled matrices from a list of pagoda2 objects
+  sm <- scaledMatrices(p2.list, data.type = data.type, od.genes = od.genes, var.scale = TRUE, neighborhood.average = FALSE);
+  # Transpose the scaled matrices since we want to run PCA on cells and not genes (like in quickPlainPCA)
+  sm <- lapply(sm, t)
+  # Get the names of all the cells
+  nms <- Reduce(union, lapply(sm, colnames))
+  
+  pcs <- lapply(sm, function(x) {
+    cm <- Matrix::colMeans(x);
+    ncomps <- min(c(nrow(cm)-1,ncol(cm)-1,ncomps))
+    res <- irlba::irlba(x, nv = ncomps, nu = 0, center = cm, right_only = F, reorth = T)
+    res
+  })
+  
+  pcj <- do.call(rbind,lapply(pcs,function(x) x$v))
+  rownames(pcj) <- nms
+  res <- pcj
+  
+  return(res)
+}
