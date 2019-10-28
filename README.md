@@ -144,35 +144,35 @@ After running dropEst you should have 2 files for each of the samples:
 
 The `.matrices.rds` files are the velocity files. Load them into R in a list (same order as you give to conos). Load, preprocess and integrate with conos the count matrices (`.rds`) as you normally would. Before running the velocity you have to had at least created an embedding and run the leiden clustering. Finally, you can esitmate the velocity:  
 ```r
-### Assuming con is your conos object and velo_list is the list of your velocity files ###
+### Assuming con is your conos object and cms.list is the list of your velocity files ###
 
 library(velocyto.R)
 
 # Preprocess the velocity files to match the conos obejct
-vi <- VelocityInfoConos(cms_list = velo_list, 
-                        con = con, n.odgenes = 2e3, verbose = TRUE)
+vi <- velocityInfoConos(cms.list = cms.list, con = con, 
+                        n.odgenes = 2e3, verbose = TRUE)
 
 # Estimate RNA velocity
-vel_info <- vi %$%
-  gene.relative.velocity.estimates(emat, nmat, deltaT=1, kCells=25, cell.dist=cell.dist, 
-                                   fit.quantile=0.05, n.cores=4)
+vel.info <- vi %$%
+  gene.relative.velocity.estimates(emat, nmat, cell.dist = cell.dist, 
+                                   deltaT = 1, kCells = 25, fit.quantile = 0.05, n.cores = 4)
 
 # Visualise the velocity on your conos embedding 
 # Takes a very long time! 
 # Assign to a variable to speed up subsequent recalculations
-cc.velo <- show.velocity.on.embedding.cor(vi$emb, vel_info, n=200, scale='sqrt', 
-                                          cell.colors=ac(vi$cell.colors, alpha=0.5), 
-                                          cex=0.8, grid.n = 50, cell.border.alpha = 0,
-                                          arrow.scale = 3, arrow.lwd = 0.6, n.cores=4, 
+cc.velo <- show.velocity.on.embedding.cor(vi$emb, vel.info, n = 200, scale = 'sqrt', 
+                                          cell.colors = ac(vi$cell.colors, alpha = 0.5), 
+                                          cex = 0.8, grid.n = 50, cell.border.alpha = 0,
+                                          arrow.scale = 3, arrow.lwd = 0.6, n.cores = 4, 
                                           xlab = "UMAP1", ylab = "UMAP2")
 
 # Use cc=cc.velo$cc when running again (skips the most time consuming delta projections step)
-show.velocity.on.embedding.cor(vi$emb, vel_info, n=200, scale='sqrt', 
-                               cell.colors=ac(vi$cell.colors, alpha=0.5), 
-                               cex=0.8, arrow.scale=15, show.grid.flow=TRUE, 
-                               min.grid.cell.mass=0.5, grid.n=40, arrow.lwd=2,
-                               do.par=F, cell.border.alpha = 0.1, n.cores=4,
-                               xlab = "UMAP1", ylab = "UMAP2", cc=cc.velo$cc)
+show.velocity.on.embedding.cor(vi$emb, vel.info, cc = cc.velo$cc, n = 200, scale = 'sqrt', 
+                               cell.colors = ac(vi$cell.colors, alpha = 0.5), 
+                               cex = 0.8, arrow.scale = 15, show.grid.flow = TRUE, 
+                               min.grid.cell.mass = 0.5, grid.n = 40, arrow.lwd = 2,
+                               do.par = F, cell.border.alpha = 0.1, n.cores = 4,
+                               xlab = "UMAP1", ylab = "UMAP2")
 
 ```
 

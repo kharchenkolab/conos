@@ -1,10 +1,5 @@
 ## Upcoming
 
-### Added
-
-- `VelocityInfoConos` function for RNA velocity analysis on samples integrated with conos (together with supplementary functions `PrepareVelocity` and `PCAforVelo`)
-- *Running RNA velocity on a conos object* section in README.md (explains usage of the `VelocityInfoConos` function)
-
 ### Changed
 
 - Optimized plotting with coloring by genes
@@ -18,6 +13,8 @@
 ### Added
 
 - Added metrics to masure specifisity of cell type markers to DE info in `getDifferentialGenes` (parameters `append.specifisity.metrics` and `append.auc`)
+- `VelocityInfoConos` function for RNA velocity analysis on samples integrated with conos (together with supplementary functions `PrepareVelocity` and `PCAforVelo`)
+- *Running RNA velocity on a conos object* section in README.md (explains usage of the `VelocityInfoConos` function)
 
 ## [1.1.2] - 2019-07-16
 
