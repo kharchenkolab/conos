@@ -229,7 +229,7 @@ VelocityInfoConos <- function(cms_list, con, n.odgenes = 2e3, verbose = TRUE, mi
 # Intersect genes and cells between all the velocity files and the conos object
 PrepareVelocity <- function(cms_file, genes, cells) {
   exon_genes <- rownames(cms_file$exon)
-  intron_genes <- rownames(cms_file$intron))
+  intron_genes <- rownames(cms_file$intron)
   spanning_genes <- rownames(cms_file$spanning)
   # Only common genes between the 3 files and conos object
   common_genes <- intersect(exon_genes, intron_genes) %>% intersect(spanning_genes) %>% intersect(genes)
