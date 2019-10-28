@@ -1,5 +1,10 @@
 ## Upcoming
 
+### Added
+
+- `VelocityInfoConos` function for RNA velocity analysis on samples integrated with conos (together with supplementary functions `PrepareVelocity` and `PCAforVelo`)
+- *Running RNA velocity on a conos object* section in README.md (explains usage of the `VelocityInfoConos` function)
+
 ### Changed
 
 - Optimized plotting with coloring by genes
