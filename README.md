@@ -134,6 +134,48 @@ than upload these files from Python. See the following tutorials:
 - [Save Conos for ScanPy](vignettes/scanpy_integration.Rmd)
 - [Load ScanPy from Conos](vignettes/scanpy_integration.ipynb)
 
+### Running RNA velocity on a conos object
+
+First of all, in order to obtain an RNA velocity plot from a conos object you have to use the [dropEst](https://github.com/hms-dbmi/dropEst) pipeline to align and annotate your single-cell RNA-seq measurments. You can see [this tutorial](http://pklab.med.harvard.edu/velocyto/notebooks/R/SCG71.nb.html) and [this shell script](http://pklab.med.harvard.edu/velocyto/mouseBM/preprocess.sh) to see how it can be done. In this example we specifically assume that when running dropEst you have used the **-V** option to get estimates of unspliced/spliced counts from the dropEst directly. Secondly, you need the [velocyto.R](http://velocyto.org/) package for the actual velocity estimation and visualisation.
+
+After running dropEst you should have 2 files for each of the samples: 
+- `sample.rds` (matrix of counts)
+- `sample.matrices.rds` (3 matrices of exons, introns and spanning reads)
+
+The `.matrices.rds` files are the velocity files. Load them into R in a list (same order as you give to conos). Load, preprocess and integrate with conos the count matrices (`.rds`) as you normally would. Before running the velocity you have to had at least created an embedding and run the leiden clustering. Finally, you can esitmate the velocity:  
+```r
+### Assuming con is your conos object and cms.list is the list of your velocity files ###
+
+library(velocyto.R)
+
+# Preprocess the velocity files to match the conos obejct
+vi <- velocityInfoConos(cms.list = cms.list, con = con, 
+                        n.odgenes = 2e3, verbose = TRUE)
+
+# Estimate RNA velocity
+vel.info <- vi %$%
+  gene.relative.velocity.estimates(emat, nmat, cell.dist = cell.dist, 
+                                   deltaT = 1, kCells = 25, fit.quantile = 0.05, n.cores = 4)
+
+# Visualise the velocity on your conos embedding 
+# Takes a very long time! 
+# Assign to a variable to speed up subsequent recalculations
+cc.velo <- show.velocity.on.embedding.cor(vi$emb, vel.info, n = 200, scale = 'sqrt', 
+                                          cell.colors = ac(vi$cell.colors, alpha = 0.5), 
+                                          cex = 0.8, grid.n = 50, cell.border.alpha = 0,
+                                          arrow.scale = 3, arrow.lwd = 0.6, n.cores = 4, 
+                                          xlab = "UMAP1", ylab = "UMAP2")
+
+# Use cc=cc.velo$cc when running again (skips the most time consuming delta projections step)
+show.velocity.on.embedding.cor(vi$emb, vel.info, cc = cc.velo$cc, n = 200, scale = 'sqrt', 
+                               cell.colors = ac(vi$cell.colors, alpha = 0.5), 
+                               cex = 0.8, arrow.scale = 15, show.grid.flow = TRUE, 
+                               min.grid.cell.mass = 0.5, grid.n = 40, arrow.lwd = 2,
+                               do.par = F, cell.border.alpha = 0.1, n.cores = 4,
+                               xlab = "UMAP1", ylab = "UMAP2")
+
+```
+
 ## Reference
 
 If you find this pipeline useful for your research, please consider citing the paper:
