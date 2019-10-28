@@ -16,7 +16,7 @@ plotSamples(samples, groups = NULL, colors = NULL, gene = NULL,
 
 \item{gene}{gene name. If this parameter is provided, points are colored by expression of this gene.}
 
-\item{embedding.type}{type of embedding. Default: tSNE.}
+\item{embedding.type}{type of embedding. Default: tSNE. If a numeric matrix is passed, interpreted as an actual embedding.}
 }
 \value{
 ggplot2 object with the panel of plots
