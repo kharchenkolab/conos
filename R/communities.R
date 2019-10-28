@@ -97,7 +97,7 @@ multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=F),
   names(fv) <- unlist(lapply(mbl,names))
 
   # enclose in a masquerading class
-  res <- list(membership=fv,dendrogram=combd,algorithm='multitrap');
+  res <- list(membership=fv, dendrogram=combd, algorithm='multitrap', names=names(fv));
   class(res) <- rev("fakeCommunities");
   return(res);
 
@@ -164,7 +164,7 @@ multimulti.community <- function(graph, n.cores=parallel::detectCores(logical=F)
   names(fv) <- unlist(lapply(mbl,names))
 
   # enclose in a masquerading class
-  res <- list(membership=fv,dendrogram=NULL,algorithm='multimulti');
+  res <- list(membership=fv, dendrogram=NULL, algorithm='multimulti', names=names(fv));
   class(res) <- rev("fakeCommunities");
   return(res);
 
@@ -184,7 +184,8 @@ leiden.community <- function(graph, resolution=1.0, n.iterations=2) {
 
   # enclose in a masquerading class
   fv <- as.factor(setNames(x,V(graph)$name))
-  res <- list(membership=fv,dendrogram=NULL,algorithm='leiden',resolution=resolution,n.iter=n.iterations);
+  res <- list(membership=fv, dendrogram=NULL, algorithm='leiden', resolution=resolution,
+              n.iter=n.iterations, names=names(fv));
   class(res) <- rev("fakeCommunities");
   return(res);
 }
@@ -194,19 +195,19 @@ leiden.community <- function(graph, resolution=1.0, n.iterations=2) {
 ##' Constructrs a n-step recursive clustering, using leiden.communities
 ##' @param graph graph
 ##' @param n.cores number of cores to use
-##' @param K recursive depth
+##' @param max.depth recursive depth
 ##' @param min.community.size minimal community size parameter for the walktrap communities .. communities smaller than that will be merged
 ##' @param verbose whether to output progress messages
-##' @param resolution resolution parameter passed to leiden.communities (either a single value, or a value equivalent to K)
+##' @param resolution resolution parameter passed to leiden.communities (either a single value, or a value equivalent to max.depth)
 ##' @param ... passed to leiden.communities
 ##' @return a fakeCommunities object that has methods membership() ... does not return a dendrogram ... see cltrap.community() to constructo that
 ##' @export
-rleiden.community <- function(graph, K=2, n.cores=parallel::detectCores(logical=F), min.community.size=10, verbose=FALSE, resolution=1, K.current=1, hierarchical=TRUE, ...) {
+rleiden.community <- function(graph, max.depth=2, n.cores=parallel::detectCores(logical=F), min.community.size=10, verbose=FALSE, resolution=1, cur.depth=1, hierarchical=TRUE, ...) {
 
-  if(verbose & K.current==1) cat(paste0("running ",K,"-recursive Leiden clustering: "));
+  if(verbose & cur.depth==1) cat(paste0("running ",max.depth,"-recursive Leiden clustering: "));
   if(length(resolution)>1) {
-    if(length(resolution)!=K) { stop("resolution value must be either a single number or a vector of length K")}
-    res <- resolution[K.current]
+    if(length(resolution)!=max.depth) { stop("resolution value must be either a single number or a vector of length max.depth")}
+    res <- resolution[cur.depth]
   } else { res <- resolution }
   mt <- leiden.community(graph, resolution=res, ...);
 
@@ -218,21 +219,14 @@ rleiden.community <- function(graph, K=2, n.cores=parallel::detectCores(logical=
   }
   if(verbose) cat(length(unique(mem)),' ');
 
-  if(K.current<K) {
+  if(cur.depth<max.depth) {
     # start recursive run
-    if(n.cores>1) {
-      wtl <- mclapply(conos:::sn(unique(mem)), function(cluster) {
-        cn <- names(mem)[which(mem==cluster)]
-        sg <- induced.subgraph(graph,cn)
-        rleiden.community(induced.subgraph(graph,cn), K=K, resolution=resolution, K.current=K.current+1, min.community.size=min.community.size, hierarchical=hierarchical, verbose=verbose, n.cores=n.cores, ...)
-      },mc.cores=n.cores,mc.allow.recursive = FALSE)
-    } else {
-      wtl <- lapply(conos:::sn(unique(mem)), function(cluster) {
-        cn <- names(mem)[which(mem==cluster)]
-        sg <- induced.subgraph(graph,cn)
-        rleiden.community(induced.subgraph(graph,cn), K=K, resolution=resolution, K.current=K.current+1, min.community.size=min.community.size, hierarchical=hierarchical, verbose=verbose, n.cores=n.cores, ...)
-      })
-    }
+    wtl <- papply(conos:::sn(unique(mem)), function(cluster) {
+      cn <- names(mem)[which(mem==cluster)]
+      sg <- induced.subgraph(graph,cn)
+      rleiden.community(induced.subgraph(graph,cn), max.depth=max.depth, resolution=resolution, cur.depth=cur.depth+1, min.community.size=min.community.size, hierarchical=hierarchical, verbose=verbose, n.cores=1, ...)
+    },n.cores=n.cores)
+
     # merge clusters, cleanup
     mbl <- lapply(wtl,membership);
     # combined clustering factor
@@ -303,8 +297,7 @@ rleiden.community <- function(graph, K=2, n.cores=parallel::detectCores(logical=
     combd <- NULL;
   }
 
-
-  if(K.current==1) {
+  if(cur.depth==1) {
     if(verbose) {
       cat(paste0(' detected a total of ',length(unique(fv)),' clusters '));
       cat("done\n");
@@ -312,17 +305,13 @@ rleiden.community <- function(graph, K=2, n.cores=parallel::detectCores(logical=
   }
 
   # enclose in a masquerading class
-  res <- list(membership=fv,dendrogram=combd,algorithm='rleiden');
-  if(hierarchical & K.current==K) {
+  res <- list(membership=fv, dendrogram=combd, algorithm='rleiden', names=names(fv));
+  if(hierarchical & cur.depth==max.depth) {
     # reconstruct merges matrix
-    hc <- as.hclust(as.dendrogram(combd))
+    hcm <- as.hclust(as.dendrogram(combd))$merge
     # translate hclust $merge to walktrap-like $merges
-    hclustMerge.to.igraphMerge <- function(x){
-      nleafs <- nrow(x) + 1
-      y <- x+nleafs; y[x<0] <- -x[x<0]-1;
-      y
-    }
-    res$merges <- hclustMerge.to.igraphMerge(x)
+    res$merges <- hcm + nrow(hcm) + 1
+    res$merges[hcm < 0] <- -hcm[hcm < 0] - 1
   }
   class(res) <- rev("fakeCommunities");
   return(res);

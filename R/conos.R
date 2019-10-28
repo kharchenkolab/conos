@@ -686,6 +686,10 @@ getLocalEdges <- function(samples, k.self, k.self.weight, metric, l2.sigma, verb
   if(verbose) cat('local pairs ')
   x <- data.frame(do.call(rbind, papply(samples, function(x) {
     pca <- getPca(x)
+    if (is.null(pca)) {
+      stop("PCA must be estimated for all samples")
+    }
+
     xk <- n2Knn(pca, k.self + 1, 1, verbose=FALSE, indexType=metric) # +1 accounts for self-edges that will be removed in the next line
     diag(xk) <- 0; # no self-edges
     xk <- as(drop0(xk),'dgTMatrix')
@@ -1153,4 +1157,109 @@ mergeCountMatrices <- function(cms, transposed=F) {
 getSampleNamePerCell=function(samples) {
   cl <- lapply(samples, getCellNames)
   return(rep(names(cl), sapply(cl, length)) %>% stats::setNames(unlist(cl)) %>% as.factor())
+}
+
+#' Estimate labeling distribution for each vertex, based on provided labels using Random Walk
+#' @param labels vector of factor or character labels, named by cell names
+#' @param max.iters: maximal number of iterations. Default: 100.
+#' @param tol: absolute tolerance as a stopping criteria. Default: 0.025
+#' @param verbose: verbose mode. Default: TRUE.
+#' @param fixed.initial.labels: prohibit changes of initial labels during diffusion. Default: TRUE.
+propagateLabelsDiffusion <- function(graph, labels, max.iters=100, diffusion.fading=10.0, diffusion.fading.const=0.1, tol=0.025, verbose=TRUE, fixed.initial.labels=TRUE) {
+  if (is.factor(labels)) {
+    labels <- as.character(labels) %>% setNames(names(labels))
+  }
+
+  edges <- igraph::as_edgelist(graph)
+  edge.weights <- igraph::edge.attributes(graph)$weight
+  labels <- labels[intersect(names(labels), igraph::vertex.attributes(graph)$name)]
+  label.distribution <- propagate_labels(edges, edge.weights, vert_labels=labels, max_n_iters=max.iters, verbose=verbose,
+                                         diffusion_fading=diffusion.fading, diffusion_fading_const=diffusion.fading.const,
+                                         tol=tol, fixed_initial_labels=fixed.initial.labels)
+  return(label.distribution)
+}
+
+#' Propagate labels using Zhu, Ghahramani, Lafferty (2003) algorithm
+#' http://mlg.eng.cam.ac.uk/zoubin/papers/zgl.pdf
+#' TODO: change solver here for something designed for Laplacians. Need to look Daniel Spielman's research
+propagateLabelsSolver <- function(graph, labels, solver="mumps") {
+  if (!solver %in% c("mumps", "Matrix"))
+    stop("Unknown solver: ", solver, ". Only 'mumps' and 'Matrix' are currently supported")
+
+  if (!requireNamespace("rmumps", quietly=T)) {
+    warning("Package 'rmumps' is required to use 'mumps' solver. Fall back to 'Matrix'")
+    solver <- "Matrix"
+  }
+
+  adj.mat <- igraph::as_adjacency_matrix(graph, attr="weight")
+  labeled.cbs <- intersect(colnames(adj.mat), names(labels))
+  unlabeled.cbs <- setdiff(colnames(adj.mat), names(labels))
+
+  labels <- as.factor(labels[labeled.cbs])
+
+  weight.sum.mat <- Matrix::Diagonal(x=Matrix::colSums(adj.mat)) %>%
+    `dimnames<-`(dimnames(adj.mat))
+
+  laplasian.uu <- (weight.sum.mat[unlabeled.cbs, unlabeled.cbs] - adj.mat[unlabeled.cbs, unlabeled.cbs])
+
+  type.scores <- Matrix::sparseMatrix(i=1:length(labels), j=as.integer(labels), x=1.0) %>%
+    `colnames<-`(levels(labels)) %>% `rownames<-`(labeled.cbs)
+
+  right.side <- Matrix::drop0(adj.mat[unlabeled.cbs, labeled.cbs] %*% type.scores)
+
+  if (solver == "Matrix") {
+    res <- Matrix::solve(laplasian.uu, right.side)
+  } else {
+    res <- rmumps::Rmumps$new(laplasian.uu, copy=F)$solve(right.side)
+  }
+
+  colnames(res) <- levels(labels)
+  rownames(res) <- unlabeled.cbs
+  return(rbind(res, type.scores))
+}
+
+#' Increase resolution for a specific set of clusters
+#'
+#' @param con conos object
+#' @param target.clusters clusters for which the resolution should be increased
+#' @param clustering name of clustering in the conos object to use. Either 'clustering' or 'groups' must be provided. Default: NULL
+#' @param groups set of clusters to use. Ignored if 'clustering' is not NULL. Default: NULL
+#' @param method function, used to find communities. Default: leiden.community
+#' @param ... additional params passed to the community function
+#' @export
+findSubcommunities <- function(con, target.clusters, clustering=NULL, groups=NULL, method=leiden.community, ...) {
+  if(!is.null(clustering)) {
+    if (clustering %in% names(con$clusters)) {
+      groups <- con$clusters[[clustering]]$groups
+    } else {
+      stop("Conos object doesn't contain clustering ", clustering)
+    }
+  }
+
+  if(is.null(groups)) {
+    stop("Either 'groups' or 'clustering' must be provided")
+  }
+
+  groups.raw <- as.character(groups) %>% setNames(names(groups))
+  groups <- groups[intersect(names(groups), V(con$graph)$name)]
+
+  if(length(groups) == 0) {
+    stop("'groups' not defined for graph object.")
+  }
+
+  groups <- droplevels(groups[groups %in% target.clusters])
+  if(length(groups) == 0) {
+    stop("None of 'target.clusters' can be found in 'groups'.")
+  }
+
+  subgroups <- split(names(groups), groups)
+  for (n in names(subgroups)) {
+    if (length(subgroups[[n]]) < 2)
+      next
+
+    new.clusts <- method(induced_subgraph(con$graph, subgroups[[n]]), ...)
+    groups.raw[new.clusts$names] <- paste0(n, "_", new.clusts$membership)
+  }
+
+  return(groups.raw)
 }

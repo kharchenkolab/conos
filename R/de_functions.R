@@ -195,7 +195,7 @@ getPerCellTypeDE <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cut
       } else {
         res1
       }
-    }, error=function(err) NA)
+    }, error=function(err) {warning("Error for level ", l, ": ", err$message); return(NA)})
   }, n.cores=n.cores)
   de.res
 }
@@ -285,8 +285,10 @@ saveDEasCSV <- function(de.results=NULL,saveprefix=NULL,gene.metadata=NULL) {
     if(is.null(saveprefix)) stop('saveprefix has not bee specified')
     ## find errors
     n.error <- sum(unlist(lapply(de.results,is.error)))
-    if(n.error > 0)
+    if(n.error > 0) {
         cat("Warning: ", n.error, " of ", length(de.results), ' results have returned an error; ignoring...\n')
+    }
+
     de.results <- de.results[!unlist(lapply(de.results,is.error))]
     ##
     x <- lapply(namedNames(de.results), function(ncc) {
@@ -336,8 +338,10 @@ saveDEasJSON <- function(de.results = NULL, saveprefix = NULL, gene.metadata = N
     if(is.null(saveprefix)) stop('saveprefix has not been specified')
     ## Find de instances that didn't work (usually because cell type is absent from one or more sample types)
     n.error <- sum(unlist(lapply(de.results, is.error)))
-    if(n.error > 0)
+    if(n.error > 0) {
         cat("Warning: ", n.error,' of ', length(de.results) ,' results have returned an error; ignoring...\n')
+    }
+
     ## get the de results that worked
     de.results <- de.results[!unlist(lapply(de.results, is.error))]
     ## Generate structure and save JSON

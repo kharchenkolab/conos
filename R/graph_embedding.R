@@ -24,7 +24,7 @@ graphToAdjList <- function(graph) {
   return(list(idx=adj.list, probabilities=probs, names=edge.list.fact$levels))
 }
 
-embedKnnGraph <- function(commute.times, n.neighbors, names=NULL, verbose=TRUE, ...) {
+embedKnnGraph <- function(commute.times, n.neighbors, names=NULL, verbose=TRUE, target.dims=2, ...) {
   min.n.neighbors <- sapply(commute.times$idx, length) %>% min()
   if (min.n.neighbors < n.neighbors) {
     n.neighbors <- min.n.neighbors
@@ -37,7 +37,8 @@ embedKnnGraph <- function(commute.times, n.neighbors, names=NULL, verbose=TRUE, 
   ct.top.ids <- cbind(1:nrow(ct.top.ids), ct.top.ids)
   ct.top <- cbind(rep(0, nrow(ct.top)), ct.top)
 
-  umap <- uwot::umap(data.frame(x=rep(0, nrow(ct.top))), nn_method=list(idx=ct.top.ids, dist=ct.top), verbose=verbose, ...)
+  umap <- uwot::umap(data.frame(x=rep(0, nrow(ct.top))), nn_method=list(idx=ct.top.ids, dist=ct.top),
+                     n_components=target.dims, verbose=verbose, ...)
   rownames(umap) <- names
   return(umap)
 }
@@ -45,7 +46,7 @@ embedKnnGraph <- function(commute.times, n.neighbors, names=NULL, verbose=TRUE, 
 embedGraphUmap <- function(graph, verbose=T, min.prob=1e-3, min.visited.verts=1000, n.cores=1,
                            max.hitting.nn.num=0, max.commute.nn.num=0, min.prob.lower=1e-7,
                            n.neighbors=40, n.epochs=1000, spread=15, min.dist=0.001, return.all=F,
-                           ...) {
+                           n.sgd.cores=n.cores, ...) {
   min.visited.verts = min(min.visited.verts, length(igraph::V(graph) - 1))
   if (max.hitting.nn.num == 0) {
     max.hitting.nn.num <- length(igraph::V(graph)) - 1
@@ -63,7 +64,7 @@ embedGraphUmap <- function(graph, verbose=T, min.prob=1e-3, min.visited.verts=10
 
   if (verbose) cat("Estimate UMAP embedding...\n")
   umap <- embedKnnGraph(commute.times, n.neighbors=n.neighbors, names=adj.info$names, n_threads=n.cores,
-                        n_epochs=n.epochs, spread=spread, min_dist=min.dist, verbose=verbose, ...)
+                        n_epochs=n.epochs, spread=spread, min_dist=min.dist, verbose=verbose, n_sgd_threads=n.sgd.cores, ...)
   if (verbose) cat("Done\n")
 
   if (return.all)

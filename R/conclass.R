@@ -218,7 +218,10 @@ Conos <- setRefClass(
         alignment.strength %<>% max(0) %>% min(1)
         k1 <- sapply(samples, function(sample) ncol(getCountMatrix(sample))) %>% max() %>%
           `*`(alignment.strength ^ 2) %>% round() %>% max(k)
+      } else {
+        alignment.strength <- 0 # otherwise, estimation of cor.base uses NULL value
       }
+
       if(k1<k) { stop("k1 must be >= k") }
       # calculate or update pairwise alignments
       sn.pairs <- updatePairs(
@@ -500,7 +503,7 @@ Conos <- setRefClass(
 
     },
 
-    plotPanel=function(clustering=NULL, groups=NULL, colors=NULL, gene=NULL, use.local.clusters=FALSE, plot.theme=NULL, use.common.embedding=FALSE, embedding.type=NULL, ...) {
+    plotPanel=function(clustering=NULL, groups=NULL, colors=NULL, gene=NULL, use.local.clusters=FALSE, plot.theme=NULL, use.common.embedding=FALSE, embedding.type=NULL, adj.list=NULL, ...) {
       if (use.local.clusters) {
         if (is.null(clustering) && !(inherits(x = samples[[1]], what = c('seurat', 'Seurat')))) {
           stop("You have to provide 'clustering' parameter to be able to use local clusters")
@@ -513,8 +516,12 @@ Conos <- setRefClass(
       } else if (is.null(groups) && is.null(colors) && is.null(gene)) {
         groups <- getClusteringGroups(clusters, clustering)
       }
-      if(use.common.embedding) { embedding.type <- embedding }
-      gg <- plotSamples(samples, groups=groups, colors=colors, gene=gene, plot.theme=adjustTheme(plot.theme), embedding.type=embedding.type, ...)
+      if(use.common.embedding) {
+        embedding.type <- embedding
+        adj.list <- c(ggplot2::lims(x=range(embedding[,1]), y=range(embedding[,2])), adj.list)
+      }
+
+      gg <- plotSamples(samples, groups=groups, colors=colors, gene=gene, plot.theme=adjustTheme(plot.theme), embedding.type=embedding.type, adj.list=adj.list, ...)
 
       return(gg)
     },
@@ -549,7 +556,7 @@ Conos <- setRefClass(
         if (!requireNamespace("uwot", quietly=T))
           stop("You need to install package 'uwot' to be able to use UMAP embedding.")
 
-        embedding <<- embedGraphUmap(graph, verbose=verbose, return.all=F, n.cores=n.jobs, ...)
+        embedding <<- embedGraphUmap(graph, verbose=verbose, return.all=F, n.cores=n.jobs, target.dims=target.dims, ...)
       }
 
       return(invisible(embedding))
@@ -703,34 +710,29 @@ Conos <- setRefClass(
       return(invisible(expression.adj[[name]] <<- cm))
     },
 
-    propagateLabels=function(labels, max.iters=50, diffusion.fading=10.0, diffusion.fading.const=0.5, tol=5e-3, return.distribution=TRUE, verbose=TRUE, fixed.initial.labels=FALSE) {
+    propagateLabels=function(labels, method="diffusion", ...) {
     "Estimate labeling distribution for each vertex, based on provided labels.\n
      Params:\n
-     - labels: vector of factor or character labels, named by cell names\n
-     - max.iters: maximal number of iterations. Default: 50.\n
-     - return.distribution: return distribution of labeling, but not single label for each vertex. Default: TRUE.\n
-     - verbose: verbose mode. Default: TRUE.\n
-     - fixed.initial.labels: prohibit changes of initial labels during diffusion.\n
+     - method: type of propagation. Either 'diffusion' or 'solver'. 'solver' gives better results,
+      but has bad asymptotics, so is inappropriate for datasets > 20k cells. Default: 'diffusion.'\n
+     - ...: additional arguments for conos:::propagateLabels* functions\n
      \n
      Return: matrix with distribution of label probabilities for each vertex by rows.
     "
-      if (is.factor(labels)) {
-        labels <- as.character(labels) %>% setNames(names(labels))
-      }
-      edges <- igraph::as_edgelist(graph)
-      edge.weights <- igraph::edge.attributes(graph)$weight
-      labels <- labels[intersect(names(labels), igraph::vertex.attributes(graph)$name)]
-
-      label.distribution <- propagate_labels(edges, edge.weights, vert_labels=labels, max_n_iters=max.iters, verbose=verbose,
-                                             diffusion_fading=diffusion.fading, diffusion_fading_const=diffusion.fading.const,
-                                             tol=tol, fixed_initial_labels=fixed.initial.labels)
-      if (return.distribution) {
-        return(label.distribution)
+      if (method == "solver") {
+        label.dist <- propagateLabelsSolver(graph, labels, ...)
+      } else if (method == "diffusion") {
+        label.dist <- propagateLabelsDiffusion(graph, labels, ...)
+      } else {
+        stop("Unknown method: ", method, ". Only 'solver' and 'diffusion' are supported.")
       }
 
-      label.distribution <- colnames(label.distribution)[apply(label.distribution, 1, which.max)] %>%
-        setNames(rownames(label.distribution))
-      return(label.distribution)
+      labels <- colnames(label.dist)[apply(label.dist, 1, which.max)] %>%
+        setNames(rownames(label.dist))
+
+      confidence <- apply(label.dist, 1, max) %>% setNames(rownames(label.dist))
+
+      return(list(labels=labels, uncertainty=(1 - confidence), label.distribution=label.dist))
     },
 
     getClusterCountMatrices=function(clustering=NULL, groups=NULL,common.genes=TRUE,omit.na.cells=TRUE) {
