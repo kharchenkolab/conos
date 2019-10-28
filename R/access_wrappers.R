@@ -63,10 +63,16 @@ setMethod(
   }
 )
 
-setGeneric("getCountMatrix", function(sample) standardGeneric("getCountMatrix"))
-setMethod("getCountMatrix", signature("Pagoda2"), function(sample) t(sample$counts))
-setMethod("getCountMatrix", signature("seurat"), function(sample) if (is.null(sample@scale.data)) sample@data else sample@scale.data)
-setMethod('getCountMatrix', signature('Seurat'), function(sample) {
+setGeneric("getCountMatrix", function(sample, transposed=F) standardGeneric("getCountMatrix"))
+setMethod("getCountMatrix", signature("Pagoda2"), function(sample, transposed=F) if (transposed) sample$counts else Matrix::t(sample$counts))
+setMethod("getCountMatrix", signature("seurat"), function(sample, transposed=F) {
+  cm <- if (is.null(sample@scale.data)) sample@data else sample@scale.data
+  if (transposed)
+    return(Matrix::t(cm))
+
+  return(cm)
+})
+setMethod('getCountMatrix', signature('Seurat'), function(sample, transposed=F) {
     checkSeuratV3()
     dat <- Seurat::GetAssayData(object = sample, slot = 'scale.data')
     dims <- dim(x = dat)
@@ -74,6 +80,10 @@ setMethod('getCountMatrix', signature('Seurat'), function(sample) {
     if (all(dims == 0) || dat.na) {
       dat <- Seurat::GetAssayData(object = sample, slot = 'data')
     }
+
+    if (transposed)
+      return(Matrix::t(dat))
+
     return(dat)
   }
 )

@@ -25,6 +25,7 @@
 - Added metrics to masure specifisity of cell type markers to DE info in `getDifferentialGenes` (parameters `append.specifisity.metrics` and `append.auc`)
 - `velocityInfoConos` function for RNA velocity analysis on samples integrated with conos (together with supplementary functions `prepareVelocity` and `pcaForVelo`)
 - "Running RNA velocity on a conos object" section in README.md (explains usage of the `velocityInfoConos` function)
+- Function `getJointCountMatrix` to conos obect
 
 ## [1.1.2] - 2019-07-16
 

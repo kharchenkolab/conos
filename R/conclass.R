@@ -361,8 +361,10 @@ Conos <- setRefClass(
         lapply.func <- if (verbose) function(...) pbapply::pblapply(..., cl=n.jobs) else function(...) papply(..., n.cores=n.jobs)
         if (verbose) cat("Estimating specificity metrics\n")
 
-        cm.merged <- lapply(samples, getRawCountMatrix, transposed=T) %>% mergeCountMatrices(transposed=T)
         groups.clean <- groups[!is.na(groups)]
+        cm.merged <- lapply(samples, getRawCountMatrix, transposed=T) %>%
+          mergeCountMatrices(transposed=T)
+
         dif <- intersect(rownames(cm.merged),names(groups.clean))
 
         if(nrow(cm.merged) != length(groups.clean) | length(dif) != nrow(cm.merged)) {
@@ -376,7 +378,7 @@ Conos <- setRefClass(
           }
         }
 
-        de.genes %<>% lapply(function(x) x %<>% subset(complete.cases(.)))
+        de.genes %<>% lapply(function(x) if ((length(x) > 0) && (nrow(x) > 0)) subset(x, complete.cases(x)) else x)
         de.genes %<>% names() %>% setNames(., .) %>%
           lapply.func(function(n) appendSpecificityMetricsToDE(de.genes[[n]], groups.clean, n, p2.counts=cm.merged, append.auc=append.auc))
       }
@@ -775,6 +777,11 @@ Conos <- setRefClass(
 
     getDatasetPerCell=function() {
       getSampleNamePerCell(samples)
+    },
+
+    getJointCountMatrix=function(raw=FALSE) {
+      lapply(samples, (if (raw) getRawCountMatrix else getCountMatrix), transposed=T) %>%
+        mergeCountMatrices(transposed=T)
     }
   )
 )
