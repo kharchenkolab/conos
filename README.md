@@ -13,6 +13,7 @@
 - [Usage example](#usage-example)
   * [Alignment of datasets](#alignment-of-datasets)
   * [Integration with ScanPy](#integration-with-scanpy)
+  * [Running RNA velocity on a conos object](#running-rna-velocity-on-a-conos-object)
 - [Reference](#reference)
   
 ## Clustering on Network of Samples
