@@ -217,12 +217,12 @@ velocityInfoConos <- function(cms.list, con, n.odgenes = 2e3, verbose = TRUE, mi
   cell.dist <- as.dist(1 - velocyto.R::armaCor(t(pcs)))
   
   if (verbose) cat("Filtering velocity...\n")
-  emat %<>% velocyto.R::filter.genes.by.cluster.expression(cluster.label, min.max.cluster.average=min.max.cluster.average.emat)
-  nmat %<>% velocyto.R::filter.genes.by.cluster.expression(cluster.label, min.max.cluster.average=min.max.cluster.average.nmat)
-  smat %<>% velocyto.R::filter.genes.by.cluster.expression(cluster.label, min.max.cluster.average=min.max.cluster.average.smat)
+  emat %<>% velocyto.R::filter.genes.by.cluster.expression(cluster.label, min.max.cluster.average = min.max.cluster.average.emat)
+  nmat %<>% velocyto.R::filter.genes.by.cluster.expression(cluster.label, min.max.cluster.average = min.max.cluster.average.nmat)
+  smat %<>% velocyto.R::filter.genes.by.cluster.expression(cluster.label, min.max.cluster.average = min.max.cluster.average.smat)
   
   if (verbose) cat("All Done!")
-  return(list(cell.dist=cell.dist, emat=emat, nmat=nmat, smat=smat, cell.colors=cell.colors, emb=emb))
+  return(list(cell.dist = cell.dist, emat = emat, nmat = nmat, smat = smat, cell.colors = cell.colors, emb = emb))
 }
 
 # Intersect genes and cells between all the velocity files and the conos object
@@ -247,14 +247,14 @@ prepareVelocity <- function(cms.file, genes, cells) {
 
 # Get PCA results for all the samples from the conos object
 # This is a modification of the quickPlainPCA function
-pcaForVelo <- function(p2.list,data.type='counts',k=30,ncomps=100,n.odgenes=NULL,verbose=TRUE) {
-  od.genes <- commonOverdispersedGenes(r.n, n.odgenes, verbose=FALSE)
+pcaForVelo <- function(p2.list, data.type = 'counts', k = 30, ncomps = 100, n.odgenes = NULL, verbose = TRUE) {
+  od.genes <- commonOverdispersedGenes(p2.list, n.odgenes, verbose = FALSE)
   if(length(od.genes)<5) return(NULL)
   
-  if(verbose) cat('Calculating PCs for',length(r.n),' datasets ...')
+  if(verbose) cat('Calculating PCs for',length(p2.list),' datasets ...')
   
   # Get scaled matrices from a list of pagoda2 objects
-  sm <- scaledMatrices(p2.list, data.type=data.type, od.genes=od.genes, var.scale=TRUE, neighborhood.average=FALSE);
+  sm <- scaledMatrices(p2.list, data.type = data.type, od.genes = od.genes, var.scale = TRUE, neighborhood.average = FALSE);
   # Transpose the scaled matrices since we want to run PCA on cells and not genes (like in quickPlainPCA)
   sm <- lapply(sm, t)
   # Get the names of all the cells
@@ -263,7 +263,7 @@ pcaForVelo <- function(p2.list,data.type='counts',k=30,ncomps=100,n.odgenes=NULL
   pcs <- lapply(sm, function(x) {
     cm <- Matrix::colMeans(x);
     ncomps <- min(c(nrow(cm)-1,ncol(cm)-1,ncomps))
-    res <- irlba::irlba(x, nv=ncomps, nu =0, center=cm, right_only = F, reorth = T)
+    res <- irlba::irlba(x, nv = ncomps, nu = 0, center = cm, right_only = F, reorth = T)
     res
   })
   
