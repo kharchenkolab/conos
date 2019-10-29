@@ -84,12 +84,12 @@ seuratProcV3 <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, n.pcs
 #' @param verbose print more messages
 #'
 #' @export
-saveConosForScanPy <- function(con, output.path, metadata.df=NULL, n.dims=100, verbose=F) {
+saveConosForScanPy <- function(con, output.path, metadata.df=NULL, n.dims=100, verbose=FALSE) {
   if (!dir.exists(output.path))
     stop("Path", output.path, "doesn't exist")
 
   if (verbose) cat("Merge count matrices... ")
-  count.matrix.merged <- con$getJointCountMatrix(raw = TRUE)
+  count.matrix.merged <- con$getJointCountMatrix(raw=TRUE)
   if (verbose) cat("Done.\n")
 
   cell.ids <- colnames(count.matrix.merged)
@@ -178,14 +178,14 @@ basicSeuratProc <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do
 #'
 #' @export
 #'
-velocityInfoConos <- function(cms.list, con, n.odgenes = 2e3, verbose = TRUE, min.max.cluster.average.emat=0.2, min.max.cluster.average.nmat=0.05, min.max.cluster.average.smat=0.01) {
+velocityInfoConos <- function(cms.list, con, n.odgenes=2e3, verbose=TRUE, min.max.cluster.average.emat=0.2, min.max.cluster.average.nmat=0.05, min.max.cluster.average.smat=0.01) {
   if (!requireNamespace("velocyto.R")) {
     stop("You need to install 'velocyto.R' package to be able to use this function")
   }
 
   if (verbose) cat("Merging raw count matrices...\n")
   # Merge samples to get names of relevant cells and genes 
-  raw.count.matrix.merged <- con$getJointCountMatrix(raw = TRUE)
+  raw.count.matrix.merged <- con$getJointCountMatrix(raw=TRUE)
   
   if (verbose) cat("Merging velocity files...\n")
   # Intersect genes and cells between the conos object and all the velocity files
@@ -210,19 +210,19 @@ velocityInfoConos <- function(cms.list, con, n.odgenes = 2e3, verbose = TRUE, mi
   
   if (verbose) cat("Calculating cell distances...\n")
   # Get PCA results for all the samples from the conos object
-  pcs <- pcaForVelo(con$samples, n.odgenes = n.odgenes)
+  pcs <- pcaForVelo(con$samples, n.odgenes=n.odgenes)
   # Again, keep the order of cells consistent
   pcs <- pcs[order(match(rownames(pcs), rownames(emb))),]
   # Calculate the cell distances based on correlation
   cell.dist <- as.dist(1 - velocyto.R::armaCor(t(pcs)))
   
   if (verbose) cat("Filtering velocity...\n")
-  emat %<>% velocyto.R::filter.genes.by.cluster.expression(cluster.label, min.max.cluster.average = min.max.cluster.average.emat)
-  nmat %<>% velocyto.R::filter.genes.by.cluster.expression(cluster.label, min.max.cluster.average = min.max.cluster.average.nmat)
-  smat %<>% velocyto.R::filter.genes.by.cluster.expression(cluster.label, min.max.cluster.average = min.max.cluster.average.smat)
+  emat %<>% velocyto.R::filter.genes.by.cluster.expression(cluster.label, min.max.cluster.average=min.max.cluster.average.emat)
+  nmat %<>% velocyto.R::filter.genes.by.cluster.expression(cluster.label, min.max.cluster.average=min.max.cluster.average.nmat)
+  smat %<>% velocyto.R::filter.genes.by.cluster.expression(cluster.label, min.max.cluster.average=min.max.cluster.average.smat)
   
   if (verbose) cat("All Done!")
-  return(list(cell.dist = cell.dist, emat = emat, nmat = nmat, smat = smat, cell.colors = cell.colors, emb = emb))
+  return(list(cell.dist=cell.dist, emat=emat, nmat=nmat, smat=smat, cell.colors=cell.colors, emb=emb))
 }
 
 # Intersect genes and cells between all the velocity files and the conos object
@@ -247,14 +247,14 @@ prepareVelocity <- function(cms.file, genes, cells) {
 
 # Get PCA results for all the samples from the conos object
 # This is a modification of the quickPlainPCA function
-pcaForVelo <- function(p2.list, data.type = 'counts', k = 30, ncomps = 100, n.odgenes = NULL, verbose = TRUE) {
+pcaForVelo <- function(p2.list, data.type='counts', k=30, ncomps=100, n.odgenes=NULL, verbose=TRUE) {
   od.genes <- commonOverdispersedGenes(p2.list, n.odgenes, verbose = FALSE)
   if(length(od.genes)<5) return(NULL)
   
   if(verbose) cat('Calculating PCs for',length(p2.list),' datasets ...')
   
   # Get scaled matrices from a list of pagoda2 objects
-  sm <- scaledMatrices(p2.list, data.type = data.type, od.genes = od.genes, var.scale = TRUE, neighborhood.average = FALSE);
+  sm <- scaledMatrices(p2.list, data.type=data.type, od.genes=od.genes, var.scale=TRUE, neighborhood.average=FALSE);
   # Transpose the scaled matrices since we want to run PCA on cells and not genes (like in quickPlainPCA)
   sm <- lapply(sm, t)
   # Get the names of all the cells
@@ -263,7 +263,7 @@ pcaForVelo <- function(p2.list, data.type = 'counts', k = 30, ncomps = 100, n.od
   pcs <- lapply(sm, function(x) {
     cm <- Matrix::colMeans(x);
     ncomps <- min(c(nrow(cm)-1,ncol(cm)-1,ncomps))
-    res <- irlba::irlba(x, nv = ncomps, nu = 0, center = cm, right_only = F, reorth = T)
+    res <- irlba::irlba(x, nv=ncomps, nu=0, center=cm, right_only=F, reorth=T)
     res
   })
   
