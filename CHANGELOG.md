@@ -1,7 +1,7 @@
 ## Upcoming
 
 ### Changed
-
+- Added mean M value column to the diff. expression output
 - Optimized plotting with coloring by genes
 - `getDifferentialGenes` uses first clustering by default
 - Fixed bug with `collapseCellsByType`. **Note:** probably will affect DE results.
