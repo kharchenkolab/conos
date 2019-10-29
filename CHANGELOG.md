@@ -14,6 +14,7 @@
 - Changed default value of `fixed.initial.labels` in `propagateLabels` from `FALSE` to `TRUE`. Presumably, `FALSE` should never be used.
 - New output format for label propagation (list of "labels", "uncertainty" and "label.distribution")
 - Numerous small bug fixes and small validations for correct arguments
+- Name of `pcaForVelo` to `pcaFromConos` (the function is now used more widely)
 
 ### Added
 
@@ -26,6 +27,7 @@
 - `velocityInfoConos` function for RNA velocity analysis on samples integrated with conos (together with supplementary functions `prepareVelocity` and `pcaForVelo`)
 - "Running RNA velocity on a conos object" section in README.md (explains usage of the `velocityInfoConos` function)
 - Function `getJointCountMatrix` to conos obect
+- New possibilities to customize the output of `saveConosForScanPy` 
 
 ## [1.1.2] - 2019-07-16
 

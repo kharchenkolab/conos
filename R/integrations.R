@@ -80,46 +80,80 @@ seuratProcV3 <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, n.pcs
 #' @param output.path path to a folder, where intermediate files will be saved
 #' @param metadata.df data.frame with additional metadata with rownames corresponding to cell ids, which should be passed to ScanPy.
 #' If NULL, only information about cell ids and origin dataset will be saved.
-#' @param n.dims to emulate PCA, Conos embed the graph to a space with `n.dims` dimensions and saves it as PCA
+#' @param norm logical, whether to include the matrix of normalised counts (only raw counts saved by default)
+#' @param pseudo.pca logical, to produce an emulated PCA, Conos embeds the graph to a space with `n.dims` dimensions and saves it as a pseudoPCA
+#' @param pca logical, whether to include PCA of all the samples (not batch corrected)
+#' @param n.dims number of dimensions for calculating PCA and/or pseudoPCA
+#' @param embed logical, whether to include the current conos embedding
+#' @param connect logical, whether to include graph connectivities and distances
 #' @param verbose print more messages
 #'
 #' @export
-saveConosForScanPy <- function(con, output.path, metadata.df=NULL, n.dims=100, verbose=FALSE) {
+saveConosForScanPy <- function(con, output.path, metadata.df=NULL, norm=FALSE, pseudo.pca=FALSE, pca=FALSE, n.dims=100, embed=FALSE, connect=FALSE, verbose=FALSE) {
   if (!dir.exists(output.path))
     stop("Path", output.path, "doesn't exist")
 
-  if (verbose) cat("Merge count matrices... ")
-  count.matrix.merged <- con$getJointCountMatrix(raw=TRUE)
+  if (verbose) cat("Merge raw count matrices...\t")
+  raw.count.matrix.merged <- con$getJointCountMatrix(raw=TRUE)
   if (verbose) cat("Done.\n")
 
-  cell.ids <- colnames(count.matrix.merged)
+  cell.ids <- colnames(raw.count.matrix.merged)
+  gene.df <- data.frame(gene=rownames(raw.count.matrix.merged))
 
   if (!is.null(metadata.df)) {
     metadata.df %<>% .[cell.ids, , drop=F] %>% dplyr::mutate(CellId=cell.ids)
   } else {
     metadata.df <- tibble::tibble(CellId=cell.ids)
   }
-
   metadata.df$Dataset <- as.character(con$getDatasetPerCell()[cell.ids])
 
-  if (verbose) cat("Create psudo-PCA space\n")
-  gene.df <- data.frame(gene=rownames(count.matrix.merged))
-  pseudopca.df <- con$embedGraph(target.dims=n.dims, method="largeVis", verbose=verbose)[cell.ids, ]
+  if (norm) {
+    if (verbose) cat("Merge count matrices...\t\t")
+    count.matrix.merged <- con$getJointCountMatrix(raw=FALSE)
+    if (verbose) cat("Done.\n")
+  }
 
-  if (verbose) cat("Done\n")
+  # Create a batch-free embedding that can be used instead of PCA space
+  if (pseudo.pca) {
+    if (verbose) cat("Create psudo-PCA space\t")
+    pseudopca.df <- con$embedGraph(target.dims=n.dims, method="largeVis", verbose=verbose)[cell.ids, ] %>% as.data.frame()
+    if (verbose) cat("Done\n")
+  }
+  
+  if (pca){
+    if (verbose) cat("Save PCA space\t")
+    pca.df <- pcaFromConos(con$samples, ncomps=n.dims, n.odgenes=2000, verbose=verbose) %>% as.data.frame()
+    if (verbose) cat("Done\n")
+  }
 
-  graph.conn <- igraph::as_adjacency_matrix(con$graph, attr="weight")[cell.ids, cell.ids]
-  graph.dist <- graph.conn
-  graph.dist@x <- 1 - graph.dist@x
+  if (embed){
+    if (verbose) cat("Save the embedding\t")
+    embed.df <- con$embedding[cell.ids,] %>% as.data.frame()
+    if (verbose) cat("Done\n")
+  }
+  
+  if (connect){
+    if (verbose) cat("Save graph matrices\t")
+    graph.conn <- igraph::as_adjacency_matrix(con$graph, attr="weight")[cell.ids, cell.ids]
+    graph.dist <- graph.conn
+    graph.dist@x <- 1 - graph.dist@x
+    if (verbose) cat("Done\n")
+  }
 
-  if (verbose) cat("Write data to disk... ")
-  Matrix::writeMM(count.matrix.merged, paste0(output.path, "/count_matrix.mtx"))
+  if (verbose) cat("Write data to disk...\t\t")
+  Matrix::writeMM(raw.count.matrix.merged, paste0(output.path, "/raw_count_matrix.mtx"))
   data.table::fwrite(metadata.df, paste0(output.path, "/metadata.csv"))
   data.table::fwrite(gene.df, paste0(output.path, "/genes.csv"))
-  data.table::fwrite(pseudopca.df, paste0(output.path, "/pca.csv"))
-  Matrix::writeMM(graph.conn, paste0(output.path, "/graph_connectivities.mtx"))
-  Matrix::writeMM(graph.dist, paste0(output.path, "/graph_distances.mtx"))
-  if (verbose) cat("Done\n")
+  if (norm) Matrix::writeMM(count.matrix.merged, paste0(output.path, "/count_matrix.mtx"))
+  if (pseudo.pca) data.table::fwrite(pseudopca.df, paste0(output.path, "/pseudopca.csv"))
+  if (pca) data.table::fwrite(pseudopca.df, paste0(output.path, "/pca.csv"))
+  if (embed) data.table::fwrite(embed.df, paste0(output.path, "/embed.csv"))
+  if (connect) {
+    Matrix::writeMM(graph.conn, paste0(output.path, "/graph_connectivities.mtx"))
+    Matrix::writeMM(graph.dist, paste0(output.path, "/graph_distances.mtx"))
+  }
+  if (verbose) cat("Done.\n")
+  if (verbose) cat("All Done!")
 }
 
 #' Create and preprocess a Seurat object
@@ -210,7 +244,7 @@ velocityInfoConos <- function(cms.list, con, n.odgenes=2e3, verbose=TRUE, min.ma
   
   if (verbose) cat("Calculating cell distances...\n")
   # Get PCA results for all the samples from the conos object
-  pcs <- pcaForVelo(con$samples, n.odgenes=n.odgenes)
+  pcs <- pcaFromConos(con$samples, n.odgenes=n.odgenes)
   # Again, keep the order of cells consistent
   pcs <- pcs[order(match(rownames(pcs), rownames(emb))),]
   # Calculate the cell distances based on correlation
@@ -247,7 +281,7 @@ prepareVelocity <- function(cms.file, genes, cells) {
 
 # Get PCA results for all the samples from the conos object
 # This is a modification of the quickPlainPCA function
-pcaForVelo <- function(p2.list, data.type='counts', k=30, ncomps=100, n.odgenes=NULL, verbose=TRUE) {
+pcaFromConos <- function(p2.list, data.type='counts', k=30, ncomps=100, n.odgenes=NULL, verbose=TRUE) {
   od.genes <- commonOverdispersedGenes(p2.list, n.odgenes, verbose = FALSE)
   if(length(od.genes)<5) return(NULL)
   

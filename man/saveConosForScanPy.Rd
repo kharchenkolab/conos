@@ -4,8 +4,9 @@
 \alias{saveConosForScanPy}
 \title{Save Conos object on disk to read it from ScanPy}
 \usage{
-saveConosForScanPy(con, output.path, metadata.df = NULL, n.dims = 100,
-  verbose = F)
+saveConosForScanPy(con, output.path, metadata.df = NULL, norm = FALSE,
+  pseudo.pca = FALSE, pca = FALSE, n.dims = 100, embed = FALSE,
+  connect = FALSE, verbose = FALSE)
 }
 \arguments{
 \item{con}{conos object}
@@ -15,7 +16,17 @@ saveConosForScanPy(con, output.path, metadata.df = NULL, n.dims = 100,
 \item{metadata.df}{data.frame with additional metadata with rownames corresponding to cell ids, which should be passed to ScanPy.
 If NULL, only information about cell ids and origin dataset will be saved.}
 
-\item{n.dims}{to emulate PCA, Conos embed the graph to a space with `n.dims` dimensions and saves it as PCA}
+\item{norm}{logical, whether to include the matrix of normalised counts (only raw counts saved by default)}
+
+\item{pseudo.pca}{logical, to produce an emulated PCA, Conos embeds the graph to a space with `n.dims` dimensions and saves it as a pseudoPCA}
+
+\item{pca}{logical, whether to include PCA of all the samples (not batch corrected)}
+
+\item{n.dims}{number of dimensions for calculating PCA and/or pseudoPCA}
+
+\item{embed}{logical, whether to include the current conos embedding}
+
+\item{connect}{logical, whether to include graph connectivities and distances}
 
 \item{verbose}{print more messages}
 }
