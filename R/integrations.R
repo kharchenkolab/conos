@@ -89,7 +89,7 @@ saveConosForScanPy <- function(con, output.path, metadata.df=NULL, n.dims=100, v
     stop("Path", output.path, "doesn't exist")
 
   if (verbose) cat("Merge count matrices... ")
-  count.matrix.merged <- lapply(con$samples, getRawCountMatrix) %>% mergeCountMatrices()
+  count.matrix.merged <- con$getJointCountMatrix(raw = TRUE)
   if (verbose) cat("Done.\n")
 
   cell.ids <- colnames(count.matrix.merged)
@@ -185,7 +185,7 @@ velocityInfoConos <- function(cms.list, con, n.odgenes = 2e3, verbose = TRUE, mi
 
   if (verbose) cat("Merging raw count matrices...\n")
   # Merge samples to get names of relevant cells and genes 
-  raw.count.matrix.merged <- lapply(con$samples, getRawCountMatrix) %>% mergeCountMatrices()
+  raw.count.matrix.merged <- con$getJointCountMatrix(raw = TRUE)
   
   if (verbose) cat("Merging velocity files...\n")
   # Intersect genes and cells between the conos object and all the velocity files

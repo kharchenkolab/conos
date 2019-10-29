@@ -362,8 +362,7 @@ Conos <- setRefClass(
         if (verbose) cat("Estimating specificity metrics\n")
 
         groups.clean <- groups[!is.na(groups)]
-        cm.merged <- lapply(samples, getRawCountMatrix, transposed=T) %>%
-          mergeCountMatrices(transposed=T)
+        cm.merged <- getJointCountMatrix(raw = TRUE)
 
         dif <- intersect(rownames(cm.merged),names(groups.clean))
 
