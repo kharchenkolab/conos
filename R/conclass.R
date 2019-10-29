@@ -344,7 +344,7 @@ Conos <- setRefClass(
         groups <- clusters[[1]]$groups
       }
 
-      groups %<>% as.factor()
+      groups %<>% as.factor() %>% droplevels()
       if (class(samples[[1]]) != 'Pagoda2') # TODO: add Seurat
         stop("Only Pagoda objects are supported for marker genes")
 

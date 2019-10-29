@@ -1252,7 +1252,7 @@ findSubcommunities <- function(con, target.clusters, clustering=NULL, groups=NUL
     stop("'groups' not defined for graph object.")
   }
 
-  groups <- droplevels(groups[groups %in% target.clusters])
+  groups <- droplevels(as.factor(groups)[groups %in% target.clusters])
   if(length(groups) == 0) {
     stop("None of 'target.clusters' can be found in 'groups'.")
   }
