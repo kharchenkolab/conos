@@ -554,10 +554,13 @@ getBetweenCellTypeCorrectedDE <- function(con.obj, sample.groups =  NULL, groups
 #' returns data.frame with aggregated info for this cell type
 aggregateDEMarkersAcrossDatasets <- function(marker.dfs, z.threshold, upregulated.only) {
   z.scores.per.dataset <- lapply(marker.dfs, function(df) setNames(df$Z, rownames(df)))
+  m.vals.per.dataset <- lapply(marker.dfs, function(df) setNames(df$M, rownames(df)))
   gene.union <- lapply(z.scores.per.dataset, names) %>% Reduce(union, .)
-  z.scores <- sapply(z.scores.per.dataset, `[`, gene.union) %>% rowMeans(na.rm=T) %>% sort(decreasing=T)
+  z.scores <- sapply(z.scores.per.dataset, `[`, gene.union) %>% rowMeans(na.rm=T)
+  m.vals <- sapply(m.vals.per.dataset, `[`, gene.union) %>% rowMeans(na.rm=T)
+  ro <- order(z.scores,decreasing=T)
   pvals <- dnorm(z.scores)
-  res <- data.frame(Gene=names(z.scores), Z=z.scores, PValue=pvals, PAdj=p.adjust(pvals))
+  res <- data.frame(Gene=names(z.scores), M=m.vals, Z=z.scores, PValue=pvals, PAdj=p.adjust(pvals))[ro,]
 
   z.filter <- if (upregulated.only) res$Z else abs(res$Z)
   return(res[z.filter > z.threshold,])
