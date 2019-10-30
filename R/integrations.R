@@ -114,30 +114,30 @@ saveConosForScanPy <- function(con, output.path, metadata.df=NULL, norm=FALSE, p
   }
 
   if (embed){
-    if (verbose) cat("Save the embedding\t")
+    if (verbose) cat("Save the embedding...\t\t")
     embed.df <- con$embedding[cell.ids,] %>% as.data.frame()
-    if (verbose) cat("Done\n")
+    if (verbose) cat("Done.\n")
   }
 
   # Create a batch-free embedding that can be used instead of PCA space
   if (pseudo.pca) {
-    if (verbose) cat("Create psudo-PCA space\t")
-    pseudopca.df <- con$embedGraph(target.dims=n.dims, method="largeVis", verbose=verbose)[cell.ids, ] %>% as.data.frame()
-    if (verbose) cat("Done\n")
+    if (verbose) cat("Create psudo-PCA space...\t")
+    pseudopca.df <- con$embedGraph(target.dims=n.dims, method="largeVis", verbose=FALSE)[cell.ids, ] %>% as.data.frame()
+    if (verbose) cat("Done.\n")
   }
   
   if (pca){
-    if (verbose) cat("Save PCA space\t")
-    pca.df <- pcaFromConos(con$samples, ncomps=n.dims, n.odgenes=2000, verbose=verbose) %>% as.data.frame()
-    if (verbose) cat("Done\n")
+    if (verbose) cat("Save PCA space...\t\t")
+    pca.df <- pcaFromConos(con$samples, ncomps=n.dims, n.odgenes=2000, verbose=FALSE) %>% as.data.frame()
+    if (verbose) cat("Done.\n")
   }
   
   if (connect){
-    if (verbose) cat("Save graph matrices\t")
+    if (verbose) cat("Save graph matrices...\t\t")
     graph.conn <- igraph::as_adjacency_matrix(con$graph, attr="weight")[cell.ids, cell.ids]
     graph.dist <- graph.conn
     graph.dist@x <- 1 - graph.dist@x
-    if (verbose) cat("Done\n")
+    if (verbose) cat("Done.\n")
   }
 
   if (verbose) cat("Write data to disk...\t\t")
@@ -302,7 +302,7 @@ pcaFromConos <- function(p2.list, data.type='counts', k=30, ncomps=100, n.odgene
   od.genes <- commonOverdispersedGenes(p2.list, n.odgenes, verbose = FALSE)
   if(length(od.genes)<5) return(NULL)
   
-  if(verbose) cat('Calculating PCs for',length(p2.list),' datasets ...')
+  if(verbose) cat('Calculating PCs for',length(p2.list),' datasets...\n')
   
   # Get scaled matrices from a list of pagoda2 objects
   sm <- scaledMatrices(p2.list, data.type=data.type, od.genes=od.genes, var.scale=TRUE, neighborhood.average=FALSE);
