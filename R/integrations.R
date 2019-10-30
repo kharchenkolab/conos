@@ -97,8 +97,8 @@ saveConosForScanPy <- function(con, output.path, metadata.df=NULL, norm=FALSE, p
   raw.count.matrix.merged <- con$getJointCountMatrix(raw=TRUE)
   if (verbose) cat("Done.\n")
 
-  cell.ids <- colnames(raw.count.matrix.merged)
-  gene.df <- data.frame(gene=rownames(raw.count.matrix.merged))
+  cell.ids <- rownames(raw.count.matrix.merged)
+  gene.df <- data.frame(gene=colnames(raw.count.matrix.merged))
 
   if (!is.null(metadata.df)) {
     metadata.df %<>% .[cell.ids, , drop=F] %>% dplyr::mutate(CellId=cell.ids)
@@ -244,7 +244,7 @@ velocityInfoConos <- function(cms.list, con, clustering=NULL, groups=NULL, n.odg
   
   if (verbose) cat("Merging velocity files...\n")
   # Intersect genes and cells between the conos object and all the velocity files
-  cms.list <- lapply(cms.list, prepareVelocity, rownames(raw.count.matrix.merged), colnames(raw.count.matrix.merged))
+  cms.list <- lapply(cms.list, prepareVelocity, genes=colnames(raw.count.matrix.merged), cells=rownames(raw.count.matrix.merged))
   # Keep only genes present in velocity files from all the samples
   common.genes <-  Reduce(intersect, lapply(cms.list, function(x) {rownames(x[[1]])}))
   cms.list <- lapply(cms.list, function(x) {lapply(x, function(y) {y[row.names(y) %in% common.genes,]} )} )
