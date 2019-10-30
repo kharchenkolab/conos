@@ -147,7 +147,7 @@ saveConosForScanPy <- function(con, output.path, metadata.df=NULL, norm=FALSE, p
   if (norm) Matrix::writeMM(count.matrix.merged, paste0(output.path, "/count_matrix.mtx"))
   if (embed) data.table::fwrite(embed.df, paste0(output.path, "/embed.csv"))
   if (pseudo.pca) data.table::fwrite(pseudopca.df, paste0(output.path, "/pseudopca.csv"))
-  if (pca) data.table::fwrite(pseudopca.df, paste0(output.path, "/pca.csv"))
+  if (pca) data.table::fwrite(pca.df, paste0(output.path, "/pca.csv"))
   if (connect) {
     Matrix::writeMM(graph.conn, paste0(output.path, "/graph_connectivities.mtx"))
     Matrix::writeMM(graph.dist, paste0(output.path, "/graph_distances.mtx"))
