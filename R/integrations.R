@@ -80,13 +80,13 @@ seuratProcV3 <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, n.pcs
 #' @param output.path path to a folder, where intermediate files will be saved
 #' @param metadata.df data.frame with additional metadata with rownames corresponding to cell ids, which should be passed to ScanPy.
 #' If NULL, only information about cell ids and origin dataset will be saved.
-#' @param norm logical, whether to include the matrix of normalised counts (only raw counts saved by default)
-#' @param pseudo.pca logical, to produce an emulated PCA, Conos embeds the graph to a space with `n.dims` dimensions and saves it as a pseudoPCA
-#' @param pca logical, whether to include PCA of all the samples (not batch corrected)
+#' @param norm logical, include the matrix of normalised counts. Default: FALSE
+#' @param pseudo.pca logical, produce an emulated PCA by embedding the graph to a space with `n.dims` dimensions and save it as a pseudoPCA. Default: FALSE
+#' @param pca logical, include PCA of all the samples (not batch corrected). Default: FALSE
 #' @param n.dims number of dimensions for calculating PCA and/or pseudoPCA
-#' @param embed logical, whether to include the current conos embedding
-#' @param connect logical, whether to include graph connectivities and distances
-#' @param verbose print more messages
+#' @param embed logical, include the current conos embedding. Default: FALSE
+#' @param connect logical, include graph of connectivities and distances. Default: FALSE
+#' @param verbose verbose mode. Default: FALSE
 #'
 #' @export
 saveConosForScanPy <- function(con, output.path, metadata.df=NULL, norm=FALSE, pseudo.pca=FALSE, pca=FALSE, n.dims=100, embed=FALSE, connect=FALSE, verbose=FALSE) {

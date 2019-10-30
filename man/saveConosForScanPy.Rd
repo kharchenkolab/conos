@@ -16,19 +16,19 @@ saveConosForScanPy(con, output.path, metadata.df = NULL, norm = FALSE,
 \item{metadata.df}{data.frame with additional metadata with rownames corresponding to cell ids, which should be passed to ScanPy.
 If NULL, only information about cell ids and origin dataset will be saved.}
 
-\item{norm}{logical, whether to include the matrix of normalised counts (only raw counts saved by default)}
+\item{norm}{logical, include the matrix of normalised counts. Default: FALSE}
 
-\item{pseudo.pca}{logical, to produce an emulated PCA, Conos embeds the graph to a space with `n.dims` dimensions and saves it as a pseudoPCA}
+\item{pseudo.pca}{logical, produce an emulated PCA by embedding the graph to a space with `n.dims` dimensions and save it as a pseudoPCA. Default: FALSE}
 
-\item{pca}{logical, whether to include PCA of all the samples (not batch corrected)}
+\item{pca}{logical, include PCA of all the samples (not batch corrected). Default: FALSE}
 
 \item{n.dims}{number of dimensions for calculating PCA and/or pseudoPCA}
 
-\item{embed}{logical, whether to include the current conos embedding}
+\item{embed}{logical, include the current conos embedding. Default: FALSE}
 
-\item{connect}{logical, whether to include graph connectivities and distances}
+\item{connect}{logical, include graph of connectivities and distances. Default: FALSE}
 
-\item{verbose}{print more messages}
+\item{verbose}{verbose mode. Default: FALSE}
 }
 \description{
 Save Conos object on disk to read it from ScanPy
