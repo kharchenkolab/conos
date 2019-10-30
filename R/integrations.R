@@ -81,10 +81,10 @@ seuratProcV3 <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, n.pcs
 #' @param metadata.df data.frame with additional metadata with rownames corresponding to cell ids, which should be passed to ScanPy.
 #' If NULL, only information about cell ids and origin dataset will be saved.
 #' @param norm logical, include the matrix of normalised counts. Default: FALSE
+#' @param embed logical, include the current conos embedding. Default: FALSE
 #' @param pseudo.pca logical, produce an emulated PCA by embedding the graph to a space with `n.dims` dimensions and save it as a pseudoPCA. Default: FALSE
 #' @param pca logical, include PCA of all the samples (not batch corrected). Default: FALSE
 #' @param n.dims number of dimensions for calculating PCA and/or pseudoPCA
-#' @param embed logical, include the current conos embedding. Default: FALSE
 #' @param connect logical, include graph of connectivities and distances. Default: FALSE
 #' @param verbose verbose mode. Default: FALSE
 #'
@@ -113,6 +113,12 @@ saveConosForScanPy <- function(con, output.path, metadata.df=NULL, norm=FALSE, p
     if (verbose) cat("Done.\n")
   }
 
+  if (embed){
+    if (verbose) cat("Save the embedding\t")
+    embed.df <- con$embedding[cell.ids,] %>% as.data.frame()
+    if (verbose) cat("Done\n")
+  }
+
   # Create a batch-free embedding that can be used instead of PCA space
   if (pseudo.pca) {
     if (verbose) cat("Create psudo-PCA space\t")
@@ -123,12 +129,6 @@ saveConosForScanPy <- function(con, output.path, metadata.df=NULL, norm=FALSE, p
   if (pca){
     if (verbose) cat("Save PCA space\t")
     pca.df <- pcaFromConos(con$samples, ncomps=n.dims, n.odgenes=2000, verbose=verbose) %>% as.data.frame()
-    if (verbose) cat("Done\n")
-  }
-
-  if (embed){
-    if (verbose) cat("Save the embedding\t")
-    embed.df <- con$embedding[cell.ids,] %>% as.data.frame()
     if (verbose) cat("Done\n")
   }
   
@@ -145,9 +145,9 @@ saveConosForScanPy <- function(con, output.path, metadata.df=NULL, norm=FALSE, p
   data.table::fwrite(metadata.df, paste0(output.path, "/metadata.csv"))
   data.table::fwrite(gene.df, paste0(output.path, "/genes.csv"))
   if (norm) Matrix::writeMM(count.matrix.merged, paste0(output.path, "/count_matrix.mtx"))
+  if (embed) data.table::fwrite(embed.df, paste0(output.path, "/embed.csv"))
   if (pseudo.pca) data.table::fwrite(pseudopca.df, paste0(output.path, "/pseudopca.csv"))
   if (pca) data.table::fwrite(pseudopca.df, paste0(output.path, "/pca.csv"))
-  if (embed) data.table::fwrite(embed.df, paste0(output.path, "/embed.csv"))
   if (connect) {
     Matrix::writeMM(graph.conn, paste0(output.path, "/graph_connectivities.mtx"))
     Matrix::writeMM(graph.dist, paste0(output.path, "/graph_distances.mtx"))
