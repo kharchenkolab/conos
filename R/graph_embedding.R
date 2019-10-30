@@ -28,7 +28,7 @@ embedKnnGraph <- function(commute.times, n.neighbors, names=NULL, verbose=TRUE, 
   min.n.neighbors <- sapply(commute.times$idx, length) %>% min()
   if (min.n.neighbors < n.neighbors) {
     n.neighbors <- min.n.neighbors
-    warning("Maximal number of estimated neighbors is ", min.n.neighbors)
+    warning("Maximal number of estimated neighbors is ", min.n.neighbors, ". Consider increasing min.visited.verts, min.prob or min.prob.lower.\n")
   }
 
   ct.top <- sapply(commute.times$dist, `[`, 1:n.neighbors) %>% t() + 1
@@ -47,7 +47,12 @@ embedGraphUmap <- function(graph, verbose=T, min.prob=1e-3, min.visited.verts=10
                            max.hitting.nn.num=0, max.commute.nn.num=0, min.prob.lower=1e-7,
                            n.neighbors=40, n.epochs=1000, spread=15, min.dist=0.001, return.all=F,
                            n.sgd.cores=n.cores, ...) {
-  min.visited.verts = min(min.visited.verts, length(igraph::V(graph) - 1))
+  conn.comps <- igraph::components(graph)
+  if (conn.comps$no > 1) {
+    warning("Conos graph is not connected. Embedding may behave unexpectedly. ",
+            "Please, consider increasing 'k' and/or 'k.self' parameters of 'buildGraph'\n")
+  }
+  min.visited.verts = min(min.visited.verts, min(conn.comps$csize) - 1)
   if (max.hitting.nn.num == 0) {
     max.hitting.nn.num <- length(igraph::V(graph)) - 1
   }
