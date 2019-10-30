@@ -202,8 +202,10 @@ basicSeuratProc <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do
 #'
 #' @param cms.list list of velocity files written out as cell.counts.matrices.rds files by running dropest with -V option
 #' @param con conos object (after creating an embedding and running leiden clustering)
-#' @param n.odgenes number of overdispersed genes to use for PCA
-#' @param verbose verbose mode
+#' @param clustering name of clustering in the conos object to use. Either 'clustering' or 'groups' must be provided. Default: NULL
+#' @param groups set of clusters to use. Ignored if 'clustering' is not NULL. Default: NULL
+#' @param n.odgenes number of overdispersed genes to use for PCA. Default: 2000
+#' @param verbose verbose mode. Default: TRUE
 #'
 #'
 #' @return List with cell distances, combined spliced expression matrix, combined unspliced expression matrix, combined matrix of spanning reads, cell colors for clusters and embedding (taken from conos)
@@ -212,10 +214,29 @@ basicSeuratProc <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do
 #'
 #' @export
 #'
-velocityInfoConos <- function(cms.list, con, n.odgenes=2e3, verbose=TRUE, min.max.cluster.average.emat=0.2, min.max.cluster.average.nmat=0.05, min.max.cluster.average.smat=0.01) {
+velocityInfoConos <- function(cms.list, con, clustering=NULL, groups=NULL, n.odgenes=2e3, verbose=TRUE, min.max.cluster.average.emat=0.2, min.max.cluster.average.nmat=0.05, min.max.cluster.average.smat=0.01) {
   if (!requireNamespace("velocyto.R")) {
     stop("You need to install 'velocyto.R' package to be able to use this function")
   }
+
+  if(!is.null(clustering)) {
+    if(clustering=="leiden") {
+      groups <- con$clusters$leiden$groups
+    } else if(clustering=="walktrap") {
+      groups <- con$clusters$walktrap$groups
+    } else {
+      stop("Unknown 'clustering'.")
+    }
+  }
+
+  if(is.null(groups)) {
+    stop("Need 'groups' argument.")
+  } else if(!any(names(groups) %in% names(V(con$graph)))) {
+    stop("'groups' not defined for graph object.")
+  }
+
+  cell.colors <- fac2col(groups)
+  emb <- con$embedding
 
   if (verbose) cat("Merging raw count matrices...\n")
   # Merge samples to get names of relevant cells and genes 
@@ -232,10 +253,6 @@ velocityInfoConos <- function(cms.list, con, n.odgenes=2e3, verbose=TRUE, min.ma
   emat <- do.call(cbind, lapply(cms.list, function(x) {x[[1]]}))
   nmat <- do.call(cbind, lapply(cms.list, function(x) {x[[2]]}))
   smat <- do.call(cbind, lapply(cms.list, function(x) {x[[3]]}))
-  
-  cluster.label <- con$clusters$leiden$groups
-  cell.colors <- fac2col(cluster.label)
-  emb <- con$embedding
   
   # Keep the order of cells consistent between velocity matrices and the embedding (not really sure whether it's necessary...)
   emat <- emat[,order(match(colnames(emat), rownames(emb)))]

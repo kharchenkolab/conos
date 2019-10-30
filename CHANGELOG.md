@@ -14,7 +14,6 @@
 - Changed default value of `fixed.initial.labels` in `propagateLabels` from `FALSE` to `TRUE`. Presumably, `FALSE` should never be used.
 - New output format for label propagation (list of "labels", "uncertainty" and "label.distribution")
 - Numerous small bug fixes and small validations for correct arguments
-- Name of `pcaForVelo` to `pcaFromConos` (the function is now used more widely)
 
 ### Added
 
@@ -24,7 +23,7 @@
 - Parameter `subgroups` to `embeddingPlot`. It allows to plot only cells, belonging to the specified subgroups
 - Parameter `keep.limits` to `embeddingPlot`
 - Added metrics to masure specifisity of cell type markers to DE info in `getDifferentialGenes` (parameters `append.specifisity.metrics` and `append.auc`)
-- `velocityInfoConos` function for RNA velocity analysis on samples integrated with conos (together with supplementary functions `prepareVelocity` and `pcaForVelo`)
+- `velocityInfoConos` function for RNA velocity analysis on samples integrated with conos (together with supplementary functions `prepareVelocity` and `pcaFromConos`)
 - "Running RNA velocity on a conos object" section in README.md (explains usage of the `velocityInfoConos` function)
 - Function `getJointCountMatrix` to conos obect
 - New possibilities to customize the output of `saveConosForScanPy` 
