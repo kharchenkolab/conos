@@ -167,15 +167,15 @@ Conos <- setRefClass(
         if(verbose) cat('running',sum(is.na(mi)),'additional',space,' space pairs ')
         xl2 <- papply(which(is.na(mi)), function(i) {
           if(space=='CPCA') {
-            xcp <- quickCPCA(samples[sn.pairs[,i]],data.type=data.type,k=k,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale,neighborhood.average=neighborhood.average, score.component.variance=score.component.variance)
+            xcp <- quickCPCA(samples[sn.pairs[,i]],data.type=data.type,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale,neighborhood.average=neighborhood.average, score.component.variance=score.component.variance)
           } else if(space=='JNMF') {
             xcp <- quickJNMF(samples[sn.pairs[,i]],data.type=data.type,n.comps=ncomps,n.odgenes=n.odgenes,var.scale=var.scale,verbose=FALSE,max.iter=3e3,neighborhood.average=neighborhood.average)
           } else if (space == 'genes') {
             xcp <- quickNULL(p2.objs = samples[sn.pairs[,i]], data.type=data.type, n.odgenes=n.odgenes, var.scale = var.scale, verbose = FALSE, neighborhood.average=neighborhood.average);
           } else if (space == 'PCA') {
-            xcp <- quickPlainPCA(samples[sn.pairs[,i]], data.type=data.type, k=k,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale,neighborhood.average=neighborhood.average, score.component.variance=score.component.variance)
+            xcp <- quickPlainPCA(samples[sn.pairs[,i]], data.type=data.type,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale,neighborhood.average=neighborhood.average, score.component.variance=score.component.variance)
           } else if (space == 'CCA' || space=='PMA') {
-            xcp <- quickCCA(samples[sn.pairs[,i]],data.type=data.type,k=k,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale,neighborhood.average=neighborhood.average, score.component.variance=score.component.variance,PMA=(space=='PMA'))
+            xcp <- quickCCA(samples[sn.pairs[,i]],data.type=data.type,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale,neighborhood.average=neighborhood.average, score.component.variance=score.component.variance,PMA=(space=='PMA'))
           }
           if(verbose) cat('.')
           xcp

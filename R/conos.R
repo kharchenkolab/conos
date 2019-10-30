@@ -180,14 +180,13 @@ cpcaFast <- function(covl,ncells,ncomp=10,maxit=1000,tol=1e-6,use.irlba=TRUE,ver
 
 #' Perform cpca on two samples
 #' @param r.n list of p2 objects
-#' @param k neighborhood size to use
 #' @param ncomps number of components to calculate (default=100)
 #' @param n.odgenes number of overdispersed genes to take from each dataset
 #' @param var.scale whether to scale variance (default=TRUE)
 #' @param verbose whether to be verbose
 #' @param neighborhood.average use neighborhood average values
 #' @param n.cores number of cores to use
-quickCPCA <- function(r.n,data.type='counts',k=30,ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=TRUE,neighborhood.average=FALSE, score.component.variance=FALSE) {
+quickCPCA <- function(r.n,data.type='counts',ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=TRUE,neighborhood.average=FALSE, score.component.variance=FALSE) {
   od.genes <- commonOverdispersedGenes(r.n, n.odgenes, verbose=verbose)
   if(length(od.genes)<5) return(NULL);
 
@@ -240,7 +239,6 @@ quickCPCA <- function(r.n,data.type='counts',k=30,ncomps=100,n.odgenes=NULL,var.
 
 #' Use space of combined sample-specific PCAs as a space
 #' @param r.n list of p2 objects
-#' @param k neighborhood size to use
 #' @param ncomps number of components to calculate (default=30)
 #' @param n.odgenes number of overdispersed genes to take from each dataset
 #' @param var.scale whether to scale variance (default=TRUE)
@@ -248,7 +246,7 @@ quickCPCA <- function(r.n,data.type='counts',k=30,ncomps=100,n.odgenes=NULL,var.
 #' @param cgsf an optional set of common genes to align on
 #' @param neighborhood.average use neighborhood average values
 #' @param n.cores number of cores to use
-quickPlainPCA <- function(r.n,data.type='counts',k=30,ncomps=30,n.odgenes=NULL,var.scale=TRUE,verbose=TRUE,neighborhood.average=FALSE, score.component.variance=FALSE, n.cores=30) {
+quickPlainPCA <- function(r.n,data.type='counts',ncomps=30,n.odgenes=NULL,var.scale=TRUE,verbose=TRUE,neighborhood.average=FALSE, score.component.variance=FALSE, n.cores=30) {
   od.genes <- commonOverdispersedGenes(r.n, n.odgenes, verbose=verbose)
   if(length(od.genes)<5) return(NULL);
 
@@ -285,14 +283,13 @@ quickPlainPCA <- function(r.n,data.type='counts',k=30,ncomps=30,n.odgenes=NULL,v
 
 # Perform CCA (using PMA package or otherwise) on two samples
 #' @param r.n list of p2 objects
-#' @param k neighborhood size to use
 #' @param ncomps number of components to calculate (default=100)
 #' @param n.odgenes number of overdispersed genes to take from each dataset
 #' @param var.scale whether to scale variance (default=TRUE)
 #' @param verbose whether to be verbose
 #' @param neighborhood.average use neighborhood average values
 #' @param n.cores number of cores to use
-quickCCA <- function(r.n,data.type='counts',k=30,ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=TRUE,neighborhood.average=FALSE, PMA=FALSE, score.component.variance=FALSE) {
+quickCCA <- function(r.n,data.type='counts',ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=TRUE,neighborhood.average=FALSE, PMA=FALSE, score.component.variance=FALSE) {
 
   od.genes <- commonOverdispersedGenes(r.n, n.odgenes, verbose=verbose)
   if(length(od.genes)<5) return(NULL);
