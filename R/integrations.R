@@ -236,7 +236,12 @@ velocityInfoConos <- function(cms.list, con, clustering=NULL, groups=NULL, n.odg
   }
 
   cell.colors <- fac2col(groups)
-  emb <- con$embedding
+
+  if (!is.null(con$embedding)){
+    emb <- con$embedding
+  } else {
+    stop("No embedding found in the conos object. Run 'con$embedGraph()' before running this function.")
+  }
 
   if (verbose) cat("Merging raw count matrices...\n")
   # Merge samples to get names of relevant cells and genes 
