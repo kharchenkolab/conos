@@ -14,6 +14,7 @@
 - Changed default value of `fixed.initial.labels` in `propagateLabels` from `FALSE` to `TRUE`. Presumably, `FALSE` should never be used.
 - New output format for label propagation (list of "labels", "uncertainty" and "label.distribution")
 - Numerous small bug fixes and small validations for correct arguments
+- ScanPy integration tutorials to refelect the changes in `saveConosForScanPy` 
 
 ### Added
 

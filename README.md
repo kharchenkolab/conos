@@ -132,7 +132,7 @@ con$plotPanel()
 
 For integration with ScanPy you need to save Conos files on disk from R session, 
 than upload these files from Python. See the following tutorials:
-- [Save Conos for ScanPy](vignettes/scanpy_integration.Rmd)
+- [Save Conos for ScanPy](vignettes/scanpy_integration.md)
 - [Load ScanPy from Conos](vignettes/scanpy_integration.ipynb)
 
 ### Running RNA velocity on a conos object
