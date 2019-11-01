@@ -115,8 +115,14 @@ saveConosForScanPy <- function(con, output.path, metadata.df=NULL, cm.norm=FALSE
 
   if (embedding){
     if (verbose) cat("Save the embedding...\t\t")
-    embedding.df <- con$embedding[cell.ids,] %>% as.data.frame()
-    if (verbose) cat("Done.\n")
+    if (!is.null(con$embedding)) {
+      embedding.df <- con$embedding[cell.ids,] %>% as.data.frame()
+      if (verbose) cat("Done.\n")
+    } else {
+      warning("\n No embedding found in the conos object. Skipping... \n")
+      embedding <- FALSE
+    }
+    
   }
 
   # Create a batch-free embedding that can be used instead of PCA space
@@ -134,10 +140,15 @@ saveConosForScanPy <- function(con, output.path, metadata.df=NULL, cm.norm=FALSE
   
   if (alignment.graph){
     if (verbose) cat("Save graph matrices...\t\t")
-    graph.conn <- igraph::as_adjacency_matrix(con$graph, attr="weight")[cell.ids, cell.ids]
-    graph.dist <- graph.conn
-    graph.dist@x <- 1 - graph.dist@x
-    if (verbose) cat("Done.\n")
+    if (!is.null(con$graph)) {
+      graph.conn <- igraph::as_adjacency_matrix(con$graph, attr="weight")[cell.ids, cell.ids]
+      graph.dist <- graph.conn
+      graph.dist@x <- 1 - graph.dist@x
+      if (verbose) cat("Done.\n")
+    } else {
+      warning("\n No graph found in the conos object. Skipping... \n")
+      alignment.graph <- FALSE
+    } 
   }
 
   if (verbose) cat("Write data to disk...\t\t")
