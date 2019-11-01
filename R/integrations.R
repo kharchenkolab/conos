@@ -80,16 +80,16 @@ seuratProcV3 <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, n.pcs
 #' @param output.path path to a folder, where intermediate files will be saved
 #' @param metadata.df data.frame with additional metadata with rownames corresponding to cell ids, which should be passed to ScanPy.
 #' If NULL, only information about cell ids and origin dataset will be saved.
-#' @param norm logical, include the matrix of normalised counts. Default: FALSE
-#' @param embed logical, include the current conos embedding. Default: FALSE
+#' @param cm.norm logical, include the matrix of normalised counts. Default: FALSE
+#' @param embedding logical, include the current conos embedding. Default: TRUE
 #' @param pseudo.pca logical, produce an emulated PCA by embedding the graph to a space with `n.dims` dimensions and save it as a pseudoPCA. Default: FALSE
 #' @param pca logical, include PCA of all the samples (not batch corrected). Default: FALSE
 #' @param n.dims number of dimensions for calculating PCA and/or pseudoPCA
-#' @param connect logical, include graph of connectivities and distances. Default: FALSE
+#' @param alignment.graph logical, include graph of connectivities and distances. Default: TRUE
 #' @param verbose verbose mode. Default: FALSE
 #'
 #' @export
-saveConosForScanPy <- function(con, output.path, metadata.df=NULL, norm=FALSE, pseudo.pca=FALSE, pca=FALSE, n.dims=100, embed=FALSE, connect=FALSE, verbose=FALSE) {
+saveConosForScanPy <- function(con, output.path, metadata.df=NULL, cm.norm=FALSE, pseudo.pca=FALSE, pca=FALSE, n.dims=100, embedding=TRUE, alignment.graph=TRUE, verbose=FALSE) {
   if (!dir.exists(output.path))
     stop("Path", output.path, "doesn't exist")
 
@@ -107,15 +107,15 @@ saveConosForScanPy <- function(con, output.path, metadata.df=NULL, norm=FALSE, p
   }
   metadata.df$Dataset <- as.character(con$getDatasetPerCell()[cell.ids])
 
-  if (norm) {
+  if (cm.norm) {
     if (verbose) cat("Merge count matrices...\t\t")
     count.matrix.merged <- con$getJointCountMatrix(raw=FALSE)
     if (verbose) cat("Done.\n")
   }
 
-  if (embed){
+  if (embedding){
     if (verbose) cat("Save the embedding...\t\t")
-    embed.df <- con$embedding[cell.ids,] %>% as.data.frame()
+    embedding.df <- con$embedding[cell.ids,] %>% as.data.frame()
     if (verbose) cat("Done.\n")
   }
 
@@ -132,7 +132,7 @@ saveConosForScanPy <- function(con, output.path, metadata.df=NULL, norm=FALSE, p
     if (verbose) cat("Done.\n")
   }
   
-  if (connect){
+  if (alignment.graph){
     if (verbose) cat("Save graph matrices...\t\t")
     graph.conn <- igraph::as_adjacency_matrix(con$graph, attr="weight")[cell.ids, cell.ids]
     graph.dist <- graph.conn
@@ -144,11 +144,11 @@ saveConosForScanPy <- function(con, output.path, metadata.df=NULL, norm=FALSE, p
   Matrix::writeMM(raw.count.matrix.merged, paste0(output.path, "/raw_count_matrix.mtx"))
   data.table::fwrite(metadata.df, paste0(output.path, "/metadata.csv"))
   data.table::fwrite(gene.df, paste0(output.path, "/genes.csv"))
-  if (norm) Matrix::writeMM(count.matrix.merged, paste0(output.path, "/count_matrix.mtx"))
-  if (embed) data.table::fwrite(embed.df, paste0(output.path, "/embed.csv"))
+  if (cm.norm) Matrix::writeMM(count.matrix.merged, paste0(output.path, "/count_matrix.mtx"))
+  if (embedding) data.table::fwrite(embedding.df, paste0(output.path, "/embedding.csv"))
   if (pseudo.pca) data.table::fwrite(pseudopca.df, paste0(output.path, "/pseudopca.csv"))
   if (pca) data.table::fwrite(pca.df, paste0(output.path, "/pca.csv"))
-  if (connect) {
+  if (alignment.graph) {
     Matrix::writeMM(graph.conn, paste0(output.path, "/graph_connectivities.mtx"))
     Matrix::writeMM(graph.dist, paste0(output.path, "/graph_distances.mtx"))
   }
