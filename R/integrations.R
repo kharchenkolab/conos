@@ -115,7 +115,7 @@ saveConosForScanPy <- function(con, output.path, metadata.df=NULL, cm.norm=FALSE
 
   if (embedding){
     if (verbose) cat("Save the embedding...\t\t")
-    if (!is.null(con$embedding)) {
+    if (length(con$embedding)>1) {
       embedding.df <- con$embedding[cell.ids,] %>% as.data.frame()
       if (verbose) cat("Done.\n")
     } else {
