@@ -28,6 +28,7 @@
 - "Running RNA velocity on a conos object" section in README.md (explains usage of the `velocityInfoConos` function)
 - Function `getJointCountMatrix` to conos obect
 - New possibilities to customize the output of `saveConosForScanPy` 
+- Function `parseCellGroups` to parse properly cell groupings depending on user settings
 
 ## [1.1.2] - 2019-07-16
 

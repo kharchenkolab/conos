@@ -230,22 +230,7 @@ velocityInfoConos <- function(cms.list, con, clustering=NULL, groups=NULL, n.odg
     stop("You need to install 'velocyto.R' package to be able to use this function")
   }
 
-  if(!is.null(clustering)) {
-    if(clustering=="leiden") {
-      groups <- con$clusters$leiden$groups
-    } else if(clustering=="walktrap") {
-      groups <- con$clusters$walktrap$groups
-    } else {
-      stop("Unknown 'clustering'.")
-    }
-  }
-
-  if(is.null(groups)) {
-    stop("Need 'groups' argument.")
-  } else if(!any(names(groups) %in% names(V(con$graph)))) {
-    stop("'groups' not defined for graph object.")
-  }
-
+  groups <- parseCellGroups(con, clustering, groups)
   cell.colors <- fac2col(groups)
 
   if (!is.null(con$embedding)){
