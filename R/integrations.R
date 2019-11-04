@@ -80,46 +80,91 @@ seuratProcV3 <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, n.pcs
 #' @param output.path path to a folder, where intermediate files will be saved
 #' @param metadata.df data.frame with additional metadata with rownames corresponding to cell ids, which should be passed to ScanPy.
 #' If NULL, only information about cell ids and origin dataset will be saved.
-#' @param n.dims to emulate PCA, Conos embed the graph to a space with `n.dims` dimensions and saves it as PCA
-#' @param verbose print more messages
+#' @param cm.norm logical, include the matrix of normalised counts. Default: FALSE
+#' @param embedding logical, include the current conos embedding. Default: TRUE
+#' @param pseudo.pca logical, produce an emulated PCA by embedding the graph to a space with `n.dims` dimensions and save it as a pseudoPCA. Default: FALSE
+#' @param pca logical, include PCA of all the samples (not batch corrected). Default: FALSE
+#' @param n.dims number of dimensions for calculating PCA and/or pseudoPCA
+#' @param alignment.graph logical, include graph of connectivities and distances. Default: TRUE
+#' @param verbose verbose mode. Default: FALSE
 #'
 #' @export
-saveConosForScanPy <- function(con, output.path, metadata.df=NULL, n.dims=100, verbose=F) {
+saveConosForScanPy <- function(con, output.path, metadata.df=NULL, cm.norm=FALSE, pseudo.pca=FALSE, pca=FALSE, n.dims=100, embedding=TRUE, alignment.graph=TRUE, verbose=FALSE) {
   if (!dir.exists(output.path))
     stop("Path", output.path, "doesn't exist")
 
-  if (verbose) cat("Merge count matrices... ")
-  count.matrix.merged <- lapply(con$samples, getRawCountMatrix) %>% mergeCountMatrices()
+  if (verbose) cat("Merge raw count matrices...\t")
+  raw.count.matrix.merged <- con$getJointCountMatrix(raw=TRUE)
   if (verbose) cat("Done.\n")
 
-  cell.ids <- colnames(count.matrix.merged)
+  cell.ids <- rownames(raw.count.matrix.merged)
+  gene.df <- data.frame(gene=colnames(raw.count.matrix.merged))
 
   if (!is.null(metadata.df)) {
     metadata.df %<>% .[cell.ids, , drop=F] %>% dplyr::mutate(CellId=cell.ids)
   } else {
     metadata.df <- tibble::tibble(CellId=cell.ids)
   }
-
   metadata.df$Dataset <- as.character(con$getDatasetPerCell()[cell.ids])
 
-  if (verbose) cat("Create psudo-PCA space\n")
-  gene.df <- data.frame(gene=rownames(count.matrix.merged))
-  pseudopca.df <- con$embedGraph(target.dims=n.dims, method="largeVis", verbose=verbose)[cell.ids, ]
+  if (cm.norm) {
+    if (verbose) cat("Merge count matrices...\t\t")
+    count.matrix.merged <- con$getJointCountMatrix(raw=FALSE)
+    if (verbose) cat("Done.\n")
+  }
 
-  if (verbose) cat("Done\n")
+  if (embedding){
+    if (verbose) cat("Save the embedding...\t\t")
+    if (length(con$embedding)>1) {
+      embedding.df <- con$embedding[cell.ids,] %>% as.data.frame()
+      if (verbose) cat("Done.\n")
+    } else {
+      warning("\n No embedding found in the conos object. Skipping... \n")
+      embedding <- FALSE
+    }
+    
+  }
 
-  graph.conn <- igraph::as_adjacency_matrix(con$graph, attr="weight")[cell.ids, cell.ids]
-  graph.dist <- graph.conn
-  graph.dist@x <- 1 - graph.dist@x
+  # Create a batch-free embedding that can be used instead of PCA space
+  if (pseudo.pca) {
+    if (verbose) cat("Create psudo-PCA space...\t")
+    pseudopca.df <- con$embedGraph(target.dims=n.dims, method="largeVis", verbose=FALSE)[cell.ids, ] %>% as.data.frame()
+    if (verbose) cat("Done.\n")
+  }
+  
+  if (pca){
+    if (verbose) cat("Save PCA space...\t\t")
+    pca.df <- pcaFromConos(con$samples, ncomps=n.dims, n.odgenes=2000, verbose=FALSE) %>% as.data.frame()
+    if (verbose) cat("Done.\n")
+  }
+  
+  if (alignment.graph){
+    if (verbose) cat("Save graph matrices...\t\t")
+    if (!is.null(con$graph)) {
+      graph.conn <- igraph::as_adjacency_matrix(con$graph, attr="weight")[cell.ids, cell.ids]
+      graph.dist <- graph.conn
+      graph.dist@x <- 1 - graph.dist@x
+      if (verbose) cat("Done.\n")
+    } else {
+      warning("\n No graph found in the conos object. Skipping... \n")
+      alignment.graph <- FALSE
+    } 
+  }
 
-  if (verbose) cat("Write data to disk... ")
-  Matrix::writeMM(count.matrix.merged, paste0(output.path, "/count_matrix.mtx"))
+  if (verbose) cat("Write data to disk...\t\t")
+  Matrix::writeMM(raw.count.matrix.merged, paste0(output.path, "/raw_count_matrix.mtx"))
   data.table::fwrite(metadata.df, paste0(output.path, "/metadata.csv"))
   data.table::fwrite(gene.df, paste0(output.path, "/genes.csv"))
-  data.table::fwrite(pseudopca.df, paste0(output.path, "/pca.csv"))
-  Matrix::writeMM(graph.conn, paste0(output.path, "/graph_connectivities.mtx"))
-  Matrix::writeMM(graph.dist, paste0(output.path, "/graph_distances.mtx"))
-  if (verbose) cat("Done\n")
+  if (cm.norm) Matrix::writeMM(count.matrix.merged, paste0(output.path, "/count_matrix.mtx"))
+  if (embedding) data.table::fwrite(embedding.df, paste0(output.path, "/embedding.csv"))
+  if (pseudo.pca) data.table::fwrite(pseudopca.df, paste0(output.path, "/pseudopca.csv"))
+  if (pca) data.table::fwrite(pca.df, paste0(output.path, "/pca.csv"))
+  if (alignment.graph) {
+    Matrix::writeMM(graph.conn, paste0(output.path, "/graph_connectivities.mtx"))
+    Matrix::writeMM(graph.dist, paste0(output.path, "/graph_distances.mtx"))
+  }
+  if (verbose) cat("Done.\n")
+  if (verbose) cat("All Done!")
 }
 
 #' Create and preprocess a Seurat object
@@ -168,8 +213,10 @@ basicSeuratProc <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do
 #'
 #' @param cms.list list of velocity files written out as cell.counts.matrices.rds files by running dropest with -V option
 #' @param con conos object (after creating an embedding and running leiden clustering)
-#' @param n.odgenes number of overdispersed genes to use for PCA
-#' @param verbose verbose mode
+#' @param clustering name of clustering in the conos object to use. Either 'clustering' or 'groups' must be provided. Default: NULL
+#' @param groups set of clusters to use. Ignored if 'clustering' is not NULL. Default: NULL
+#' @param n.odgenes number of overdispersed genes to use for PCA. Default: 2000
+#' @param verbose verbose mode. Default: TRUE
 #'
 #'
 #' @return List with cell distances, combined spliced expression matrix, combined unspliced expression matrix, combined matrix of spanning reads, cell colors for clusters and embedding (taken from conos)
@@ -178,18 +225,27 @@ basicSeuratProc <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do
 #'
 #' @export
 #'
-velocityInfoConos <- function(cms.list, con, n.odgenes = 2e3, verbose = TRUE, min.max.cluster.average.emat=0.2, min.max.cluster.average.nmat=0.05, min.max.cluster.average.smat=0.01) {
+velocityInfoConos <- function(cms.list, con, clustering=NULL, groups=NULL, n.odgenes=2e3, verbose=TRUE, min.max.cluster.average.emat=0.2, min.max.cluster.average.nmat=0.05, min.max.cluster.average.smat=0.01) {
   if (!requireNamespace("velocyto.R")) {
     stop("You need to install 'velocyto.R' package to be able to use this function")
   }
 
+  groups <- parseCellGroups(con, clustering, groups)
+  cell.colors <- fac2col(groups)
+
+  if (!is.null(con$embedding)){
+    emb <- con$embedding
+  } else {
+    stop("No embedding found in the conos object. Run 'con$embedGraph()' before running this function.")
+  }
+
   if (verbose) cat("Merging raw count matrices...\n")
   # Merge samples to get names of relevant cells and genes 
-  raw.count.matrix.merged <- lapply(con$samples, getRawCountMatrix) %>% mergeCountMatrices()
+  raw.count.matrix.merged <- con$getJointCountMatrix(raw=TRUE)
   
   if (verbose) cat("Merging velocity files...\n")
   # Intersect genes and cells between the conos object and all the velocity files
-  cms.list <- lapply(cms.list, prepareVelocity, rownames(raw.count.matrix.merged), colnames(raw.count.matrix.merged))
+  cms.list <- lapply(cms.list, prepareVelocity, genes=colnames(raw.count.matrix.merged), cells=rownames(raw.count.matrix.merged))
   # Keep only genes present in velocity files from all the samples
   common.genes <-  Reduce(intersect, lapply(cms.list, function(x) {rownames(x[[1]])}))
   cms.list <- lapply(cms.list, function(x) {lapply(x, function(y) {y[row.names(y) %in% common.genes,]} )} )
@@ -199,10 +255,6 @@ velocityInfoConos <- function(cms.list, con, n.odgenes = 2e3, verbose = TRUE, mi
   nmat <- do.call(cbind, lapply(cms.list, function(x) {x[[2]]}))
   smat <- do.call(cbind, lapply(cms.list, function(x) {x[[3]]}))
   
-  cluster.label <- con$clusters$leiden$groups
-  cell.colors <- fac2col(cluster.label)
-  emb <- con$embedding
-  
   # Keep the order of cells consistent between velocity matrices and the embedding (not really sure whether it's necessary...)
   emat <- emat[,order(match(colnames(emat), rownames(emb)))]
   nmat <- nmat[,order(match(colnames(nmat), rownames(emb)))]
@@ -210,19 +262,19 @@ velocityInfoConos <- function(cms.list, con, n.odgenes = 2e3, verbose = TRUE, mi
   
   if (verbose) cat("Calculating cell distances...\n")
   # Get PCA results for all the samples from the conos object
-  pcs <- pcaForVelo(con$samples, n.odgenes = n.odgenes)
+  pcs <- pcaFromConos(con$samples, n.odgenes=n.odgenes)
   # Again, keep the order of cells consistent
   pcs <- pcs[order(match(rownames(pcs), rownames(emb))),]
   # Calculate the cell distances based on correlation
   cell.dist <- as.dist(1 - velocyto.R::armaCor(t(pcs)))
   
   if (verbose) cat("Filtering velocity...\n")
-  emat %<>% velocyto.R::filter.genes.by.cluster.expression(cluster.label, min.max.cluster.average = min.max.cluster.average.emat)
-  nmat %<>% velocyto.R::filter.genes.by.cluster.expression(cluster.label, min.max.cluster.average = min.max.cluster.average.nmat)
-  smat %<>% velocyto.R::filter.genes.by.cluster.expression(cluster.label, min.max.cluster.average = min.max.cluster.average.smat)
+  emat %<>% velocyto.R::filter.genes.by.cluster.expression(cluster.label, min.max.cluster.average=min.max.cluster.average.emat)
+  nmat %<>% velocyto.R::filter.genes.by.cluster.expression(cluster.label, min.max.cluster.average=min.max.cluster.average.nmat)
+  smat %<>% velocyto.R::filter.genes.by.cluster.expression(cluster.label, min.max.cluster.average=min.max.cluster.average.smat)
   
   if (verbose) cat("All Done!")
-  return(list(cell.dist = cell.dist, emat = emat, nmat = nmat, smat = smat, cell.colors = cell.colors, emb = emb))
+  return(list(cell.dist=cell.dist, emat=emat, nmat=nmat, smat=smat, cell.colors=cell.colors, emb=emb))
 }
 
 # Intersect genes and cells between all the velocity files and the conos object
@@ -247,14 +299,14 @@ prepareVelocity <- function(cms.file, genes, cells) {
 
 # Get PCA results for all the samples from the conos object
 # This is a modification of the quickPlainPCA function
-pcaForVelo <- function(p2.list, data.type = 'counts', k = 30, ncomps = 100, n.odgenes = NULL, verbose = TRUE) {
+pcaFromConos <- function(p2.list, data.type='counts', k=30, ncomps=100, n.odgenes=NULL, verbose=TRUE) {
   od.genes <- commonOverdispersedGenes(p2.list, n.odgenes, verbose = FALSE)
   if(length(od.genes)<5) return(NULL)
   
-  if(verbose) cat('Calculating PCs for',length(p2.list),' datasets ...')
+  if(verbose) cat('Calculating PCs for',length(p2.list),' datasets...\n')
   
   # Get scaled matrices from a list of pagoda2 objects
-  sm <- scaledMatrices(p2.list, data.type = data.type, od.genes = od.genes, var.scale = TRUE, neighborhood.average = FALSE);
+  sm <- scaledMatrices(p2.list, data.type=data.type, od.genes=od.genes, var.scale=TRUE, neighborhood.average=FALSE);
   # Transpose the scaled matrices since we want to run PCA on cells and not genes (like in quickPlainPCA)
   sm <- lapply(sm, t)
   # Get the names of all the cells
@@ -263,7 +315,7 @@ pcaForVelo <- function(p2.list, data.type = 'counts', k = 30, ncomps = 100, n.od
   pcs <- lapply(sm, function(x) {
     cm <- Matrix::colMeans(x);
     ncomps <- min(c(nrow(cm)-1,ncol(cm)-1,ncomps))
-    res <- irlba::irlba(x, nv = ncomps, nu = 0, center = cm, right_only = F, reorth = T)
+    res <- irlba::irlba(x, nv=ncomps, nu=0, center=cm, right_only=F, reorth=T)
     res
   })
   

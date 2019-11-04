@@ -1230,17 +1230,7 @@ propagateLabelsSolver <- function(graph, labels, solver="mumps") {
 #' @param ... additional params passed to the community function
 #' @export
 findSubcommunities <- function(con, target.clusters, clustering=NULL, groups=NULL, method=leiden.community, ...) {
-  if(!is.null(clustering)) {
-    if (clustering %in% names(con$clusters)) {
-      groups <- con$clusters[[clustering]]$groups
-    } else {
-      stop("Conos object doesn't contain clustering ", clustering)
-    }
-  }
-
-  if(is.null(groups)) {
-    stop("Either 'groups' or 'clustering' must be provided")
-  }
+  groups <- parseCellGroups(con, clustering, groups)
 
   groups.raw <- as.character(groups) %>% setNames(names(groups))
   groups <- groups[intersect(names(groups), V(con$graph)$name)]
@@ -1264,4 +1254,27 @@ findSubcommunities <- function(con, target.clusters, clustering=NULL, groups=NUL
   }
 
   return(groups.raw)
+}
+
+parseCellGroups <- function(con, clustering, groups, parse.clusters=T) {
+  if (!parse.clusters)
+    return(groups)
+
+  if (!is.null(groups)) {
+    if (!any(names(groups) %in% names(V(con$graph))))
+      stop("'groups' aren't defined for any of the cells.")
+
+    return(groups)
+  }
+
+  if (is.null(clustering)) {
+    if (length(con$clusters) > 0)
+      return(con$clusters[[1]]$groups)
+
+    stop("Either 'groups' must be provided or the conos object must have some clustering estimated")
+  }
+  if(is.null(clusters[[clustering]]))
+    stop(paste("clustering",clustering,"doesn't exist, run findCommunity() first"))
+
+  return(con$clusters[[clustering]]$groups)
 }

@@ -333,16 +333,7 @@ Conos <- setRefClass(
     },
 
     getDifferentialGenes=function(clustering=NULL, groups=NULL, z.threshold=3.0, upregulated.only=F, verbose=T, plot=FALSE, n.genes.to.show=10, inner.clustering=FALSE, append.specificity.metrics=TRUE, append.auc=FALSE, n.cores=NULL) {
-      if (!is.null(clustering)) {
-        groups <- clusters[[clustering]]$groups
-      }
-
-      if (is.null(groups)) {
-        if (length(clusters) == 0)
-          stop("Either 'groups' be provided or clustering must be estimated (see 'findCommunities')")
-
-        groups <- clusters[[1]]$groups
-      }
+      groups <- parseCellGroups(con, clustering, groups)
 
       groups %<>% as.factor() %>% droplevels()
       if (class(samples[[1]]) != 'Pagoda2') # TODO: add Seurat
@@ -362,8 +353,7 @@ Conos <- setRefClass(
         if (verbose) cat("Estimating specificity metrics\n")
 
         groups.clean <- groups[!is.na(groups)]
-        cm.merged <- lapply(samples, getRawCountMatrix, transposed=T) %>%
-          mergeCountMatrices(transposed=T)
+        cm.merged <- getJointCountMatrix(raw=TRUE)
 
         dif <- intersect(rownames(cm.merged),names(groups.clean))
 
