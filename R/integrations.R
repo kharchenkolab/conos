@@ -269,9 +269,9 @@ velocityInfoConos <- function(cms.list, con, clustering=NULL, groups=NULL, n.odg
   cell.dist <- as.dist(1 - velocyto.R::armaCor(t(pcs)))
   
   if (verbose) cat("Filtering velocity...\n")
-  emat %<>% velocyto.R::filter.genes.by.cluster.expression(cluster.label, min.max.cluster.average=min.max.cluster.average.emat)
-  nmat %<>% velocyto.R::filter.genes.by.cluster.expression(cluster.label, min.max.cluster.average=min.max.cluster.average.nmat)
-  smat %<>% velocyto.R::filter.genes.by.cluster.expression(cluster.label, min.max.cluster.average=min.max.cluster.average.smat)
+  emat %<>% velocyto.R::filter.genes.by.cluster.expression(groups, min.max.cluster.average=min.max.cluster.average.emat)
+  nmat %<>% velocyto.R::filter.genes.by.cluster.expression(groups, min.max.cluster.average=min.max.cluster.average.nmat)
+  smat %<>% velocyto.R::filter.genes.by.cluster.expression(groups, min.max.cluster.average=min.max.cluster.average.smat)
   
   if (verbose) cat("All Done!")
   return(list(cell.dist=cell.dist, emat=emat, nmat=nmat, smat=smat, cell.colors=cell.colors, emb=emb))
