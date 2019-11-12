@@ -199,13 +199,16 @@ embeddingColorsPlot <- function(plot.df, colors, groups, geom_point_w, gradient.
         color.range <- range(colors)
       } else if (color.range == "data") {
         color.range <- NULL
+      } else {
+        stop("Unknown color.range: ", color.range)
       }
     }
 
     if (!is.null(palette)) {
       gg <- gg + ggplot2::scale_colour_gradientn(colors=palette(100), limits=color.range)
     } else {
-      if (prod(range(colors, na.rm=T)) < 0) {
+      c.range <- if (is.null(color.range)) range(colors, na.rm=T) else color.range
+      if (prod(c.range) < 0) {
         gg <- gg + ggplot2::scale_color_gradient2(low="#0000ff",mid="#d8d0d0", high="#ff0000", limits=color.range)
       } else {
         gg <- gg + ggplot2::scale_color_gradient(low="#d8d0d0", high="#ff0000", limits=color.range)
