@@ -501,7 +501,9 @@ Conos <- setRefClass(
           stop("You have to provide 'clustering' parameter to be able to use local clusters")
         }
 
-        groups <- Reduce(c, lapply(samples, getClustering, clustering))
+        groups <- lapply(samples, getClustering, clustering) %>%
+          lapply(function(cls) setNames(as.character(cls), names(cls))) %>% Reduce(c, .)
+
         if (is.null(groups)) {
           stop(paste0("No clustering '", clustering, "' presented in the samples"))
         }
