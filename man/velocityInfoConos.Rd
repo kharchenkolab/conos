@@ -4,7 +4,8 @@
 \alias{velocityInfoConos}
 \title{RNA velocity analysis on samples integrated with conos}
 \usage{
-velocityInfoConos(cms.list, con, n.odgenes = 2000, verbose = TRUE,
+velocityInfoConos(cms.list, con, clustering = NULL, groups = NULL,
+  n.odgenes = 2000, verbose = TRUE,
   min.max.cluster.average.emat = 0.2,
   min.max.cluster.average.nmat = 0.05,
   min.max.cluster.average.smat = 0.01)
@@ -14,9 +15,13 @@ velocityInfoConos(cms.list, con, n.odgenes = 2000, verbose = TRUE,
 
 \item{con}{conos object (after creating an embedding and running leiden clustering)}
 
-\item{n.odgenes}{number of overdispersed genes to use for PCA}
+\item{clustering}{name of clustering in the conos object to use. Either 'clustering' or 'groups' must be provided. Default: NULL}
 
-\item{verbose}{verbose mode}
+\item{groups}{set of clusters to use. Ignored if 'clustering' is not NULL. Default: NULL}
+
+\item{n.odgenes}{number of overdispersed genes to use for PCA. Default: 2000}
+
+\item{verbose}{verbose mode. Default: TRUE}
 }
 \value{
 List with cell distances, combined spliced expression matrix, combined unspliced expression matrix, combined matrix of spanning reads, cell colors for clusters and embedding (taken from conos)
