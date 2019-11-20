@@ -223,8 +223,10 @@ embeddingColorsPlot <- function(plot.df, colors, groups, geom_point_w, gradient.
   return(list(gg=gg, na.plot.df=na.plot.df))
 }
 
-styleEmbeddingPlot <- function(gg, plot.theme=NULL, title=NULL, legend.position=NULL, show.legend=NULL, show.ticks=NULL, show.labels=NULL) {
-  gg <- gg + ggplot2::labs(x='Component 1', y='Component 2')
+styleEmbeddingPlot <- function(gg, plot.theme=NULL, title=NULL, legend.position=NULL, show.legend=TRUE, show.ticks=TRUE, show.labels=TRUE, relabel.axis=TRUE) {
+  if (relabel.axis) {
+    gg <- gg + ggplot2::labs(x='Component 1', y='Component 2')
+  }
 
   if (!is.null(plot.theme)) {
     gg <- gg + plot.theme
