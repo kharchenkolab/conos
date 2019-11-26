@@ -1,3 +1,13 @@
+## Upcoming part 2
+
+### Changed
+
+- Moved some code to the new sccore
+
+### Added
+
+- Functionality for PAGA graph collapsing
+
 ## Upcoming
 
 ### Changed
