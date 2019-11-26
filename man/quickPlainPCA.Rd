@@ -4,15 +4,13 @@
 \alias{quickPlainPCA}
 \title{Use space of combined sample-specific PCAs as a space}
 \usage{
-quickPlainPCA(r.n, data.type = "counts", k = 30, ncomps = 30,
+quickPlainPCA(r.n, data.type = "counts", ncomps = 30,
   n.odgenes = NULL, var.scale = TRUE, verbose = TRUE,
   neighborhood.average = FALSE, score.component.variance = FALSE,
   n.cores = 30)
 }
 \arguments{
 \item{r.n}{list of p2 objects}
-
-\item{k}{neighborhood size to use}
 
 \item{ncomps}{number of components to calculate (default=30)}
 
