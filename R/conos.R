@@ -1278,3 +1278,22 @@ parseCellGroups <- function(con, clustering, groups, parse.clusters=T) {
 
   return(con$clusters[[clustering]]$groups)
 }
+
+#' Estimate entropy of edge weights per cell according to the specified factor.
+#' Can be used to visualize alignment quality according to this factor.
+#'
+#' @param con conos object
+#' @param factor.per.cell some factor, which group cells, such as sample or a specific condition
+#' @export
+estimteWeightEntropyPerCell <- function(con, factor.per.cell) {
+  adj.mat <- igraph::as_adjacency_matrix(con$graph, attr="weight") %>% as("dgTMatrix")
+  factor.per.cell %<>% as.factor() %>% .[rownames(adj.mat)]
+  weight.sum.per.fac.cell <- getSumWeightMatrix(adj.mat@x, adj.mat@i, adj.mat@j, as.integer(factor.per.cell)) %>%
+    `colnames<-`(levels(adj.mat)) %>% `rownames<-`(rownames(adj.mat))
+
+  xt <- table(factor.per.cell)
+
+  entropy.per.cell <- apply(weight.sum.per.fac.cell, 1, entropy::KL.empirical, xt, unit=c('log2')) / log2(length(xt))
+
+  return(entropy.per.cell)
+}
