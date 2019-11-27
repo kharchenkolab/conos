@@ -1,3 +1,13 @@
+## Upcoming
+
+### Changed
+
+- Moved some code to the new sccore package
+
+### Added
+
+- Functionality for PAGA graph collapsing
+
 ## [1.2.0] - 2019-11-27
 
 ### Changed

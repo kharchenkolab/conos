@@ -13,31 +13,32 @@ License: GPL3
 Encoding: UTF-8
 LazyData: true
 Imports:
-  abind,
-  cowplot,
-  d3heatmap,
-  dendextend,
-  dplyr,
-  entropy,
-  ggplot2,
-  ggrepel,
-  gridExtra,
-  heatmaply,
-  irlba,
-  magrittr,
-  Matrix.utils,
-  methods,
-  parallel,
-  reshape2,
-  Rcpp,
-  RcppArmadillo,
-  RcppProgress,
-  rlang,
-  Rtsne,
-  shiny,
-  stats,
-  utils,
-  viridis
+    abind,
+    cowplot,
+    d3heatmap,
+    dendextend,
+    dplyr,
+    entropy,
+    ggplot2,
+    ggrepel,
+    gridExtra,
+    heatmaply,
+    irlba,
+    magrittr,
+    Matrix.utils,
+    methods,
+    parallel,
+    reshape2,
+    Rcpp,
+    RcppArmadillo,
+    RcppProgress,
+    rlang,
+    Rtsne,
+    shiny,
+    stats,
+    utils,
+    viridis,
+    sccore (>= 0.1)
 Suggests:
   DESeq2,
   entropy,
@@ -53,3 +54,5 @@ VignetteBuilder: knitr
 RoxygenNote: 6.1.1
 LinkingTo: Rcpp, RcppArmadillo, RcppEigen, RcppProgress, igraph
 NeedsCompilation: yes
+Remotes:  
+    hms-dbmi/sccore
