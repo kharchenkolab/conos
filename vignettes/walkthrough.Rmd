@@ -289,8 +289,6 @@ conosShinyApp(con,N=30)
 
 # Label propagation
 
-## General workflow
-
 One of the uses of this graph is to propagate labels. For example in some cases we will only have information about the cell types in one of the samples and we want to automatically label the other samples.
 
 We'll load annotation from a simple text file (first column giving cell name, second - cell type), and make a named factor out of it:
