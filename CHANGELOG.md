@@ -2,7 +2,7 @@
 
 ### Changed
 
-- Moved some code to the new sccore
+- Moved some code to the new sccore package
 
 ### Added
 
