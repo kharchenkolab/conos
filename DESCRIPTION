@@ -39,6 +39,7 @@ Imports:
   utils,
   viridis
 Suggests:
+  clues,
   DESeq2,
   entropy,
   ggrastr,

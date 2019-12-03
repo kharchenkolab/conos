@@ -402,6 +402,9 @@ Conos <- setRefClass(
 
       # test stability
       if(test.stability) {
+        if (!requireNamespace("clues", quietly=T))
+          stop("You need to install package 'clues' to be able to use 'test.stability'.")
+
         subset.clustering <- function(g,f=stability.subsampling.fraction,seed=NULL, ...) {
           if(!is.null(seed)) { set.seed(seed) }
           vi <- sample(1:length(V(g)),ceiling(length(V(g))*(f)))
@@ -429,7 +432,7 @@ Conos <- setRefClass(
 
         # Adjusted rand index
         if(verbose) cat("adjusted Rand ... ")
-        ari <- unlist(conos:::papply(sr,function(o) { ol <- membership(o); adjustedRand(as.integer(ol),as.integer(cls.groups[names(ol)]),randMethod='HA') },n.cores=n.cores))
+        ari <- unlist(conos:::papply(sr,function(o) { ol <- membership(o); clues::adjustedRand(as.integer(ol),as.integer(cls.groups[names(ol)]),randMethod='HA') },n.cores=n.cores))
         if(verbose) cat("done\n");
 
         res$stability <- list(flat=list(jc=jc.stats,ari=ari))
@@ -453,8 +456,7 @@ Conos <- setRefClass(
           res$stability$upper.tree <- clm
 
           if(verbose) cat("tree Jaccard ... ")
-          jc.hstats <- do.call(rbind,mclapply(sr,function(z) conos:::bestClusterThresholds(z,cls.groups,clm)$threshold ,mc.cores=n.cores))
-
+          jc.hstats <- do.call(rbind, papply(sr,function(z) bestClusterThresholds(z,cls.groups,clm)$threshold, n.cores=n.cores))
         } else {
           # compute cluster hierarchy based on cell mixing (and then something)
           # assess stability for that hierarchy (to visualize internal node stability)
@@ -465,15 +467,15 @@ Conos <- setRefClass(
           clm <- igraph:::complete.dend(chwt,FALSE)
 
           if(verbose) cat("clusterTree Jaccard ... ")
-          jc.hstats <- do.call(rbind,mclapply(sr,function(st1) {
+          jc.hstats <- do.call(rbind, papply(sr,function(st1) {
             mf <- membership(st1); mf <- as.factor(setNames(as.character(mf),names(mf)))
             st1g <- getClusterGraph(graph,mf,plot=F,normalize=T)
-            st1w <- walktrap.community(st1g,steps=8)
+            st1w <- walktrap.community(st1g, steps=8)
 
             #merges <- st1w$merge; leaf.factor <- mf; clusters <- cls.groups
-            x <- conos:::bestClusterTreeThresholds(st1w,mf,cls.groups,clm)
+            x <- bestClusterTreeThresholds(st1w,mf,cls.groups,clm)
             x$threshold
-          },mc.cores=n.cores))
+          }, n.cores=n.cores))
 
         }
         res$stability$upper.tree <- clm
