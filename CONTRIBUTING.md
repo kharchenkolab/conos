@@ -16,3 +16,4 @@ If you merge any branch to `master`, please follow the next steps:
 3. Tag the version for git release and docker rebuild:
     - `git tag -a v1.1.2 -m "v1.1.2"`
     - `git push origin master --tags`
+    - Alternatively, after pushing changes to master, on GitHub open "Releases" - "[Draft new release](https://github.com/hms-dbmi/conos/releases/new)", fill the tag name and description using the latest changes from CHANGELOG
