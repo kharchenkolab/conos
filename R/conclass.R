@@ -333,7 +333,7 @@ Conos <- setRefClass(
     },
 
     getDifferentialGenes=function(clustering=NULL, groups=NULL, z.threshold=3.0, upregulated.only=F, verbose=T, plot=FALSE, n.genes.to.show=10, inner.clustering=FALSE, append.specificity.metrics=TRUE, append.auc=FALSE, n.cores=NULL) {
-      groups <- parseCellGroups(con, clustering, groups)
+      groups <- parseCellGroups(.self, clustering, groups)
 
       groups %<>% as.factor() %>% droplevels()
       if (class(samples[[1]]) != 'Pagoda2') # TODO: add Seurat

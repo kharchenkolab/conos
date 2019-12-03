@@ -576,7 +576,11 @@ getDifferentialGenesP2 <- function(p2.samples, groups, z.threshold=3.0, upregula
     if (length(intersect(rownames(p2$counts), names(groups))) < 3) {
       list()
     } else {
-      p2$getDifferentialGenes(groups=groups, z.threshold=0)
+      if (packageVersion("pagoda2") >= "0.1.1") {
+        p2$getDifferentialGenes(groups=groups, z.threshold=0, append.specificity.metrics=F, append.auc=F)
+      } else {
+        p2$getDifferentialGenes(groups=groups, z.threshold=0)
+      }
     }
   })
 

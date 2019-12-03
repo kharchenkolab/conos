@@ -1,6 +1,13 @@
+## [1.2.1] - 2019-12-3
+
+### Changed
+
+- Fixed `getDifferentialGenes`
+
 ## [1.2.0] - 2019-11-27
 
 ### Changed
+
 - Added mean M value column to the diff. expression output
 - Optimized plotting with coloring by genes
 - `getDifferentialGenes` uses first clustering by default
