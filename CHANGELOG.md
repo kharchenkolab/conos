@@ -3,6 +3,7 @@
 ### Changed
 
 - Fixed `getDifferentialGenes`
+- Fixed testing clustering stability
 
 ## [1.2.0] - 2019-11-27
 
