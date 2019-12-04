@@ -204,7 +204,7 @@ Conos <- setRefClass(
     buildGraph=function(k=15, k.self=10, k.self.weight=0.1, alignment.strength=NULL, space='PCA', matching.method='mNN', metric='angular', k1=k, data.type='counts', l2.sigma=1e5, var.scale=TRUE, ncomps=40,
                         n.odgenes=2000, neighborhood.average=FALSE, neighborhood.average.k=10, matching.mask=NULL, exclude.samples=NULL, common.centering=TRUE, verbose=TRUE,
                         base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, score.component.variance=FALSE,
-                        balance.edge.weights=FALSE, balancing.factor.per.cell=NULL, same.factor.downweight=1.0) {
+                        balance.edge.weights=FALSE, balancing.factor.per.cell=NULL, same.factor.downweight=1.0, k.same.factor=k, balancing.factor.per.sample=NULL) {
       supported.spaces <- c("CPCA","JNMF","genes","PCA","PMA","CCA")
       if(!space %in% supported.spaces) {
         stop(paste0("only the following spaces are currently supported: [",paste(supported.spaces,collapse=' '),"]"))
@@ -253,9 +253,16 @@ Conos <- setRefClass(
         if(is.na(i)) { i <- match(paste(rev(sn.pairs[,j]),collapse='.vs.'),names(cached.pairs)) }
         if(is.na(i)) { stop(paste("unable to find alignment for pair",paste(sn.pairs[,j],collapse='.vs.'))) }
 
+        k.cur <- k
+        weight.mult <- 1
+        if (!is.null(balancing.factor.per.sample) && (balancing.factor.per.sample[sn.pairs[1,j]] == balancing.factor.per.sample[sn.pairs[2,j]])) {
+          k.cur <- min(k.same.factor, k1) # It always should be less then k1, though never supposed to be set higher
+          weight.mult <- same.factor.downweight
+        }
+
         if(space=='JNMF') {
           mnn <- getNeighborMatrix(cached.pairs[[i]]$rot1, cached.pairs[[i]]$rot2,
-                                   k=k, k1=k1, matching=matching.method, metric=metric, l2.sigma=l2.sigma, cor.base=cor.base)
+                                   k=k.cur, k1=k1, matching=matching.method, metric=metric, l2.sigma=l2.sigma, cor.base=cor.base)
         } else if (space %in% c("CPCA","GSVD","PCA")) {
           #common.genes <- Reduce(intersect,lapply(r.ns, getGenes))
           if(!is.null(cached.pairs[[i]]$CPC)) {
@@ -279,22 +286,22 @@ Conos <- setRefClass(
           }
 
           mnn <- getPcaBasedNeighborMatrix(samples[sn.pairs[,j]], od.genes=od.genes, rot=rot, data.type=data.type,
-                                           k=k, k1=k1, matching.method=matching.method, metric=metric, l2.sigma=l2.sigma, cor.base=cor.base,
+                                           k=k.cur, k1=k1, matching.method=matching.method, metric=metric, l2.sigma=l2.sigma, cor.base=cor.base,
                                            var.scale=var.scale, neighborhood.average=neighborhood.average, common.centering=common.centering,
                                            base.groups=base.groups, append.decoys=append.decoys, samples=samples, samf=samf, decoy.threshold=decoy.threshold,
                                            n.decoys=n.decoys, append.global.axes=append.global.axes, global.proj=global.proj)
         } else if (space=='genes') { ## Overdispersed Gene space
           mnn <- getNeighborMatrix(as.matrix(cached.pairs[[i]]$genespace1), as.matrix(cached.pairs[[i]]$genespace2),
-                                   k=k, k1=k1, matching=matching.method, metric=metric, l2.sigma=l2.sigma, cor.base=cor.base)
+                                   k=k.cur, k1=k1, matching=matching.method, metric=metric, l2.sigma=l2.sigma, cor.base=cor.base)
         } else if(space=='PMA' || space=='CCA') {
           mnn <- getNeighborMatrix(cached.pairs[[i]]$u, cached.pairs[[i]]$v,
-                                   k=k, k1=k1, matching=matching.method, metric=metric, l2.sigma=l2.sigma, cor.base=cor.base);
+                                   k=k.cur, k1=k1, matching=matching.method, metric=metric, l2.sigma=l2.sigma, cor.base=cor.base);
         } else {
           stop("Unknown space: ", space)
         }
 
         if(verbose) cat(".")
-        return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=mnn@x,stringsAsFactors=F))
+        return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=(mnn@x * weight.mult),stringsAsFactors=F))
       },n.cores=n.cores,mc.preschedule=TRUE)
       if(verbose) cat(" done\n")
       ## Merge the results into a edge table
