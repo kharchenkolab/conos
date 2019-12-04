@@ -223,7 +223,7 @@ getPerCellTypeDECorrected <- function(con.obj, groups=NULL, sample.groups=NULL, 
     rbindDEMatrices(cluster.sep.chr=cluster.sep.chr)
   gc()
     ## For every cell type get differential expression results
-    de.res <- parallel::mclapply(sn(levels(groups)), function(l) {
+    de.res <- papply(sn(levels(groups)), function(l) {
         try({
             ## Get count matrix
             cm <- aggr2[,strpart(colnames(aggr2),cluster.sep.chr,2,fixed=TRUE) == l]
@@ -271,8 +271,8 @@ getPerCellTypeDECorrected <- function(con.obj, groups=NULL, sample.groups=NULL, 
                 res1
             }
         })
-    }, mc.cores=n.cores)
-    de.res
+    }, n.cores=n.cores)
+    return(de.res)
 }
 
 #' Save differential expression as CSV table

@@ -2,7 +2,6 @@
 #' @import Matrix
 #' @import igraph
 #' @import sccore
-#' @importFrom parallel mclapply
 #' @importFrom dplyr %>%
 #' @importFrom magrittr %<>%
 #' @importFrom magrittr %$%
@@ -427,7 +426,7 @@ dendSetColorByMixture <- function(d,fac,leafContent) {
 papply <- function(...,n.cores=parallel::detectCores(), mc.preschedule=FALSE) {
   if(n.cores>1) {
     if(requireNamespace("parallel", quietly = TRUE)) {
-      res <- mclapply(...,mc.cores=n.cores,mc.preschedule=mc.preschedule)
+      res <- parallel::mclapply(...,mc.cores=n.cores,mc.preschedule=mc.preschedule)
     }
     else if(requireNamespace("BiocParallel", quietly = TRUE)) {
       # It should never happen because parallel is specified in Imports
@@ -568,7 +567,7 @@ postProcessWalktrapClusters <- function(p2list, pjc, no.cl = 200, size.cutoff = 
     ## Memberships to keep
     global.cluster.filtered <- as.factor(global.cluster[global.cluster %in% cl.to.keep])
     ## Get new assignments for all the cells
-    new.assign <- unlist(unname(parallel::mclapply(p2list, function(p2o) {
+    new.assign <- unlist(unname(papply(p2list, function(p2o) {
         try({
             ## get global cluster centroids for cells in this app
             global.cluster.filtered.bd <- factorBreakdown(global.cluster.filtered)
@@ -592,7 +591,7 @@ postProcessWalktrapClusters <- function(p2list, pjc, no.cl = 200, size.cutoff = 
             new.cluster.assign <- apply(xcor,1, function(x) {colnames(xcor)[which.max(x)]})
             new.cluster.assign
         })
-    },mc.cores=n.cores)))
+    },n.cores=n.cores)))
     ## Merge
     x <- as.character(global.cluster.filtered)
     names(x) <- names(global.cluster.filtered)
