@@ -140,12 +140,14 @@ plotClusterBarplots <- function(conos.obj=NULL, clustering=NULL, groups=NULL,sam
   if(!is.null(clustering)) {
     if(is.null(conos.obj)) stop('conos.obj must be passed if clustering name is specified');
     if(!clustering %in% names(conos.obj$clusters)) stop('specified clustering doesn\'t exist')
-    groups <- as.factor(conos.obj$clusters[[clustering]]$groups)
+    groups <- conos.obj$clusters[[clustering]]$groups
   } else if (is.null(groups)) {
     if(is.null(conos.obj)) stop('either groups factor on the cells or a conos object needs to be specified')
     if(is.null(conos.obj$clusters[[1]])) stop('conos object lacks any clustering. run $findCommunities() first')
-    groups <- as.factor(conos.obj$clusters[[1]]$groups)
+    groups <- conos.obj$clusters[[1]]$groups
   }
+
+  groups <- as.factor(groups)
   if(is.null(sample.factor)) {
     sample.factor <- conos.obj$getDatasetPerCell(); # assignment to samples
   }
@@ -155,7 +157,8 @@ plotClusterBarplots <- function(conos.obj=NULL, clustering=NULL, groups=NULL,sam
 
   df <- reshape2::melt(xt); colnames(df) <- c("sample","cluster","f");  df$f <- df$f/colSums(xt)[as.character(df$cluster)]
   clp <- ggplot2::ggplot(df, ggplot2::aes(x=factor(cluster, levels=levels(groups)),y=f,fill=sample)) +
-    ggplot2::geom_bar(stat='identity') + ggplot2::xlab('cluster') + ggplot2::ylab('fraction of cells') + ggplot2::theme_bw()
+    ggplot2::geom_bar(stat='identity') + ggplot2::xlab('cluster') + ggplot2::ylab('fraction of cells') + ggplot2::theme_bw() +
+    ggplot2::scale_y_continuous(expand=c(0, 0))
 
   if(!show.size && !show.entropy)
     return(clp);
