@@ -201,7 +201,10 @@ Conos <- setRefClass(
     },
 
 
-    buildGraph=function(k=15, k.self=10, k.self.weight=0.1, alignment.strength=NULL, space='PCA', matching.method='mNN', metric='angular', k1=k, data.type='counts', l2.sigma=1e5, var.scale =TRUE, ncomps=40, n.odgenes=2000, neighborhood.average=FALSE, neighborhood.average.k=10, matching.mask=NULL, exclude.samples=NULL, common.centering=TRUE, verbose=TRUE, base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, score.component.variance=FALSE, balance.edge.weights=FALSE, balancing.factor.per.cell=NULL, same.factor.downweight=1.0) {
+    buildGraph=function(k=15, k.self=10, k.self.weight=0.1, alignment.strength=NULL, space='PCA', matching.method='mNN', metric='angular', k1=k, data.type='counts', l2.sigma=1e5, var.scale=TRUE, ncomps=40,
+                        n.odgenes=2000, neighborhood.average=FALSE, neighborhood.average.k=10, matching.mask=NULL, exclude.samples=NULL, common.centering=TRUE, verbose=TRUE,
+                        base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, score.component.variance=FALSE,
+                        balance.edge.weights=FALSE, balancing.factor.per.cell=NULL, same.factor.downweight=1.0) {
       supported.spaces <- c("CPCA","JNMF","genes","PCA","PMA","CCA")
       if(!space %in% supported.spaces) {
         stop(paste0("only the following spaces are currently supported: [",paste(supported.spaces,collapse=' '),"]"))
@@ -243,6 +246,7 @@ Conos <- setRefClass(
       # determine inter-sample mapping
       if(verbose) cat('inter-sample links using ',matching.method,' ');
       cached.pairs <- pairs[[space]]
+      cor.base <- 1 + min(1, alignment.strength * 10)
       mnnres <- papply(1:ncol(sn.pairs), function(j) {
         # we'll look up the pair by name (possibly reversed), not to assume for the ordering of $pairs[[space]] to be the same
         i <- match(paste(sn.pairs[,j],collapse='.vs.'),names(cached.pairs));
@@ -250,11 +254,8 @@ Conos <- setRefClass(
         if(is.na(i)) { stop(paste("unable to find alignment for pair",paste(sn.pairs[,j],collapse='.vs.'))) }
 
         if(space=='JNMF') {
-          mnn <- getNeighborMatrix(cached.pairs[[i]]$rot1,cached.pairs[[i]]$rot2,k,matching=matching.method,metric=metric,l2.sigma=l2.sigma)
-          if(verbose) cat(".")
-          return(data.frame('mA.lab'=rownames(cached.pairs[[i]]$rot1)[mnn@i+1],'mB.lab'=rownames(cached.pairs[[i]]$rot2)[mnn@j+1],'w'=mnn@x,stringsAsFactors=F))
-          #return(data.frame('mA.lab'=rownames(cached.pairs[[i]]$rot1)[mnn@i+1],'mB.lab'=rownames(cached.pairs[[i]]$rot2)[mnn@j+1],'w'=1/pmax(1,log(mnn@x)),stringsAsFactors=F))
-
+          mnn <- getNeighborMatrix(cached.pairs[[i]]$rot1, cached.pairs[[i]]$rot2,
+                                   k=k, k1=k1, matching=matching.method, metric=metric, l2.sigma=l2.sigma, cor.base=cor.base)
         } else if (space %in% c("CPCA","GSVD","PCA")) {
           #common.genes <- Reduce(intersect,lapply(r.ns, getGenes))
           if(!is.null(cached.pairs[[i]]$CPC)) {
@@ -277,24 +278,23 @@ Conos <- setRefClass(
             rot <- rot[,1:ncomps,drop=F]
           }
 
-          mnn <- getPcaBasedNeighborMatrix(samples[sn.pairs[,j]], od.genes=od.genes, rot=rot, k=k, k1=k1, data.type=data.type,
+          mnn <- getPcaBasedNeighborMatrix(samples[sn.pairs[,j]], od.genes=od.genes, rot=rot, data.type=data.type,
+                                           k=k, k1=k1, matching.method=matching.method, metric=metric, l2.sigma=l2.sigma, cor.base=cor.base,
                                            var.scale=var.scale, neighborhood.average=neighborhood.average, common.centering=common.centering,
-                                           matching.method=matching.method, metric=metric, l2.sigma=l2.sigma, cor.base=1 + min(1, alignment.strength * 10),
                                            base.groups=base.groups, append.decoys=append.decoys, samples=samples, samf=samf, decoy.threshold=decoy.threshold,
                                            n.decoys=n.decoys, append.global.axes=append.global.axes, global.proj=global.proj)
-          if(verbose) cat(".")
-
-          return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=mnn@x,stringsAsFactors=F))
-
-        } else if (space=='genes') {
-          ## Overdispersed Gene space
-          mnn <- getNeighborMatrix(as.matrix(cached.pairs[[i]]$genespace1), as.matrix(cached.pairs[[i]]$genespace2),k,matching=matching.method,metric=metric,l2.sigma=l2.sigma)
-          return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=mnn@x,stringsAsFactors=F))
+        } else if (space=='genes') { ## Overdispersed Gene space
+          mnn <- getNeighborMatrix(as.matrix(cached.pairs[[i]]$genespace1), as.matrix(cached.pairs[[i]]$genespace2),
+                                   k=k, k1=k1, matching=matching.method, metric=metric, l2.sigma=l2.sigma, cor.base=cor.base)
         } else if(space=='PMA' || space=='CCA') {
-          mnn <- getNeighborMatrix(cached.pairs[[i]]$u,cached.pairs[[i]]$v,k,k1=k1,matching=matching.method,metric=metric,l2.sigma=l2.sigma,cor.base=1 + min(1, alignment.strength * 10));
-          return(data.frame('mA.lab'=rownames(cached.pairs[[i]]$u)[mnn@i+1],'mB.lab'=rownames(cached.pairs[[i]]$v)[mnn@j+1],'w'=mnn@x,stringsAsFactors=F))
+          mnn <- getNeighborMatrix(cached.pairs[[i]]$u, cached.pairs[[i]]$v,
+                                   k=k, k1=k1, matching=matching.method, metric=metric, l2.sigma=l2.sigma, cor.base=cor.base);
+        } else {
+          stop("Unknown space: ", space)
         }
-        mnnres
+
+        if(verbose) cat(".")
+        return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=mnn@x,stringsAsFactors=F))
       },n.cores=n.cores,mc.preschedule=TRUE)
       if(verbose) cat(" done\n")
       ## Merge the results into a edge table

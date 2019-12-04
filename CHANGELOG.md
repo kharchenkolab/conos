@@ -3,6 +3,8 @@
 ### Changed
 
 - Moved some code to the new sccore package
+- Fixed inconsistent use of parameters for different spaces in `buildGraph`
+- Various small fixes
 
 ### Added
 
