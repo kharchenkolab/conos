@@ -1200,7 +1200,7 @@ parseCellGroups <- function(con, clustering, groups, parse.clusters=T) {
     return(groups)
 
   if (!is.null(groups)) {
-    if (!any(names(groups) %in% names(V(con$graph))))
+    if (!any(names(groups) %in% names(con$getDatasetPerCell())))
       stop("'groups' aren't defined for any of the cells.")
 
     return(groups)
