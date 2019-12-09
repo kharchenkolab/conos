@@ -359,21 +359,8 @@ Conos <- setRefClass(
         lapply.func <- if (verbose) function(...) pbapply::pblapply(..., cl=n.jobs) else function(...) papply(..., n.cores=n.jobs)
         if (verbose) cat("Estimating specificity metrics\n")
 
-        groups.clean <- groups[!is.na(groups)]
         cm.merged <- getJointCountMatrix(raw=TRUE)
-
-        dif <- intersect(rownames(cm.merged),names(groups.clean))
-
-        if(nrow(cm.merged) != length(groups.clean) | length(dif) != nrow(cm.merged)) {
-          if(nrow(cm.merged) < length(groups.clean)) {
-            if(verbose) message("'groups' is defined for ",length(groups.clean)-nrow(cm.merged)," unknown cells.")
-            groups.clean %<>% subset(rownames %in% rownames(cm.merged))
-          }
-          if(length(dif) < nrow(cm.merged)) {
-            if(verbose) message("Excluding ",nrow(cm.merged)-length(dif)," cells missing from 'groups'.")
-            cm.merged %<>% .[rownames(.) %in% dif,]
-          }
-        }
+        groups.clean <- groups %>% .[!is.na(.)] %>% .[names(.) %in% rownames(cm.merged)]
 
         de.genes %<>% lapply(function(x) if ((length(x) > 0) && (nrow(x) > 0)) subset(x, complete.cases(x)) else x)
         de.genes %<>% names() %>% setNames(., .) %>%
