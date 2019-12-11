@@ -27,16 +27,21 @@ setMethod(
     return(head(x = vf, n = n.odgenes))
   }
 )
+setMethod("getOverdispersedGenes", signature("Conos"), function(sample, n.odgenes=NULL) commonOverdispersedGene(sample$samples,n.odgenes,verbose=FALSE))
+
+
 
 setGeneric("getCellNames", function(sample) standardGeneric("getCellNames"))
 setMethod("getCellNames", signature("Pagoda2"), function(sample) rownames(sample$counts))
 setMethod("getCellNames", signature("seurat"), function(sample) colnames(sample@data))
 setMethod(f = 'getCellNames', signature = signature('Seurat'), definition = function(sample) return(colnames(x = sample)))
+setMethod("getCellNames", signature("Conos"), function(sample) unlist(lapply(sample$samples,getCellNames)))
 
 setGeneric("getGenes", function(sample) standardGeneric("getGenes"))
 setMethod("getGenes", signature("Pagoda2"), function(sample) colnames(sample$counts))
 setMethod("getGenes", signature("seurat"), function(sample) rownames(sample@data))
 setMethod(f = 'getGenes', signature = signature('Seurat'), definition = function(sample) return(rownames(x = sample)))
+setMethod("getGenes", signature("Conos"), function(sample) unique(unlist(lapply(sample$samples,getGenes))))
 
 setGeneric("edgeMat<-", function(sample, value) standardGeneric("edgeMat<-"))
 setMethod("edgeMat<-", signature("Pagoda2"), function(sample, value) {sample$misc$edgeMat <- value; sample})
@@ -96,6 +101,9 @@ setMethod("getGeneExpression", signature("Pagoda2"), function(sample, gene) {
 
   return(stats::setNames(rep(NA, nrow(sample$counts)), rownames(sample$counts)))
 })
+setMethod("getGeneExpression", signature("Conos"), function(sample, gene) {
+  lapply(sample$samples, getGeneExpression, gene) %>% Reduce(c, .)
+})
 
 getGeneExpression.default <- function(sample, gene) {
   count.matrix <- getCountMatrix(sample)
@@ -142,6 +150,7 @@ setMethod(
     return(rd)
   }
 )
+setMethod("getRawCountMatrix", signature("Conos"), function(sample, transposed=F) { m <- sample$getJointCountMatrix(raw=TRUE); if (transposed) t(m) else m })
 
 setGeneric("getEmbedding", function(sample, type) standardGeneric("getEmbedding"))
 setMethod("getEmbedding", signature("Pagoda2"), function(sample, type) sample$embeddings$PCA[[type]])
@@ -160,6 +169,7 @@ setMethod(
     return(emb)
   }
 )
+setMethod("getEmbedding", signature("Conos"), function(sample, type) sample$embedding)
 
 setGeneric("getClustering", function(sample, type) standardGeneric("getClustering"))
 setMethod("getClustering", signature("Pagoda2"), function(sample, type) sample$clusters$PCA[[type]])
@@ -193,3 +203,4 @@ setMethod(
     return(idents)
   }
 )
+setMethod("getClustering", signature("Conos"), function(sample, type) { cl <- sample$clusters[[type]]; if(is.null(cl)) NULL else cl$groups })
