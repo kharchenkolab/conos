@@ -311,71 +311,114 @@ plotComponentVariance <- function(conos.obj, space='PCA',plot.theme=theme_bw()) 
 
 }
 
-plotDEGenes <- function(de.genes, samples, groups, n.genes.to.show=10, inner.clustering=FALSE, gradient.range.quantile=0.95) {
-  # genes to show
-  vi <- unlist(lapply(de.genes, class))=='data.frame';
-  x <- lapply(de.genes[vi],function(d) {  if(!is.null(d) && nrow(d)>0) { d[1:min(nrow(d),n.genes.to.show),] } else { NULL } })
-  x <- lapply(x,rownames);
-  genes <- unique(unlist(x))
-  # make expression matrix
-  cl <- lapply(samples, function(y) getCountMatrix(y) %>% .[rownames(.) %in% genes,,drop=F] )
+##' Plot a heatmap of differential genes
+##'
+##' @param con conos (or p2) object
+##' @param groups groups in which the DE genes were determined (so that the cells can be ordered correctly)
+##' @param de differential expression result (list of data frames)
+##' @param min.auc optional minimum AUC threshold
+##' @param min.specificity optional minimum specificity threshold
+##' @param n.genes.per.cluster number of genes to show for each cluster
+##' @param additional.genes optional additional genes to include (the genes will be assigned to the closest cluster)
+##' @param expression.quantile expression quantile to show (0.98 by default)
+##' @param pal palette to use for the main heatmap 
+##' @param ordering order by which the top DE genes (to be shown) are determined (default "-AUC")
+##' @param column.metadata additional column metadata, passed either as a data.frame with rows named as cells, or as a list of named cell factors.
+##' @param show.gene.clusters whether to show gene cluster color codes
+##' @param remove.duplicates remove duplicated genes (leaving them in just one of the clusters)
+##' @param ... extra parameters are passed to pheatmap
+##' @return pheatmap object
+##' @export
+plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,n.genes.per.cluster=10,additional.genes=NULL,expression.quantile=0.99,pal=colorRampPalette(c('dodgerblue1','grey95','indianred1'))(1024),ordering='-AUC',column.metadata=NULL,show.gene.clusters=TRUE, remove.duplicates=TRUE, ...) {
+  if (!requireNamespace("pheatmap", quietly = TRUE)) {
+    stop("pheatmap package needs to be installed to use plotDEheatmap")
+  }
+  
+  if(is.null(de)) { # run DE
+    de <- con$getDifferentialGenes(groups=groups,append.auc=TRUE,z.threshold=0,upregulated.only=TRUE)
+  }
+  # apply filters
+  if(!is.null(min.auc)) {
+    if(!is.null(de[[1]]$AUC)) {
+      de <- lapply(de,function(x) x %>% filter(AUC>min.auc))
+    } else {
+      warning("AUC column lacking in the DE results - recalculate with append.auc=TRUE")
+    }
+  }
+  if(!is.null(min.specificity)) {
+    if(!is.null(de[[1]]$Specificity)) {
+      de <- lapply(de,function(x) x %>% filter(Specificity>min.specificity))
+    } else {
+      warning("Specificity column lacking in the DE results - recalculate append.specificity.metrics=TRUE")
+    }
+  }
+  #de <- lapply(de,function(x) x%>%arrange(-Precision)%>%head(n.genes.per.cluster))
+  de <- lapply(de,function(x) x%>%arrange(!!rlang::parse_expr(ordering))%>%head(n.genes.per.cluster))
+  
+  gns <- lapply(de,function(x) as.character(x$Gene)) %>% unlist
+  sn <- function(x) setNames(x,x)
+  expl <- lapply(de,function(d) do.call(rbind,lapply(sn(as.character(d$Gene)),function(gene) conos:::getGeneExpression(con,gene))))
 
-  em <- mergeCountMatrices(cl, transposed=T)
+  # place additional genes
+  if(!is.null(additional.genes)) {
+    additional.genes <- setdiff(additional.genes,unlist(lapply(expl,rownames)))
+    x <- setdiff(additional.genes,conos:::getGenes(con)); if(length(x)>0) warning('the following genes are not found in the dataset: ',paste(x,collapse=' '))
+    
+    age <- do.call(rbind,lapply(sn(additional.genes),function(gene) conos:::getGeneExpression(con,gene)))
+    # for each gene, measure average correlation with genes of each cluster
+    acc <- do.call(rbind,lapply(expl,function(og) rowMeans(cor(t(age),t(og)),na.rm=T)))
+    acc <- acc[,apply(acc,2,function(x) any(is.finite(x))),drop=F]
+    acc.best <- na.omit(apply(acc,2,which.max))
+    
+    for(i in 1:length(acc.best)) {
+      gn <- names(acc.best)[i];
+      expl[[acc.best[i]]] <- rbind(expl[[acc.best[i]]],age[gn,,drop=F])
+    }
+  }
+  
 
-  # renormalize rows
-  if(all(sign(em)>=0)) {
-    gradientPalette <- colorRampPalette(c('gray90','red'), space = "Lab")(1024)
-    em <- t(apply(em,1,function(x) {
-      zlim <- as.numeric(quantile(x,p=c(1-gradient.range.quantile,gradient.range.quantile)))
-      if(diff(zlim)==0) {
-        zlim <- as.numeric(range(x))
-      }
-      x[x<zlim[1]] <- zlim[1]; x[x>zlim[2]] <- zlim[2];
-      x <- (x-zlim[1])/(zlim[2]-zlim[1])
-    }))
-  } else {
-    gradientPalette <- colorRampPalette(c("blue", "grey90", "red"), space = "Lab")(1024)
-    em <- t(apply(em,1,function(x) {
-      zlim <- c(-1,1)*as.numeric(quantile(abs(x),p=gradient.range.quantile))
-      if(diff(zlim)==0) {
-        zlim <- c(-1,1)*as.numeric(max(abs(x)))
-      }
-      x[x<zlim[1]] <- zlim[1]; x[x>zlim[2]] <- zlim[2];
-      x <- (x-zlim[1])/(zlim[2]-zlim[1])
-    }))
+  exp <- do.call(rbind,expl)
+  # limit to cells that were participating in the de
+  exp <- exp[,colnames(exp) %in% names(na.omit(groups))]
+  
+
+  # transform expression values
+  x <- t(apply(as.matrix(exp), 1, function(xp) {
+    qs <- quantile(xp,c(1-expression.quantile,expression.quantile))
+    xp[xp<qs[1]] <- qs[1]
+    xp[xp>qs[2]] <- qs[2]
+    xp-min(xp);
+    xpr <- diff(range(xp));
+    if(xpr>0) xp <- xp/xpr;
+    xp
+  }))
+
+
+  o <- order(groups[colnames(x)])
+  x=x[,o]
+  
+  annot <- data.frame(CellType=groups[colnames(x)],row.names = colnames(x))
+  if(!is.null(column.metadata)) {
+    if(is.data.frame(column.metadata)) { # data frame
+      annot <- cbind(annot,column.metadata[colnames(x),])
+    } else if(is.list(column.metadata)) { # a list of factors
+      annot <- cbind(annot,data.frame(do.call(cbind.data.frame,lapply(column.metadata,'[',rownames(annot)))))
+    } else {
+      warning('column.metadata must be either a data.frame or a list of cell-named factors')
+    }
   }
 
-  # cluster cell types by averages
-  gmap <- data.frame(gene=unlist(x),cl=rep(names(x),unlist(lapply(x,length))));
-  rowfac <- factor(gmap$cl[match(rownames(em),gmap$gene)],levels=names(x))
-  if(inner.clustering) {
-    clclo <- hclust(as.dist(1-cor(do.call(cbind,tapply(1:nrow(em),rowfac,function(ii) Matrix::colMeans(em[ii,,drop=FALSE]))))),method='complete')$order
-    clgo <- tapply(1:nrow(em),rowfac,function(ii) ii[hclust(as.dist(1-cor(t(em[ii,]))),method='complete')$order])
-    clco <- tapply(1:ncol(em),groups[colnames(em)],function(ii) {
-      if(length(ii)>3) ii[hclust(as.dist(1-cor(em[,ii,drop=F])),method='complete')$order] else ii
-    })
+  if(show.gene.clusters) { 
+    rannot <- rep(names(expl),unlist(lapply(expl,nrow)))
+    names(rannot) <- rownames(x);
+    rannot <- rannot[!duplicated(names(rannot))]
+    rannot <- data.frame(CellType=factor(rannot,levels=names(expl)))
   } else {
-    clclo <- 1:length(levels(rowfac))
-    clgo <- tapply(1:nrow(em),rowfac,I)
-    clco <- tapply(1:ncol(em),groups[colnames(em)],I)
+    rannot <- NULL
   }
-
-  #clco <- clco[names(clgo)]
-  # filter down to the clusters that are included
-  #vic <- cols %in% clclo
-  colors <- fac2col(groups[colnames(em)],v=0.95,s=0.95,return.details=TRUE)
-  samf <- fac2col(getSampleNamePerCell(samples),v=0.75,s=0.9,return.details=TRUE);
-  cellcols <- colors$colors[unlist(clco[clclo])]
-  samfcols <- samf$colors[unlist(clco[clclo])]
-  genecols <- rev(rep(colors$palette,unlist(lapply(clgo,length)[clclo])))
-  drawGroupNames <- FALSE;
-  bottomMargin <- ifelse(drawGroupNames,4,0.5);
-
-  # browser()
-
-  #pagoda2:::my.heatmap2(em[rev(unlist(clgo[clclo])),unlist(clco[clclo])],col=gradientPalette,Colv=NA,Rowv=NA,labRow=NA,labCol=NA,RowSideColors=genecols,ColSideColors=rbind(samfcols,cellcols),margins=c(bottomMargin,0.5),ColSideColors.unit.vsize=0.05,RowSideColors.hsize=0.05,useRaster=TRUE, box=TRUE)
-
-  pagoda2:::my.heatmap2(em[rev(unlist(clgo[clclo])),unlist(clco[clclo])],col=gradientPalette,Colv=NA,Rowv=NA,labRow=NA,labCol=NA,RowSideColors=genecols,ColSideColors=rbind(samfcols,cellcols),margins=c(bottomMargin,0.5),ColSideColors.unit.vsize=0.05,RowSideColors.hsize=0.05,useRaster=TRUE, box=TRUE)
-  abline(v=cumsum(unlist(lapply(clco[clclo],length))),col=1,lty=3)
-  abline(h=cumsum(rev(unlist(lapply(clgo[clclo],length))))+0.5,col=1,lty=3)
+  if(remove.duplicates) { x <- x[!duplicated(rownames(x)),] }
+  
+  # draw heatmap
+  pheatmap::pheatmap(x,cluster_cols=FALSE,annotation_col = annot, annotation_row=rannot, show_colnames = F,annotation_legend = TRUE, cluster_rows = FALSE,color=pal, ...)
+    
 }
