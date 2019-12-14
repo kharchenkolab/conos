@@ -410,27 +410,27 @@ con$embedGraph(method="UMAP", min.dist=0.01, spread=15, n.cores=4, min.prob.lowe
     ## Convert graph to adjacency list...
     ## Done
     ## Estimate nearest neighbors and commute times...
-    ## Estimating hitting distances: 19:04:52.
+    ## Estimating hitting distances: 19:16:28.
     ## Done.
-    ## Estimating commute distances: 19:04:55.
-    ## Hashing adjacency list: 19:04:55.
+    ## Estimating commute distances: 19:16:32.
+    ## Hashing adjacency list: 19:16:32.
     ## Done.
-    ## Estimating distances: 19:04:56.
+    ## Estimating distances: 19:16:32.
     ## Done
     ## Done.
-    ## All done!: 19:04:58.
+    ## All done!: 19:16:35.
     ## Done
     ## Estimate UMAP embedding...
 
-    ## 19:04:58 Read 12000 rows and found 1 numeric columns
+    ## 19:16:35 Read 12000 rows and found 1 numeric columns
 
-    ## 19:04:58 Commencing smooth kNN distance calibration using 4 threads
+    ## 19:16:35 Commencing smooth kNN distance calibration using 4 threads
 
-    ## 19:04:59 Initializing from normalized Laplacian + noise
+    ## 19:16:36 Initializing from normalized Laplacian + noise
 
-    ## 19:05:00 Commencing optimization for 1000 epochs, with 349862 positive edges using 4 threads
+    ## 19:16:37 Commencing optimization for 1000 epochs, with 349848 positive edges using 4 threads
 
-    ## 19:05:16 Optimization finished
+    ## 19:16:54 Optimization finished
 
     ## Done
 
@@ -620,46 +620,46 @@ head(new.label.info$label.distribution)
 
     ##                                        T CD4-CD8-  progenitors
     ## MantonBM1_HiSeq_1-CGATTGACACCTCGGA-1 0.000000e+00 0.000000e+00
-    ## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 2.535885e-05 6.687189e-08
+    ## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 2.535876e-05 6.687111e-08
     ## MantonBM1_HiSeq_1-AGGTCCGTCTCTGCTG-1 0.000000e+00 0.000000e+00
-    ## MantonBM2_HiSeq_1-GGAAAGCCAGACGCCT-1 3.708576e-06 4.243413e-08
-    ## MantonBM2_HiSeq_1-GGGTTGCGTAGCTGCC-1 2.445825e-06 1.553065e-09
-    ## MantonBM2_HiSeq_1-GACAGAGGTCACAAGG-1 3.687123e-02 7.782137e-07
+    ## MantonBM2_HiSeq_1-GGAAAGCCAGACGCCT-1 3.708578e-06 4.243333e-08
+    ## MantonBM2_HiSeq_1-GGGTTGCGTAGCTGCC-1 2.445873e-06 1.553036e-09
+    ## MantonBM2_HiSeq_1-GACAGAGGTCACAAGG-1 3.687744e-02 7.802162e-07
     ##                                           B cells        NK       T cyto
     ## MantonBM1_HiSeq_1-CGATTGACACCTCGGA-1 0.000000e+00 1.0000000 0.000000e+00
-    ## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 5.805073e-10 0.9998261 1.479521e-04
+    ## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 5.805149e-10 0.9998261 1.479464e-04
     ## MantonBM1_HiSeq_1-AGGTCCGTCTCTGCTG-1 0.000000e+00 1.0000000 0.000000e+00
-    ## MantonBM2_HiSeq_1-GGAAAGCCAGACGCCT-1 2.855374e-10 0.9999793 1.685568e-05
-    ## MantonBM2_HiSeq_1-GGGTTGCGTAGCTGCC-1 4.165759e-10 0.9999579 3.957049e-05
-    ## MantonBM2_HiSeq_1-GACAGAGGTCACAAGG-1 1.225645e-06 0.9075957 5.456467e-02
+    ## MantonBM2_HiSeq_1-GGAAAGCCAGACGCCT-1 2.855341e-10 0.9999793 1.685544e-05
+    ## MantonBM2_HiSeq_1-GGGTTGCGTAGCTGCC-1 4.165746e-10 0.9999579 3.956879e-05
+    ## MantonBM2_HiSeq_1-GACAGAGGTCACAAGG-1 1.226882e-06 0.9076003 5.455220e-02
     ##                                         monocytes monomyelocytes
     ## MantonBM1_HiSeq_1-CGATTGACACCTCGGA-1 0.000000e+00   0.000000e+00
-    ## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 3.968262e-07   1.250657e-09
+    ## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 3.968239e-07   1.250732e-09
     ## MantonBM1_HiSeq_1-AGGTCCGTCTCTGCTG-1 0.000000e+00   0.000000e+00
-    ## MantonBM2_HiSeq_1-GGAAAGCCAGACGCCT-1 6.368278e-08   2.926130e-10
-    ## MantonBM2_HiSeq_1-GGGTTGCGTAGCTGCC-1 4.817267e-09   4.749189e-11
-    ## MantonBM2_HiSeq_1-GACAGAGGTCACAAGG-1 9.420485e-07   6.587810e-08
+    ## MantonBM2_HiSeq_1-GGAAAGCCAGACGCCT-1 6.368236e-08   2.926289e-10
+    ## MantonBM2_HiSeq_1-GGGTTGCGTAGCTGCC-1 4.817054e-09   4.750624e-11
+    ## MantonBM2_HiSeq_1-GACAGAGGTCACAAGG-1 9.422397e-07   6.660567e-08
     ##                                      plasma cells  dying cells
     ## MantonBM1_HiSeq_1-CGATTGACACCTCGGA-1 0.000000e+00 0.000000e+00
-    ## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 8.293244e-09 7.233109e-08
+    ## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 8.293722e-09 7.235309e-08
     ## MantonBM1_HiSeq_1-AGGTCCGTCTCTGCTG-1 0.000000e+00 0.000000e+00
-    ## MantonBM2_HiSeq_1-GGAAAGCCAGACGCCT-1 1.539908e-09 3.811303e-08
-    ## MantonBM2_HiSeq_1-GGGTTGCGTAGCTGCC-1 1.195754e-10 9.338783e-08
-    ## MantonBM2_HiSeq_1-GACAGAGGTCACAAGG-1 2.368022e-08 9.645528e-04
+    ## MantonBM2_HiSeq_1-GGAAAGCCAGACGCCT-1 1.539996e-09 3.812012e-08
+    ## MantonBM2_HiSeq_1-GGGTTGCGTAGCTGCC-1 1.195779e-10 9.342492e-08
+    ## MantonBM2_HiSeq_1-GACAGAGGTCACAAGG-1 2.369293e-08 9.662349e-04
     ##                                         erythroid          HSC
     ## MantonBM1_HiSeq_1-CGATTGACACCTCGGA-1 0.000000e+00 0.000000e+00
-    ## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 2.379163e-09 3.423921e-10
+    ## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 2.379154e-09 3.423938e-10
     ## MantonBM1_HiSeq_1-AGGTCCGTCTCTGCTG-1 0.000000e+00 0.000000e+00
-    ## MantonBM2_HiSeq_1-GGAAAGCCAGACGCCT-1 9.261202e-10 2.149912e-10
-    ## MantonBM2_HiSeq_1-GGGTTGCGTAGCTGCC-1 5.536799e-11 2.621887e-10
-    ## MantonBM2_HiSeq_1-GACAGAGGTCACAAGG-1 2.459978e-07 3.440054e-07
+    ## MantonBM2_HiSeq_1-GGAAAGCCAGACGCCT-1 9.261282e-10 2.149902e-10
+    ## MantonBM2_HiSeq_1-GGGTTGCGTAGCTGCC-1 5.537500e-11 2.621778e-10
+    ## MantonBM2_HiSeq_1-GACAGAGGTCACAAGG-1 2.462760e-07 3.442262e-07
     ##                                               pDC           DC
     ## MantonBM1_HiSeq_1-CGATTGACACCTCGGA-1 0.000000e+00 0.000000e+00
-    ## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 6.209976e-08 5.769105e-09
+    ## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 6.210101e-08 5.769584e-09
     ## MantonBM1_HiSeq_1-AGGTCCGTCTCTGCTG-1 0.000000e+00 0.000000e+00
-    ## MantonBM2_HiSeq_1-GGAAAGCCAGACGCCT-1 1.063970e-08 1.057840e-09
-    ## MantonBM2_HiSeq_1-GGGTTGCGTAGCTGCC-1 8.238726e-10 8.165033e-11
-    ## MantonBM2_HiSeq_1-GACAGAGGTCACAAGG-1 1.776537e-07 1.543863e-08
+    ## MantonBM2_HiSeq_1-GGAAAGCCAGACGCCT-1 1.063991e-08 1.057924e-09
+    ## MantonBM2_HiSeq_1-GGGTTGCGTAGCTGCC-1 8.238596e-10 8.165366e-11
+    ## MantonBM2_HiSeq_1-GACAGAGGTCACAAGG-1 1.778168e-07 1.544300e-08
 
 # Differential expression
 
@@ -720,12 +720,12 @@ de.info$monocytes %>% filter(AUC > 0.75) %>% arrange(-Precision) %>% head()
 ```
 
     ##       Gene        M        Z        PValue          PAdj       AUC
-    ## 1     CD14 3.231546 15.50441  2.520960e-53  8.465888e-49 0.7702102
-    ## 2 SERPINA1 3.228138 21.10589  7.426641e-98  2.498990e-93 0.8833554
-    ## 3    RAB31 3.089283 13.86084  7.619598e-43  2.556985e-38 0.7845012
-    ## 4     CSTA 3.110447 23.86952 7.592441e-125 2.556906e-120 0.9107458
+    ## 1     CD14 3.231546 15.50428  2.526209e-53  8.483516e-49 0.7702102
+    ## 2 SERPINA1 3.228138 21.10572  7.453301e-98  2.507961e-93 0.8833554
+    ## 3    RAB31 3.089283 13.86050  7.655582e-43  2.569060e-38 0.7845012
+    ## 4     CSTA 3.110447 23.86946 7.602830e-125 2.560405e-120 0.9107458
     ## 5     FCN1 3.172066 26.74712 1.786229e-156 6.016911e-152 0.9514647
-    ## 6     G0S2 3.172698 16.27406  1.231885e-58  4.138147e-54 0.7984214
+    ## 6     G0S2 3.172698 16.27389  1.235291e-58  4.149591e-54 0.7984214
     ##   Specificity Precision ExpressionFraction
     ## 1   0.9919610 0.9125737          0.5490544
     ## 2   0.9836050 0.8834111          0.7836879
@@ -783,13 +783,13 @@ str( con$getClusterCountMatrices() , 1)
 ```
 
     ## List of 4
-    ##  $ MantonBM1_HiSeq_1: num [1:33694, 1:13] 0 0 0 1 0 0 0 0 40 4 ...
+    ##  $ MantonBM1_HiSeq_1: num [1:33694, 1:14] 0 0 0 1 0 0 0 0 59 5 ...
     ##   ..- attr(*, "dimnames")=List of 2
-    ##  $ MantonBM2_HiSeq_1: num [1:33694, 1:13] 0 0 0 0 0 0 0 0 63 4 ...
+    ##  $ MantonBM2_HiSeq_1: num [1:33694, 1:14] 0 0 0 0 0 0 0 0 102 6 ...
     ##   ..- attr(*, "dimnames")=List of 2
-    ##  $ MantonCB1_HiSeq_1: num [1:33694, 1:13] 0 0 0 0 0 0 0 0 77 6 ...
+    ##  $ MantonCB1_HiSeq_1: num [1:33694, 1:14] 0 0 0 0 0 0 0 0 101 10 ...
     ##   ..- attr(*, "dimnames")=List of 2
-    ##  $ MantonCB2_HiSeq_1: num [1:33694, 1:13] 0 0 0 0 0 0 0 0 133 18 ...
+    ##  $ MantonCB2_HiSeq_1: num [1:33694, 1:14] 0 0 0 0 0 0 0 0 166 22 ...
     ##   ..- attr(*, "dimnames")=List of 2
 
 The list above, returns pooled count matrix for each sample, where the
