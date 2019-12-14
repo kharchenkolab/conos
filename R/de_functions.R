@@ -553,6 +553,9 @@ getBetweenCellTypeCorrectedDE <- function(con.obj, sample.groups =  NULL, groups
 #' Takes data.frames with info about DE genes for single cell type and many samples and
 #' returns data.frame with aggregated info for this cell type
 aggregateDEMarkersAcrossDatasets <- function(marker.dfs, z.threshold, upregulated.only) {
+  if (length(marker.dfs) == 0)
+    return(data.frame())
+
   z.scores.per.dataset <- lapply(marker.dfs, function(df) setNames(df$Z, rownames(df)))
   m.vals.per.dataset <- lapply(marker.dfs, function(df) setNames(df$M, rownames(df)))
   gene.union <- lapply(z.scores.per.dataset, names) %>% Reduce(union, .)
