@@ -347,6 +347,18 @@ de.info$monocytes %>% filter(AUC > 0.75) %>% arrange(-Precision) %>% head()
 con$plotGraph(gene="CD14")
 ```
 
+Or plot a heatmap of top genes (top by AUC by default)
+```{r fig.width=7,fig.height=7}
+plotDEheatmap(con,new.annot,de.info, n.genes.per.cluster = 5, column.metadata=list(samples=con$getDatasetPerCell()), row_names_gp = grid::gpar(fontsize = 7))
+```
+
+Make a smaller heatmap, selecting a subset of cell types, and showing only hand-picked set of genes:
+```{r fig.width=7,fig.height=4}
+gns <- c("GZMB","IL32","CD3E","LYZ","HLA-DRA","IGHD","GNLY","IGHM","GZMK")
+plotDEheatmap(con,new.annot,de.info[-c(3,10)], n.genes.per.cluster = 30, column.metadata=list(samples=con$getDatasetPerCell()), row_names_gp = grid::gpar(fontsize = 7), labeled.gene.subset = gns)
+```
+
+
 ## DE Between Sample Groups
 
 Next, given a joint clustering of cells that captures cell relationships between samples, we can want to ask what is different between the cells of these populations between specific samples types, in this case CB and BM samples. Conos provides routines to be able to do that.

@@ -320,19 +320,26 @@ plotComponentVariance <- function(conos.obj, space='PCA',plot.theme=theme_bw()) 
 ##' @param min.specificity optional minimum specificity threshold
 ##' @param n.genes.per.cluster number of genes to show for each cluster
 ##' @param additional.genes optional additional genes to include (the genes will be assigned to the closest cluster)
+##' @param labeled.gene.subset 
 ##' @param expression.quantile expression quantile to show (0.98 by default)
 ##' @param pal palette to use for the main heatmap 
 ##' @param ordering order by which the top DE genes (to be shown) are determined (default "-AUC")
 ##' @param column.metadata additional column metadata, passed either as a data.frame with rows named as cells, or as a list of named cell factors.
 ##' @param show.gene.clusters whether to show gene cluster color codes
 ##' @param remove.duplicates remove duplicated genes (leaving them in just one of the clusters)
+##' @param column.metadata.colors a list of color specifications for additional column metadata, specified according to the HeatmapMetadata format. Use "clusters" slot to specify cluster colors.
+##' @param show.cluster.legend whether to show the cluster legend
+##' @param show_heatmap_legend whether to show the expression heatmap legend
+##' @param border show borders around the heatmap and annotations
+##' @param return.details if TRUE will return a list containing the heatmap (ha), but also raw matrix (x), expression list (expl) and other info to produce the heatmap on your own.
 ##' @param ... extra parameters are passed to pheatmap
-##' @return pheatmap object
+##' @return ComplexHeatmap::Heatmap object
 ##' @export
-plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,n.genes.per.cluster=10,additional.genes=NULL,expression.quantile=0.99,pal=colorRampPalette(c('dodgerblue1','grey95','indianred1'))(1024),ordering='-AUC',column.metadata=NULL,show.gene.clusters=TRUE, remove.duplicates=TRUE, ...) {
-  if (!requireNamespace("pheatmap", quietly = TRUE)) {
+plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,n.genes.per.cluster=10,additional.genes=NULL,labeled.gene.subset=NULL, expression.quantile=0.99,pal=colorRampPalette(c('dodgerblue1','grey95','indianred1'))(1024),ordering='-AUC',column.metadata=NULL,show.gene.clusters=TRUE, remove.duplicates=TRUE, column.metadata.colors=NULL, show.cluster.legend=TRUE, show_heatmap_legend=FALSE, border=TRUE, return.details=FALSE, ...) {
+  if (!requireNamespace("ComplexHeatmap", quietly = TRUE)) {
     stop("pheatmap package needs to be installed to use plotDEheatmap")
   }
+
   
   if(is.null(de)) { # run DE
     de <- con$getDifferentialGenes(groups=groups,append.auc=TRUE,z.threshold=0,upregulated.only=TRUE)
@@ -397,7 +404,8 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,n
   o <- order(groups[colnames(x)])
   x=x[,o]
   
-  annot <- data.frame(CellType=groups[colnames(x)],row.names = colnames(x))
+  annot <- data.frame(clusters=groups[colnames(x)],row.names = colnames(x))
+  
   if(!is.null(column.metadata)) {
     if(is.data.frame(column.metadata)) { # data frame
       annot <- cbind(annot,column.metadata[colnames(x),])
@@ -407,18 +415,44 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,n
       warning('column.metadata must be either a data.frame or a list of cell-named factors')
     }
   }
+  annot <- annot[,rev(1:ncol(annot)),drop=FALSE]
 
-  if(show.gene.clusters) { 
-    rannot <- rep(names(expl),unlist(lapply(expl,nrow)))
-    names(rannot) <- rownames(x);
-    rannot <- rannot[!duplicated(names(rannot))]
-    rannot <- data.frame(CellType=factor(rannot,levels=names(expl)))
-  } else {
-    rannot <- NULL
+  if(is.null(column.metadata.colors))  { column.metadata.colors <- list(); } else { if(!is.list(column.metadata.colors)) stop("column.metadata.colors must be a list in a format accepted by HeatmapAnnotation col argument") }
+
+  # make sure cluster colors are defined
+  if(is.null(column.metadata.colors[['clusters']])) {
+    uc <- unique(annot$clusters);
+    column.metadata.colors$clusters <- setNames(rainbow(length(uc)),uc)
   }
+
+  rannot <- rep(names(expl),unlist(lapply(expl,nrow)))
+  names(rannot) <- rownames(x);
+  rannot <- rannot[!duplicated(names(rannot))]
+  rannot <- data.frame(clusters=factor(rannot,levels=names(expl)))
+  
   if(remove.duplicates) { x <- x[!duplicated(rownames(x)),] }
   
   # draw heatmap
-  pheatmap::pheatmap(x,cluster_cols=FALSE,annotation_col = annot, annotation_row=rannot, show_colnames = F,annotation_legend = TRUE, cluster_rows = FALSE,color=pal, ...)
+  ha <- ComplexHeatmap::HeatmapAnnotation(df=annot,border=border,col=column.metadata.colors,show_legend=show.cluster.legend)
+
+  if(show.gene.clusters) { 
+    ra <- ComplexHeatmap::HeatmapAnnotation(df=rannot,which='row',show_annotation_name=FALSE, show_legend=FALSE, border=border,col=column.metadata.colors)
+  } else { ra <- NULL } 
+  
+  #ComplexHeatmap::Heatmap(x, col=pal, cluster_rows=FALSE, cluster_columns=FALSE, show_column_names=FALSE, top_annotation=ha , left_annotation=ra, column_split=groups[colnames(x)], row_split=rannot[,1], row_gap = unit(0, "mm"), column_gap = unit(0, "mm"), border=T,  ...);
+
+  ha <- ComplexHeatmap::Heatmap(x, name='expression', col=pal, cluster_rows=FALSE, cluster_columns=FALSE, show_row_names=is.null(labeled.gene.subset), show_column_names=FALSE, top_annotation=ha , left_annotation=ra, border=border,  show_heatmap_legend=show_heatmap_legend, ...);
+  if(!is.null(labeled.gene.subset)) {
+    gene.subset <- which(rownames(x) %in% labeled.gene.subset)
+    labels <- rownames(x)[gene.subset];
+    ha <- ha + ComplexHeatmap::rowAnnotation(link = ComplexHeatmap::anno_mark(at = gene.subset, labels = labels))
+    
+  }
+
+  if(return.details) {
+    return(list(ha=ha,x=x,annot=annot,rannot=rannot,expl=expl,pal=pal,labeled.gene.subset=labeled.gene.subset))
+  } else {
+    return(ha)
+  }
     
 }

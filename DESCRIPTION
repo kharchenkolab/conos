@@ -44,7 +44,7 @@ Suggests:
   DESeq2,
   entropy,
   ggrastr,
-  pheatmap,
+  ComplexHeatmap,
   knitr,
   pbapply,
   PMA,
