@@ -644,9 +644,22 @@ Conos <- setRefClass(
     },
 
 
-    plotGraph=function(color.by='cluster', clustering=NULL, groups=NULL, colors=NULL, gene=NULL, plot.theme=NULL, ...) {
+    plotGraph=function(color.by='cluster', clustering=NULL, groups=NULL, colors=NULL, gene=NULL, plot.theme=NULL, subset=NULL, ...) {
+      "Plot joint graph.\n
+       Params:\n
+       - clustering: name of the clustering to use\n
+       - groups: a factor on cells to use for coloring.\n
+       - colors: a color factor (named with cell names) use for cell coloring.\n
+       - gene: show expression of a gene.\n
+       - subset: a subset of cells to show.\n
+      "
       if(class(embedding)[1] == "uninitializedField") {
         embedGraph();
+      }
+
+      emb <- embedding;
+      if(!is.null(subset)) {
+        emb <- emb[rownames(emb) %in% subset,,drop=F]
       }
 
       if (!is.null(gene)) {
@@ -662,9 +675,8 @@ Conos <- setRefClass(
         } else {
           stop('supported values of color.by are ("cluster" and "sample")')
         }
-      }
-
-      return(embeddingPlot(embedding, groups=groups, colors=colors, plot.theme=adjustTheme(plot.theme), ...))
+      } 
+      return(embeddingPlot(emb, groups=groups, colors=colors, plot.theme=adjustTheme(plot.theme), ...))
     },
 
     correctGenes=function(genes=NULL, n.od.genes=500, fading=10.0, fading.const=0.5, max.iters=15, tol=5e-3, name='diffusion', verbose=TRUE, count.matrix=NULL, normalize=TRUE) {

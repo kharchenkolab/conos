@@ -33,9 +33,9 @@ getClusteringGroups <- function(clusters, clustering) {
 ##' @param nrow number of rows in the panel
 ##' @param panel.size vector with two numbers, which specified (width, height) of the panel in inches. Ignored if raster == FALSE.
 ##' @param adjust.func function to adjust plots before combining them to single panel. Can be used, for example, to provide color pallette of guides of the plots.
+##' @param subset a subset of cells to show (vector of cell names)
 ##' @return ggplot2 object with the panel of plots
-plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow=NULL, raster=FALSE, panel.size=NULL, adjust.func=NULL, title.size=6,
-                           raster.width=NULL, raster.height=NULL, adj.list=NULL, ...) {
+plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow=NULL, raster=FALSE, panel.size=NULL, adjust.func=NULL, title.size=6,raster.width=NULL, raster.height=NULL, adj.list=NULL, subset=NULL, ...) {
   if (is.null(panel.size)) {
     panel.size <- dev.size(units="in")
   } else if (length(panel.size) == 1) {
@@ -65,13 +65,17 @@ plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow
     raster.height <- panel.size[2] / ncol
   }
 
-  plot.list <- lapply(names(embeddings), function(n)
-    embeddingPlot(embeddings[[n]], groups=groups, colors=colors, raster=raster,
+  plot.list <- lapply(names(embeddings), function(n) {
+    emb <- embeddings[[n]];
+    if(!is.null(subset)) {
+      emb <- emb[rownames(emb) %in% subset,,drop=F]
+    }
+    embeddingPlot(emb, groups=groups, colors=colors, raster=raster,
                   raster.width=raster.width, raster.height=raster.height, ...) +
       ggplot2::geom_label(data=data.frame(x=-Inf, y=Inf, label=n), mapping=ggplot2::aes(x=x, y=y, label=label),
                           fill=ggplot2::alpha("white", 0.6), hjust=0, vjust=1, size=title.size,
                           label.padding=ggplot2::unit(title.size / 4, "pt"), label.size = NA)
-    )
+  })
 
   for (adj in adj.list) {
     plot.list %<>% lapply(`+`, adj)
@@ -335,7 +339,7 @@ plotComponentVariance <- function(conos.obj, space='PCA',plot.theme=theme_bw()) 
 ##' @param ... extra parameters are passed to pheatmap
 ##' @return ComplexHeatmap::Heatmap object
 ##' @export
-plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,n.genes.per.cluster=10,additional.genes=NULL,labeled.gene.subset=NULL, expression.quantile=0.99,pal=colorRampPalette(c('dodgerblue1','grey95','indianred1'))(1024),ordering='-AUC',column.metadata=NULL,show.gene.clusters=TRUE, remove.duplicates=TRUE, column.metadata.colors=NULL, show.cluster.legend=TRUE, show_heatmap_legend=FALSE, border=TRUE, return.details=FALSE, ...) {
+plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,n.genes.per.cluster=10,additional.genes=NULL,labeled.gene.subset=NULL, expression.quantile=0.99,pal=colorRampPalette(c('dodgerblue1','grey95','indianred1'))(1024),ordering='-AUC',column.metadata=NULL,show.gene.clusters=TRUE, remove.duplicates=TRUE, column.metadata.colors=NULL, show.cluster.legend=TRUE, show_heatmap_legend=FALSE, border=TRUE, return.details=FALSE, row.label.font.size=10, ...) {
   if (!requireNamespace("ComplexHeatmap", quietly = TRUE)) {
     stop("pheatmap package needs to be installed to use plotDEheatmap")
   }
@@ -441,11 +445,11 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,n
   
   #ComplexHeatmap::Heatmap(x, col=pal, cluster_rows=FALSE, cluster_columns=FALSE, show_column_names=FALSE, top_annotation=ha , left_annotation=ra, column_split=groups[colnames(x)], row_split=rannot[,1], row_gap = unit(0, "mm"), column_gap = unit(0, "mm"), border=T,  ...);
 
-  ha <- ComplexHeatmap::Heatmap(x, name='expression', col=pal, cluster_rows=FALSE, cluster_columns=FALSE, show_row_names=is.null(labeled.gene.subset), show_column_names=FALSE, top_annotation=ha , left_annotation=ra, border=border,  show_heatmap_legend=show_heatmap_legend, ...);
+  ha <- ComplexHeatmap::Heatmap(x, name='expression', col=pal, cluster_rows=FALSE, cluster_columns=FALSE, show_row_names=is.null(labeled.gene.subset), show_column_names=FALSE, top_annotation=ha , left_annotation=ra, border=border,  show_heatmap_legend=show_heatmap_legend, row_names_gp = grid::gpar(fontsize = row.label.font.size), ...);
   if(!is.null(labeled.gene.subset)) {
     gene.subset <- which(rownames(x) %in% labeled.gene.subset)
     labels <- rownames(x)[gene.subset];
-    ha <- ha + ComplexHeatmap::rowAnnotation(link = ComplexHeatmap::anno_mark(at = gene.subset, labels = labels))
+    ha <- ha + ComplexHeatmap::rowAnnotation(link = ComplexHeatmap::anno_mark(at = gene.subset, labels = labels, labels_gp = grid::gpar(fontsize = row.label.font.size)))
     
   }
 
