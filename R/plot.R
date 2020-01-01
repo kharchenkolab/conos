@@ -322,9 +322,10 @@ plotComponentVariance <- function(conos.obj, space='PCA',plot.theme=theme_bw()) 
 ##' @param de differential expression result (list of data frames)
 ##' @param min.auc optional minimum AUC threshold
 ##' @param min.specificity optional minimum specificity threshold
+##' @param min.precision optional minimum precision threshold
 ##' @param n.genes.per.cluster number of genes to show for each cluster
 ##' @param additional.genes optional additional genes to include (the genes will be assigned to the closest cluster)
-##' @param labeled.gene.subset 
+##' @param labeled.gene.subset a subset of gene names to show (instead of all genes). Can be a vector of gene names, or a number of top genes (in each cluster) to show the names for.
 ##' @param expression.quantile expression quantile to show (0.98 by default)
 ##' @param pal palette to use for the main heatmap 
 ##' @param ordering order by which the top DE genes (to be shown) are determined (default "-AUC")
@@ -339,7 +340,7 @@ plotComponentVariance <- function(conos.obj, space='PCA',plot.theme=theme_bw()) 
 ##' @param ... extra parameters are passed to pheatmap
 ##' @return ComplexHeatmap::Heatmap object
 ##' @export
-plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,n.genes.per.cluster=10,additional.genes=NULL,labeled.gene.subset=NULL, expression.quantile=0.99,pal=colorRampPalette(c('dodgerblue1','grey95','indianred1'))(1024),ordering='-AUC',column.metadata=NULL,show.gene.clusters=TRUE, remove.duplicates=TRUE, column.metadata.colors=NULL, show.cluster.legend=TRUE, show_heatmap_legend=FALSE, border=TRUE, return.details=FALSE, row.label.font.size=10, ...) {
+plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,min.precision=NULL,n.genes.per.cluster=10,additional.genes=NULL,labeled.gene.subset=NULL, expression.quantile=0.99,pal=colorRampPalette(c('dodgerblue1','grey95','indianred1'))(1024),ordering='-AUC',column.metadata=NULL,show.gene.clusters=TRUE, remove.duplicates=TRUE, column.metadata.colors=NULL, show.cluster.legend=TRUE, show_heatmap_legend=FALSE, border=TRUE, return.details=FALSE, row.label.font.size=10, ...) {
   if (!requireNamespace("ComplexHeatmap", quietly = TRUE)) {
     stop("pheatmap package needs to be installed to use plotDEheatmap")
   }
@@ -363,13 +364,23 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,n
       warning("Specificity column lacking in the DE results - recalculate append.specificity.metrics=TRUE")
     }
   }
+  
+  if(!is.null(min.precision)) {
+    if(!is.null(de[[1]]$Precision)) {
+      de <- lapply(de,function(x) x %>% filter(Precision>min.precision))
+    } else {
+      warning("Precision column lacking in the DE results - recalculate append.specificity.metrics=TRUE")
+    }
+  }
+  
   #de <- lapply(de,function(x) x%>%arrange(-Precision)%>%head(n.genes.per.cluster))
   de <- lapply(de,function(x) x%>%arrange(!!rlang::parse_expr(ordering))%>%head(n.genes.per.cluster))
+  de <- de[unlist(lapply(de, nrow))>0]
   
   gns <- lapply(de,function(x) as.character(x$Gene)) %>% unlist
   sn <- function(x) setNames(x,x)
   expl <- lapply(de,function(d) do.call(rbind,lapply(sn(as.character(d$Gene)),function(gene) conos:::getGeneExpression(con,gene))))
-
+  
   # place additional genes
   if(!is.null(additional.genes)) {
     additional.genes <- setdiff(additional.genes,unlist(lapply(expl,rownames)))
@@ -447,6 +458,10 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,n
 
   ha <- ComplexHeatmap::Heatmap(x, name='expression', col=pal, cluster_rows=FALSE, cluster_columns=FALSE, show_row_names=is.null(labeled.gene.subset), show_column_names=FALSE, top_annotation=ha , left_annotation=ra, border=border,  show_heatmap_legend=show_heatmap_legend, row_names_gp = grid::gpar(fontsize = row.label.font.size), ...);
   if(!is.null(labeled.gene.subset)) {
+    if(is.numeric(labeled.gene.subset)) {
+      # select top n genes to show
+      labeled.gene.subset <- unique(unlist(lapply(de,function(x) x$Gene[1:min(labeled.gene.subset,nrow(x))])))
+    }
     gene.subset <- which(rownames(x) %in% labeled.gene.subset)
     labels <- rownames(x)[gene.subset];
     ha <- ha + ComplexHeatmap::rowAnnotation(link = ComplexHeatmap::anno_mark(at = gene.subset, labels = labels, labels_gp = grid::gpar(fontsize = row.label.font.size)))
