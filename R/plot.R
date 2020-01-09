@@ -327,7 +327,7 @@ plotComponentVariance <- function(conos.obj, space='PCA',plot.theme=theme_bw()) 
 ##' @param additional.genes optional additional genes to include (the genes will be assigned to the closest cluster)
 ##' @param labeled.gene.subset a subset of gene names to show (instead of all genes). Can be a vector of gene names, or a number of top genes (in each cluster) to show the names for.
 ##' @param expression.quantile expression quantile to show (0.98 by default)
-##' @param pal palette to use for the main heatmap 
+##' @param pal palette to use for the main heatmap
 ##' @param ordering order by which the top DE genes (to be shown) are determined (default "-AUC")
 ##' @param column.metadata additional column metadata, passed either as a data.frame with rows named as cells, or as a list of named cell factors.
 ##' @param show.gene.clusters whether to show gene cluster color codes
@@ -342,10 +342,10 @@ plotComponentVariance <- function(conos.obj, space='PCA',plot.theme=theme_bw()) 
 ##' @export
 plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,min.precision=NULL,n.genes.per.cluster=10,additional.genes=NULL,labeled.gene.subset=NULL, expression.quantile=0.99,pal=colorRampPalette(c('dodgerblue1','grey95','indianred1'))(1024),ordering='-AUC',column.metadata=NULL,show.gene.clusters=TRUE, remove.duplicates=TRUE, column.metadata.colors=NULL, show.cluster.legend=TRUE, show_heatmap_legend=FALSE, border=TRUE, return.details=FALSE, row.label.font.size=10, ...) {
   if (!requireNamespace("ComplexHeatmap", quietly = TRUE)) {
-    stop("pheatmap package needs to be installed to use plotDEheatmap")
+    stop("ComplexHeatmap package needs to be installed to use plotDEheatmap")
   }
 
-  
+
   if(is.null(de)) { # run DE
     de <- con$getDifferentialGenes(groups=groups,append.auc=TRUE,z.threshold=0,upregulated.only=TRUE)
   }
@@ -364,7 +364,7 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,m
       warning("Specificity column lacking in the DE results - recalculate append.specificity.metrics=TRUE")
     }
   }
-  
+
   if(!is.null(min.precision)) {
     if(!is.null(de[[1]]$Precision)) {
       de <- lapply(de,function(x) x %>% filter(Precision>min.precision))
@@ -372,37 +372,37 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,m
       warning("Precision column lacking in the DE results - recalculate append.specificity.metrics=TRUE")
     }
   }
-  
+
   #de <- lapply(de,function(x) x%>%arrange(-Precision)%>%head(n.genes.per.cluster))
   de <- lapply(de,function(x) x%>%arrange(!!rlang::parse_expr(ordering))%>%head(n.genes.per.cluster))
   de <- de[unlist(lapply(de, nrow))>0]
-  
+
   gns <- lapply(de,function(x) as.character(x$Gene)) %>% unlist
   sn <- function(x) setNames(x,x)
   expl <- lapply(de,function(d) do.call(rbind,lapply(sn(as.character(d$Gene)),function(gene) conos:::getGeneExpression(con,gene))))
-  
+
   # place additional genes
   if(!is.null(additional.genes)) {
     additional.genes <- setdiff(additional.genes,unlist(lapply(expl,rownames)))
     x <- setdiff(additional.genes,conos:::getGenes(con)); if(length(x)>0) warning('the following genes are not found in the dataset: ',paste(x,collapse=' '))
-    
+
     age <- do.call(rbind,lapply(sn(additional.genes),function(gene) conos:::getGeneExpression(con,gene)))
     # for each gene, measure average correlation with genes of each cluster
     acc <- do.call(rbind,lapply(expl,function(og) rowMeans(cor(t(age),t(og)),na.rm=T)))
     acc <- acc[,apply(acc,2,function(x) any(is.finite(x))),drop=F]
     acc.best <- na.omit(apply(acc,2,which.max))
-    
+
     for(i in 1:length(acc.best)) {
       gn <- names(acc.best)[i];
       expl[[acc.best[i]]] <- rbind(expl[[acc.best[i]]],age[gn,,drop=F])
     }
   }
-  
+
 
   exp <- do.call(rbind,expl)
   # limit to cells that were participating in the de
   exp <- exp[,colnames(exp) %in% names(na.omit(groups))]
-  
+
 
   # transform expression values
   x <- t(apply(as.matrix(exp), 1, function(xp) {
@@ -418,9 +418,9 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,m
 
   o <- order(groups[colnames(x)])
   x=x[,o]
-  
+
   annot <- data.frame(clusters=groups[colnames(x)],row.names = colnames(x))
-  
+
   if(!is.null(column.metadata)) {
     if(is.data.frame(column.metadata)) { # data frame
       annot <- cbind(annot,column.metadata[colnames(x),])
@@ -444,16 +444,16 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,m
   names(rannot) <- rownames(x);
   rannot <- rannot[!duplicated(names(rannot))]
   rannot <- data.frame(clusters=factor(rannot,levels=names(expl)))
-  
+
   if(remove.duplicates) { x <- x[!duplicated(rownames(x)),] }
-  
+
   # draw heatmap
   ha <- ComplexHeatmap::HeatmapAnnotation(df=annot,border=border,col=column.metadata.colors,show_legend=show.cluster.legend)
 
-  if(show.gene.clusters) { 
+  if(show.gene.clusters) {
     ra <- ComplexHeatmap::HeatmapAnnotation(df=rannot,which='row',show_annotation_name=FALSE, show_legend=FALSE, border=border,col=column.metadata.colors)
-  } else { ra <- NULL } 
-  
+  } else { ra <- NULL }
+
   #ComplexHeatmap::Heatmap(x, col=pal, cluster_rows=FALSE, cluster_columns=FALSE, show_column_names=FALSE, top_annotation=ha , left_annotation=ra, column_split=groups[colnames(x)], row_split=rannot[,1], row_gap = unit(0, "mm"), column_gap = unit(0, "mm"), border=T,  ...);
 
   ha <- ComplexHeatmap::Heatmap(x, name='expression', col=pal, cluster_rows=FALSE, cluster_columns=FALSE, show_row_names=is.null(labeled.gene.subset), show_column_names=FALSE, top_annotation=ha , left_annotation=ra, border=border,  show_heatmap_legend=show_heatmap_legend, row_names_gp = grid::gpar(fontsize = row.label.font.size), ...);
@@ -465,7 +465,7 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,m
     gene.subset <- which(rownames(x) %in% labeled.gene.subset)
     labels <- rownames(x)[gene.subset];
     ha <- ha + ComplexHeatmap::rowAnnotation(link = ComplexHeatmap::anno_mark(at = gene.subset, labels = labels, labels_gp = grid::gpar(fontsize = row.label.font.size)))
-    
+
   }
 
   if(return.details) {
@@ -473,5 +473,5 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,m
   } else {
     return(ha)
   }
-    
+
 }

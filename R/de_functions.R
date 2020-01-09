@@ -3,18 +3,18 @@ validatePerCellTypeParams <- function(con.obj, groups, sample.groups, ref.level,
     stop("You have to install DESeq2 package to use differential expression")
   }
 
-  if ( class(con.obj) != 'Conos') stop('con.obj must be a conos object')
-  if ( is.null(groups) ) stop('groups must be specified');
-  if ( is.null(sample.groups) ) stop('sample.groups must be specified')
-  if ( class(sample.groups) != 'list' ) stop('sample.groups must be a list');
-  if ( length(sample.groups) != 2 ) stop('sample.groups must be of length 2');
-  if ( ! all(unlist(lapply(sample.groups, function(x) class(x) == 'character'))) )
+  if (!('Conos' %in% class(con.obj))) stop('con.obj must be a conos object')
+  if (is.null(groups)) stop('groups must be specified');
+  if (is.null(sample.groups)) stop('sample.groups must be specified')
+  if (!('list' %in% class(sample.groups))) stop('sample.groups must be a list');
+  if (length(sample.groups) != 2) stop('sample.groups must be of length 2');
+  if (!all(unlist(lapply(sample.groups, function(x) 'character' %in% class(x)))))
     stop('sample.groups must be a list of character vectors');
-  if ( ! all(unlist(lapply(sample.groups, function(x) length(x) > 0))) )
+  if (!all(sapply(sample.groups, length) > 0))
     stop('sample.groups entries must be on length greater or equal to 1')
-  if ( ! all(unlist(lapply(sample.groups, function(x) {all(x %in% names(con.obj$samples))}))) )
+  if (!all(unlist(lapply(sample.groups, function(x) {all(x %in% names(con.obj$samples))}))))
     stop('sample.groups entries must be names of samples in the conos object')
-  if ( is.null(ref.level) ) stop('reference level is not defined')
+  if (is.null(ref.level)) stop('reference level is not defined')
   ## todo: check samplegrousp are named
   if(is.null(names(sample.groups))) stop('sample.groups must be named')
   if(class(groups) != 'factor') stop('groups must be a factor')
