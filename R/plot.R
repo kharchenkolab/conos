@@ -349,17 +349,21 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,m
   if(is.null(de)) { # run DE
     de <- con$getDifferentialGenes(groups=groups,append.auc=TRUE,z.threshold=0,upregulated.only=TRUE)
   }
+  
+  # drop empty results
+  de <- de[unlist(lapply(de,nrow))>0]
+  
   # apply filters
   if(!is.null(min.auc)) {
     if(!is.null(de[[1]]$AUC)) {
-      de <- lapply(de,function(x) x %>% filter(AUC>min.auc))
+      de <- lapply(de,function(x) x %>% dplyr::filter(AUC>min.auc))
     } else {
       warning("AUC column lacking in the DE results - recalculate with append.auc=TRUE")
     }
   }
   if(!is.null(min.specificity)) {
     if(!is.null(de[[1]]$Specificity)) {
-      de <- lapply(de,function(x) x %>% filter(Specificity>min.specificity))
+      de <- lapply(de,function(x) x %>% dplyr::filter(Specificity>min.specificity))
     } else {
       warning("Specificity column lacking in the DE results - recalculate append.specificity.metrics=TRUE")
     }
@@ -367,14 +371,22 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,m
   
   if(!is.null(min.precision)) {
     if(!is.null(de[[1]]$Precision)) {
-      de <- lapply(de,function(x) x %>% filter(Precision>min.precision))
+      de <- lapply(de,function(x) x %>% dplyr::filter(Precision>min.precision))
     } else {
       warning("Precision column lacking in the DE results - recalculate append.specificity.metrics=TRUE")
     }
   }
   
   #de <- lapply(de,function(x) x%>%arrange(-Precision)%>%head(n.genes.per.cluster))
-  de <- lapply(de,function(x) x%>%arrange(!!rlang::parse_expr(ordering))%>%head(n.genes.per.cluster))
+  if(n.genes.per.cluster==0) { # want to show only expliclty specified genes
+    if(is.null(additional.genes)) stop("if n.genes.per.cluster is 0, additional.genes must be specified")
+    additional.genes.only <- TRUE;
+    n.genes.per.cluster <- 30; # leave some genes to establish cluster association for the additional genes
+  } else {
+    additional.genes.only <- FALSE;
+  }
+  
+  de <- lapply(de,function(x) x%>%dplyr::arrange(!!rlang::parse_expr(ordering))%>%head(n.genes.per.cluster))
   de <- de[unlist(lapply(de, nrow))>0]
   
   gns <- lapply(de,function(x) as.character(x$Gene)) %>% unlist
@@ -383,10 +395,10 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,m
   
   # place additional genes
   if(!is.null(additional.genes)) {
-    additional.genes <- setdiff(additional.genes,unlist(lapply(expl,rownames)))
-    x <- setdiff(additional.genes,conos:::getGenes(con)); if(length(x)>0) warning('the following genes are not found in the dataset: ',paste(x,collapse=' '))
+    genes.to.add <- setdiff(additional.genes,unlist(lapply(expl,rownames)))
+    x <- setdiff(genes.to.add,conos:::getGenes(con)); if(length(x)>0) warning('the following genes are not found in the dataset: ',paste(x,collapse=' '))
     
-    age <- do.call(rbind,lapply(sn(additional.genes),function(gene) conos:::getGeneExpression(con,gene)))
+    age <- do.call(rbind,lapply(sn(genes.to.add),function(gene) conos:::getGeneExpression(con,gene)))
     # for each gene, measure average correlation with genes of each cluster
     acc <- do.call(rbind,lapply(expl,function(og) rowMeans(cor(t(age),t(og)),na.rm=T)))
     acc <- acc[,apply(acc,2,function(x) any(is.finite(x))),drop=F]
@@ -396,16 +408,22 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,m
       gn <- names(acc.best)[i];
       expl[[acc.best[i]]] <- rbind(expl[[acc.best[i]]],age[gn,,drop=F])
     }
+    if(additional.genes.only) { # leave only genes that were explictly specified
+      expl <- lapply(expl,function(d) d[rownames(d) %in% additional.genes,,drop=F])
+      expl <- expl[unlist(lapply(expl,nrow))>0]
+
+    }
   }
   
 
   exp <- do.call(rbind,expl)
   # limit to cells that were participating in the de
-  exp <- exp[,colnames(exp) %in% names(na.omit(groups))]
+  exp <- na.omit(exp[,colnames(exp) %in% names(na.omit(groups))])
   
 
   # transform expression values
   x <- t(apply(as.matrix(exp), 1, function(xp) {
+    
     qs <- quantile(xp,c(1-expression.quantile,expression.quantile))
     xp[xp<qs[1]] <- qs[1]
     xp[xp>qs[2]] <- qs[2]
@@ -440,9 +458,10 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,m
     column.metadata.colors$clusters <- setNames(rainbow(length(uc)),uc)
   }
 
-  rannot <- rep(names(expl),unlist(lapply(expl,nrow)))
-  names(rannot) <- rownames(x);
+  rannot <- setNames(rep(names(expl),unlist(lapply(expl,nrow))),unlist(lapply(expl,rownames)))
+  #names(rannot) <- rownames(x);
   rannot <- rannot[!duplicated(names(rannot))]
+  rannot <- rannot[names(rannot) %in% rownames(x)]
   rannot <- data.frame(clusters=factor(rannot,levels=names(expl)))
   
   if(remove.duplicates) { x <- x[!duplicated(rownames(x)),] }
