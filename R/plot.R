@@ -337,10 +337,12 @@ plotComponentVariance <- function(conos.obj, space='PCA',plot.theme=theme_bw()) 
 ##' @param show_heatmap_legend whether to show the expression heatmap legend
 ##' @param border show borders around the heatmap and annotations
 ##' @param return.details if TRUE will return a list containing the heatmap (ha), but also raw matrix (x), expression list (expl) and other info to produce the heatmap on your own.
+##' @param row.label.font.size font size for the row labels
+##' @param order.clusters whether to re-order the clusters according to the similarity of the expression patterns (of the genes being shown)
 ##' @param ... extra parameters are passed to pheatmap
-##' @return ComplexHeatmap::Heatmap object
+##' @return ComplexHeatmap::Heatmap object (see return.details param for other output)
 ##' @export
-plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,min.precision=NULL,n.genes.per.cluster=10,additional.genes=NULL,labeled.gene.subset=NULL, expression.quantile=0.99,pal=colorRampPalette(c('dodgerblue1','grey95','indianred1'))(1024),ordering='-AUC',column.metadata=NULL,show.gene.clusters=TRUE, remove.duplicates=TRUE, column.metadata.colors=NULL, show.cluster.legend=TRUE, show_heatmap_legend=FALSE, border=TRUE, return.details=FALSE, row.label.font.size=10, ...) {
+plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,min.precision=NULL,n.genes.per.cluster=10,additional.genes=NULL,labeled.gene.subset=NULL, expression.quantile=0.99,pal=colorRampPalette(c('dodgerblue1','grey95','indianred1'))(1024),ordering='-AUC',column.metadata=NULL,show.gene.clusters=TRUE, remove.duplicates=TRUE, column.metadata.colors=NULL, show.cluster.legend=TRUE, show_heatmap_legend=FALSE, border=TRUE, return.details=FALSE, row.label.font.size=10, order.clusters=FALSE, split=FALSE, split.gap=0, ...) {
   if (!requireNamespace("ComplexHeatmap", quietly = TRUE)) {
     stop("pheatmap package needs to be installed to use plotDEheatmap")
   }
@@ -352,6 +354,13 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,m
   
   # drop empty results
   de <- de[unlist(lapply(de,nrow))>0]
+
+  # drop results that are not in the factor levels
+  de <- de[names(de) %in% levels(groups)]
+
+  # order de list to match groups order
+  de <- de[order(match(names(de),levels(groups)))]
+
   
   # apply filters
   if(!is.null(min.auc)) {
@@ -414,16 +423,25 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,m
 
     }
   }
-  
+
 
   exp <- do.call(rbind,expl)
   # limit to cells that were participating in the de
   exp <- na.omit(exp[,colnames(exp) %in% names(na.omit(groups))])
-  
+
+  if(order.clusters) {
+    # group clusters based on expression similarity (of the genes shown)
+    xc <- do.call(cbind,tapply(1:ncol(exp),groups[colnames(exp)],function(ii) rowMeans(exp[,ii,drop=F])))
+    hc <- hclust(as.dist(2-cor(xc)),method='ward.D2')
+    groups <- factor(groups,levels=hc$labels[hc$order])
+    expl <- expl[levels(groups)]
+    # re-create exp (could just reorder it)
+    exp <- do.call(rbind,expl)
+    exp <- na.omit(exp[,colnames(exp) %in% names(na.omit(groups))])
+  }
 
   # transform expression values
   x <- t(apply(as.matrix(exp), 1, function(xp) {
-    
     qs <- quantile(xp,c(1-expression.quantile,expression.quantile))
     xp[xp<qs[1]] <- qs[1]
     xp[xp>qs[2]] <- qs[2]
@@ -437,6 +455,7 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,m
   o <- order(groups[colnames(x)])
   x=x[,o]
   
+
   annot <- data.frame(clusters=groups[colnames(x)],row.names = colnames(x))
   
   if(!is.null(column.metadata)) {
@@ -450,7 +469,18 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,m
   }
   annot <- annot[,rev(1:ncol(annot)),drop=FALSE]
 
-  if(is.null(column.metadata.colors))  { column.metadata.colors <- list(); } else { if(!is.list(column.metadata.colors)) stop("column.metadata.colors must be a list in a format accepted by HeatmapAnnotation col argument") }
+  if(is.null(column.metadata.colors))  {
+    column.metadata.colors <- list();
+  } else {
+    if(!is.list(column.metadata.colors)) stop("column.metadata.colors must be a list in a format accepted by HeatmapAnnotation col argument")
+    # reorder pallete to match the ordering in groups
+    if(!is.null(column.metadata.colors[['clusters']])) {
+      if(!all(levels(groups) %in% names(column.metadata.colors[['clusters']]))) {
+        stop("column.metadata.colors[['clusters']] must be a named vector of colors containing all levels of the specified cell groups")
+      }
+      column.metadata.colors[['clusters']] <- column.metadata.colors[['clusters']][levels(groups)]
+    }
+  }
 
   # make sure cluster colors are defined
   if(is.null(column.metadata.colors[['clusters']])) {
@@ -458,7 +488,8 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,m
     column.metadata.colors$clusters <- setNames(rainbow(length(uc)),uc)
   }
 
-  rannot <- setNames(rep(names(expl),unlist(lapply(expl,nrow))),unlist(lapply(expl,rownames)))
+  tt <- unlist(lapply(expl,nrow)); 
+  rannot <- setNames(rep(names(tt),tt),unlist(lapply(expl,rownames)))
   #names(rannot) <- rownames(x);
   rannot <- rannot[!duplicated(names(rannot))]
   rannot <- rannot[names(rannot) %in% rownames(x)]
@@ -474,8 +505,11 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,m
   } else { ra <- NULL } 
   
   #ComplexHeatmap::Heatmap(x, col=pal, cluster_rows=FALSE, cluster_columns=FALSE, show_column_names=FALSE, top_annotation=ha , left_annotation=ra, column_split=groups[colnames(x)], row_split=rannot[,1], row_gap = unit(0, "mm"), column_gap = unit(0, "mm"), border=T,  ...);
-
-  ha <- ComplexHeatmap::Heatmap(x, name='expression', col=pal, cluster_rows=FALSE, cluster_columns=FALSE, show_row_names=is.null(labeled.gene.subset), show_column_names=FALSE, top_annotation=ha , left_annotation=ra, border=border,  show_heatmap_legend=show_heatmap_legend, row_names_gp = grid::gpar(fontsize = row.label.font.size), ...);
+  if(split) {
+    ha <- ComplexHeatmap::Heatmap(x, name='expression', col=pal, cluster_rows=FALSE, cluster_columns=FALSE, show_row_names=is.null(labeled.gene.subset), show_column_names=FALSE, top_annotation=ha , left_annotation=ra, border=border,  show_heatmap_legend=show_heatmap_legend, row_names_gp = grid::gpar(fontsize = row.label.font.size), column_split=groups[colnames(x)], row_split=rannot[,1], row_gap = unit(split.gap, "mm"), column_gap = unit(split.gap, "mm"), ...);
+  } else {
+    ha <- ComplexHeatmap::Heatmap(x, name='expression', col=pal, cluster_rows=FALSE, cluster_columns=FALSE, show_row_names=is.null(labeled.gene.subset), show_column_names=FALSE, top_annotation=ha , left_annotation=ra, border=border,  show_heatmap_legend=show_heatmap_legend, row_names_gp = grid::gpar(fontsize = row.label.font.size), ...);
+  }
   if(!is.null(labeled.gene.subset)) {
     if(is.numeric(labeled.gene.subset)) {
       # select top n genes to show
