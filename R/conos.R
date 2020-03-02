@@ -270,12 +270,8 @@ quickPlainPCA <- function(r.n,data.type='counts',ncomps=30,n.odgenes=NULL,var.sc
 
   pcj <- do.call(cbind,lapply(pcs,function(x) x$v))
   # interleave the column order so that selecting top n components balances out the two datasets
-  interleave <- function(v1,v2) { 
-    ord1 <- 2*(1:length(v1))-1
-    ord2 <- 2*(1:length(v2))
-    c(v1,v2)[order(c(ord1,ord2))]
-  }
-  ncols <- lapply(pcs,function(x) ncol(x$v))
+  interleave <- function(n1,n2) { order(c((1:n1)-0.5,1:n2)) }
+  ncols <- unlist(lapply(pcs,function(x) ncol(x$v)))
   pcj <- pcj[,interleave(ncols[1],ncols[2])]
   
   rownames(pcj) <- od.genes;
