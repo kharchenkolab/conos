@@ -410,27 +410,27 @@ con$embedGraph(method="UMAP", min.dist=0.01, spread=15, n.cores=4, min.prob.lowe
     ## Convert graph to adjacency list...
     ## Done
     ## Estimate nearest neighbors and commute times...
-    ## Estimating hitting distances: 19:16:28.
+    ## Estimating hitting distances: 17:56:45.
     ## Done.
-    ## Estimating commute distances: 19:16:32.
-    ## Hashing adjacency list: 19:16:32.
+    ## Estimating commute distances: 17:56:48.
+    ## Hashing adjacency list: 17:56:48.
     ## Done.
-    ## Estimating distances: 19:16:32.
+    ## Estimating distances: 17:56:49.
     ## Done
     ## Done.
-    ## All done!: 19:16:35.
+    ## All done!: 17:56:51.
     ## Done
     ## Estimate UMAP embedding...
 
-    ## 19:16:35 Read 12000 rows and found 1 numeric columns
+    ## 17:56:51 Read 12000 rows and found 1 numeric columns
 
-    ## 19:16:35 Commencing smooth kNN distance calibration using 4 threads
+    ## 17:56:52 Commencing smooth kNN distance calibration using 4 threads
 
-    ## 19:16:36 Initializing from normalized Laplacian + noise
+    ## 17:56:52 Initializing from normalized Laplacian + noise
 
-    ## 19:16:37 Commencing optimization for 1000 epochs, with 349848 positive edges using 4 threads
+    ## 17:56:53 Commencing optimization for 1000 epochs, with 351362 positive edges using 4 threads
 
-    ## 19:16:54 Optimization finished
+    ## 17:57:09 Optimization finished
 
     ## Done
 
@@ -619,47 +619,47 @@ head(new.label.info$label.distribution)
 ```
 
     ##                                        T CD4-CD8-  progenitors
-    ## MantonBM1_HiSeq_1-CGATTGACACCTCGGA-1 0.000000e+00 0.000000e+00
-    ## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 2.535876e-05 6.687111e-08
-    ## MantonBM1_HiSeq_1-AGGTCCGTCTCTGCTG-1 0.000000e+00 0.000000e+00
-    ## MantonBM2_HiSeq_1-GGAAAGCCAGACGCCT-1 3.708578e-06 4.243333e-08
-    ## MantonBM2_HiSeq_1-GGGTTGCGTAGCTGCC-1 2.445873e-06 1.553036e-09
-    ## MantonBM2_HiSeq_1-GACAGAGGTCACAAGG-1 3.687744e-02 7.802162e-07
-    ##                                           B cells        NK       T cyto
-    ## MantonBM1_HiSeq_1-CGATTGACACCTCGGA-1 0.000000e+00 1.0000000 0.000000e+00
-    ## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 5.805149e-10 0.9998261 1.479464e-04
-    ## MantonBM1_HiSeq_1-AGGTCCGTCTCTGCTG-1 0.000000e+00 1.0000000 0.000000e+00
-    ## MantonBM2_HiSeq_1-GGAAAGCCAGACGCCT-1 2.855341e-10 0.9999793 1.685544e-05
-    ## MantonBM2_HiSeq_1-GGGTTGCGTAGCTGCC-1 4.165746e-10 0.9999579 3.956879e-05
-    ## MantonBM2_HiSeq_1-GACAGAGGTCACAAGG-1 1.226882e-06 0.9076003 5.455220e-02
-    ##                                         monocytes monomyelocytes
-    ## MantonBM1_HiSeq_1-CGATTGACACCTCGGA-1 0.000000e+00   0.000000e+00
-    ## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 3.968239e-07   1.250732e-09
-    ## MantonBM1_HiSeq_1-AGGTCCGTCTCTGCTG-1 0.000000e+00   0.000000e+00
-    ## MantonBM2_HiSeq_1-GGAAAGCCAGACGCCT-1 6.368236e-08   2.926289e-10
-    ## MantonBM2_HiSeq_1-GGGTTGCGTAGCTGCC-1 4.817054e-09   4.750624e-11
-    ## MantonBM2_HiSeq_1-GACAGAGGTCACAAGG-1 9.422397e-07   6.660567e-08
+    ## MantonBM1_HiSeq_1-ATCACGAAGGAGTCTG-1 0.000000e+00 0.000000e+00
+    ## MantonBM2_HiSeq_1-TTTGCGCGTAGCGCTC-1 1.522970e-06 2.367580e-08
+    ## MantonBM1_HiSeq_1-GCGCGATAGAAGGACA-1 0.000000e+00 0.000000e+00
+    ## MantonBM1_HiSeq_1-ACAGCTATCGATAGAA-1 0.000000e+00 0.000000e+00
+    ## MantonBM2_HiSeq_1-AGCTCCTCATGTCTCC-1 9.402861e-07 1.940159e-08
+    ## MantonBM1_HiSeq_1-CCCAATCCACCATCCT-1 0.000000e+00 0.000000e+00
+    ##                                           B cells           NK
+    ## MantonBM1_HiSeq_1-ATCACGAAGGAGTCTG-1 0.000000e+00 0.000000e+00
+    ## MantonBM2_HiSeq_1-TTTGCGCGTAGCGCTC-1 1.708361e-08 2.533198e-09
+    ## MantonBM1_HiSeq_1-GCGCGATAGAAGGACA-1 0.000000e+00 0.000000e+00
+    ## MantonBM1_HiSeq_1-ACAGCTATCGATAGAA-1 0.000000e+00 0.000000e+00
+    ## MantonBM2_HiSeq_1-AGCTCCTCATGTCTCC-1 1.548886e-08 1.763021e-09
+    ## MantonBM1_HiSeq_1-CCCAATCCACCATCCT-1 0.000000e+00 0.000000e+00
+    ##                                            T cyto monocytes monomyelocytes
+    ## MantonBM1_HiSeq_1-ATCACGAAGGAGTCTG-1 0.000000e+00 1.0000000   0.0000000000
+    ## MantonBM2_HiSeq_1-TTTGCGCGTAGCGCTC-1 5.414639e-10 0.9982103   0.0015851989
+    ## MantonBM1_HiSeq_1-GCGCGATAGAAGGACA-1 0.000000e+00 1.0000000   0.0000000000
+    ## MantonBM1_HiSeq_1-ACAGCTATCGATAGAA-1 0.000000e+00 1.0000000   0.0000000000
+    ## MantonBM2_HiSeq_1-AGCTCCTCATGTCTCC-1 4.431973e-10 0.9990664   0.0007616298
+    ## MantonBM1_HiSeq_1-CCCAATCCACCATCCT-1 0.000000e+00 1.0000000   0.0000000000
     ##                                      plasma cells  dying cells
-    ## MantonBM1_HiSeq_1-CGATTGACACCTCGGA-1 0.000000e+00 0.000000e+00
-    ## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 8.293722e-09 7.235309e-08
-    ## MantonBM1_HiSeq_1-AGGTCCGTCTCTGCTG-1 0.000000e+00 0.000000e+00
-    ## MantonBM2_HiSeq_1-GGAAAGCCAGACGCCT-1 1.539996e-09 3.812012e-08
-    ## MantonBM2_HiSeq_1-GGGTTGCGTAGCTGCC-1 1.195779e-10 9.342492e-08
-    ## MantonBM2_HiSeq_1-GACAGAGGTCACAAGG-1 2.369293e-08 9.662349e-04
+    ## MantonBM1_HiSeq_1-ATCACGAAGGAGTCTG-1 0.000000e+00 0.000000e+00
+    ## MantonBM2_HiSeq_1-TTTGCGCGTAGCGCTC-1 1.879407e-07 2.435256e-07
+    ## MantonBM1_HiSeq_1-GCGCGATAGAAGGACA-1 0.000000e+00 0.000000e+00
+    ## MantonBM1_HiSeq_1-ACAGCTATCGATAGAA-1 0.000000e+00 0.000000e+00
+    ## MantonBM2_HiSeq_1-AGCTCCTCATGTCTCC-1 1.324181e-07 2.126047e-07
+    ## MantonBM1_HiSeq_1-CCCAATCCACCATCCT-1 0.000000e+00 0.000000e+00
     ##                                         erythroid          HSC
-    ## MantonBM1_HiSeq_1-CGATTGACACCTCGGA-1 0.000000e+00 0.000000e+00
-    ## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 2.379154e-09 3.423938e-10
-    ## MantonBM1_HiSeq_1-AGGTCCGTCTCTGCTG-1 0.000000e+00 0.000000e+00
-    ## MantonBM2_HiSeq_1-GGAAAGCCAGACGCCT-1 9.261282e-10 2.149902e-10
-    ## MantonBM2_HiSeq_1-GGGTTGCGTAGCTGCC-1 5.537500e-11 2.621778e-10
-    ## MantonBM2_HiSeq_1-GACAGAGGTCACAAGG-1 2.462760e-07 3.442262e-07
+    ## MantonBM1_HiSeq_1-ATCACGAAGGAGTCTG-1 0.000000e+00 0.000000e+00
+    ## MantonBM2_HiSeq_1-TTTGCGCGTAGCGCTC-1 6.017598e-09 2.270053e-09
+    ## MantonBM1_HiSeq_1-GCGCGATAGAAGGACA-1 0.000000e+00 0.000000e+00
+    ## MantonBM1_HiSeq_1-ACAGCTATCGATAGAA-1 0.000000e+00 0.000000e+00
+    ## MantonBM2_HiSeq_1-AGCTCCTCATGTCTCC-1 4.369539e-09 1.832747e-09
+    ## MantonBM1_HiSeq_1-CCCAATCCACCATCCT-1 0.000000e+00 0.000000e+00
     ##                                               pDC           DC
-    ## MantonBM1_HiSeq_1-CGATTGACACCTCGGA-1 0.000000e+00 0.000000e+00
-    ## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 6.210101e-08 5.769584e-09
-    ## MantonBM1_HiSeq_1-AGGTCCGTCTCTGCTG-1 0.000000e+00 0.000000e+00
-    ## MantonBM2_HiSeq_1-GGAAAGCCAGACGCCT-1 1.063991e-08 1.057924e-09
-    ## MantonBM2_HiSeq_1-GGGTTGCGTAGCTGCC-1 8.238596e-10 8.165366e-11
-    ## MantonBM2_HiSeq_1-GACAGAGGTCACAAGG-1 1.778168e-07 1.544300e-08
+    ## MantonBM1_HiSeq_1-ATCACGAAGGAGTCTG-1 0.000000e+00 0.0000000000
+    ## MantonBM2_HiSeq_1-TTTGCGCGTAGCGCTC-1 1.807266e-06 0.0002007056
+    ## MantonBM1_HiSeq_1-GCGCGATAGAAGGACA-1 0.000000e+00 0.0000000000
+    ## MantonBM1_HiSeq_1-ACAGCTATCGATAGAA-1 0.000000e+00 0.0000000000
+    ## MantonBM2_HiSeq_1-AGCTCCTCATGTCTCC-1 1.606282e-06 0.0001690121
+    ## MantonBM1_HiSeq_1-CCCAATCCACCATCCT-1 0.000000e+00 0.0000000000
 
 # Differential expression
 
@@ -683,19 +683,19 @@ head(de.info$`B cells`)
 ```
 
     ##              Gene        M        Z        PValue          PAdj       AUC
-    ## CD74         CD74 1.792637 31.07438 8.313211e-211 2.801053e-206 0.7302839
-    ## HLA-DRA   HLA-DRA 1.982385 29.18043 5.018019e-186 1.690721e-181 0.8684258
-    ## HLA-DPA1 HLA-DPA1 2.175342 27.60902 1.198650e-166 4.038491e-162 0.8735651
-    ## CD79A       CD79A 2.365229 27.31567 3.778823e-163 1.273123e-158 0.9059457
-    ## HLA-DPB1 HLA-DPB1 2.111452 27.13642 4.975666e-161 1.676302e-156 0.8717198
-    ## HLA-DRB1 HLA-DRB1 1.951073 26.35791 5.497062e-152 1.851905e-147 0.8560079
+    ## CD74         CD74 1.783430 30.71596 5.358033e-206 1.805336e-201 0.7285243
+    ## HLA-DRA   HLA-DRA 1.970110 28.84419 8.653330e-182 2.915566e-177 0.8659041
+    ## HLA-DPA1 HLA-DPA1 2.166771 27.26773 1.398515e-162 4.711877e-158 0.8699558
+    ## CD79A       CD79A 2.367299 27.25606 1.922121e-162 6.475817e-158 0.9059042
+    ## HLA-DPB1 HLA-DPB1 2.104391 26.93159 1.263872e-158 4.257986e-154 0.8697674
+    ## HLA-DRB1 HLA-DRB1 1.946088 26.22140 1.989544e-150 6.702575e-146 0.8553614
     ##          Specificity Precision ExpressionFraction
-    ## CD74       0.4636177 0.2462152          0.9972129
-    ## HLA-DRA    0.7635583 0.4189837          0.9743590
-    ## HLA-DPA1   0.8360197 0.4910126          0.9136009
-    ## CD79A      0.9176369 0.6524564          0.8957637
-    ## HLA-DPB1   0.8238933 0.4758343          0.9219621
-    ## HLA-DRB1   0.8025668 0.4444746          0.9124861
+    ## CD74       0.4631641 0.2448390          0.9944103
+    ## HLA-DRA    0.7626656 0.4161074          0.9703745
+    ## HLA-DPA1   0.8348111 0.4865189          0.9077697
+    ## CD79A      0.9172838 0.6508323          0.8960313
+    ## HLA-DPB1   0.8230977 0.4729574          0.9189491
+    ## HLA-DRB1   0.8021024 0.4428455          0.9116825
 
 ``` r
 cowplot::plot_grid(con$plotGraph(groups=new.annot), con$plotGraph(gene="CD74"))
@@ -720,19 +720,19 @@ de.info$monocytes %>% filter(AUC > 0.75) %>% arrange(-Precision) %>% head()
 ```
 
     ##       Gene        M        Z        PValue          PAdj       AUC
-    ## 1     CD14 3.231546 15.50428  2.526209e-53  8.483516e-49 0.7702102
-    ## 2 SERPINA1 3.228138 21.10572  7.453301e-98  2.507961e-93 0.8833554
-    ## 3    RAB31 3.089283 13.86050  7.655582e-43  2.569060e-38 0.7845012
-    ## 4     CSTA 3.110447 23.86946 7.602830e-125 2.560405e-120 0.9107458
-    ## 5     FCN1 3.172066 26.74712 1.786229e-156 6.016911e-152 0.9514647
-    ## 6     G0S2 3.172698 16.27389  1.235291e-58  4.149591e-54 0.7984214
+    ## 1     CD14 3.226926 15.41709  9.724657e-53  3.265637e-48 0.7692823
+    ## 2 SERPINA1 3.220854 21.07233  1.507243e-97  5.071723e-93 0.8832630
+    ## 3    RAB31 3.073102 13.76918  2.703236e-42  9.070979e-38 0.7833055
+    ## 4     CSTA 3.114940 23.81856 2.559077e-124 8.617947e-120 0.9100943
+    ## 5     FCN1 3.164136 26.62166 5.080555e-155 1.711385e-150 0.9506489
+    ## 6     G0S2 3.177618 16.25523  1.673163e-58  5.620658e-54 0.7979838
     ##   Specificity Precision ExpressionFraction
-    ## 1   0.9919610 0.9125737          0.5490544
-    ## 2   0.9836050 0.8834111          0.7836879
-    ## 3   0.9849228 0.8564014          0.5851064
-    ## 4   0.9763459 0.8512790          0.8457447
-    ## 5   0.9712175 0.8401705          0.9320331
-    ## 6   0.9810150 0.8338658          0.6170213
+    ## 1   0.9914237 0.9066798          0.5477745
+    ## 2   0.9831445 0.8800799          0.7839763
+    ## 3   0.9842970 0.8503460          0.5833828
+    ## 4   0.9756997 0.8471148          0.8451039
+    ## 5   0.9704726 0.8359084          0.9311573
+    ## 6   0.9805675 0.8298722          0.6166172
 
 ``` r
 con$plotGraph(gene="CD14")
@@ -744,7 +744,7 @@ Or plot a heatmap of top genes (top by AUC by
 default)
 
 ``` r
-plotDEheatmap(con,new.annot,de.info, n.genes.per.cluster = 5, column.metadata=list(samples=con$getDatasetPerCell()), row_names_gp = grid::gpar(fontsize = 7))
+plotDEheatmap(con,as.factor(new.annot),de.info, n.genes.per.cluster = 5, column.metadata=list(samples=con$getDatasetPerCell()), row.label.font.size = 7)
 ```
 
 ![](walkthrough_files/figure-gfm/unnamed-chunk-46-1.png)<!-- -->
@@ -755,7 +755,7 @@ genes:
 
 ``` r
 gns <- c("GZMB","IL32","CD3E","LYZ","HLA-DRA","IGHD","GNLY","IGHM","GZMK")
-plotDEheatmap(con,new.annot,de.info[-c(3,10)], n.genes.per.cluster = 30, column.metadata=list(samples=con$getDatasetPerCell()), row_names_gp = grid::gpar(fontsize = 7), labeled.gene.subset = gns)
+plotDEheatmap(con,new.annot,de.info[-c(3,10)], n.genes.per.cluster = 30, column.metadata=list(samples=con$getDatasetPerCell()), row.label.font.size = 7, labeled.gene.subset = gns)
 ```
 
 ![](walkthrough_files/figure-gfm/unnamed-chunk-47-1.png)<!-- -->
@@ -783,13 +783,13 @@ str( con$getClusterCountMatrices() , 1)
 ```
 
     ## List of 4
-    ##  $ MantonBM1_HiSeq_1: num [1:33694, 1:14] 0 0 0 1 0 0 0 0 59 5 ...
+    ##  $ MantonBM1_HiSeq_1: num [1:33694, 1:12] 0 0 0 1 0 0 0 0 44 5 ...
     ##   ..- attr(*, "dimnames")=List of 2
-    ##  $ MantonBM2_HiSeq_1: num [1:33694, 1:14] 0 0 0 0 0 0 0 0 102 6 ...
+    ##  $ MantonBM2_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 66 4 ...
     ##   ..- attr(*, "dimnames")=List of 2
-    ##  $ MantonCB1_HiSeq_1: num [1:33694, 1:14] 0 0 0 0 0 0 0 0 101 10 ...
+    ##  $ MantonCB1_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 84 7 ...
     ##   ..- attr(*, "dimnames")=List of 2
-    ##  $ MantonCB2_HiSeq_1: num [1:33694, 1:14] 0 0 0 0 0 0 0 0 166 22 ...
+    ##  $ MantonCB2_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 153 20 ...
     ##   ..- attr(*, "dimnames")=List of 2
 
 The list above, returns pooled count matrix for each sample, where the
@@ -842,19 +842,19 @@ head(res[order(res$padj,decreasing = FALSE),])
 ```
 
     ##                baseMean log2FoldChange     lfcSE      stat       pvalue
-    ## RP11-386I14.4 633.00092       3.590611 0.2906414 12.354092 4.629512e-35
-    ## HBA2          440.35042       3.378324 0.3707656  9.111752 8.106231e-20
-    ## CH17-373J23.1 440.57697       3.406280 0.3884377  8.769179 1.799740e-18
-    ## CD69          627.05296       2.480220 0.2966294  8.361342 6.200897e-17
-    ## IGHA1          94.44757      -6.211823 0.7615539 -8.156773 3.440928e-16
-    ## HMGB2         175.18363      -3.126746 0.4015545 -7.786606 6.883331e-15
+    ## RP11-386I14.4 637.71953       3.618939 0.2941141 12.304543 8.562006e-35
+    ## HBA2          437.33335       3.386807 0.3697592  9.159495 5.214086e-20
+    ## CH17-373J23.1 435.34473       3.383322 0.3844136  8.801255 1.352946e-18
+    ## CD69          621.47862       2.479981 0.2993561  8.284387 1.187195e-16
+    ## IGHA1          94.53635      -6.202638 0.7607468 -8.153354 3.539679e-16
+    ## HMGB2         173.36582      -3.096187 0.3862006 -8.017043 1.083212e-15
     ##                       padj
-    ## RP11-386I14.4 7.252131e-31
-    ## HBA2          6.349206e-16
-    ## CH17-373J23.1 9.397643e-15
-    ## CD69          2.428426e-13
-    ## IGHA1         1.078043e-12
-    ## HMGB2         1.797123e-11
+    ## RP11-386I14.4 1.341666e-30
+    ## HBA2          4.085237e-16
+    ## CH17-373J23.1 7.066888e-15
+    ## CD69          4.650835e-13
+    ## IGHA1         1.109336e-12
+    ## HMGB2         2.828989e-12
 
 # Forcing better alignment
 

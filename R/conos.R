@@ -255,7 +255,7 @@ quickPlainPCA <- function(r.n,data.type='counts',ncomps=30,n.odgenes=NULL,var.sc
   sm <- scaledMatrices(r.n, data.type=data.type, od.genes=od.genes, var.scale=var.scale, neighborhood.average=neighborhood.average);
   pcs <- lapply(sm, function(x) {
     cm <- Matrix::colMeans(x);
-    ncomps <- min(c(nrow(cm)-1,ncol(cm)-1,ncomps));
+    ncomps <- min(c(nrow(cm)-1,ncol(cm)-1,round(ncomps/2)));
     res <- irlba::irlba(x, nv=ncomps, nu =0, center=cm, right_only = F, reorth = T);
     if(score.component.variance) {
       # calculate projection
@@ -269,6 +269,11 @@ quickPlainPCA <- function(r.n,data.type='counts',ncomps=30,n.odgenes=NULL,var.sc
   })
 
   pcj <- do.call(cbind,lapply(pcs,function(x) x$v))
+  # interleave the column order so that selecting top n components balances out the two datasets
+  interleave <- function(n1,n2) { order(c((1:n1)-0.5,1:n2)) }
+  ncols <- unlist(lapply(pcs,function(x) ncol(x$v)))
+  pcj <- pcj[,interleave(ncols[1],ncols[2])]
+  
   rownames(pcj) <- od.genes;
   res <- list(CPC=pcj);
 
