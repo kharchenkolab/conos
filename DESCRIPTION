@@ -22,7 +22,6 @@ Imports:
     ggplot2,
     ggrepel,
     gridExtra,
-    heatmaply,
     irlba,
     magrittr,
     Matrix.utils,
@@ -40,18 +39,18 @@ Imports:
     viridis,
     sccore (>= 0.1)
 Suggests:
-  clues,
-  DESeq2,
-  entropy,
-  ggrastr,
-  ComplexHeatmap,
-  knitr,
-  pbapply,
-  PMA,
-  pROC,
-  rmarkdown,
-  Seurat,
-  shinycssloaders
+    clues,
+    DESeq2,
+    entropy,
+    ggrastr,
+    ComplexHeatmap,
+    knitr,
+    pbapply,
+    PMA,
+    pROC,
+    rmarkdown,
+    Seurat,
+    shinycssloaders
 VignetteBuilder: knitr
 RoxygenNote: 6.1.1
 LinkingTo: Rcpp, RcppArmadillo, RcppEigen, RcppProgress, igraph
