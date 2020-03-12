@@ -15,7 +15,6 @@ LazyData: true
 Imports:
     abind,
     cowplot,
-    d3heatmap,
     dendextend,
     dplyr,
     entropy,
@@ -40,6 +39,7 @@ Imports:
     sccore (>= 0.1)
 Suggests:
     clues,
+    d3heatmap,
     DESeq2,
     entropy,
     ggrastr,

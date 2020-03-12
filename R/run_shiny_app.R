@@ -317,6 +317,10 @@ conosShinyApp <- function(con, N=30, leaf.labels=NULL, tissue_mapping=NULL, tiss
     stop("Package 'shinycssloaders' is required to run shiny app")
   }
 
+  if (!requireNamespace("d3heatmap", quietly = TRUE)) {
+    stop("Package 'd3heatmap' is required to run shiny app")
+  }
+
   if(is.null(con$clusters$walktrap)) stop("please run findCommunities(method=walktrap.communities) to calculate walktrap clustering first")
   if(is.null(leaf.labels)) {
     # get sample labels for cells

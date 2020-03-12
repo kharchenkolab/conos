@@ -615,13 +615,12 @@ Conos <- setRefClass(
       }
 
       if(what=='dend') {
-        require(dendextend)
         m <- st$upper.tree; nleafs <- nrow(m)+1; m[m<=nleafs] <- -1*m[m<=nleafs]; m[m>0] <- m[m>0]-nleafs;
         hc <- list(merge=m,height=1:nrow(m),labels=levels(clusters[[clustering]]$groups),order=c(1:nleafs)); class(hc) <- 'hclust'
         # fix the ordering so that edges don't intersects
         hc$order <- order.dendrogram(as.dendrogram(hc))
 
-        d <- as.dendrogram(hc) %>% hang.dendrogram()
+        d <- as.dendrogram(hc) %>% dendextend::hang.dendrogram()
 
         # depth-first traversal of a merge matrix
         t.dfirst <- function(m,i=nrow(m)) {
@@ -629,7 +628,7 @@ Conos <- setRefClass(
           rr <- m[i,2]; if(rr<0) { rr <- abs(rr) } else { rr <- t.dfirst(m,rr) }
           c(i+nrow(m)+1,rl,rr)
         }
-        xy <- get_nodes_xy(d)
+        xy <- dendextend::get_nodes_xy(d)
         to <- t.dfirst(hc$merge)
         plot(d,las=2,axes=F)
         # flat on the left
@@ -675,7 +674,7 @@ Conos <- setRefClass(
         } else {
           stop('supported values of color.by are ("cluster" and "sample")')
         }
-      } 
+      }
       return(embeddingPlot(emb, groups=groups, colors=colors, plot.theme=adjustTheme(plot.theme), ...))
     },
 
