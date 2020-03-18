@@ -220,7 +220,7 @@ In the example above, UMAP layout makes even many of the very small subpopulatio
 
 Now we can use this common embedding in `plotPanel` as well:
 
-```{r}
+```{r fig.width=6, fig.height=6}
 con$plotPanel(clustering='walktrap', size=0.1, use.common.embedding=T)
 ```
 
@@ -349,13 +349,13 @@ con$plotGraph(gene="CD14")
 
 Or plot a heatmap of top genes (top by AUC by default)
 ```{r fig.width=7,fig.height=7}
-plotDEheatmap(con,new.annot,de.info, n.genes.per.cluster = 5, column.metadata=list(samples=con$getDatasetPerCell()), row_names_gp = grid::gpar(fontsize = 7))
+plotDEheatmap(con,as.factor(new.annot),de.info, n.genes.per.cluster = 5, column.metadata=list(samples=con$getDatasetPerCell()), row.label.font.size = 7)
 ```
 
 Make a smaller heatmap, selecting a subset of cell types, and showing only hand-picked set of genes:
 ```{r fig.width=7,fig.height=4}
 gns <- c("GZMB","IL32","CD3E","LYZ","HLA-DRA","IGHD","GNLY","IGHM","GZMK")
-plotDEheatmap(con,new.annot,de.info[-c(3,10)], n.genes.per.cluster = 30, column.metadata=list(samples=con$getDatasetPerCell()), row_names_gp = grid::gpar(fontsize = 7), labeled.gene.subset = gns)
+plotDEheatmap(con,new.annot,de.info[-c(3,10)], n.genes.per.cluster = 30, column.metadata=list(samples=con$getDatasetPerCell()), row.label.font.size = 7, labeled.gene.subset = gns)
 ```
 
 

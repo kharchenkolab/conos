@@ -15,14 +15,12 @@ LazyData: true
 Imports:
     abind,
     cowplot,
-    d3heatmap,
     dendextend,
     dplyr,
     entropy,
     ggplot2,
     ggrepel,
     gridExtra,
-    heatmaply,
     irlba,
     magrittr,
     Matrix.utils,
@@ -40,21 +38,22 @@ Imports:
     viridis,
     sccore (>= 0.1)
 Suggests:
-  clues,
-  DESeq2,
-  entropy,
-  ggrastr,
-  ComplexHeatmap,
-  knitr,
-  pbapply,
-  PMA,
-  pROC,
-  rmarkdown,
-  Seurat,
-  shinycssloaders
+    clues,
+    d3heatmap,
+    DESeq2,
+    entropy,
+    ggrastr,
+    ComplexHeatmap,
+    knitr,
+    pbapply,
+    PMA,
+    pROC,
+    rmarkdown,
+    Seurat,
+    shinycssloaders
 VignetteBuilder: knitr
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.0
 LinkingTo: Rcpp, RcppArmadillo, RcppEigen, RcppProgress, igraph
 NeedsCompilation: yes
-Remotes:  
+Remotes: 
     hms-dbmi/sccore

@@ -67,8 +67,8 @@ collapseCellsByType <- function(cm, groups, min.cell.count=10) {
   groups <- as.factor(groups);
   cl <- factor(groups[match(rownames(cm),names(groups))],levels=levels(groups));
   tc <- colSumByFactor(cm,cl);
-  tc <- tc[-1,,drop=F]  # omit NA cells
-  tc[table(cl)>=min.cell.count,]
+  tc <- tc[-1,,drop=FALSE]  # omit NA cells
+  tc[table(cl)>=min.cell.count,,drop=FALSE]
 }
 
 adjustMatrixRownames <- function(name, cm, cluster.sep.chr) {rownames(cm) <- paste0(name, cluster.sep.chr, rownames(cm)); return(cm)}

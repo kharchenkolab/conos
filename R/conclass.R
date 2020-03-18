@@ -227,6 +227,7 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
           global.proj <- projectSamplesOnGlobalAxes(self$samples, cms.clust, data.type, neighborhood.average, verbose, self$n.cores)
         }
       }
+
       # determine inter-sample mapping
       if(verbose) cat('inter-sample links using ',matching.method,' ');
       cached.pairs <- self$pairs[[space]]
@@ -238,10 +239,8 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
         if(is.na(i)) { stop(paste("unable to find alignment for pair",paste(sn.pairs[,j],collapse='.vs.'))) }
 
         k.cur <- k
-        weight.mult <- 1
         if (!is.null(balancing.factor.per.sample) && (balancing.factor.per.sample[sn.pairs[1,j]] == balancing.factor.per.sample[sn.pairs[2,j]])) {
           k.cur <- min(k.same.factor, k1) # It always should be less then k1, though never supposed to be set higher
-          weight.mult <- same.factor.downweight
         }
 
         if(space=='JNMF') {
@@ -285,8 +284,9 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
         }
 
         if(verbose) cat(".")
-        return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=(mnn@x * weight.mult),stringsAsFactors=F))
+        return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=mnn@x,stringsAsFactors=F))
       },n.cores=self$n.cores,mc.preschedule=TRUE)
+
       if(verbose) cat(" done\n")
       ## Merge the results into a edge table
       el <- do.call(rbind,mnnres)
@@ -305,6 +305,16 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
       # collapse duplicate edges
       g <- simplify(g, edge.attr.comb=list(weight="sum", type = "first"))
       if(verbose) cat('done\n')
+
+      if (!is.null(balancing.factor.per.sample)) {
+        if (is.null(balancing.factor.per.cell)) {
+          sf <- getDatasetPerCell()
+          balancing.factor.per.cell <- setNames(balancing.factor.per.sample[as.character(sf)], names(sf))
+        } else {
+          warning("Both balancing.factor.per.cell and balancing.factor.per.sample are provided. Used the former for balancing edge weights")
+        }
+      }
+
       if (balance.edge.weights || !is.null(balancing.factor.per.cell)) {
         if(verbose) cat('balancing edge weights ');
 
@@ -599,13 +609,12 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
       }
 
       if(what=='dend') {
-        require(dendextend)
         m <- st$upper.tree; nleafs <- nrow(m)+1; m[m<=nleafs] <- -1*m[m<=nleafs]; m[m>0] <- m[m>0]-nleafs;
         hc <- list(merge=m,height=1:nrow(m),labels=levels(self$clusters[[clustering]]$groups),order=c(1:nleafs)); class(hc) <- 'hclust'
         # fix the ordering so that edges don't intersects
         hc$order <- order.dendrogram(as.dendrogram(hc))
 
-        d <- as.dendrogram(hc) %>% hang.dendrogram()
+        d <- as.dendrogram(hc) %>% dendextend::hang.dendrogram()
 
         # depth-first traversal of a merge matrix
         t.dfirst <- function(m,i=nrow(m)) {
@@ -613,7 +622,7 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
           rr <- m[i,2]; if(rr<0) { rr <- abs(rr) } else { rr <- t.dfirst(m,rr) }
           c(i+nrow(m)+1,rl,rr)
         }
-        xy <- get_nodes_xy(d)
+        xy <- dendextend::get_nodes_xy(d)
         to <- t.dfirst(hc$merge)
         plot(d,las=2,axes=F)
         # flat on the left
@@ -659,6 +668,7 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
           stop('supported values of color.by are ("cluster" and "sample")')
         }
       }
+
       return(embeddingPlot(emb, groups=groups, colors=colors, plot.theme=private$adjustTheme(plot.theme), ...))
     },
 
