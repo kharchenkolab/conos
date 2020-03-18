@@ -4,11 +4,17 @@
 \alias{velocityInfoConos}
 \title{RNA velocity analysis on samples integrated with conos}
 \usage{
-velocityInfoConos(cms.list, con, clustering = NULL, groups = NULL,
-  n.odgenes = 2000, verbose = TRUE,
+velocityInfoConos(
+  cms.list,
+  con,
+  clustering = NULL,
+  groups = NULL,
+  n.odgenes = 2000,
+  verbose = TRUE,
   min.max.cluster.average.emat = 0.2,
   min.max.cluster.average.nmat = 0.05,
-  min.max.cluster.average.smat = 0.01)
+  min.max.cluster.average.smat = 0.01
+)
 }
 \arguments{
 \item{cms.list}{list of velocity files written out as cell.counts.matrices.rds files by running dropest with -V option}

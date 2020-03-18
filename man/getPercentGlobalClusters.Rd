@@ -4,8 +4,12 @@
 \alias{getPercentGlobalClusters}
 \title{Evaluate how many clusters are global}
 \usage{
-getPercentGlobalClusters(p2list, pjc, pc.samples.cutoff = 0.9,
-  min.cell.count.per.sample = 10)
+getPercentGlobalClusters(
+  p2list,
+  pjc,
+  pc.samples.cutoff = 0.9,
+  min.cell.count.per.sample = 10
+)
 }
 \arguments{
 \item{p2list}{list of pagoda2 object on which clustering was generated}

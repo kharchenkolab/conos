@@ -4,8 +4,7 @@
 \alias{dendSetWidthByBreadth}
 \title{Set dendrogram node width by breadth of the provided factor}
 \usage{
-dendSetWidthByBreadth(d, fac, leafContent, min.width = 1,
-  max.width = 4)
+dendSetWidthByBreadth(d, fac, leafContent, min.width = 1, max.width = 4)
 }
 \arguments{
 \item{d}{dendrogram}

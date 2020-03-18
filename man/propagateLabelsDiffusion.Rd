@@ -4,9 +4,16 @@
 \alias{propagateLabelsDiffusion}
 \title{Estimate labeling distribution for each vertex, based on provided labels using Random Walk}
 \usage{
-propagateLabelsDiffusion(graph, labels, max.iters = 100,
-  diffusion.fading = 10, diffusion.fading.const = 0.1, tol = 0.025,
-  verbose = TRUE, fixed.initial.labels = TRUE)
+propagateLabelsDiffusion(
+  graph,
+  labels,
+  max.iters = 100,
+  diffusion.fading = 10,
+  diffusion.fading.const = 0.1,
+  tol = 0.025,
+  verbose = TRUE,
+  fixed.initial.labels = TRUE
+)
 }
 \arguments{
 \item{labels}{vector of factor or character labels, named by cell names}

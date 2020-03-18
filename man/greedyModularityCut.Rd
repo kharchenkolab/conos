@@ -4,8 +4,14 @@
 \alias{greedyModularityCut}
 \title{performs a greedy top-down selective cut to optmize modularity}
 \usage{
-greedyModularityCut(wt, N, leaf.labels = NULL, minsize = 0,
-  minbreadth = 0, flat.cut = TRUE)
+greedyModularityCut(
+  wt,
+  N,
+  leaf.labels = NULL,
+  minsize = 0,
+  minbreadth = 0,
+  flat.cut = TRUE
+)
 }
 \arguments{
 \item{wt}{walktrap rsult}

@@ -4,9 +4,17 @@
 \alias{scanKModularity}
 \title{Scan joint graph modularity for a range of k (or k.self) values}
 \usage{
-scanKModularity(con, min = 3, max = 50, by = 1,
-  scan.k.self = FALSE, omit.internal.edges = TRUE, verbose = TRUE,
-  plot = TRUE, ...)
+scanKModularity(
+  con,
+  min = 3,
+  max = 50,
+  by = 1,
+  scan.k.self = FALSE,
+  omit.internal.edges = TRUE,
+  verbose = TRUE,
+  plot = TRUE,
+  ...
+)
 }
 \arguments{
 \item{con}{Conos object to test}

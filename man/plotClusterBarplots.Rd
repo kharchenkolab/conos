@@ -5,9 +5,16 @@
 \title{Plots barplots per sample of composition of each pagoda2 application based on
 selected clustering}
 \usage{
-plotClusterBarplots(conos.obj = NULL, clustering = NULL,
-  groups = NULL, sample.factor = NULL, show.entropy = TRUE,
-  show.size = TRUE, show.composition = TRUE, legend.height = 0.2)
+plotClusterBarplots(
+  conos.obj = NULL,
+  clustering = NULL,
+  groups = NULL,
+  sample.factor = NULL,
+  show.entropy = TRUE,
+  show.size = TRUE,
+  show.composition = TRUE,
+  legend.height = 0.2
+)
 }
 \arguments{
 \item{conos.obj}{A conos object}

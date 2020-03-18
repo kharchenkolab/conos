@@ -4,9 +4,16 @@
 \alias{basicSeuratProc}
 \title{Create and preprocess a Seurat object}
 \usage{
-basicSeuratProc(count.matrix, vars.to.regress = NULL, verbose = TRUE,
-  do.par = TRUE, n.pcs = 100, cluster = TRUE, tsne = TRUE,
-  umap = FALSE)
+basicSeuratProc(
+  count.matrix,
+  vars.to.regress = NULL,
+  verbose = TRUE,
+  do.par = TRUE,
+  n.pcs = 100,
+  cluster = TRUE,
+  tsne = TRUE,
+  umap = FALSE
+)
 }
 \arguments{
 \item{count.matrix}{gene count matrix}

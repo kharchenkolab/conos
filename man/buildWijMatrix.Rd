@@ -8,11 +8,9 @@
 \usage{
 buildWijMatrix(x, threads = NULL, perplexity = 50)
 
-\method{buildWijMatrix}{TsparseMatrix}(x, threads = NULL,
-  perplexity = 50)
+\method{buildWijMatrix}{TsparseMatrix}(x, threads = NULL, perplexity = 50)
 
-\method{buildWijMatrix}{CsparseMatrix}(x, threads = NULL,
-  perplexity = 50)
+\method{buildWijMatrix}{CsparseMatrix}(x, threads = NULL, perplexity = 50)
 }
 \arguments{
 \item{x}{A sparse matrix}

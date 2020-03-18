@@ -4,11 +4,19 @@
 \alias{getBetweenCellTypeDE}
 \title{Compare two cell types across the entire panel}
 \usage{
-getBetweenCellTypeDE(con.obj, sample.groups = NULL, groups = NULL,
-  cooks.cutoff = FALSE, refgroup = NULL, altgroup = NULL,
-  min.cell.count = 10, independent.filtering = FALSE,
-  cluster.sep.chr = "<!!>", return.details = TRUE,
-  only.paired = TRUE)
+getBetweenCellTypeDE(
+  con.obj,
+  sample.groups = NULL,
+  groups = NULL,
+  cooks.cutoff = FALSE,
+  refgroup = NULL,
+  altgroup = NULL,
+  min.cell.count = 10,
+  independent.filtering = FALSE,
+  cluster.sep.chr = "<!!>",
+  return.details = TRUE,
+  only.paired = TRUE
+)
 }
 \arguments{
 \item{con.obj}{conos object}

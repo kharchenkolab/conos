@@ -4,9 +4,15 @@
 \alias{multitrap.community}
 \title{mutlilevel+walktrap communities}
 \usage{
-multitrap.community(graph, n.cores = parallel::detectCores(logical = F),
-  hclust.link = "single", min.community.size = 10, verbose = FALSE,
-  level = NULL, ...)
+multitrap.community(
+  graph,
+  n.cores = parallel::detectCores(logical = F),
+  hclust.link = "single",
+  min.community.size = 10,
+  verbose = FALSE,
+  level = NULL,
+  ...
+)
 }
 \arguments{
 \item{graph}{graph}

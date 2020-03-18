@@ -4,11 +4,20 @@
 \alias{getCorrectionVector}
 \title{Obtain a correction vector for removing the constant effect between the same clusters of two different apps}
 \usage{
-getCorrectionVector(con.obj, groups = NULL, sample.groups = NULL,
-  cooks.cutoff = FALSE, independent.filtering = FALSE, n.cores = 1,
-  cluster.sep.chr = "<!!>", return.details = FALSE, de.init = NULL,
-  exclude.celltypes = c(), correction.method = "varianceweighted",
-  ref.level = NULL)
+getCorrectionVector(
+  con.obj,
+  groups = NULL,
+  sample.groups = NULL,
+  cooks.cutoff = FALSE,
+  independent.filtering = FALSE,
+  n.cores = 1,
+  cluster.sep.chr = "<!!>",
+  return.details = FALSE,
+  de.init = NULL,
+  exclude.celltypes = c(),
+  correction.method = "varianceweighted",
+  ref.level = NULL
+)
 }
 \arguments{
 \item{con.obj}{conos object}

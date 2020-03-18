@@ -4,12 +4,33 @@
 \alias{plotDEheatmap}
 \title{Plot a heatmap of differential genes}
 \usage{
-plotDEheatmap(con, groups, de = NULL, min.auc = NULL,
-  min.specificity = NULL, n.genes.per.cluster = 10,
-  additional.genes = NULL, expression.quantile = 0.99,
-  pal = colorRampPalette(c("grey95", "black"))(1024),
-  ordering = "-AUC", column.metadata = NULL,
-  show.gene.clusters = TRUE, remove.duplicates = TRUE, ...)
+plotDEheatmap(
+  con,
+  groups,
+  de = NULL,
+  min.auc = NULL,
+  min.specificity = NULL,
+  min.precision = NULL,
+  n.genes.per.cluster = 10,
+  additional.genes = NULL,
+  labeled.gene.subset = NULL,
+  expression.quantile = 0.99,
+  pal = colorRampPalette(c("dodgerblue1", "grey95", "indianred1"))(1024),
+  ordering = "-AUC",
+  column.metadata = NULL,
+  show.gene.clusters = TRUE,
+  remove.duplicates = TRUE,
+  column.metadata.colors = NULL,
+  show.cluster.legend = TRUE,
+  show_heatmap_legend = FALSE,
+  border = TRUE,
+  return.details = FALSE,
+  row.label.font.size = 10,
+  order.clusters = FALSE,
+  split = FALSE,
+  split.gap = 0,
+  ...
+)
 }
 \arguments{
 \item{con}{conos (or p2) object}
@@ -22,9 +43,13 @@ plotDEheatmap(con, groups, de = NULL, min.auc = NULL,
 
 \item{min.specificity}{optional minimum specificity threshold}
 
+\item{min.precision}{optional minimum precision threshold}
+
 \item{n.genes.per.cluster}{number of genes to show for each cluster}
 
 \item{additional.genes}{optional additional genes to include (the genes will be assigned to the closest cluster)}
+
+\item{labeled.gene.subset}{a subset of gene names to show (instead of all genes). Can be a vector of gene names, or a number of top genes (in each cluster) to show the names for.}
 
 \item{expression.quantile}{expression quantile to show (0.98 by default)}
 
@@ -38,10 +63,24 @@ plotDEheatmap(con, groups, de = NULL, min.auc = NULL,
 
 \item{remove.duplicates}{remove duplicated genes (leaving them in just one of the clusters)}
 
+\item{column.metadata.colors}{a list of color specifications for additional column metadata, specified according to the HeatmapMetadata format. Use "clusters" slot to specify cluster colors.}
+
+\item{show.cluster.legend}{whether to show the cluster legend}
+
+\item{show_heatmap_legend}{whether to show the expression heatmap legend}
+
+\item{border}{show borders around the heatmap and annotations}
+
+\item{return.details}{if TRUE will return a list containing the heatmap (ha), but also raw matrix (x), expression list (expl) and other info to produce the heatmap on your own.}
+
+\item{row.label.font.size}{font size for the row labels}
+
+\item{order.clusters}{whether to re-order the clusters according to the similarity of the expression patterns (of the genes being shown)}
+
 \item{...}{extra parameters are passed to pheatmap}
 }
 \value{
-pheatmap object
+ComplexHeatmap::Heatmap object (see return.details param for other output)
 }
 \description{
 Plot a heatmap of differential genes

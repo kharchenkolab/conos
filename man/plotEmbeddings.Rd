@@ -4,10 +4,22 @@
 \alias{plotEmbeddings}
 \title{Plot panel of specified embeddings}
 \usage{
-plotEmbeddings(embeddings, groups = NULL, colors = NULL, ncol = NULL,
-  nrow = NULL, raster = FALSE, panel.size = NULL,
-  adjust.func = NULL, title.size = 6, raster.width = NULL,
-  raster.height = NULL, adj.list = NULL, ...)
+plotEmbeddings(
+  embeddings,
+  groups = NULL,
+  colors = NULL,
+  ncol = NULL,
+  nrow = NULL,
+  raster = FALSE,
+  panel.size = NULL,
+  adjust.func = NULL,
+  title.size = 6,
+  raster.width = NULL,
+  raster.height = NULL,
+  adj.list = NULL,
+  subset = NULL,
+  ...
+)
 }
 \arguments{
 \item{embeddings}{list of two-column matrices with (x, y) coordinates of the embeddings. Each mutrix must have cell names in rownames.}
@@ -29,6 +41,8 @@ plotEmbeddings(embeddings, groups = NULL, colors = NULL, ncol = NULL,
 \item{raster.width}{width of the plot in inches. Ignored if raster == FALSE.}
 
 \item{raster.height}{height of the plot in inches. Ignored if raster == FALSE.}
+
+\item{subset}{a subset of cells to show (vector of cell names)}
 
 \item{...}{Arguments passed on to \code{ggrepel::geom_label_repel}
 \describe{

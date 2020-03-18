@@ -4,8 +4,7 @@
 \alias{getGreedyCutGroups}
 \title{get memerships vector from greedyModularityCut function results without running shiny app}
 \usage{
-getGreedyCutGroups(n.clusters = NULL,
-  greedy.modularity.cut.result = NULL)
+getGreedyCutGroups(n.clusters = NULL, greedy.modularity.cut.result = NULL)
 }
 \arguments{
 \item{n.clusters}{number of clusters less or equal to N + 1 number of splits in greedyModularityCut results}

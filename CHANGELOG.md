@@ -2,10 +2,11 @@
 
 ### Changed
 
-- Moved some code to the new sccore package
+- Moved some code to the new package `sccore`
 - Fixed inconsistent use of parameters for different spaces in `buildGraph`
 - Various small fixes
 - Fixed the number of components calculated for the simple PCA rotation
+- Conos is R6 class now (instead of refClass)
 	
 ### Added
 
