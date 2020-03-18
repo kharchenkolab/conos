@@ -6,6 +6,25 @@ output:
     toc_depth: 2
 ---
 
+- [Loading the data](#loading-the-data)
+  * [Pre-processing with Pagoda2](#pre-processing-with-pagoda2)
+  * [Pre-processing with Seurat](#pre-processing-with-seurat)
+- [Integrating datasets with Conos](#integrating-datasets-with-conos)
+  * [Visualization](#visualization)
+  * [Changing embedding parameters](#changing-embedding-parameters)
+    + [largeVis](#largevis)
+    + [UMAP](#umap)
+- [Exploring hierarchical community structure](#exploring-hierarchical-community-structure)
+  * [Using code](#using-code)
+  * [Using Shiny Application](#using-shiny-application)
+- [Label propagation](#label-propagation)
+  * [General workflow](#general-workflow)
+- [Differential expression](#differential-expression)
+  * [Cluster markers](#cluster-markers)
+  * [DE Between Sample Groups](#de-between-sample-groups)
+    + [Simple run](#simple-run)
+- [Forcing better alignment](#forcing-better-alignment)
+
 In this tutorial we will go over the analysis of a panel of samples using Conos. Conos objects can be used to identify clusters of corresponding cells across panels of samples from similar or dissimilar sources, with different degrees of cell type overlap. Here we will identify corresponding clusters across a panel of bone marrow (BM) and cord blood (CB) by generating a joint graph with the cells from all the samples. We will use the graph to propagate labels from a single labelled sample to other samples and finally perform differential expression between BM and CB samples.
 
 First, let's load Conos library to start with:

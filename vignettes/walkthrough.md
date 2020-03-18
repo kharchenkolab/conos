@@ -1,6 +1,25 @@
 Conos Walkthrough
 ================
 
+- [Loading the data](#loading-the-data)
+  * [Pre-processing with Pagoda2](#pre-processing-with-pagoda2)
+  * [Pre-processing with Seurat](#pre-processing-with-seurat)
+- [Integrating datasets with Conos](#integrating-datasets-with-conos)
+  * [Visualization](#visualization)
+  * [Changing embedding parameters](#changing-embedding-parameters)
+    + [largeVis](#largevis)
+    + [UMAP](#umap)
+- [Exploring hierarchical community structure](#exploring-hierarchical-community-structure)
+  * [Using code](#using-code)
+  * [Using Shiny Application](#using-shiny-application)
+- [Label propagation](#label-propagation)
+  * [General workflow](#general-workflow)
+- [Differential expression](#differential-expression)
+  * [Cluster markers](#cluster-markers)
+  * [DE Between Sample Groups](#de-between-sample-groups)
+    + [Simple run](#simple-run)
+- [Forcing better alignment](#forcing-better-alignment)
+
 In this tutorial we will go over the analysis of a panel of samples
 using Conos. Conos objects can be used to identify clusters of
 corresponding cells across panels of samples from similar or dissimilar
