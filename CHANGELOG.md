@@ -11,9 +11,8 @@
 
 - Functionality for PAGA graph collapsing
 - Parameters `k.same.factor` and `balancing.factor.per.sample` to `buildGraph`. 
-  It can be used to improve alignment between different conditions: together with `same.factor.downweight`
+  It can be used to improve alignment between different conditions: with `same.factor.downweight`
   it gives the system similar to `k.self` and `k.self.weight`
-    - **TODO:** It should be made consistent with balancing.factor.per.cell before merging to master
 - plotDEheatmap() function for viewing marker genes
 	
 ## [1.2.1] - 2019-12-3

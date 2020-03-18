@@ -243,6 +243,7 @@ Conos <- setRefClass(
           global.proj <- projectSamplesOnGlobalAxes(samples, cms.clust, data.type, neighborhood.average, verbose, n.cores)
         }
       }
+
       # determine inter-sample mapping
       if(verbose) cat('inter-sample links using ',matching.method,' ');
       cached.pairs <- pairs[[space]]
@@ -254,10 +255,8 @@ Conos <- setRefClass(
         if(is.na(i)) { stop(paste("unable to find alignment for pair",paste(sn.pairs[,j],collapse='.vs.'))) }
 
         k.cur <- k
-        weight.mult <- 1
         if (!is.null(balancing.factor.per.sample) && (balancing.factor.per.sample[sn.pairs[1,j]] == balancing.factor.per.sample[sn.pairs[2,j]])) {
           k.cur <- min(k.same.factor, k1) # It always should be less then k1, though never supposed to be set higher
-          weight.mult <- same.factor.downweight
         }
 
         if(space=='JNMF') {
@@ -301,7 +300,7 @@ Conos <- setRefClass(
         }
 
         if(verbose) cat(".")
-        return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=(mnn@x * weight.mult),stringsAsFactors=F))
+        return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=mnn@x,stringsAsFactors=F))
       },n.cores=n.cores,mc.preschedule=TRUE)
       if(verbose) cat(" done\n")
       ## Merge the results into a edge table
@@ -321,6 +320,16 @@ Conos <- setRefClass(
       # collapse duplicate edges
       g <- simplify(g, edge.attr.comb=list(weight="sum", type = "first"))
       if(verbose) cat('done\n')
+
+      if (!is.null(balancing.factor.per.sample)) {
+        if (is.null(balancing.factor.per.cell)) {
+          sf <- getDatasetPerCell()
+          balancing.factor.per.cell <- setNames(balancing.factor.per.sample[as.character(sf)], names(sf))
+        } else {
+          warning("Both balancing.factor.per.cell and balancing.factor.per.sample are provided. Used the former for balancing edge weights")
+        }
+      }
+
       if (balance.edge.weights || !is.null(balancing.factor.per.cell)) {
         if(verbose) cat('balancing edge weights ');
 
