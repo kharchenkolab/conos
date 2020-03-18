@@ -14,6 +14,7 @@
   It can be used to improve alignment between different conditions: with `same.factor.downweight`
   it gives the system similar to `k.self` and `k.self.weight`
 - plotDEheatmap() function for viewing marker genes
+- Function `convertToPagoda2` to create Pagoda 2 from Conos. Helpful for PagodaWebApp.
 	
 ## [1.2.1] - 2019-12-3
 

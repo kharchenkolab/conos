@@ -52,8 +52,8 @@ Suggests:
     Seurat,
     shinycssloaders
 VignetteBuilder: knitr
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.0
 LinkingTo: Rcpp, RcppArmadillo, RcppEigen, RcppProgress, igraph
 NeedsCompilation: yes
-Remotes:  
+Remotes: 
     hms-dbmi/sccore
