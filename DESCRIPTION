@@ -39,11 +39,11 @@ Imports:
     sccore (>= 0.1)
 Suggests:
     clues,
+    ComplexHeatmap (>= 2.0.0),
     d3heatmap,
     DESeq2,
     entropy,
     ggrastr,
-    ComplexHeatmap,
     knitr,
     pbapply,
     PMA,
@@ -55,5 +55,6 @@ VignetteBuilder: knitr
 RoxygenNote: 7.1.0
 LinkingTo: Rcpp, RcppArmadillo, RcppEigen, RcppProgress, igraph
 NeedsCompilation: yes
-Remotes: 
-    hms-dbmi/sccore
+Remotes:
+    hms-dbmi/sccore,
+    jokergoo/ComplexHeatmap
