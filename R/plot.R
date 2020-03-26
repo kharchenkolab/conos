@@ -339,10 +339,12 @@ plotComponentVariance <- function(conos.obj, space='PCA',plot.theme=theme_bw()) 
 ##' @param return.details if TRUE will return a list containing the heatmap (ha), but also raw matrix (x), expression list (expl) and other info to produce the heatmap on your own.
 ##' @param row.label.font.size font size for the row labels
 ##' @param order.clusters whether to re-order the clusters according to the similarity of the expression patterns (of the genes being shown)
+##' @param cell.order explicitly supply cell order
+##' @param averaging.window optional window averaging between neighboring cells within each group (turned off by default) - useful when very large number of cells shown (requires zoo package)
 ##' @param ... extra parameters are passed to pheatmap
 ##' @return ComplexHeatmap::Heatmap object (see return.details param for other output)
 ##' @export
-plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,min.precision=NULL,n.genes.per.cluster=10,additional.genes=NULL,labeled.gene.subset=NULL, expression.quantile=0.99,pal=colorRampPalette(c('dodgerblue1','grey95','indianred1'))(1024),ordering='-AUC',column.metadata=NULL,show.gene.clusters=TRUE, remove.duplicates=TRUE, column.metadata.colors=NULL, show.cluster.legend=TRUE, show_heatmap_legend=FALSE, border=TRUE, return.details=FALSE, row.label.font.size=10, order.clusters=FALSE, split=FALSE, split.gap=0, ...) {
+plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,min.precision=NULL,n.genes.per.cluster=10,additional.genes=NULL,labeled.gene.subset=NULL, expression.quantile=0.99,pal=colorRampPalette(c('dodgerblue1','grey95','indianred1'))(1024),ordering='-AUC',column.metadata=NULL,show.gene.clusters=TRUE, remove.duplicates=TRUE, column.metadata.colors=NULL, show.cluster.legend=TRUE, show_heatmap_legend=FALSE, border=TRUE, return.details=FALSE, row.label.font.size=10, order.clusters=FALSE, split=FALSE, split.gap=0, cell.order=NULL, averaging.window=0, ...) {
   if (!requireNamespace("ComplexHeatmap", quietly = TRUE)) {
     stop("ComplexHeatmap package needs to be installed to use plotDEheatmap")
   }
@@ -441,20 +443,57 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,m
     exp <- do.call(rbind,expl)
     exp <- na.omit(exp[,colnames(exp) %in% names(na.omit(groups))])
   }
+  
+  if(averaging.window>0) {
+    # check if zoo is installed
+    if(requireNamespace("zoo", quietly = TRUE)) {
+      exp <- do.call(cbind,tapply(1:ncol(exp),as.factor(groups[colnames(exp)]),function(ii) {
+        xa <- t(zoo::rollapply(as.matrix(t(exp[,ii,drop=F])),averaging.window,mean,align='left',partial=T))
+        colnames(xa) <- colnames(exp)[ii]
+        xa
+      }))
+    } else {
+      warning("window averaging requires zoo package to be installed. skipping.")
+    }
+  }
 
   # transform expression values
   x <- t(apply(as.matrix(exp), 1, function(xp) {
-    qs <- quantile(xp,c(1-expression.quantile,expression.quantile))
-    xp[xp<qs[1]] <- qs[1]
-    xp[xp>qs[2]] <- qs[2]
-    xp-min(xp);
-    xpr <- diff(range(xp));
-    if(xpr>0) xp <- xp/xpr;
+    if(expression.quantile<1) {
+      qs <- quantile(xp,c(1-expression.quantile,expression.quantile))
+      if(diff(qs)==0) { # too much, set to adjacent values
+        xps <- unique(xp)
+        if(length(xps)<3) { qs <- range(xp) } # only two values, just take the extremes
+        xpm <- median(xp)
+        if(sum(xp<xpm) > sum(xp>xpm)) { # more common to have values below the median
+          qs[1] <- max(xp[xp<xpm])
+        } else { # more common to have values above the median
+          qs[2] <- min(xps[xps>xpm]) # take the next one higher
+        }
+      }
+      xp[xp<qs[1]] <- qs[1]
+      xp[xp>qs[2]] <- qs[2]
+    }
+    xp <- xp-min(xp);
+    if(max(xp)>0) xp <- xp/max(xp);
     xp
+    
+    # mx <- quantile(abs(x),expression.quantile) # absolute maximum
+    # if(mx==0) mx<-max(abs(x)) # in case the quantile squashes all the signal
+    # x[x>mx] <- mx; x[x< -1*mx] <- -1*mx; # trim
+    # if(center) x <- x-mean(x) # center
+    # x/max(abs(x)); # scale
+    # x
   }))
+  
+  
 
 
-  o <- order(groups[colnames(x)])
+  if(!is.null(cell.order)) {
+    o <- cell.order[cell.order %in% colnames(o)]
+  } else { 
+    o <- order(groups[colnames(x)])
+  }
   x=x[,o]
 
   annot <- data.frame(clusters=groups[colnames(x)],row.names = colnames(x))
