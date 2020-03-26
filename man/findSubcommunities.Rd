@@ -4,8 +4,14 @@
 \alias{findSubcommunities}
 \title{Increase resolution for a specific set of clusters}
 \usage{
-findSubcommunities(con, target.clusters, clustering = NULL,
-  groups = NULL, method = leiden.community, ...)
+findSubcommunities(
+  con,
+  target.clusters,
+  clustering = NULL,
+  groups = NULL,
+  method = leiden.community,
+  ...
+)
 }
 \arguments{
 \item{con}{conos object}

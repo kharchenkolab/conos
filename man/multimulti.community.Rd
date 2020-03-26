@@ -4,9 +4,15 @@
 \alias{multimulti.community}
 \title{mutlilevel+multilevel communities}
 \usage{
-multimulti.community(graph, n.cores = parallel::detectCores(logical = F),
-  hclust.link = "single", min.community.size = 10, verbose = FALSE,
-  level = NULL, ...)
+multimulti.community(
+  graph,
+  n.cores = parallel::detectCores(logical = F),
+  hclust.link = "single",
+  min.community.size = 10,
+  verbose = FALSE,
+  level = NULL,
+  ...
+)
 }
 \arguments{
 \item{graph}{graph}

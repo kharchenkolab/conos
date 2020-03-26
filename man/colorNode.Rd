@@ -4,11 +4,21 @@
 \alias{colorNode}
 \title{Color node and adjacent branches based on label of cluster, number of cells and breadth}
 \usage{
-colorNode(x = NULL, labels_mapping = NULL, hc = NULL,
-  leafContent = NULL, mapping = NULL, sample_names = NULL,
-  current_cut = NULL, colors = NULL, parent_color = NULL,
-  breadth_mapping = NULL, binar_mapping = NULL,
-  binar_mapping2 = NULL, binar_mapping3 = NULL)
+colorNode(
+  x = NULL,
+  labels_mapping = NULL,
+  hc = NULL,
+  leafContent = NULL,
+  mapping = NULL,
+  sample_names = NULL,
+  current_cut = NULL,
+  colors = NULL,
+  parent_color = NULL,
+  breadth_mapping = NULL,
+  binar_mapping = NULL,
+  binar_mapping2 = NULL,
+  binar_mapping3 = NULL
+)
 }
 \description{
 Color node and adjacent branches based on label of cluster, number of cells and breadth

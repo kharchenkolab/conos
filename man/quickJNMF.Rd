@@ -4,9 +4,16 @@
 \alias{quickJNMF}
 \title{Perform pairwise JNMF}
 \usage{
-quickJNMF(p2.objs, data.type = "counts", n.comps = 30,
-  n.odgenes = NULL, var.scale = TRUE, verbose = TRUE,
-  max.iter = 1000, neighborhood.average = FALSE)
+quickJNMF(
+  p2.objs,
+  data.type = "counts",
+  n.comps = 30,
+  n.odgenes = NULL,
+  var.scale = TRUE,
+  verbose = TRUE,
+  max.iter = 1000,
+  neighborhood.average = FALSE
+)
 }
 \description{
 Perform pairwise JNMF

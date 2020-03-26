@@ -4,9 +4,17 @@
 \alias{quickCCA}
 \title{Perform CCA (using PMA package or otherwise) on two samples}
 \usage{
-quickCCA(r.n, data.type = "counts", ncomps = 100, n.odgenes = NULL,
-  var.scale = TRUE, verbose = TRUE, neighborhood.average = FALSE,
-  PMA = FALSE, score.component.variance = FALSE)
+quickCCA(
+  r.n,
+  data.type = "counts",
+  ncomps = 100,
+  n.odgenes = NULL,
+  var.scale = TRUE,
+  verbose = TRUE,
+  neighborhood.average = FALSE,
+  PMA = FALSE,
+  score.component.variance = FALSE
+)
 }
 \arguments{
 \item{r.n}{list of p2 objects}

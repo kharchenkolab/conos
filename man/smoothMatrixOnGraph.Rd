@@ -4,8 +4,13 @@
 \alias{smoothMatrixOnGraph}
 \title{Wrapper to make is.label.fixed optional}
 \usage{
-smoothMatrixOnGraph(edges, edge.weights, matrix,
-  is.label.fixed = logical(), ...)
+smoothMatrixOnGraph(
+  edges,
+  edge.weights,
+  matrix,
+  is.label.fixed = logical(),
+  ...
+)
 }
 \description{
 Wrapper to make is.label.fixed optional

@@ -4,8 +4,12 @@
 \alias{saveDEasJSON}
 \title{Save differential expression results as JSON}
 \usage{
-saveDEasJSON(de.results = NULL, saveprefix = NULL,
-  gene.metadata = NULL, cluster.sep.chr = "<!!>")
+saveDEasJSON(
+  de.results = NULL,
+  saveprefix = NULL,
+  gene.metadata = NULL,
+  cluster.sep.chr = "<!!>"
+)
 }
 \arguments{
 \item{de.results}{differential expression results}

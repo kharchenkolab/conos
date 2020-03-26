@@ -4,8 +4,13 @@
 \alias{postProcessWalktrapClusters}
 \title{Post process clusters generated with walktrap to control granularity}
 \usage{
-postProcessWalktrapClusters(p2list, pjc, no.cl = 200, size.cutoff = 10,
-  n.cores = 4)
+postProcessWalktrapClusters(
+  p2list,
+  pjc,
+  no.cl = 200,
+  size.cutoff = 10,
+  n.cores = 4
+)
 }
 \arguments{
 \item{p2list}{list of pagoda2 objects}

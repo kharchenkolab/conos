@@ -4,8 +4,14 @@
 \alias{plotSamples}
 \title{Plot panel of specified embeddings, extracting them from pagoda2 objects}
 \usage{
-plotSamples(samples, groups = NULL, colors = NULL, gene = NULL,
-  embedding.type = NULL, ...)
+plotSamples(
+  samples,
+  groups = NULL,
+  colors = NULL,
+  gene = NULL,
+  embedding.type = NULL,
+  ...
+)
 }
 \arguments{
 \item{samples}{list of pagoda2 or Seurat objects}

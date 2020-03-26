@@ -104,6 +104,8 @@ docker run -d -p 8787:8787 -e PASSWORD=pass --name conos -it conos
 
 ## Usage example
 
+To see the class documentation, run `?Conos`.
+
 ### Alignment of datasets
 
 Please see [Conos tutorial](vignettes/walkthrough.md) for detailed usage. The overall runtime of the tutorial should be ~5 minutes.

@@ -4,8 +4,12 @@
 \alias{calculateBreadth}
 \title{Calculate breadth based on precalculated values}
 \usage{
-calculateBreadth(dend = NULL, hc = NULL, breadth_mapping = NULL,
-  labels_mapping = NULL)
+calculateBreadth(
+  dend = NULL,
+  hc = NULL,
+  breadth_mapping = NULL,
+  labels_mapping = NULL
+)
 }
 \description{
 Calculate breadth based on precalculated values

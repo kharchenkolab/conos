@@ -345,8 +345,9 @@ plotComponentVariance <- function(conos.obj, space='PCA',plot.theme=theme_bw()) 
 ##' @return ComplexHeatmap::Heatmap object (see return.details param for other output)
 ##' @export
 plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,min.precision=NULL,n.genes.per.cluster=10,additional.genes=NULL,labeled.gene.subset=NULL, expression.quantile=0.99,pal=colorRampPalette(c('dodgerblue1','grey95','indianred1'))(1024),ordering='-AUC',column.metadata=NULL,show.gene.clusters=TRUE, remove.duplicates=TRUE, column.metadata.colors=NULL, show.cluster.legend=TRUE, show_heatmap_legend=FALSE, border=TRUE, return.details=FALSE, row.label.font.size=10, order.clusters=FALSE, split=FALSE, split.gap=0, cell.order=NULL, averaging.window=0, ...) {
-  if (!requireNamespace("ComplexHeatmap", quietly = TRUE)) {
-    stop("ComplexHeatmap package needs to be installed to use plotDEheatmap")
+
+  if (!requireNamespace("ComplexHeatmap", quietly = TRUE) || (substr(packageVersion("ComplexHeatmap"), 1, 1) <= "1")) {
+    stop("ComplexHeatmap >= 2.0 package needs to be installed to use plotDEheatmap. Please run \"devtools::install_github('jokergoo/ComplexHeatmap')\".")
   }
 
   groups <- as.factor(groups)
@@ -477,13 +478,6 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,m
     xp <- xp-min(xp);
     if(max(xp)>0) xp <- xp/max(xp);
     xp
-    
-    # mx <- quantile(abs(x),expression.quantile) # absolute maximum
-    # if(mx==0) mx<-max(abs(x)) # in case the quantile squashes all the signal
-    # x[x>mx] <- mx; x[x< -1*mx] <- -1*mx; # trim
-    # if(center) x <- x-mean(x) # center
-    # x/max(abs(x)); # scale
-    # x
   }))
   
   

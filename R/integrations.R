@@ -122,7 +122,7 @@ saveConosForScanPy <- function(con, output.path, metadata.df=NULL, cm.norm=FALSE
       warning("\n No embedding found in the conos object. Skipping... \n")
       embedding <- FALSE
     }
-    
+
   }
 
   # Create a batch-free embedding that can be used instead of PCA space
@@ -131,13 +131,13 @@ saveConosForScanPy <- function(con, output.path, metadata.df=NULL, cm.norm=FALSE
     pseudopca.df <- con$embedGraph(target.dims=n.dims, method="largeVis", verbose=FALSE)[cell.ids, ] %>% as.data.frame()
     if (verbose) cat("Done.\n")
   }
-  
+
   if (pca){
     if (verbose) cat("Save PCA space...\t\t")
     pca.df <- pcaFromConos(con$samples, ncomps=n.dims, n.odgenes=2000, verbose=FALSE) %>% as.data.frame()
     if (verbose) cat("Done.\n")
   }
-  
+
   if (alignment.graph){
     if (verbose) cat("Save graph matrices...\t\t")
     if (!is.null(con$graph)) {
@@ -148,7 +148,7 @@ saveConosForScanPy <- function(con, output.path, metadata.df=NULL, cm.norm=FALSE
     } else {
       warning("\n No graph found in the conos object. Skipping... \n")
       alignment.graph <- FALSE
-    } 
+    }
   }
 
   if (verbose) cat("Write data to disk...\t\t")
@@ -240,26 +240,26 @@ velocityInfoConos <- function(cms.list, con, clustering=NULL, groups=NULL, n.odg
   }
 
   if (verbose) cat("Merging raw count matrices...\n")
-  # Merge samples to get names of relevant cells and genes 
+  # Merge samples to get names of relevant cells and genes
   raw.count.matrix.merged <- con$getJointCountMatrix(raw=TRUE)
-  
+
   if (verbose) cat("Merging velocity files...\n")
   # Intersect genes and cells between the conos object and all the velocity files
   cms.list <- lapply(cms.list, prepareVelocity, genes=colnames(raw.count.matrix.merged), cells=rownames(raw.count.matrix.merged))
   # Keep only genes present in velocity files from all the samples
   common.genes <-  Reduce(intersect, lapply(cms.list, function(x) {rownames(x[[1]])}))
   cms.list <- lapply(cms.list, function(x) {lapply(x, function(y) {y[row.names(y) %in% common.genes,]} )} )
-  
+
   # Merge velocity files from different samples
   emat <- do.call(cbind, lapply(cms.list, function(x) {x[[1]]}))
   nmat <- do.call(cbind, lapply(cms.list, function(x) {x[[2]]}))
   smat <- do.call(cbind, lapply(cms.list, function(x) {x[[3]]}))
-  
+
   # Keep the order of cells consistent between velocity matrices and the embedding (not really sure whether it's necessary...)
   emat <- emat[,order(match(colnames(emat), rownames(emb)))]
   nmat <- nmat[,order(match(colnames(nmat), rownames(emb)))]
   smat <- smat[,order(match(colnames(smat), rownames(emb)))]
-  
+
   if (verbose) cat("Calculating cell distances...\n")
   # Get PCA results for all the samples from the conos object
   pcs <- pcaFromConos(con$samples, n.odgenes=n.odgenes)
@@ -267,12 +267,12 @@ velocityInfoConos <- function(cms.list, con, clustering=NULL, groups=NULL, n.odg
   pcs <- pcs[order(match(rownames(pcs), rownames(emb))),]
   # Calculate the cell distances based on correlation
   cell.dist <- as.dist(1 - velocyto.R::armaCor(t(pcs)))
-  
+
   if (verbose) cat("Filtering velocity...\n")
   emat %<>% velocyto.R::filter.genes.by.cluster.expression(groups, min.max.cluster.average=min.max.cluster.average.emat)
   nmat %<>% velocyto.R::filter.genes.by.cluster.expression(groups, min.max.cluster.average=min.max.cluster.average.nmat)
   smat %<>% velocyto.R::filter.genes.by.cluster.expression(groups, min.max.cluster.average=min.max.cluster.average.smat)
-  
+
   if (verbose) cat("All Done!")
   return(list(cell.dist=cell.dist, emat=emat, nmat=nmat, smat=smat, cell.colors=cell.colors, emb=emb))
 }
@@ -284,13 +284,13 @@ prepareVelocity <- function(cms.file, genes, cells) {
   spanning.genes <- rownames(cms.file$spanning)
   # Only common genes between the 3 files and conos object
   common.genes <- intersect(exon.genes, intron.genes) %>% intersect(spanning.genes) %>% intersect(genes)
-  
+
   exon.cells <- colnames(cms.file$exon)
   intron.cells <- colnames(cms.file$intron)
   spanning.cells <- colnames(cms.file$spanning)
   # Only common cells between the 3 files and conos object
   common.cells <- intersect(exon.cells, intron.cells) %>% intersect(spanning.cells) %>% intersect(cells)
-  
+
   cms.file$exon <- cms.file$exon[common.genes,common.cells]
   cms.file$intron <- cms.file$intron[common.genes,common.cells]
   cms.file$spanning <- cms.file$spanning[common.genes,common.cells]
@@ -300,28 +300,61 @@ prepareVelocity <- function(cms.file, genes, cells) {
 # Get PCA results for all the samples from the conos object
 # This is a modification of the quickPlainPCA function
 pcaFromConos <- function(p2.list, data.type='counts', k=30, ncomps=100, n.odgenes=NULL, verbose=TRUE) {
+
   od.genes <- commonOverdispersedGenes(p2.list, n.odgenes, verbose = FALSE)
   if(length(od.genes)<5) return(NULL)
-  
+
   if(verbose) cat('Calculating PCs for',length(p2.list),' datasets...\n')
-  
+
   # Get scaled matrices from a list of pagoda2 objects
   sm <- scaledMatrices(p2.list, data.type=data.type, od.genes=od.genes, var.scale=TRUE, neighborhood.average=FALSE);
   # Transpose the scaled matrices since we want to run PCA on cells and not genes (like in quickPlainPCA)
   sm <- lapply(sm, t)
   # Get the names of all the cells
   nms <- Reduce(union, lapply(sm, colnames))
-  
+
   pcs <- lapply(sm, function(x) {
     cm <- Matrix::colMeans(x);
     ncomps <- min(c(nrow(cm)-1,ncol(cm)-1,ncomps))
     res <- irlba::irlba(x, nv=ncomps, nu=0, center=cm, right_only=F, reorth=T)
     res
   })
-  
+
   pcj <- do.call(rbind,lapply(pcs,function(x) x$v))
   rownames(pcj) <- nms
   res <- pcj
-  
+
   return(res)
+}
+
+#' @export
+convertToPagoda2 <- function(con, n.pcs=100, n.odgenes=2000, verbose=T, ...) {
+  if (!requireNamespace('pagoda2', quietly=T)) {
+    stop("'pagoda2' must be installed to convert Conos to Pagoda 2")
+  }
+
+  p2 <- con$getJointCountMatrix(raw=T) %>% Matrix::t() %>%
+    Pagoda2$new(n.cores=con$n.cores, verbose=verbose, ...)
+
+  if (n.pcs > 0) {
+    if (verbose) cat("Estimating PCA... ")
+    p2$reductions$PCA <- pcaFromConos(con$samples, ncomps=n.pcs, n.odgenes=n.odgenes, verbose=FALSE)
+    if (verbose) cat("Done\n")
+  }
+
+  p2$graphs$conos <- con$graph
+
+  if (!("uninitializedField" %in% class(con$embedding))) {
+    p2$embeddings$PCA$conos <- con$embedding
+  }
+
+  if (length(con$clusters) > 0) {
+    con.clusters <- con$clusters %>% setNames(paste0("conos_", names(.))) %>%
+      lapply(`[[`, "groups") %>% lapply(as.factor)
+    p2$clusters %<>% c(con.clusters)
+  }
+
+  p2$clusters$dataset <- con$getDatasetPerCell()
+
+  return(p2)
 }

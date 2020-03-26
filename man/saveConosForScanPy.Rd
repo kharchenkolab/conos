@@ -4,9 +4,18 @@
 \alias{saveConosForScanPy}
 \title{Save Conos object on disk to read it from ScanPy}
 \usage{
-saveConosForScanPy(con, output.path, metadata.df = NULL,
-  cm.norm = FALSE, pseudo.pca = FALSE, pca = FALSE, n.dims = 100,
-  embedding = TRUE, alignment.graph = TRUE, verbose = FALSE)
+saveConosForScanPy(
+  con,
+  output.path,
+  metadata.df = NULL,
+  cm.norm = FALSE,
+  pseudo.pca = FALSE,
+  pca = FALSE,
+  n.dims = 100,
+  embedding = TRUE,
+  alignment.graph = TRUE,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{con}{conos object}

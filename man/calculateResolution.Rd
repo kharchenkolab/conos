@@ -4,8 +4,13 @@
 \alias{calculateResolution}
 \title{Calculate resolution for each cut}
 \usage{
-calculateResolution(dend = NULL, hc = NULL, mapping = NULL,
-  sample_names = NULL, labels_mapping = NULL)
+calculateResolution(
+  dend = NULL,
+  hc = NULL,
+  mapping = NULL,
+  sample_names = NULL,
+  labels_mapping = NULL
+)
 }
 \description{
 Calculate resolution for each cut

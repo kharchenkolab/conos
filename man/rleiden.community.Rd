@@ -4,10 +4,17 @@
 \alias{rleiden.community}
 \title{recursive leiden communities}
 \usage{
-rleiden.community(graph, max.depth = 2,
+rleiden.community(
+  graph,
+  max.depth = 2,
   n.cores = parallel::detectCores(logical = F),
-  min.community.size = 10, verbose = FALSE, resolution = 1,
-  cur.depth = 1, hierarchical = TRUE, ...)
+  min.community.size = 10,
+  verbose = FALSE,
+  resolution = 1,
+  cur.depth = 1,
+  hierarchical = TRUE,
+  ...
+)
 }
 \arguments{
 \item{graph}{graph}

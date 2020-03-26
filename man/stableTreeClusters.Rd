@@ -4,8 +4,14 @@
 \alias{stableTreeClusters}
 \title{determine number of detectable clusters given a reference walktrap and a bunch of permuted walktraps}
 \usage{
-stableTreeClusters(refwt, tests, min.threshold = 0.8, min.size = 10,
-  n.cores = 30, average.thresholds = FALSE)
+stableTreeClusters(
+  refwt,
+  tests,
+  min.threshold = 0.8,
+  min.size = 10,
+  n.cores = 30,
+  average.thresholds = FALSE
+)
 }
 \arguments{
 \item{refwt}{reference walktrap rsult}

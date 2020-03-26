@@ -4,9 +4,17 @@
 \alias{getNeighborMatrix}
 \title{Establish rough neighbor matching between samples given their projections in a common space}
 \usage{
-getNeighborMatrix(p1, p2, k, k1 = k, matching = "mNN",
-  metric = "angular", l2.sigma = 1e+05, cor.base = 1,
-  min.similarity = 1e-05)
+getNeighborMatrix(
+  p1,
+  p2,
+  k,
+  k1 = k,
+  matching = "mNN",
+  metric = "angular",
+  l2.sigma = 1e+05,
+  cor.base = 1,
+  min.similarity = 1e-05
+)
 }
 \arguments{
 \item{p1}{projection of sample 1}

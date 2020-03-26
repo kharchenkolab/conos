@@ -5,10 +5,18 @@
 \title{Do differential expression for each cell type in a conos object between the specified subsets of apps
 applying the specified correction vector}
 \usage{
-getPerCellTypeDECorrected(con.obj, groups = NULL, sample.groups = NULL,
-  cooks.cutoff = FALSE, independent.filtering = FALSE, n.cores = 1,
-  cluster.sep.chr = "<!!>", correction = NULL, return.details = TRUE,
-  ref.level = NULL)
+getPerCellTypeDECorrected(
+  con.obj,
+  groups = NULL,
+  sample.groups = NULL,
+  cooks.cutoff = FALSE,
+  independent.filtering = FALSE,
+  n.cores = 1,
+  cluster.sep.chr = "<!!>",
+  correction = NULL,
+  return.details = TRUE,
+  ref.level = NULL
+)
 }
 \arguments{
 \item{con.obj}{conos object}

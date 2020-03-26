@@ -1,6 +1,6 @@
 Package: conos
 Title: Clustering on Netowrk of Samples
-Version: 1.2.1
+Version: 1.3.0
 Authors@R: c(person("Peter", "Kharchenko", email = "peter_kharchenko@hms.harvard.edu", role = c("aut", "cre")),
              person("Nikolas","Barkas", email="nikolas_barkas@hms.harvard.edu", role="aut"),
              person("Viktor","Petukhov", email="viktor.s.petuhov@ya.ru", role="aut"))
@@ -39,11 +39,11 @@ Imports:
     sccore (>= 0.1)
 Suggests:
     clues,
+    ComplexHeatmap (>= 2.0.0),
     d3heatmap,
     DESeq2,
     entropy,
     ggrastr,
-    ComplexHeatmap,
     knitr,
     pbapply,
     PMA,
@@ -52,8 +52,9 @@ Suggests:
     Seurat,
     shinycssloaders
 VignetteBuilder: knitr
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.0
 LinkingTo: Rcpp, RcppArmadillo, RcppEigen, RcppProgress, igraph
 NeedsCompilation: yes
-Remotes:  
-    hms-dbmi/sccore
+Remotes:
+    hms-dbmi/sccore,
+    jokergoo/ComplexHeatmap
