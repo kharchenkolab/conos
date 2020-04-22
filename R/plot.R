@@ -325,6 +325,7 @@ plotComponentVariance <- function(conos.obj, space='PCA',plot.theme=theme_bw()) 
 ##' @param min.precision optional minimum precision threshold
 ##' @param n.genes.per.cluster number of genes to show for each cluster
 ##' @param additional.genes optional additional genes to include (the genes will be assigned to the closest cluster)
+##' @param exclude.genes an optional list of genes to exclude from the heatmap
 ##' @param labeled.gene.subset a subset of gene names to show (instead of all genes). Can be a vector of gene names, or a number of top genes (in each cluster) to show the names for.
 ##' @param expression.quantile expression quantile to show (0.98 by default)
 ##' @param pal palette to use for the main heatmap
@@ -344,7 +345,7 @@ plotComponentVariance <- function(conos.obj, space='PCA',plot.theme=theme_bw()) 
 ##' @param ... extra parameters are passed to pheatmap
 ##' @return ComplexHeatmap::Heatmap object (see return.details param for other output)
 ##' @export
-plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,min.precision=NULL,n.genes.per.cluster=10,additional.genes=NULL,labeled.gene.subset=NULL, expression.quantile=0.99,pal=colorRampPalette(c('dodgerblue1','grey95','indianred1'))(1024),ordering='-AUC',column.metadata=NULL,show.gene.clusters=TRUE, remove.duplicates=TRUE, column.metadata.colors=NULL, show.cluster.legend=TRUE, show_heatmap_legend=FALSE, border=TRUE, return.details=FALSE, row.label.font.size=10, order.clusters=FALSE, split=FALSE, split.gap=0, cell.order=NULL, averaging.window=0, ...) {
+plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,min.precision=NULL,n.genes.per.cluster=10,additional.genes=NULL,exclude.genes=NULL, labeled.gene.subset=NULL, expression.quantile=0.99,pal=colorRampPalette(c('dodgerblue1','grey95','indianred1'))(1024),ordering='-AUC',column.metadata=NULL,show.gene.clusters=TRUE, remove.duplicates=TRUE, column.metadata.colors=NULL, show.cluster.legend=TRUE, show_heatmap_legend=FALSE, border=TRUE, return.details=FALSE, row.label.font.size=10, order.clusters=FALSE, split=FALSE, split.gap=0, cell.order=NULL, averaging.window=0, ...) {
 
   if (!requireNamespace("ComplexHeatmap", quietly = TRUE) || (substr(packageVersion("ComplexHeatmap"), 1, 1) <= "1")) {
     stop("ComplexHeatmap >= 2.0 package needs to be installed to use plotDEheatmap. Please run \"devtools::install_github('jokergoo/ComplexHeatmap')\".")
@@ -409,24 +410,33 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,m
   # place additional genes
   if(!is.null(additional.genes)) {
     genes.to.add <- setdiff(additional.genes,unlist(lapply(expl,rownames)))
-    x <- setdiff(genes.to.add,conos:::getGenes(con)); if(length(x)>0) warning('the following genes are not found in the dataset: ',paste(x,collapse=' '))
-
-    age <- do.call(rbind,lapply(sn(genes.to.add),function(gene) conos:::getGeneExpression(con,gene)))
-
-    # for each gene, measure average correlation with genes of each cluster
-    acc <- do.call(rbind,lapply(expl,function(og) rowMeans(cor(t(age),t(og)),na.rm=T)))
-    acc <- acc[,apply(acc,2,function(x) any(is.finite(x))),drop=F]
-    acc.best <- na.omit(apply(acc,2,which.max))
-
-    for(i in 1:length(acc.best)) {
-      gn <- names(acc.best)[i];
-      expl[[acc.best[i]]] <- rbind(expl[[acc.best[i]]],age[gn,,drop=F])
+    if(length(genes.to.add)>0) {
+      x <- setdiff(genes.to.add,conos:::getGenes(con)); if(length(x)>0) warning('the following genes are not found in the dataset: ',paste(x,collapse=' '))
+      
+      age <- do.call(rbind,lapply(sn(genes.to.add),function(gene) conos:::getGeneExpression(con,gene)))
+      
+      # for each gene, measure average correlation with genes of each cluster
+      acc <- do.call(rbind,lapply(expl,function(og) rowMeans(cor(t(age),t(og)),na.rm=T)))
+      acc <- acc[,apply(acc,2,function(x) any(is.finite(x))),drop=F]
+      acc.best <- na.omit(apply(acc,2,which.max))
+      
+      for(i in 1:length(acc.best)) {
+        gn <- names(acc.best)[i];
+        expl[[acc.best[i]]] <- rbind(expl[[acc.best[i]]],age[gn,,drop=F])
+      }
+      if(additional.genes.only) { # leave only genes that were explictly specified
+        expl <- lapply(expl,function(d) d[rownames(d) %in% additional.genes,,drop=F])
+        expl <- expl[unlist(lapply(expl,nrow))>0]
+        
+      }
     }
-    if(additional.genes.only) { # leave only genes that were explictly specified
-      expl <- lapply(expl,function(d) d[rownames(d) %in% additional.genes,,drop=F])
-      expl <- expl[unlist(lapply(expl,nrow))>0]
-
-    }
+  }
+  
+  # omit genes that should be excluded
+  if(!is.null(exclude.genes)) {
+    expl <- lapply(expl,function(x) {
+      x[!rownames(x) %in% exclude.genes,,drop=F]
+    })
   }
 
 
