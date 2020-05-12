@@ -1,3 +1,10 @@
+## Upcoming
+
+### Changed
+
+- Improved `plotDEheatmap` function
+- Fixed bug with `balancing.factor.per.sample` in `buildGraph`
+
 ## [1.3.0] - 2020-19-3
 
 ### Changed

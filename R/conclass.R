@@ -199,7 +199,7 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
 
       if (!is.null(balancing.factor.per.sample)) {
         if (is.null(balancing.factor.per.cell)) {
-          sf <- getDatasetPerCell()
+          sf <- self$getDatasetPerCell()
           balancing.factor.per.cell <- setNames(balancing.factor.per.sample[as.character(sf)], names(sf))
         } else {
           warning("Both balancing.factor.per.cell and balancing.factor.per.sample are provided. Used the former for balancing edge weights")
