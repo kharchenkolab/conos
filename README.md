@@ -7,9 +7,9 @@
       - [Ubuntu Dependencies](#ubuntu-dependencies)
       - [Red-Hat-based distributions Dependencies](#red-hat-based-distributions-dependencies)
       - [OS X](#os-x)
-- [Installing Conos as Docker Container](#installing-conos-as-docker-container)
-  * [Ready-to-run docker image](#ready-to-run-docker-image)
-  * [Building docker image on the fly](#building-docker-image-on-the-fly)
+  * [Installing Conos as Docker Container](#installing-conos-as-docker-container)
+    + [Ready-to-run docker image](#ready-to-run-docker-image)
+    + [Building docker image on the fly](#building-docker-image-on-the-fly)
 - [Usage example](#usage-example)
   * [Alignment of datasets](#alignment-of-datasets)
   * [Integration with ScanPy](#integration-with-scanpy)
@@ -47,6 +47,8 @@ Then install [pagoda2](https://github.com/hms-dbmi/pagoda2) (or Seurat), then in
 devtools::install_github("hms-dbmi/conos")
 ```
 
+If you have problems with `sccore` package, run `devtools::install_github("hms-dbmi/sccore")` before installing Conos.
+
 #### System dependencies
 
 The dependencies are inherited from [pagoda2](https://github.com/hms-dbmi/pagoda2):
@@ -69,13 +71,13 @@ yum install openssl-devel libcurl-devel
 
 It is possible to install pagoda2 and Conos on OS X, however some users have reported issues with OpenMP configuration. For instructions see [pagoda2](https://github.com/hms-dbmi/pagoda2#mac-dependencies) readme.
 
-## Installing Conos as Docker Container
+### Installing Conos as Docker Container
 
 If your system configuration is making it difficult to install Conos natively, an alternative way to get Conos running is through a docker container.
 
 **Note:** on OS X, Docker Machine has Memory and CPU limit. To control it, please check instructions either for [CLI](https://stackoverflow.com/questions/32834082/how-to-increase-docker-machine-memory-mac/32834453#32834453) or for [Docker Desktop](https://docs.docker.com/docker-for-mac/#advanced).
 
-### Ready-to-run docker image
+#### Ready-to-run docker image
 
 The docker distribution has the latest version and also includes the [Pagoda2 package](https://github.com/hms-dbmi/pagoda2). To start a docker container, first [install docker](https://docs.docker.com/install/) on your platform and then start the pagoda container with the following command in the shell:
 
@@ -90,7 +92,7 @@ The first time you run the command it will download several images so make sure 
 docker pull vpetukhov/conos:latest
 ```
 
-### Building docker image on the fly
+#### Building docker image on the fly
 
 If you want to build image by your own, download the [Dockerfile](https://github.com/hms-dbmi/conos/blob/master/dockers/Dockerfile) (available in this repo under `/dockers`) and run to following command to build it:
 ```
