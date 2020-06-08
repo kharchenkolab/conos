@@ -147,7 +147,7 @@ After running dropEst you should have 2 files for each of the samples:
 - `sample.rds` (matrix of counts)
 - `sample.matrices.rds` (3 matrices of exons, introns and spanning reads)
 
-The `.matrices.rds` files are the velocity files. Load them into R in a list (same order as you give to conos). Load, preprocess and integrate with conos the count matrices (`.rds`) as you normally would. Before running the velocity you have to had at least created an embedding and run the leiden clustering. Finally, you can esitmate the velocity:  
+The `.matrices.rds` files are the velocity files. Load them into R in a list (same order as you give to conos). Load, preprocess and integrate with conos the count matrices (`.rds`) as you normally would. Before running the velocity you have to had at least created an embedding and run the leiden clustering. Finally, you can estimate the velocity:  
 ```r
 ### Assuming con is your conos object and cms.list is the list of your velocity files ###
 
