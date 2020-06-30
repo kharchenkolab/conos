@@ -92,9 +92,9 @@ The docker distribution has the latest version and also includes the [Pagoda2 pa
 docker run -p 8787:8787 -e PASSWORD=pass docker.io/vpetukhov/conos:latest
 ```
 
-The first time you run the command it will download several images so make sure that you have fast internet access setup. You can then point your browser to http://localhost:8787/ to get an Rstudio environment with `pagoda2` and `conos` installed (log in using credentials *rstudio* / *pass*). Explore the docker [--mount option]([https://docs.docker.com/storage/volumes/) to allow access of the docker image to your local files.
+The first time you run this command, it will download several large images so make sure that you have fast internet access setup. You can then point your browser to http://localhost:8787/ to get an Rstudio environment with `pagoda2` and `conos` installed (log in using credentials *rstudio* / *pass*). Explore the docker [--mount option]([https://docs.docker.com/storage/volumes/) to allow access of the docker image to your local files.
 
-**Note:** if you already downloaded the docker image and want to update it, please run 
+**Note:** If you already downloaded the docker image and want to update it, please pull the latest image with: 
 ```
 docker pull vpetukhov/conos:latest
 ```
@@ -117,7 +117,7 @@ To see the class documentation, run `?Conos`.
 
 ### Alignment of datasets
 
-Please see [Conos tutorial](vignettes/walkthrough.md) for detailed usage. The overall runtime of the tutorial should be ~5 minutes.
+Please see the [Conos tutorial](vignettes/walkthrough.md) for detailed usage. The overall runtime of the tutorial should be ~5 minutes.
 
 Additional examples: [forcing better alignment](vignettes/adjust_alignment_strength.md), [integrating RNA-seq and ATAC-seq](http://pklab.med.harvard.edu/peterk/conos/atac_rna/example.html).
 
@@ -141,8 +141,8 @@ con$plotPanel()
 
 ### Integration with ScanPy
 
-For integration with ScanPy you need to save Conos files on disk from R session, 
-than upload these files from Python. See the following tutorials:
+For integration with ScanPy, you need to save Conos files on disk from your R session, and 
+then upload these files from Python. See the following tutorials:
 - [Save Conos for ScanPy](vignettes/scanpy_integration.md)
 - [Load ScanPy from Conos](vignettes/scanpy_integration.ipynb)
 
