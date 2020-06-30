@@ -1,4 +1,4 @@
-# conos
+# Conos
 
 - [Conos: Clustering on Network of Samples](#clustering-on-network-of-samples)
 - [Installation](#installation)
@@ -111,7 +111,7 @@ You can then run it using the following command:
 docker run -d -p 8787:8787 -e PASSWORD=pass --name conos -it conos
 ```
 
-## Usage example
+## Usage examples
 
 To see the class documentation, run `?Conos`.
 
@@ -146,7 +146,7 @@ then upload these files from Python. See the following tutorials:
 - [Save Conos for ScanPy](vignettes/scanpy_integration.md)
 - [Load ScanPy from Conos](vignettes/scanpy_integration.ipynb)
 
-### Running RNA velocity on a conos object
+### Running RNA velocity on a Conos object
 
 First of all, in order to obtain an RNA velocity plot from a `conos` object you have to use the [dropEst](https://github.com/hms-dbmi/dropEst) pipeline to align and annotate your single-cell RNA-seq measurements. You can see [this tutorial](http://pklab.med.harvard.edu/velocyto/notebooks/R/SCG71.nb.html) and [this shell script](http://pklab.med.harvard.edu/velocyto/mouseBM/preprocess.sh) to see how it can be done. In this example we specifically assume that when running dropEst you have used the **-V** option to get estimates of unspliced/spliced counts from the dropEst directly. Secondly, you need the [velocyto.R](http://velocyto.org/) package for the actual velocity estimation and visualisation.
 
@@ -154,13 +154,13 @@ After running dropEst you should have 2 files for each of the samples:
 - `sample.rds` (matrix of counts)
 - `sample.matrices.rds` (3 matrices of exons, introns and spanning reads)
 
-The `.matrices.rds` files are the velocity files. Load them into R in a list (same order as you give to `conos`). Load, preprocess and integrate with conos the count matrices (`.rds`) as you normally would. Before running the velocity, you must at least create an embedding and run the leiden clustering. Finally, you can estimate the velocity as follows:  
+The `.matrices.rds` files are the velocity files. Load them into R in a list (same order as you give to `conos`). Load, preprocess and integrate with Conos the count matrices (`.rds`) as you normally would. Before running the velocity, you must at least create an embedding and run the leiden clustering. Finally, you can estimate the velocity as follows:  
 ```r
-### Assuming con is your conos object and cms.list is the list of your velocity files ###
+### Assuming con is your Conos object and cms.list is the list of your velocity files ###
 
 library(velocyto.R)
 
-# Preprocess the velocity files to match the conos object
+# Preprocess the velocity files to match the Conos object
 vi <- velocityInfoConos(cms.list = cms.list, con = con, 
                         n.odgenes = 2e3, verbose = TRUE)
 
@@ -169,7 +169,7 @@ vel.info <- vi %$%
   gene.relative.velocity.estimates(emat, nmat, cell.dist = cell.dist, 
                                    deltaT = 1, kCells = 25, fit.quantile = 0.05, n.cores = 4)
 
-# Visualise the velocity on your conos embedding 
+# Visualise the velocity on your Conos embedding 
 # Takes a very long time! 
 # Assign to a variable to speed up subsequent recalculations
 cc.velo <- show.velocity.on.embedding.cor(vi$emb, vel.info, n = 200, scale = 'sqrt', 
