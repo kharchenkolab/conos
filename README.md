@@ -52,7 +52,7 @@ Then install [pagoda2](https://github.com/hms-dbmi/pagoda2) (or Seurat), then in
 devtools::install_github("hms-dbmi/conos")
 ```
 
-If you have problems with `sccore` package, run `devtools::install_github("hms-dbmi/sccore")` before installing Conos.
+If you have problems with `sccore` package, run `devtools::install_github("hms-dbmi/sccore")` before installing `conos`.
 
 #### System dependencies
 
@@ -112,7 +112,7 @@ If you want to build image by your own, download the [Dockerfile](https://github
 ```
 docker build -t conos .
 ```
-This will create a "conos" docker image on your system (be patient, as the build takes approximately 30-50 minutes or so).
+This will create a "conos" docker image on your system (please be patient, as the build takes approximately 30-50 minutes).
 You can then run it using the following command:
 ```
 docker run -d -p 8787:8787 -e PASSWORD=pass --name conos -it conos
@@ -124,13 +124,13 @@ To see the class documentation, run `?Conos`.
 
 ### Alignment of datasets
 
-Please see the [Conos tutorial](vignettes/walkthrough.md) for detailed usage. The overall runtime of the tutorial should be ~5 minutes.
+Please see the [Conos tutorial](vignettes/walkthrough.md) for detailed usage. The overall runtime of the tutorial should be approximately 5 minutes.
 
 Additional examples: [forcing better alignment](vignettes/adjust_alignment_strength.md), [integrating RNA-seq and ATAC-seq](http://pklab.med.harvard.edu/peterk/conos/atac_rna/example.html).
 
 Given a list of individual processed samples (`pl`), Conos processing can be as simple as this:
 ```r
-# construct conos object, where pl is a list of pagoda2 objects 
+# construct Conos object, where pl is a list of pagoda2 objects 
 con <- Conos$new(pl)
 
 # build graph
@@ -155,13 +155,13 @@ then upload these files from Python. See the following tutorials:
 
 ### Running RNA velocity on a Conos object
 
-First of all, in order to obtain an RNA velocity plot from a `conos` object you have to use the [dropEst](https://github.com/hms-dbmi/dropEst) pipeline to align and annotate your single-cell RNA-seq measurements. You can see [this tutorial](http://pklab.med.harvard.edu/velocyto/notebooks/R/SCG71.nb.html) and [this shell script](http://pklab.med.harvard.edu/velocyto/mouseBM/preprocess.sh) to see how it can be done. In this example we specifically assume that when running dropEst you have used the **-V** option to get estimates of unspliced/spliced counts from the dropEst directly. Secondly, you need the [velocyto.R](http://velocyto.org/) package for the actual velocity estimation and visualisation.
+First of all, in order to obtain an RNA velocity plot from a Conos object you have to use the [dropEst](https://github.com/hms-dbmi/dropEst) pipeline to align and annotate your single-cell RNA-seq measurements. You can see [this tutorial](http://pklab.med.harvard.edu/velocyto/notebooks/R/SCG71.nb.html) and [this shell script](http://pklab.med.harvard.edu/velocyto/mouseBM/preprocess.sh) to see how it can be done. In this example we specifically assume that when running dropEst you have used the **-V** option to get estimates of unspliced/spliced counts from the dropEst directly. Secondly, you need the [velocyto.R](http://velocyto.org/) package for the actual velocity estimation and visualisation.
 
 After running dropEst you should have 2 files for each of the samples: 
 - `sample.rds` (matrix of counts)
 - `sample.matrices.rds` (3 matrices of exons, introns and spanning reads)
 
-The `.matrices.rds` files are the velocity files. Load them into R in a list (same order as you give to `conos`). Load, preprocess and integrate with Conos the count matrices (`.rds`) as you normally would. Before running the velocity, you must at least create an embedding and run the leiden clustering. Finally, you can estimate the velocity as follows:  
+The `.matrices.rds` files are the velocity files. Load them into R in a list (same order as you give to Conos). Load, preprocess and integrate with Conos the count matrices (`.rds`) as you normally would. Before running the velocity, you must at least create an embedding and run the leiden clustering. Finally, you can estimate the velocity as follows:  
 ```r
 ### Assuming con is your Conos object and cms.list is the list of your velocity files ###
 
