@@ -19,16 +19,16 @@
 ## Conos: Clustering On Network Of Samples
 
 * **What is Conos?**
-Conos is a package to wire together large collections of single-cell RNA-seq datasets, which allows for both the identification of recurrent cell clusters and the propagation of information between datasets in multi-sample or atlas-scale collections. It focuses on uniform mapping of homologous cell types across heterogeneous sample collections. For instance, users could investigate a collection of dozens of peripheral blood samples from cancer patients combined with dozens of controls, which perhaps includes samples of a related tissue such as lymph nodes.
+Conos is a package to wire together large collections of single-cell RNA-seq datasets, which allows for both the identification of recurrent cell clusters and the propagation of information between datasets in multi-sample or atlas-scale collections. It focuses on the uniform mapping of homologous cell types across heterogeneous sample collections. For instance, users could investigate a collection of dozens of peripheral blood samples from cancer patients combined with dozens of controls, which perhaps includes samples of a related tissue such as lymph nodes.
 
 * **How does it work?**
 ![overview](http://pklab.med.harvard.edu/peterk/conos/Figure1_take3.pk.png)
-Conos applies one of many error-prone methods to align each pair of samples in a collection, establishing weighted inter-sample cell-to-cell links, creating a global joint graph. Cells of the same type will tend to map to each other across many such pairwise comparisons, forming cliques that can be recognized as clusters (graph communities). 
+Conos applies one of many error-prone methods to align each pair of samples in a collection, establishing weighted inter-sample cell-to-cell links. The resulting joint graph can then be analyzed to identify subpopulations across different samples. Cells of the same type will tend to map to each other across many such pairwise comparisons, forming cliques that can be recognized as clusters (graph communities). 
 
-To elaborate in more detail, Conos processing can be divided into three phases:
+  To elaborate in more detail, Conos processing can be divided into three phases:
     * **Phase 1: Filtering and normalization** Each individual dataset in the sample panel is filtered and normalized using standard packages for single-dataset processing: either `pagoda2` or `Seurat`. Specifically, Conos relies on these methods to perform cell filtering, library size normalization, identification of overdispersed genes and, in the case of pagoda2, variance normalization. (Conos is robust to variations in the normalization procedures, but it is recommended that all of the datasets be processed uniformly.)
     * **Phase 2: Identify multiple plausible inter-sample mappings** Conos performs pairwise comparisons of the datasets in the panel to establish an initial error-prone mapping between cells of different datasets. 
-    * **Phase 3: Joint graph construction** These inter-sample edges from Phase 2 are then combined with lower-weight intra-sample edges during the joint graph construction. The joint graph is then used for downstream analysis, including community detection and label propagation. For a comprehensive description of the algorithm, please refer to the [publication](https://doi.org/10.1038/s41592-019-0466-z).
+    * **Phase 3: Joint graph construction** These inter-sample edges from Phase 2 are then combined with lower-weight intra-sample edges during the joint graph construction. The joint graph is then used for downstream analysis, including community detection and label propagation. For a comprehensive description of the algorithm, please refer to our [publication](https://doi.org/10.1038/s41592-019-0466-z).
 
 * **What does it produce?**
 In essence, Conos will take a large, potentially heterogeneous panel of samples and will produce clustering grouping similar cell subpopulations together in a way that will be robust to inter-sample variation:  
