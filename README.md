@@ -52,6 +52,8 @@ Then install [pagoda2](https://github.com/hms-dbmi/pagoda2) (or Seurat), then in
 devtools::install_github("hms-dbmi/conos")
 ```
 
+If you have problems with `sccore` package, run `devtools::install_github("hms-dbmi/sccore")` before installing Conos.
+
 #### System dependencies
 
 The dependencies are inherited from [pagoda2](https://github.com/hms-dbmi/pagoda2):
