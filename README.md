@@ -7,9 +7,9 @@
       - [Ubuntu Dependencies](#ubuntu-dependencies)
       - [Red Hat-based distributions Dependencies](#red-hat-based-distributions-dependencies)
       - [OS X](#os-x)
-- [Installing Conos as Docker Container](#installing-conos-as-docker-container)
-  * [Ready-to-run docker image](#ready-to-run-docker-image)
-  * [Building docker image on the fly](#building-docker-image-on-the-fly)
+  * [Installing Conos as Docker Container](#installing-conos-as-docker-container)
+    + [Ready-to-run docker image](#ready-to-run-docker-image)
+    + [Building docker image on the fly](#building-docker-image-on-the-fly)
 - [Usage examples](#usage-example)
   * [Alignment of datasets](#alignment-of-datasets)
   * [Integration with ScanPy](#integration-with-scanpy)
@@ -83,13 +83,13 @@ brew install openssl curl-openssl
 
 **Note:** It is possible to install `pagoda2` and `conos` on OS X, however some users have reported issues with the OpenMP configuration. For instructions, see the [pagoda2](https://github.com/hms-dbmi/pagoda2#mac-dependencies) README.
 
-## Installing Conos as Docker Container
+### Installing Conos as Docker Container
 
 If your system configuration is making it difficult to install `conos` natively, an alternative way to get `conos` running is through a docker container.
 
 **Note:** on OS X, Docker Machine has Memory and CPU limits. To control it, please check instructions either for [CLI](https://stackoverflow.com/questions/32834082/how-to-increase-docker-machine-memory-mac/32834453#32834453) or for [Docker Desktop](https://docs.docker.com/docker-for-mac/#advanced).
 
-### Ready-to-run docker image
+#### Ready-to-run docker image
 
 The docker distribution has the latest version and also includes the [Pagoda2 package](https://github.com/hms-dbmi/pagoda2). To start a docker container, first [install docker](https://docs.docker.com/install/) on your platform and then start the `pagoda2` container with the following command in the shell:
 
@@ -104,7 +104,7 @@ The first time you run this command, it will download several large images so ma
 docker pull vpetukhov/conos:latest
 ```
 
-### Building docker image on the fly
+#### Building docker image on the fly
 
 If you want to build image by your own, download the [Dockerfile](https://github.com/hms-dbmi/conos/blob/master/dockers/Dockerfile) (available in this repo under `/dockers`) and run to following command to build it:
 ```
