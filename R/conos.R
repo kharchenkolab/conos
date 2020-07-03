@@ -1241,3 +1241,5 @@ estimteWeightEntropyPerCell <- function(con, factor.per.cell) {
 
   return(entropy.per.cell)
 }
+
+

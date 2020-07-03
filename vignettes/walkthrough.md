@@ -203,7 +203,7 @@ clusters in other sample (for example note cluster
 9).
 
 ``` r
-con$plotPanel(clustering="multilevel", use.local.clusters=T, title.size=6)
+con$plotPanel(clustering="multilevel", use.local.clusters=TRUE, title.size=6)
 ```
 
 ![](walkthrough_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
@@ -325,7 +325,7 @@ of the sample of origin of each
 cell.
 
 ``` r
-con$plotGraph(color.by='sample', mark.groups=F, alpha=0.1, show.legend=T)
+con$plotGraph(color.by='sample', mark.groups=FALSE, alpha=0.1, show.legend=TRUE)
 ```
 
 ![](walkthrough_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
@@ -467,7 +467,7 @@ subpopulations called by walktrap apparent.
 Now we can use this common embedding in `plotPanel` as well:
 
 ``` r
-con$plotPanel(clustering='walktrap', size=0.1, use.common.embedding=T)
+con$plotPanel(clustering='walktrap', size=0.1, use.common.embedding=TRUE)
 ```
 
 ![](walkthrough_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
@@ -572,7 +572,7 @@ name, second - cell type), and make a named factor out of
 it:
 
 ``` r
-cellannot <- read.table(file.path(find.package('conos'),'extdata','cellannot.txt'),header=F,sep='\t')
+cellannot <- read.table(file.path(find.package('conos'),'extdata','cellannot.txt'),header=FALSE,sep='\t')
 cellannot <- setNames(cellannot[,2], cellannot[,1])
 ```
 
@@ -614,7 +614,7 @@ Next let’s propagates the labels from the one annotated sample to the
 other samples.
 
 ``` r
-new.label.info <- con$propagateLabels(labels = cellannot, verbose=T)
+new.label.info <- con$propagateLabels(labels = cellannot, verbose=TRUE)
 ```
 
 This function returns probabilities, uncertainty scores and final labels
@@ -622,13 +622,13 @@ in the dataset of each cell belonging to each
 group:
 
 ``` r
-con$plotPanel(colors=new.label.info$uncertainty, show.legend=T, legend.title="Uncertainty", legend.pos=c(1, 0))
+con$plotPanel(colors=new.label.info$uncertainty, show.legend=TRUE, legend.title="Uncertainty", legend.pos=c(1, 0))
 ```
 
 ![](walkthrough_files/figure-gfm/unnamed-chunk-40-1.png)<!-- -->
 
 ``` r
-con$plotPanel(groups=new.label.info$labels, show.legend=F)
+con$plotPanel(groups=new.label.info$labels, show.legend=FALSE)
 ```
 
 ![](walkthrough_files/figure-gfm/unnamed-chunk-40-2.png)<!-- -->
@@ -689,7 +689,7 @@ at the cluster cell markers:
 
 ``` r
 new.annot <- new.label.info$labels
-de.info <- con$getDifferentialGenes(groups=new.annot, n.cores=4, append.auc=T)
+de.info <- con$getDifferentialGenes(groups=new.annot, n.cores=4, append.auc=TRUE)
 ```
 
     ## Estimating marker genes per sample
@@ -905,7 +905,7 @@ con$embedGraph()
     ## Estimating embeddings.
 
 ``` r
-con$plotGraph(color.by='sample', mark.groups=F, alpha=0.1, show.legend=T)
+con$plotGraph(color.by='sample', mark.groups=FALSE, alpha=0.1, show.legend=TRUE)
 ```
 
 ![](walkthrough_files/figure-gfm/unnamed-chunk-54-1.png)<!-- -->
