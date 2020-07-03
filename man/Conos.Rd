@@ -32,7 +32,6 @@ The class encompasses sample collections, providing methods for calculating and 
 \itemize{
 \item \href{#method-new}{\code{Conos$new()}}
 \item \href{#method-addSamples}{\code{Conos$addSamples()}}
-\item \href{#method-updatePairs}{\code{Conos$updatePairs()}}
 \item \href{#method-buildGraph}{\code{Conos$buildGraph()}}
 \item \href{#method-getDifferentialGenes}{\code{Conos$getDifferentialGenes()}}
 \item \href{#method-findCommunities}{\code{Conos$findCommunities()}}
@@ -84,27 +83,6 @@ initialize or add a set of samples to the conos panel. Note: this will simply ad
 \subsection{Returns}{
 invisible view of the full sample list
 }
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-updatePairs"></a>}}
-\if{latex}{\out{\hypertarget{method-updatePairs}{}}}
-\subsection{Method \code{updatePairs()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Conos$updatePairs(
-  space = "PCA",
-  data.type = "counts",
-  ncomps = 50,
-  n.odgenes = 1000,
-  var.scale = TRUE,
-  neighborhood.average = FALSE,
-  neighborhood.average.k = 10,
-  matching.mask = NULL,
-  exclude.samples = NULL,
-  score.component.variance = FALSE,
-  verbose = FALSE
-)}\if{html}{\out{</div>}}
-}
-
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-buildGraph"></a>}}

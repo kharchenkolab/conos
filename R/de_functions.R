@@ -89,62 +89,6 @@ is.error <- function (x) {
   inherits(x, c("try-error", "error"))
 }
 
-#' Obtain a correction vector for removing the constant effect between the same clusters of two different apps
-#' @param con.obj conos object
-#' @param groups a vector specifying clusters
-#' @param sample.groups the groups of the samples
-#' @param cooks.cutoff cooksCutoff distance for DESeq2
-#' @param independent.filtering independentFiltering for DESeq2
-#' @param n.cores number of cores
-#' @param cluster.sep.chr separator for cluster and sample name
-#' @param return.details logical, if TRUE return internal sturcuters
-#' @param de.init if specified reuses existing differential expression results
-#' @param exclude.celltypes names of cell types to exclude from the generation of the vecotr
-#' @param correction.method 'varianceweighted' or 'mean' specifies way to merge the fold changes from different cell types
-#' @export getCorrectionVector
-getCorrectionVector <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cutoff=FALSE, independent.filtering = FALSE,
-                                n.cores=1, cluster.sep.chr = '<!!>', return.details=FALSE,de.init=NULL,exclude.celltypes=c(),
-                                correction.method='varianceweighted',ref.level=NULL) {
-  validatePerCellTypeParams(con.obj, groups, sample.groups, ref.level, cluster.sep.chr)
-    ## Main function
-    if(is.null(de.init)) {
-        de.init <- getPerCellTypeDE(con.obj, groups=groups, sample.groups=sample.groups,
-                                    cooks.cutoff=cooks.cutoff, independent.filtering=independent.filtering,
-                                    n.cores=n.cores, cluster.sep.chr=cluster.sep.chr,return.details=FALSE,
-                                    ref.level = ref.level);
-    }
-    de.init <- de.init[!names(de.init) %in% exclude.celltypes]
-    allfcs <- lapply(de.init, function(x) {
-        if(!is.error(x)) {
-            fc <- x$log2FoldChange
-            names(fc) <- rownames(x)
-            fc
-        } else {
-            NULL
-        }
-    })
-    allfcs <- allfcs[!unlist(lapply(allfcs, is.null))]
-    genes <- Reduce(intersect, lapply(allfcs, names))
-    ## Matrix of fold changes
-    fc.mat <- do.call(rbind, lapply(allfcs, function(x) x[genes]))
-    if (correction.method == 'mean') {
-        correction <- apply(fc.mat, 2, mean, na.rm=TRUE)
-    } else if (correction.method == 'varianceweighted') {
-        mu <- apply(fc.mat, 2, mean, na.rm=TRUE)
-        var <- apply(fc.mat, 2, var,na.rm=TRUE)
-        weight <- 1 - pchisq(q=var,df=nrow(fc.mat)-1)
-        correction <- mu * weight
-    } else {
-        stop(paste0('unknown correction method: ', correction.method))
-    }
-    correction[is.na(correction)] <- 0
-    ## return
-    if (!return.details) {
-        return(correction)
-    }
-
-    return(list(correction.vector=correction, de.init=de.init))
-}
 
 #' Do differential expression for each cell type in a conos object between the specified subsets of apps
 #' @param con.obj conos object
