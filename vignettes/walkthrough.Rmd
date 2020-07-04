@@ -159,7 +159,7 @@ has an independent set of clusters that bears no relation to
 clusters in other samples. For example, notice the presence (and lack thereof) of cluster
 9.
 
-```{r, fig.height=6, fig.width=6}
+```{r, fig.height=10, fig.width=10}
 con$plotPanel(clustering="multilevel", use.local.clusters=TRUE, title.size=6)
 ```
 
@@ -227,7 +227,7 @@ We can now plot the clusters we obtained. Note that the number of clusters
 between different samples now correspond to the same cell type. Also not
 the presence of cluster 5 in BM samples only, but not in CB.
 
-```{r, fig.height=6, fig.width=6}
+```{r, fig.height=10, fig.width=10}
 con$plotPanel(font.size=4)
 ```
 
@@ -236,7 +236,7 @@ The convenience function `plotClusterBarplots` can be used to examine the compos
 clusters in terms of samples (top), sample entropy (middle), and cluster size
 (bottom):
 
-```{r, fig.height=8,fig.width=8}
+```{r, fig.height=10,fig.width=10}
 plotClusterBarplots(con, legend.height = 0.1)
 ```
 
@@ -244,7 +244,7 @@ plotClusterBarplots(con, legend.height = 0.1)
 Next we can check the expression pattern of a specific gene across all the individual
 embeddings. In this case, we investigate the expression pattern of [GZMK](https://www.genecards.org/cgi-bin/carddisp.pl?gene=GZMK):
 
-```{r, fig.height=6, fig.width=6}
+```{r, fig.height=10, fig.width=10}
 con$plotPanel(gene = 'GZMK')
 ```
 
@@ -259,7 +259,7 @@ main function `conos::embeddingPlot` and will pass all visualization parameters
 to this main function. So, to get full list of the possible parameters please refer to
 `?conos::embeddingPlot` and the examples below.
 
-```{r, fig.height=4, fig.width=4, message=FALSE, warning=FALSE}
+```{r, fig.height=8, fig.width=8, message=FALSE, warning=FALSE}
 con$plotGraph(alpha=0.1)
 ```
 
@@ -267,7 +267,7 @@ con$plotGraph(alpha=0.1)
 Observe that the graph captures the population structure irrespective
 of the sample of origin for each cell:
 
-```{r, fig.height=4, fig.width=6}
+```{r, fig.height=10, fig.width=10}
 con$plotGraph(color.by='sample', mark.groups=FALSE, alpha=0.1, show.legend=TRUE)
 ```
 
@@ -275,7 +275,7 @@ con$plotGraph(color.by='sample', mark.groups=FALSE, alpha=0.1, show.legend=TRUE)
 
 We can also visualize gene expression on this joint graph embedding, again using "GMZK" as an example:
 
-```{r, fig.height=4, fig.width=4}
+```{r, fig.height=8, fig.width=8}
 con$plotGraph(gene='GZMK', title='GZMK expression')
 ```
 
@@ -296,13 +296,13 @@ though these calculations take much longer). Here we’ll get a lot of smaller c
 
 Now let's visualize these new clusters:
 
-```{r, fig.width=6, fig.height=6}
+```{r, fig.width=10, fig.height=10}
 con$plotPanel(clustering='walktrap',font.size=4)
 ```
 
 And here is the new clustering, as viewed on a joint graph:
 
-```{r, fig.width=4, fig.height=4}
+```{r, fig.width=8, fig.height=8}
 con$plotGraph(clustering='walktrap')
 ```
 
@@ -330,7 +330,7 @@ sake of example:
 con$embedGraph(alpha=0.001, sgd_batched=1e8)  
 ```
 
-```{r, fig.width=4, fig.height=4}
+```{r, fig.width=10, fig.height=10}
 con$plotGraph(clustering='walktrap', size=0.1)
 ```
 
@@ -363,7 +363,7 @@ con$embedGraph(method="UMAP", min.dist=0.01, spread=15, n.cores=4, min.prob.lowe
 ```
 
 
-``{r, fig.width=4, fig.height=4}
+``{r, fig.width=8, fig.height=8}
 con$plotGraph(clustering='walktrap', size=0.1)
 ```
 
@@ -375,7 +375,7 @@ subpopulations called by walktrap apparent.
 
 Now we can use this common embedding in `plotPanel` as well:
 
-```{r fig.width=6, fig.height=6}
+```{r fig.width=10, fig.height=10}
 con$plotPanel(clustering='walktrap', size=0.1, use.common.embedding=TRUE)
 ```
 
@@ -393,7 +393,7 @@ fc <- greedyModularityCut(con$clusters$walktrap$result, 40)
 The cut determines a finer clustering (likely overclustering) of the
 dataset on its leafs:
 
-```{r, fig.height=4, fig.width=4}
+```{r, fig.height=8, fig.width=8}
 con$plotGraph(groups=fc$groups, size=0.1)
 ```
 
@@ -475,7 +475,7 @@ that the annotated cells are indeed in only one sample and that the
 other samples are unlabelled.
 
 
-```{r, fig.width=6, fig.height=6}
+```{r, fig.width=10, fig.height=10}
 con$plotPanel(groups = cellannot)
 ```
 
@@ -490,7 +490,7 @@ This function returns probabilities, uncertainty scores, and final labels
 in the dataset of each cell belonging to each
 group:
 
-```{r, fig.width=6, fig.height=6}
+```{r, fig.width=10, fig.height=10}
 con$plotPanel(colors=new.label.info$uncertainty, show.legend=TRUE, legend.title="Uncertainty", legend.pos=c(1, 0))
 con$plotPanel(groups=new.label.info$labels, show.legend=FALSE)
 ```
@@ -515,7 +515,7 @@ head(de.info$`B cells`)
 ```
 
 
-```{r, fig.width=8, fig.height=4}
+```{r, fig.width=8, fig.height=8}
 cowplot::plot_grid(con$plotGraph(groups=new.annot), con$plotGraph(gene="CD74"))
 ```
 
@@ -537,7 +537,7 @@ precision.
 de.info$monocytes %>% filter(AUC > 0.75) %>% arrange(-Precision) %>% head()
 ```
 
-```{r, fig.width=4, fig.height=4}
+```{r, fig.width=8, fig.height=8}
 con$plotGraph(gene="CD14")
 ```
 
@@ -545,7 +545,7 @@ con$plotGraph(gene="CD14")
 Or we can plot a heatmap of the top genes (top by AUC, by
 default)
 
-```{r fig.width=7,fig.height=7}
+```{r fig.width=10,fig.height=10}
 plotDEheatmap(con,as.factor(new.annot),de.info, n.genes.per.cluster = 5, column.metadata=list(samples=con$getDatasetPerCell()), row.label.font.size = 7)
 ```
 
@@ -555,7 +555,7 @@ Here w make a smaller heatmap, selecting a subset of cell types and showing
 only a hand-picked set of
 genes:
 
-```{r fig.width=7,fig.height=4}
+```{r fig.width=10,fig.height=10}
 gns <- c("GZMB","IL32","CD3E","LYZ","HLA-DRA","IGHD","GNLY","IGHM","GZMK")
 plotDEheatmap(con,new.annot,de.info[-c(3,10)], n.genes.per.cluster = 30, column.metadata=list(samples=con$getDatasetPerCell()), row.label.font.size = 7, labeled.gene.subset = gns)
 ```
@@ -643,7 +643,7 @@ con$buildGraph(k=15, k.self=5, alignment.strength=0.3, space='PCA', ncomps=30, n
 We can re-generate the embedding and visualize the sample distribution
 again:
 
-```{r, fig.height=4, fig.width=6, message=FALSE, warning=FALSE}
+```{r, fig.height=8, fig.width=8, message=FALSE, warning=FALSE}
 con$embedGraph()
 con$plotGraph(color.by='sample', mark.groups=FALSE, alpha=0.1, show.legend=TRUE)
 ```
@@ -651,7 +651,7 @@ con$plotGraph(color.by='sample', mark.groups=FALSE, alpha=0.1, show.legend=TRUE)
 
 We can also check the entropy, as described above:
 
-```{r, fig.height=8,fig.width=8}
+```{r, fig.height=10,fig.width=10}
 con$findCommunities()
 plotClusterBarplots(con, legend.height = 0.1)
 ```
