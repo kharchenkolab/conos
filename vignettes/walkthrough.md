@@ -493,41 +493,41 @@ con$embedGraph(method="UMAP", min.dist=0.01, spread=15, n.cores=4, min.prob.lowe
 ## Convert graph to adjacency list...
 ## Done
 ## Estimate nearest neighbors and commute times...
-## Estimating hitting distances: 14:34:34.
+## Estimating hitting distances: 14:44:55.
 ## Done.
-## Estimating commute distances: 14:34:37.
-## Hashing adjacency list: 14:34:37.
+## Estimating commute distances: 14:44:57.
+## Hashing adjacency list: 14:44:57.
 ## Done.
-## Estimating distances: 14:34:37.
+## Estimating distances: 14:44:58.
 ## Done
 ## Done.
-## All done!: 14:34:41.
+## All done!: 14:45:02.
 ## Done
 ## Estimate UMAP embedding...
 ```
 
 ```
-## 14:34:41 UMAP embedding parameters a = 0.02659 b = 0.7912
+## 14:45:02 UMAP embedding parameters a = 0.02659 b = 0.7912
 ```
 
 ```
-## 14:34:41 Read 12000 rows and found 1 numeric columns
+## 14:45:02 Read 12000 rows and found 1 numeric columns
 ```
 
 ```
-## 14:34:41 Commencing smooth kNN distance calibration using 4 threads
+## 14:45:02 Commencing smooth kNN distance calibration using 4 threads
 ```
 
 ```
-## 14:34:42 Initializing from normalized Laplacian + noise
+## 14:45:03 Initializing from normalized Laplacian + noise
 ```
 
 ```
-## 14:34:42 Commencing optimization for 1000 epochs, with 351244 positive edges using 4 threads
+## 14:45:03 Commencing optimization for 1000 epochs, with 351246 positive edges using 4 threads
 ```
 
 ```
-## 14:34:51 Optimization finished
+## 14:45:15 Optimization finished
 ```
 
 ```
@@ -535,7 +535,7 @@ con$embedGraph(method="UMAP", min.dist=0.01, spread=15, n.cores=4, min.prob.lowe
 ```
 
 
-``{r, fig.width=8, fig.height=8}
+``{r, fig.width=6, fig.height=6}
 con$plotGraph(clustering='walktrap', size=0.1)
 ```
 
@@ -722,37 +722,37 @@ head(new.label.info$label.distribution)
 ```
 
 ```
-##                                        T CD4-CD8-  progenitors      B cells
-## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.000000e+00 0.000000e+00 0.000000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 2.537075e-06 3.334537e-09 8.605454e-11
-## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.000000e+00 0.000000e+00 0.000000e+00
-## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 0.000000e+00 0.000000e+00 0.000000e+00
-## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.000000e+00 0.000000e+00 0.000000e+00
-## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.000000e+00 0.000000e+00 0.000000e+00
+##                                      T CD4-CD8-  progenitors      B cells
+## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.0000e+00 0.000000e+00 0.000000e+00
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 2.5373e-06 3.334797e-09 8.607117e-11
+## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.0000e+00 0.000000e+00 0.000000e+00
+## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 0.0000e+00 0.000000e+00 0.000000e+00
+## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.0000e+00 0.000000e+00 0.000000e+00
+## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.0000e+00 0.000000e+00 0.000000e+00
 ##                                                NK    T cyto    monocytes
 ## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.0000000000 1.0000000 0.000000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 0.0003790052 0.9996182 6.742244e-14
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 0.0003790038 0.9996182 6.742344e-14
 ## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.0000000000 1.0000000 0.000000e+00
 ## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 1.0000000000 0.0000000 0.000000e+00
 ## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.0000000000 1.0000000 0.000000e+00
 ## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.0000000000 1.0000000 0.000000e+00
 ##                                      monomyelocytes plasma cells  dying cells
 ## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1   0.000000e+00 0.000000e+00 0.000000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1   4.608393e-08 2.171115e-11 1.738191e-07
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1   4.608493e-08 2.171291e-11 1.738325e-07
 ## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1   0.000000e+00 0.000000e+00 0.000000e+00
 ## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1   0.000000e+00 0.000000e+00 0.000000e+00
 ## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1   0.000000e+00 0.000000e+00 0.000000e+00
 ## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1   0.000000e+00 0.000000e+00 0.000000e+00
-##                                         erythroid         HSC          pDC
-## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.000000e+00 0.00000e+00 0.000000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 5.069377e-10 1.12706e-10 1.092554e-12
-## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.000000e+00 0.00000e+00 0.000000e+00
-## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 0.000000e+00 0.00000e+00 0.000000e+00
-## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.000000e+00 0.00000e+00 0.000000e+00
-## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.000000e+00 0.00000e+00 0.000000e+00
+##                                         erythroid          HSC          pDC
+## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.000000e+00 0.000000e+00 0.000000e+00
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 5.069928e-10 1.127116e-10 1.092963e-12
+## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.000000e+00 0.000000e+00 0.000000e+00
+## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 0.000000e+00 0.000000e+00 0.000000e+00
+## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.000000e+00 0.000000e+00 0.000000e+00
+## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.000000e+00 0.000000e+00 0.000000e+00
 ##                                                DC
 ## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.000000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 1.864799e-14
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 1.865406e-14
 ## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.000000e+00
 ## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 0.000000e+00
 ## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.000000e+00
@@ -881,13 +881,13 @@ str( con$getClusterCountMatrices() , 1)
 
 ```
 ## List of 4
-##  $ MantonBM1_HiSeq_1: num [1:33694, 1:13] 0 0 0 1 0 0 0 0 57 6 ...
+##  $ MantonBM1_HiSeq_1: num [1:33694, 1:11] 0 0 0 1 0 0 0 0 41 5 ...
 ##   ..- attr(*, "dimnames")=List of 2
-##  $ MantonBM2_HiSeq_1: num [1:33694, 1:13] 0 0 0 0 0 0 0 0 100 6 ...
+##  $ MantonBM2_HiSeq_1: num [1:33694, 1:11] 0 0 0 0 0 0 0 0 63 4 ...
 ##   ..- attr(*, "dimnames")=List of 2
-##  $ MantonCB1_HiSeq_1: num [1:33694, 1:13] 0 0 0 1 0 0 0 0 101 7 ...
+##  $ MantonCB1_HiSeq_1: num [1:33694, 1:11] 0 0 0 0 0 0 0 0 70 5 ...
 ##   ..- attr(*, "dimnames")=List of 2
-##  $ MantonCB2_HiSeq_1: num [1:33694, 1:13] 0 0 0 0 0 0 0 0 168 22 ...
+##  $ MantonCB2_HiSeq_1: num [1:33694, 1:11] 0 0 0 0 0 0 0 0 152 19 ...
 ##   ..- attr(*, "dimnames")=List of 2
 ```
 
