@@ -24,7 +24,7 @@ In this tutorial, we will go over the analysis of a panel of samples
 using Conos. Conos objects can be used to identify clusters of
 corresponding cells across panels of samples from similar or dissimilar
 sources, with different degrees of cell type overlap. Here we will
-identify the clusers of corresponding cells across a panel of bone marrow (BM) and
+identify the clusters of corresponding cells across a panel of bone marrow (BM) and
 cord blood (CB) by generating a joint graph with the cells from all the
 samples. We will then use this graph to propagate labels from a single
 labelled sample to other samples, and finally perform differential
@@ -872,7 +872,7 @@ head(res[order(res$padj,decreasing = FALSE),])
 # Forcing Better Alignment
 
 As can be seen from the sample distribution plot, different samples (in
-particular, those reprsenting different tissues, i.e. BM or CB in our case) form separate
+particular, those representing different tissues, i.e. BM or CB in our case) form separate
 subclusters within the clusters of major cell types. Conos allows users to
 force better alignment through i) adjustment of the `alignment.strength
 parameter`, and ii) through rebalancing of edge weights based on a

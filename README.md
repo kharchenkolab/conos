@@ -123,7 +123,7 @@ show.velocity.on.embedding.cor(vi$emb, vel.info, cc = cc.velo$cc, n = 200, scale
 
 ## Installation
 
-Native installations have been tested in Linux. Normal installation should take under 10 minutes.
+Native installations have been tested in Linux and Mac OS. Normally, installations should take under 10 minutes.
 
 ### Native installation
 
