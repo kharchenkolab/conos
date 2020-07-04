@@ -570,6 +570,9 @@ aggregateDEMarkersAcrossDatasets <- function(marker.dfs, z.threshold, upregulate
 }
 
 getDifferentialGenesP2 <- function(p2.samples, groups, z.threshold=3.0, upregulated.only=F, verbose=T, n.cores=1) {
+
+  lapply.func <- if (verbose) function(...) pbapply::pblapply(..., cl=n.cores) else function(...) papply(..., n.cores=n.cores)
+  
   groups %<>% as.character() %>% setNames(names(groups))
 
   if (verbose) cat("Estimating marker genes per sample\n")
