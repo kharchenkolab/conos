@@ -1,24 +1,24 @@
 Conos Walkthrough
 ================
 
-- [Loading the data](#loading-the-data)
+- [Loading the Data](#loading-the-data)
   * [Pre-processing with Pagoda2](#pre-processing-with-pagoda2)
   * [Pre-processing with Seurat](#pre-processing-with-seurat)
-- [Integrating datasets with Conos](#integrating-datasets-with-conos)
+- [Integrating Datasets with Conos](#integrating-datasets-with-conos)
   * [Visualization](#visualization)
   * [Changing embedding parameters](#changing-embedding-parameters)
     + [largeVis](#largevis)
     + [UMAP](#umap)
-- [Exploring hierarchical community structure](#exploring-hierarchical-community-structure)
+- [Exploring Hierarchical Community Structure](#exploring-hierarchical-community-structure)
   * [Using code](#using-code)
   * [Using Shiny Application](#using-shiny-application)
-- [Label propagation](#label-propagation)
+- [Label Propagation](#label-propagation)
   * [General workflow](#general-workflow)
-- [Differential expression](#differential-expression)
+- [Differential Expression](#differential-expression)
   * [Cluster markers](#cluster-markers)
-  * [DE Between Sample Groups](#de-between-sample-groups)
+  * [Differential expression between sample groups](#de-between-sample-groups)
     + [Simple run](#simple-run)
-- [Forcing better alignment](#forcing-better-alignment)
+- [Forcing Better Alignment](#forcing-better-alignment)
 
 In this tutorial, we will go over the analysis of a panel of samples
 using Conos. Conos objects can be used to identify clusters of
@@ -167,7 +167,7 @@ appropriate, one can regress out certain signatures using [standard
 techniques](https://satijalab.org/seurat/v3.0/cell_cycle_vignette.html#regress-out-cell-cycle-scores-during-data-scaling). Please 
 see the Seurat documentation for more [details](https://satijalab.org/seurat/).
 
-# Integrating datasets with Conos
+# Integrating Datasets with Conos
 
 We will now construct a Conos object for this panel of samples. At this
 point we haven’t calculated anything: we have just generated an object
@@ -347,7 +347,9 @@ con$findCommunities(method = igraph::walktrap.community, steps=7)
 ```
 
 **Note:** We recommend using a higher number of steps (e.g. 8-10,
-though these calculations take much longer). Here we’ll get a lot of smaller clusters. **Note:** Different clustering results are kept as a simple list under con$clusters.
+though these calculations take much longer). Here we’ll get a lot of smaller clusters. 
+
+**Note:** Different clustering results are kept as a simple list under `con$clusters`.
 
 Now let's visualize these new clusters:
 
@@ -469,7 +471,7 @@ con$plotPanel(clustering='walktrap', size=0.1, use.common.embedding=TRUE)
 
 ![](walkthrough_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
 
-# Exploring hierarchical community structure
+# Exploring Hierarchical Community Structure
 
 ## Using code
 
@@ -772,7 +774,7 @@ plotDEheatmap(con,new.annot,de.info[-c(3,10)], n.genes.per.cluster = 30, column.
 
 ![](walkthrough_files/figure-gfm/unnamed-chunk-47-1.png)<!-- -->
 
-## Differential Expression Between Sample Groups
+## Differential expression between sample groups
 
 Next, given a joint clustering of cells that captures the cell relationships
 between samples, we can want to ask what is different between the cells
