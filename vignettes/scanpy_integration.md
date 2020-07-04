@@ -1,10 +1,5 @@
----
-title: "Convert Conos object to ScanPy"
-output:
-  rmarkdown::github_document:
-    toc: true
----
-
+Convert Conos Object to ScanPy
+==============================
 
 First load the Conos library and the corresponding data:
 

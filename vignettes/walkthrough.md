@@ -1,10 +1,5 @@
----
-title: "Conos Walkthrough"
-output:
-  github_document:
-    toc: true
-    toc_depth: 2
----
+Conos Walkthrough
+=================
 
 - [Loading the Data](#loading-the-data)
   * [Pre-processing with Pagoda2](#pre-processing-with-pagoda2)

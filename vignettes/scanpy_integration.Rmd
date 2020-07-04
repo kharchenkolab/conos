@@ -1,5 +1,5 @@
 ---
-title: "Convert Conos object to ScanPy"
+title: "Convert Conos Object to ScanPy"
 output:
   rmarkdown::github_document:
     toc: true
