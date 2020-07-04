@@ -1,7 +1,7 @@
 Adjustment of Alignment Strength with Conos
 ================
 
-This tutorial uses the same data as the main Walkthrough to demonstrate
+This tutorial uses the same data as the main [Walkthrough](https://github.com/hms-dbmi/conos/blob/master/vignettes/walkthrough.md) to demonstrate
 different options for forcing alignment. It can be especially useful if
 the samples are grouped by some external condition (e.g. sequencing
 protocol or disease vs control).

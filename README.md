@@ -1,8 +1,8 @@
 # Conos
 
-- [Conos: Clustering on Network of Samples](#conos:-clustering-on-network-of-samples)
+- [Conos: Clustering on Network of Samples](#conos-clustering-on-network-of-samples)
 - [Tutorials](#tutorials)
-  * [Usage: Alignment of Datasets](#usage:-alignment-of-datasets)
+  * [Usage: Alignment of Datasets](#usage-alignment-of-datasets)
   * [Integration with ScanPy](#integration-with-scanpy)
   * [Running RNA velocity on a conos object](#running-rna-velocity-on-a-conos-object)
 - [Installation](#installation)
