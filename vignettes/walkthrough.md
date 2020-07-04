@@ -42,15 +42,17 @@ library(dplyr)
 Next we will load a previously prepared panel of samples. This panel was
 made up of 16 cord blood and bone marrow samples, but here we look at a
 smaller subset of just 4 samples. All samples have been subset to
-exactly 3000 cells. Note: when starting with your own panel, it’s
-recommended to filter out low-count / poor /dying cells.
+exactly 3000 cells. 
+
+**Note:** when starting with your own panel, it’s
+recommended to filter out low-count/poor-quality/dying cells.
 
 ``` r
 panel <- readRDS(file.path(find.package('conos'),'extdata','panel.rds'))
 ```
 
 Let’s take a look at the panel. The panel is a named list of sparse
-matrices (type dgCMatrix).
+matrices (type `"dgCMatrix"`).
 
 ``` r
 str(panel,1)
@@ -100,7 +102,7 @@ processing. As the datasets will be compared to each other we will turn
 off automated dropping of low-expressed genes (`min.cells.per.gene=0`),
 and lower the numbers of local PCs estimated for faster processing.
 (note: you could run the outer loop in parallel using mclapply, however
-if ran within RStudio this sometimes causes multi-threading problems;
+if ran within RStudio this sometimes causes multithreading problems;
 also, multiprocessing must be disabled in order to obtain exactly the
 same individual sample embeddings from one run to another: this can be
 done by using `set.seed(1)` and specifying `n.cores=1` in the command
@@ -244,7 +246,7 @@ with different set of parameters (e.g. more components, different number
 of starting over-dispersed genes), clear the cache first by doing
 `con$pairs$PCA <- NULL`.
 
-In the `$buildGraph()` invokation above, we specified
+In the `$buildGraph()` invocation above, we specified
 `score.component.variance=TRUE` which estimates amount of variance
 explained by successive PCs (by default this option is off to save
 time). We can visualize the results using:
@@ -256,10 +258,10 @@ plotComponentVariance(con, space='PCA')
 ![](walkthrough_files/figure-gfm/unnamed-chunk-13-1.png)<!-- --> When
 using ‘angular’ distance measure (default), it is NOT recommended to
 reduce the number of components to a bare minimum indicated by the
-“elbow” inflection point - include 10-20 more (typcally 30 components
+“elbow” inflection point - include 10-20 more (typically 30 components
 work well). For ‘L2’ distance, using fewer components (i.e. at ‘elbow’
 value) is sometimes better. (note: remember that if you want to
-recalcualte projections, clear the cache for that space, i.e.
+recalculate projections, clear the cache for that space, i.e.
 `con$pairs$PCA <- NULL`).
 
 We next use the graph we identified to get global clusters. Here we use
@@ -304,7 +306,7 @@ con$plotPanel(gene = 'GZMK')
 
 Next we embed and visualize the complete joint graph.
 
-Note: embedding estimation will run the first time around. Please see
+**Note:** embedding estimation will run the first time around. Please see
 `$embedGraph()` function for additional embedding options.
 
 Note 2: both functions `$plotGraph` and `$plotPanel` are based on the
@@ -346,10 +348,8 @@ community detection method on the same joint graph:
 con$findCommunities(method = igraph::walktrap.community, steps=7)
 ```
 
-Note: it is recommended to use higher number of steps (e.g. 8-10,
+**Note:** it is recommended to use higher number of steps (e.g. 8-10,
 however these calculations take much longer). Here we’ll get a lot of
-smaller clusters. Note: different clustering results are kept as a
-simple list under `con$clusters`.
 
 Visualize new clusters:
 
