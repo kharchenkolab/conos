@@ -493,24 +493,27 @@ con$embedGraph(method="UMAP", min.dist=0.01, spread=15, n.cores=4, min.prob.lowe
 ## Convert graph to adjacency list...
 ## Done
 ## Estimate nearest neighbors and commute times...
-## Estimating hitting distances: 15:23:09.
+## Estimating hitting distances: 15:42:39.
 ## Done.
-## Estimating commute distances: 15:23:12.
-## Hashing adjacency list: 15:23:12.
+## Estimating commute distances: 15:42:41.
+## Hashing adjacency list: 15:42:41.
 ## Done.
-## Estimating distances: 15:23:12.
+## Estimating distances: 15:42:42.
 ## Done
 ## Done.
-## All done!: 15:23:16.
+## All done!: 15:42:46.
 ## Done
 ## Estimate UMAP embedding...
 ## Done
 ```
 
 
-``{r, fig.width=6, fig.height=6}
+
+```r
 con$plotGraph(clustering='walktrap', size=0.1)
 ```
+
+![plot of chunk unnamed-chunk-27](figure/unnamed-chunk-27-1.png)
 
 
 In the example above, the UMAP layout distinguishes many of the very small
@@ -525,7 +528,7 @@ Now we can use this common embedding in `plotPanel` as well:
 con$plotPanel(clustering='walktrap', size=0.1, use.common.embedding=TRUE)
 ```
 
-![plot of chunk unnamed-chunk-27](figure/unnamed-chunk-27-1.png)
+![plot of chunk unnamed-chunk-28](figure/unnamed-chunk-28-1.png)
 
 
 # Exploring Hierarchical Community Structure
@@ -547,7 +550,7 @@ dataset on its leafs:
 con$plotGraph(groups=fc$groups, size=0.1)
 ```
 
-![plot of chunk unnamed-chunk-29](figure/unnamed-chunk-29-1.png)
+![plot of chunk unnamed-chunk-30](figure/unnamed-chunk-30-1.png)
 
 
 Let’s look at the hierarchical structure of these
@@ -560,7 +563,7 @@ dend <- as.dendrogram(fc$hc)
 plot(dend)
 ```
 
-![plot of chunk unnamed-chunk-30](figure/unnamed-chunk-30-1.png)
+![plot of chunk unnamed-chunk-31](figure/unnamed-chunk-31-1.png)
 
 
 
@@ -590,7 +593,7 @@ dend <- dendSetWidthByBreadth(dend, samf, fc$leafContent, min.width=1, max.width
 plot(dend)
 ```
 
-![plot of chunk unnamed-chunk-32](figure/unnamed-chunk-32-1.png)
+![plot of chunk unnamed-chunk-33](figure/unnamed-chunk-33-1.png)
 
 
 Similarly, we can find a factor that labels the cells by the respective tissue from which they originate (in this case BM or CB). To define a factor for this simple
@@ -616,7 +619,7 @@ dend <- dendSetColorByMixture(dend, tissue.factor, fc$leafContent)
 plot(dend)
 ```
 
-![plot of chunk unnamed-chunk-34](figure/unnamed-chunk-34-1.png)
+![plot of chunk unnamed-chunk-35](figure/unnamed-chunk-35-1.png)
 
 ## Using Shiny Application
 
@@ -655,7 +658,7 @@ other samples are unlabelled.
 con$plotPanel(groups = cellannot)
 ```
 
-![plot of chunk unnamed-chunk-37](figure/unnamed-chunk-37-1.png)
+![plot of chunk unnamed-chunk-38](figure/unnamed-chunk-38-1.png)
 
 Next let’s propagate the labels from the one annotated sample to the
 other samples.
@@ -674,13 +677,13 @@ group:
 con$plotPanel(colors=new.label.info$uncertainty, show.legend=TRUE, legend.title="Uncertainty", legend.pos=c(1, 0))
 ```
 
-![plot of chunk unnamed-chunk-39](figure/unnamed-chunk-39-1.png)
+![plot of chunk unnamed-chunk-40](figure/unnamed-chunk-40-1.png)
 
 ```r
 con$plotPanel(groups=new.label.info$labels, show.legend=FALSE)
 ```
 
-![plot of chunk unnamed-chunk-39](figure/unnamed-chunk-39-2.png)
+![plot of chunk unnamed-chunk-40](figure/unnamed-chunk-40-2.png)
 
 
 
@@ -690,41 +693,41 @@ head(new.label.info$label.distribution)
 ```
 
 ```
-##                                        T CD4-CD8-  progenitors      B cells
-## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.000000e+00 0.000000e+00 0.000000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 2.537248e-06 3.334717e-09 8.607192e-11
-## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.000000e+00 0.000000e+00 0.000000e+00
-## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 0.000000e+00 0.000000e+00 0.000000e+00
-## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.000000e+00 0.000000e+00 0.000000e+00
-## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.000000e+00 0.000000e+00 0.000000e+00
-##                                                NK    T cyto    monocytes
-## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.0000000000 1.0000000 0.000000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 0.0003790058 0.9996182 6.742228e-14
-## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.0000000000 1.0000000 0.000000e+00
-## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 1.0000000000 0.0000000 0.000000e+00
-## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.0000000000 1.0000000 0.000000e+00
-## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.0000000000 1.0000000 0.000000e+00
-##                                      monomyelocytes plasma cells dying cells
-## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1   0.000000e+00 0.000000e+00 0.00000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1   4.608536e-08 2.171275e-11 1.73832e-07
-## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1   0.000000e+00 0.000000e+00 0.00000e+00
-## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1   0.000000e+00 0.000000e+00 0.00000e+00
-## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1   0.000000e+00 0.000000e+00 0.00000e+00
-## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1   0.000000e+00 0.000000e+00 0.00000e+00
-##                                         erythroid          HSC         pDC
+##                                        T CD4-CD8-  progenitors     B cells
 ## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.000000e+00 0.000000e+00 0.00000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 5.069752e-10 1.127137e-10 1.09298e-12
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 2.537186e-06 3.334591e-09 8.60712e-11
 ## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.000000e+00 0.000000e+00 0.00000e+00
 ## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 0.000000e+00 0.000000e+00 0.00000e+00
 ## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.000000e+00 0.000000e+00 0.00000e+00
 ## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.000000e+00 0.000000e+00 0.00000e+00
-##                                                DC
-## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.000000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 1.865508e-14
-## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.000000e+00
-## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 0.000000e+00
-## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.000000e+00
-## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.000000e+00
+##                                                NK    T cyto    monocytes
+## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.0000000000 1.0000000 0.000000e+00
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 0.0003790038 0.9996182 6.741998e-14
+## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.0000000000 1.0000000 0.000000e+00
+## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 1.0000000000 0.0000000 0.000000e+00
+## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.0000000000 1.0000000 0.000000e+00
+## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.0000000000 1.0000000 0.000000e+00
+##                                      monomyelocytes plasma cells  dying cells
+## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1   0.000000e+00 0.000000e+00 0.000000e+00
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1   4.608346e-08 2.171136e-11 1.738209e-07
+## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1   0.000000e+00 0.000000e+00 0.000000e+00
+## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1   0.000000e+00 0.000000e+00 0.000000e+00
+## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1   0.000000e+00 0.000000e+00 0.000000e+00
+## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1   0.000000e+00 0.000000e+00 0.000000e+00
+##                                        erythroid          HSC          pDC
+## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.00000e+00 0.000000e+00 0.000000e+00
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 5.06951e-10 1.127095e-10 1.092948e-12
+## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.00000e+00 0.000000e+00 0.000000e+00
+## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 0.00000e+00 0.000000e+00 0.000000e+00
+## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.00000e+00 0.000000e+00 0.000000e+00
+## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.00000e+00 0.000000e+00 0.000000e+00
+##                                               DC
+## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.00000e+00
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 1.86541e-14
+## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.00000e+00
+## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 0.00000e+00
+## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.00000e+00
+## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.00000e+00
 ```
 
 # Differential Expression
@@ -742,10 +745,11 @@ de.info <- con$getDifferentialGenes(groups=new.annot, n.cores=4, append.auc=TRUE
 
 ```
 ## Estimating marker genes per sample
+## Aggregating marker genes
 ```
 
 ```
-## Error in lapply.func(p2.samples, function(p2) {: could not find function "lapply.func"
+## Error in plapply(., aggregateDEMarkersAcrossDatasets, z.threshold = z.threshold, : could not find function "plapply"
 ```
 
 ```r
@@ -762,7 +766,7 @@ head(de.info$`B cells`)
 cowplot::plot_grid(con$plotGraph(groups=new.annot), con$plotGraph(gene="CD74"))
 ```
 
-![plot of chunk unnamed-chunk-42](figure/unnamed-chunk-42-1.png)
+![plot of chunk unnamed-chunk-43](figure/unnamed-chunk-43-1.png)
 
 
 
@@ -792,7 +796,7 @@ de.info$monocytes %>% filter(AUC > 0.75) %>% arrange(-Precision) %>% head()
 con$plotGraph(gene="CD14")
 ```
 
-![plot of chunk unnamed-chunk-44](figure/unnamed-chunk-44-1.png)
+![plot of chunk unnamed-chunk-45](figure/unnamed-chunk-45-1.png)
 
 
 Or we can plot a heatmap of the top genes (top by AUC, by
@@ -849,13 +853,13 @@ str( con$getClusterCountMatrices() , 1)
 
 ```
 ## List of 4
-##  $ MantonBM1_HiSeq_1: num [1:33694, 1:11] 0 0 0 1 0 0 0 0 44 6 ...
+##  $ MantonBM1_HiSeq_1: num [1:33694, 1:12] 0 0 0 1 0 0 0 0 40 6 ...
 ##   ..- attr(*, "dimnames")=List of 2
-##  $ MantonBM2_HiSeq_1: num [1:33694, 1:11] 0 0 0 0 0 0 0 0 65 4 ...
+##  $ MantonBM2_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 58 3 ...
 ##   ..- attr(*, "dimnames")=List of 2
-##  $ MantonCB1_HiSeq_1: num [1:33694, 1:11] 0 0 0 0 0 0 0 0 81 7 ...
+##  $ MantonCB1_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 63 5 ...
 ##   ..- attr(*, "dimnames")=List of 2
-##  $ MantonCB2_HiSeq_1: num [1:33694, 1:11] 0 0 0 0 0 0 0 0 149 17 ...
+##  $ MantonCB2_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 142 17 ...
 ##   ..- attr(*, "dimnames")=List of 2
 ```
 
@@ -976,7 +980,7 @@ con$embedGraph()
 con$plotGraph(color.by='sample', mark.groups=FALSE, alpha=0.1, show.legend=TRUE)
 ```
 
-![plot of chunk unnamed-chunk-53](figure/unnamed-chunk-53-1.png)
+![plot of chunk unnamed-chunk-54](figure/unnamed-chunk-54-1.png)
 
 
 We can also check the entropy, as described above:
@@ -987,5 +991,5 @@ con$findCommunities()
 plotClusterBarplots(con, legend.height = 0.1)
 ```
 
-![plot of chunk unnamed-chunk-54](figure/unnamed-chunk-54-1.png)
+![plot of chunk unnamed-chunk-55](figure/unnamed-chunk-55-1.png)
 

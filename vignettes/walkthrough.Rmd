@@ -363,7 +363,7 @@ con$embedGraph(method="UMAP", min.dist=0.01, spread=15, n.cores=4, min.prob.lowe
 ```
 
 
-``{r, fig.width=6, fig.height=6}
+```{r, fig.width=6, fig.height=6}
 con$plotGraph(clustering='walktrap', size=0.1)
 ```
 
