@@ -37,7 +37,7 @@ expression between the BM and CB samples.
 
 First, let’s load Conos library:
 
-``` r
+```{r, message=FALSE, warning=FALSE}
 library(conos)
 library(dplyr)
 ```
@@ -50,14 +50,14 @@ made up of 16 cord blood and bone marrow samples, but for convenience, we will h
 **Note:** When starting with your own panel, we
 recommend filtering out low-count/poor-quality/dying cells, as is standard for quality control.
 
-``` r
+```{r}
 panel <- readRDS(file.path(find.package('conos'),'extdata','panel.rds'))
 ```
 
 Let’s take a look at the panel. The panel is a named list of sparse
 matrices (type `"dgCMatrix"`).
 
-``` r
+```{r}
 str(panel, 1)
 ```
 
@@ -67,14 +67,14 @@ should be named identically. In this case, the cells have been prefixed
 by sample id, so there will not be any collisions. However, in most cases
 you will have to prefix the cells before continuing.
 
-``` r
+```{r}
 head(colnames(panel[[1]]))
 ```
 
 
 To quickly check that the cell names are unique, we can run:
 
-``` r
+```{r}
 any(duplicated(unlist(lapply(panel,colnames))))
 ```
 
@@ -99,7 +99,7 @@ same individual sample embeddings from one run to another: this can be
 done by using `set.seed(1)` and specifying `n.cores=1` in the command
 below.)
 
-``` r
+```{r}
 library(pagoda2)
 panel.preprocessed <- lapply(panel, basicP2proc, n.cores=4, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
 ```
@@ -108,7 +108,7 @@ Let’s look at the output of our processing: we now have a named list of
 pagoda2 objects, which is the starting point for the analysis with
 Conos.
 
-``` r
+```{r}
 str(panel.preprocessed, 1)
 ```
 
@@ -119,7 +119,7 @@ using an analogous `basicSeuratProc` helper function. If
 you already have a set of Seurat objects (one per dataset), you can just
 skip this step and feed them directly to `Conos$new()` as shown below.
 
-``` r
+```{r, eval=FALSE}
 library(Seurat)
 panel.preprocessed <- lapply(panel, basicSeuratProc)
 ```
@@ -141,7 +141,7 @@ that contains the samples. At this step, we also set the
 parallel processing, feel free to use as many physical cores as you have available
 here.
 
-``` r
+```{r}
 con <- Conos$new(panel.preprocessed, n.cores=4)
 ```
 
@@ -149,7 +149,7 @@ Our original pagoda2 (or Seurat) objects are now saved in the Conos
 object (if you are short of memory you can go ahead and delete the
 originals).
 
-``` r
+```{r}
 str(con$samples,1)
 ```
 
@@ -159,7 +159,7 @@ has an independent set of clusters that bears no relation to
 clusters in other samples. For example, notice the presence (and lack thereof) of cluster
 9.
 
-``` r
+```{r, fig.height=6, fig.width=6}
 con$plotPanel(clustering="multilevel", use.local.clusters=TRUE, title.size=6)
 ```
 
@@ -183,7 +183,7 @@ are included in the graph:
 The other parameters passed to the `buildGraph()` function below are all
 default values, but are included for clarity:
 
-``` r
+```{r}
 con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
 ```
 
@@ -199,7 +199,7 @@ In the `$buildGraph()` invocation above, we specified
 explained by successive PCs (by default this option is off to save
 time). We can visualize the results using:
 
-``` r
+```{r}
 plotComponentVariance(con, space='PCA')
 ```
 
@@ -217,7 +217,7 @@ Leiden community detection method to obtain clusters. Increasing the
 value of the resolution parameter will result in more fine-grained
 clusters, while decreasing it will return coarser clustering.
 
-``` r
+```{r}
 con$findCommunities(method=leiden.community, resolution=1)
 ```
 
@@ -227,7 +227,7 @@ We can now plot the clusters we obtained. Note that the number of clusters
 between different samples now correspond to the same cell type. Also not
 the presence of cluster 5 in BM samples only, but not in CB.
 
-``` r
+```{r, fig.height=6, fig.width=6}
 con$plotPanel(font.size=4)
 ```
 
@@ -236,7 +236,7 @@ The convenience function `plotClusterBarplots` can be used to examine the compos
 clusters in terms of samples (top), sample entropy (middle), and cluster size
 (bottom):
 
-``` r
+```{r, fig.height=8,fig.width=8}
 plotClusterBarplots(con, legend.height = 0.1)
 ```
 
@@ -244,7 +244,7 @@ plotClusterBarplots(con, legend.height = 0.1)
 Next we can check the expression pattern of a specific gene across all the individual
 embeddings. In this case, we investigate the expression pattern of [GZMK](https://www.genecards.org/cgi-bin/carddisp.pl?gene=GZMK):
 
-``` r
+```{r, fig.height=6, fig.width=6}
 con$plotPanel(gene = 'GZMK')
 ```
 
@@ -259,7 +259,7 @@ main function `conos::embeddingPlot` and will pass all visualization parameters
 to this main function. So, to get full list of the possible parameters please refer to
 `?conos::embeddingPlot` and the examples below.
 
-``` r
+```{r, fig.height=4, fig.width=4, message=FALSE, warning=FALSE}
 con$plotGraph(alpha=0.1)
 ```
 
@@ -267,7 +267,7 @@ con$plotGraph(alpha=0.1)
 Observe that the graph captures the population structure irrespective
 of the sample of origin for each cell:
 
-``` r
+```{r, fig.height=4, fig.width=6}
 con$plotGraph(color.by='sample', mark.groups=FALSE, alpha=0.1, show.legend=TRUE)
 ```
 
@@ -275,7 +275,7 @@ con$plotGraph(color.by='sample', mark.groups=FALSE, alpha=0.1, show.legend=TRUE)
 
 We can also visualize gene expression on this joint graph embedding, again using "GMZK" as an example:
 
-``` r
+```{r, fig.height=4, fig.width=4}
 con$plotGraph(gene='GZMK', title='GZMK expression')
 ```
 
@@ -285,7 +285,7 @@ Other community detection methods can provide a more sensitive and
 hierarchical view of the subpopulation structure. Here we run the [igraph walktrap
 community detection method](https://www.rdocumentation.org/packages/igraph/versions/0.5.1/topics/walktrap.community) on the same joint graph:
 
-``` r
+```{r}
 con$findCommunities(method = igraph::walktrap.community, steps=7)
 ```
 
@@ -296,13 +296,13 @@ though these calculations take much longer). Here we’ll get a lot of smaller c
 
 Now let's visualize these new clusters:
 
-``` r
+```{r, fig.width=6, fig.height=6}
 con$plotPanel(clustering='walktrap',font.size=4)
 ```
 
 And here is the new clustering, as viewed on a joint graph:
 
-``` r
+```{r, fig.width=4, fig.height=4}
 con$plotGraph(clustering='walktrap')
 ```
 
@@ -326,12 +326,11 @@ increasing `sgd_batches` often helps to avoid cluster intersections and the
 spreading out of clusters. Here we take `alpha` to a very low value, for the
 sake of example:
 
-``` r
+```{r, message=FALSE, warning=FALSE}
 con$embedGraph(alpha=0.001, sgd_batched=1e8)  
 ```
 
-
-``` r
+```{r, fig.width=4, fig.height=4}
 con$plotGraph(clustering='walktrap', size=0.1)
 ```
 
@@ -359,12 +358,12 @@ and accuracy:
 
 > - **min.prob.lower:** minimal probability of hitting a neighbor, after which the random walk stops. Default: 1e-7.
 
-``` r
+```{r}
 con$embedGraph(method="UMAP", min.dist=0.01, spread=15, n.cores=4, min.prob.lower=1e-3)
 ```
 
 
-``` r
+``{r, fig.width=4, fig.height=4}
 con$plotGraph(clustering='walktrap', size=0.1)
 ```
 
@@ -376,7 +375,7 @@ subpopulations called by walktrap apparent.
 
 Now we can use this common embedding in `plotPanel` as well:
 
-``` r
+```{r fig.width=6, fig.height=6}
 con$plotPanel(clustering='walktrap', size=0.1, use.common.embedding=TRUE)
 ```
 
@@ -387,14 +386,14 @@ con$plotPanel(clustering='walktrap', size=0.1, use.common.embedding=TRUE)
 
 Walktrap clustering generates a hierarchical community structure. Let's being by taking a cut of the top dendrogram and visualizing it. Here we’ll take the 40 top clusters.
 
-``` r
+```{r}
 fc <- greedyModularityCut(con$clusters$walktrap$result, 40)
 ```
 
 The cut determines a finer clustering (likely overclustering) of the
 dataset on its leafs:
 
-``` r
+```{r, fig.height=4, fig.width=4}
 con$plotGraph(groups=fc$groups, size=0.1)
 ```
 
@@ -402,7 +401,7 @@ con$plotGraph(groups=fc$groups, size=0.1)
 Let’s look at the hierarchical structure of these
 clusters:
 
-``` r
+```{r}
 # fc$hc is an hclust structure ... here we will convert it to a dendrogram
 dend <- as.dendrogram(fc$hc)
 plot(dend)
@@ -415,7 +414,7 @@ we can alter the width of the edges to reflect how many samples are
 contributing to it (normalized entropy). To do so, let’s first define a
 factor specifying which samples different samples came from:
 
-``` r
+```{r}
 samf <- con$getDatasetPerCell()
 str(samf)
 ```
@@ -424,7 +423,7 @@ Now we’ll use `dendSetWidthByBreadth()` function to calculate the
 entropies of each edge and set the width
 accordingly:
 
-``` r
+```{r}
 dend <- dendSetWidthByBreadth(dend, samf, fc$leafContent, min.width=1, max.width=4)
 plot(dend)
 ```
@@ -434,14 +433,14 @@ Similarly, we can find a factor that labels the cells by the respective tissue f
 dataset, we’ll simply parse the cell
 names:
 
-``` r
+```{r}
 tissue.factor <- as.factor(setNames(ifelse(grepl('BM',names(samf)),'BM','CB'), names(samf)))
 str(tissue.factor)
 ```
 
 Now, we can color the dendrogram edges according to the tissue mixture, resulting in a more informative plot:
 
-``` r
+```{r}
 dend <- dendSetColorByMixture(dend, tissue.factor, fc$leafContent)
 plot(dend)
 ```
@@ -452,8 +451,8 @@ An alternative way to explore this the hierarchical community structure is by
 using an interactive app. The app also allows users to visualize tissue
 composition and sample similarities:
 
-``` r
-conosShinyApp(con,N=30)
+```{r, eval=FALSE}
+conosShinyApp(con, N=30)
 ```
 
 # Label Propagation
@@ -466,7 +465,7 @@ We’ll load the annotation from a simple text file (first column giving the cel
 name, second giving the cell type), and make a named factor out of
 it:
 
-``` r
+```{r}
 cellannot <- read.table(file.path(find.package('conos'),'extdata','cellannot.txt'),header=FALSE,sep='\t')
 cellannot <- setNames(cellannot[,2], cellannot[,1])
 ```
@@ -475,14 +474,15 @@ Next we plot our panel with the annotations we made. This is to verify
 that the annotated cells are indeed in only one sample and that the
 other samples are unlabelled.
 
-``` r
+
+```{r, fig.width=6, fig.height=6}
 con$plotPanel(groups = cellannot)
 ```
 
 Next let’s propagate the labels from the one annotated sample to the
 other samples.
 
-``` r
+```{r}
 new.label.info <- con$propagateLabels(labels = cellannot, verbose=TRUE)
 ```
 
@@ -490,19 +490,14 @@ This function returns probabilities, uncertainty scores, and final labels
 in the dataset of each cell belonging to each
 group:
 
-``` r
+```{r, fig.width=6, fig.height=6}
 con$plotPanel(colors=new.label.info$uncertainty, show.legend=TRUE, legend.title="Uncertainty", legend.pos=c(1, 0))
-```
-
-
-
-``` r
 con$plotPanel(groups=new.label.info$labels, show.legend=FALSE)
 ```
 
 
 
-``` r
+```{r}
 head(new.label.info$label.distribution)
 ```
 
@@ -513,18 +508,14 @@ head(new.label.info$label.distribution)
 The first step we can do to understand meaning of the dataset is to look
 at the cluster cell markers:
 
-``` r
+```{r}
 new.annot <- new.label.info$labels
 de.info <- con$getDifferentialGenes(groups=new.annot, n.cores=4, append.auc=TRUE)
-```
-
-
-``` r
 head(de.info$`B cells`)
 ```
 
 
-``` r
+```{r, fig.width=8, fig.height=4}
 cowplot::plot_grid(con$plotGraph(groups=new.annot), con$plotGraph(gene="CD74"))
 ```
 
@@ -542,11 +533,11 @@ recommended to filter the data by some lower value for the AUC and then
 order the results by Z-score or
 precision.
 
-``` r
+```{r}
 de.info$monocytes %>% filter(AUC > 0.75) %>% arrange(-Precision) %>% head()
 ```
 
-``` r
+```{r, fig.width=4, fig.height=4}
 con$plotGraph(gene="CD14")
 ```
 
@@ -554,7 +545,7 @@ con$plotGraph(gene="CD14")
 Or we can plot a heatmap of the top genes (top by AUC, by
 default)
 
-``` r
+```{r fig.width=7,fig.height=7}
 plotDEheatmap(con,as.factor(new.annot),de.info, n.genes.per.cluster = 5, column.metadata=list(samples=con$getDatasetPerCell()), row.label.font.size = 7)
 ```
 
@@ -564,7 +555,7 @@ Here w make a smaller heatmap, selecting a subset of cell types and showing
 only a hand-picked set of
 genes:
 
-``` r
+```{r fig.width=7,fig.height=4}
 gns <- c("GZMB","IL32","CD3E","LYZ","HLA-DRA","IGHD","GNLY","IGHM","GZMK")
 plotDEheatmap(con,new.annot,de.info[-c(3,10)], n.genes.per.cluster = 30, column.metadata=list(samples=con$getDatasetPerCell()), row.label.font.size = 7, labeled.gene.subset = gns)
 ```
@@ -588,7 +579,7 @@ cluster, between sample groups); if however more advanced models are desired
 (e.g. additional model variables, etc.), the `getClusterCountMatrices`
 command can be used to obtain the meta-cell counts:
 
-``` r
+```{r}
 str( con$getClusterCountMatrices() , 1)
 ```
 
@@ -599,7 +590,7 @@ be supplied.
 Back to DE analysis of the cluster states between groups of samples:
 First we need to define our sample groups
 
-``` r
+```{r}
 samplegroups <- list(
   bm = c("MantonBM1_HiSeq_1","MantonBM2_HiSeq_1"),
   cb = c("MantonCB1_HiSeq_1","MantonCB2_HiSeq_1")
@@ -611,20 +602,20 @@ samplegroups <- list(
 We can then run differential expression between cells in these sample
 groups:
 
-``` r
+```{r}
 de.info <- getPerCellTypeDE(con, groups=as.factor(new.annot), sample.groups = samplegroups, ref.level='bm', n.cores=4)
 ```
 
 …and examine the output:
 
-``` r
+```{r}
 str(de.info[1:3], 2)
 ```
 
 
 Let’s look at the results for the B cells:
 
-``` r
+```{r}
 res <- de.info[['B cells']]$res
 head(res[order(res$padj,decreasing = FALSE),])
 ```
@@ -640,7 +631,7 @@ specific factor (e.g. tissue to which the cell belongs) using the
 `balance.edge.weights`
 parameter.
 
-``` r
+```{r}
 con$buildGraph(k=15, k.self=5, alignment.strength=0.3, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
 ```
 
@@ -652,18 +643,15 @@ con$buildGraph(k=15, k.self=5, alignment.strength=0.3, space='PCA', ncomps=30, n
 We can re-generate the embedding and visualize the sample distribution
 again:
 
-``` r
+```{r, fig.height=4, fig.width=6, message=FALSE, warning=FALSE}
 con$embedGraph()
-```
-
-``` r
 con$plotGraph(color.by='sample', mark.groups=FALSE, alpha=0.1, show.legend=TRUE)
 ```
 
 
 We can also check the entropy, as described above:
 
-``` r
+```{r, fig.height=8,fig.width=8}
 con$findCommunities()
 plotClusterBarplots(con, legend.height = 0.1)
 ```
