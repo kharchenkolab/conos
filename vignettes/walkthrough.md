@@ -493,15 +493,15 @@ con$embedGraph(method="UMAP", min.dist=0.01, spread=15, n.cores=4, min.prob.lowe
 ## Convert graph to adjacency list...
 ## Done
 ## Estimate nearest neighbors and commute times...
-## Estimating hitting distances: 15:42:39.
+## Estimating hitting distances: 15:56:22.
 ## Done.
-## Estimating commute distances: 15:42:41.
-## Hashing adjacency list: 15:42:41.
+## Estimating commute distances: 15:56:25.
+## Hashing adjacency list: 15:56:25.
 ## Done.
-## Estimating distances: 15:42:42.
+## Estimating distances: 15:56:26.
 ## Done
 ## Done.
-## All done!: 15:42:46.
+## All done!: 15:56:29.
 ## Done
 ## Estimate UMAP embedding...
 ## Done
@@ -693,41 +693,41 @@ head(new.label.info$label.distribution)
 ```
 
 ```
-##                                        T CD4-CD8-  progenitors     B cells
-## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.000000e+00 0.000000e+00 0.00000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 2.537186e-06 3.334591e-09 8.60712e-11
-## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.000000e+00 0.000000e+00 0.00000e+00
-## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 0.000000e+00 0.000000e+00 0.00000e+00
-## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.000000e+00 0.000000e+00 0.00000e+00
-## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.000000e+00 0.000000e+00 0.00000e+00
-##                                                NK    T cyto    monocytes
-## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.0000000000 1.0000000 0.000000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 0.0003790038 0.9996182 6.741998e-14
-## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.0000000000 1.0000000 0.000000e+00
-## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 1.0000000000 0.0000000 0.000000e+00
-## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.0000000000 1.0000000 0.000000e+00
-## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.0000000000 1.0000000 0.000000e+00
+##                                        T CD4-CD8- progenitors      B cells
+## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.000000e+00 0.00000e+00 0.000000e+00
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 2.537222e-06 3.33468e-09 8.607128e-11
+## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.000000e+00 0.00000e+00 0.000000e+00
+## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 0.000000e+00 0.00000e+00 0.000000e+00
+## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.000000e+00 0.00000e+00 0.000000e+00
+## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.000000e+00 0.00000e+00 0.000000e+00
+##                                                NK    T cyto   monocytes
+## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.0000000000 1.0000000 0.00000e+00
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 0.0003790043 0.9996182 6.74222e-14
+## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.0000000000 1.0000000 0.00000e+00
+## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 1.0000000000 0.0000000 0.00000e+00
+## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.0000000000 1.0000000 0.00000e+00
+## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.0000000000 1.0000000 0.00000e+00
 ##                                      monomyelocytes plasma cells  dying cells
 ## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1   0.000000e+00 0.000000e+00 0.000000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1   4.608346e-08 2.171136e-11 1.738209e-07
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1   4.608413e-08 2.171214e-11 1.738265e-07
 ## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1   0.000000e+00 0.000000e+00 0.000000e+00
 ## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1   0.000000e+00 0.000000e+00 0.000000e+00
 ## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1   0.000000e+00 0.000000e+00 0.000000e+00
 ## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1   0.000000e+00 0.000000e+00 0.000000e+00
-##                                        erythroid          HSC          pDC
-## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.00000e+00 0.000000e+00 0.000000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 5.06951e-10 1.127095e-10 1.092948e-12
-## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.00000e+00 0.000000e+00 0.000000e+00
-## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 0.00000e+00 0.000000e+00 0.000000e+00
-## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.00000e+00 0.000000e+00 0.000000e+00
-## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.00000e+00 0.000000e+00 0.000000e+00
-##                                               DC
-## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.00000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 1.86541e-14
-## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.00000e+00
-## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 0.00000e+00
-## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.00000e+00
-## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.00000e+00
+##                                         erythroid        HSC          pDC
+## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.000000e+00 0.0000e+00 0.000000e+00
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 5.069636e-10 1.1271e-10 1.092956e-12
+## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.000000e+00 0.0000e+00 0.000000e+00
+## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 0.000000e+00 0.0000e+00 0.000000e+00
+## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.000000e+00 0.0000e+00 0.000000e+00
+## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.000000e+00 0.0000e+00 0.000000e+00
+##                                                DC
+## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.000000e+00
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 1.865393e-14
+## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.000000e+00
+## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 0.000000e+00
+## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.000000e+00
+## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.000000e+00
 ```
 
 # Differential Expression
@@ -853,13 +853,13 @@ str( con$getClusterCountMatrices() , 1)
 
 ```
 ## List of 4
-##  $ MantonBM1_HiSeq_1: num [1:33694, 1:12] 0 0 0 1 0 0 0 0 40 6 ...
+##  $ MantonBM1_HiSeq_1: num [1:33694, 1:12] 0 0 0 1 0 0 0 0 45 6 ...
 ##   ..- attr(*, "dimnames")=List of 2
-##  $ MantonBM2_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 58 3 ...
+##  $ MantonBM2_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 64 4 ...
 ##   ..- attr(*, "dimnames")=List of 2
-##  $ MantonCB1_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 63 5 ...
+##  $ MantonCB1_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 81 7 ...
 ##   ..- attr(*, "dimnames")=List of 2
-##  $ MantonCB2_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 142 17 ...
+##  $ MantonCB2_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 149 18 ...
 ##   ..- attr(*, "dimnames")=List of 2
 ```
 

@@ -1,3 +1,27 @@
+#' Use mclapply if n.cores>1, otherwise use regular lapply() if n.cores=1
+#'
+#' @description Set names equal to values
+#' @param ... Primary input arguments X, FUN for mclapply(X, FUN, ...) or lapply(X, FUN, ...)
+#' @param n.cores integer Number of cores (default=parallel::detectCores())
+#' @param mc.preschedule boolean (default=FALSE) From mclapply. If TRUE, then the computation is first divided to (at most) as many jobs are there are cores and then the jobs are started, each job possibly covering more than one value. If FALSE, then one job is forked for each value of X for mclapply(X, FUN, ...)
+#' @return list 
+#' @keywords internal
+papply <- function(..., n.cores=parallel::detectCores(), mc.preschedule=FALSE) {
+  if(n.cores>1) {
+    result <- parallel::mclapply(..., mc.cores=n.cores, mc.preschedule=mc.preschedule)
+  } else {
+    # fall back on lapply
+    result <- lapply(...)
+  }
+
+  is.error <- (sapply(result, class) == "try-error")
+  if (any(is.error)) {
+    stop(paste("Errors in papply:", result[is.error]))
+  }
+
+  return(result)
+}
+
 validatePerCellTypeParams <- function(con.obj, groups, sample.groups, ref.level, cluster.sep.chr) {
   if (!requireNamespace("DESeq2", quietly = TRUE)) {
     stop("You have to install DESeq2 package to use differential expression")
