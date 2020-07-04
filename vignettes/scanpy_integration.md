@@ -1,17 +1,17 @@
-Convert Conos object to ScanPy
+Convert Conos Object to ScanPy
 ================
 
 ``` r
 library(conos)
 ```
 
-Load data:
+Load the data:
 
 ``` r
 panel <- readRDS(file.path(find.package('conos'), 'extdata', 'panel.rds'))
 ```
 
-Run Pagoda 2:
+Run Pagoda2:
 
 ``` r
 library(pagoda2)
@@ -41,7 +41,7 @@ panel.preprocessed <- lapply(panel, basicP2proc, n.cores=4, min.cells.per.gene=0
     ## running PCA using 2000 OD genes .... done
     ## running tSNE using 4 cores:
 
-Align datasets:
+Align the datasets:
 
 ``` r
 con <- Conos$new(panel.preprocessed, n.cores=4)
@@ -53,7 +53,7 @@ con$buildGraph(k=15, k.self=5, space='PCA', ncomps=30)
     ## local pairs local pairs  done
     ## building graph ..done
 
-Find clusters and create embedding:
+Find clusters and create an embedding:
 
 ``` r
 con$findCommunities()
@@ -89,13 +89,13 @@ con$embedGraph(method="UMAP")
 
     ## Done
 
-Prepare metadata (can be any type of clustering of all the cells):
+Prepare metadata (which can be any type of clustering of all the cells):
 
 ``` r
 metadata <- data.frame(Cluster=con$clusters$leiden$groups)
 ```
 
-Save data (set `exchange_dir` to your path):
+Save the data (set `exchange_dir` to your path):
 
 ``` r
 exchange_dir <- "."

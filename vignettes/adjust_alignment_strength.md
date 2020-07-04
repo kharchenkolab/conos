@@ -92,8 +92,8 @@ con$plotGraph(groups=tissue_per_cb, alpha=0.1, size=0.2, mark.groups=F,
 
 So we can see clear separation. Indeed, it’s a matter of a research
 questions, if different tissues must be aligned completely, or if it
-should form close, but separate cluster. And one benifit of Conos is
-that it gives you option to choose. There are three ways you can force
+should form close, but separate cluster. And one benefit of Conos is
+that it gives you the option to choose. There are three ways you can force
 more aggressive alignment.
 
 Let’s first define function to show changes in Conos
