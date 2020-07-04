@@ -600,12 +600,12 @@ getDifferentialGenesP2 <- function(p2.samples, groups, z.threshold=3.0, upregula
   groups %<>% as.character() %>% setNames(names(groups))
 
   if (verbose) cat("Estimating marker genes per sample\n")
-  markers.per.sample <- lapply.func(p2.samples, function(p2) {
+  markers.per.sample <- papply(p2.samples, function(p2) {
     if (length(intersect(rownames(p2$counts), names(groups))) < 3) {
       list()
     } else {
       if (packageVersion("pagoda2") >= "0.1.1") {
-        p2$getDifferentialGenes(groups=groups, z.threshold=0, append.specificity.metrics=F, append.auc=F)
+        p2$getDifferentialGenes(groups=groups, z.threshold=0, append.specificity.metrics=FALSE, append.auc=FALSE)
       } else {
         p2$getDifferentialGenes(groups=groups, z.threshold=0)
       }
@@ -614,8 +614,8 @@ getDifferentialGenesP2 <- function(p2.samples, groups, z.threshold=3.0, upregula
 
   if (verbose) cat("Aggregating marker genes\n")
   markers.per.type <- unique(groups) %>% setNames(., .) %>%
-    lapply(function(id) lapply(markers.per.sample, `[[`, id) %>% .[!sapply(., is.null)]) %>%
-    plapply(aggregateDEMarkersAcrossDatasets, z.threshold=z.threshold, upregulated.only=upregulated.only, verbose=verbose, n.cores=n.cores)
+    lapply(function(id) lapply(markers.per.sample, `[[`, id) %>% .[!sapply(., is.null)])
+  markers.per.type = papply(markers.per.type, aggregateDEMarkersAcrossDatasets, z.threshold=z.threshold, upregulated.only=upregulated.only)
 
   return(markers.per.type)
 }

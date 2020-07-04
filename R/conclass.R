@@ -226,6 +226,9 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
 
     getDifferentialGenes=function(clustering=NULL, groups=NULL, z.threshold=3.0, upregulated.only=F, verbose=T, plot=FALSE, n.genes.to.show=10, inner.clustering=FALSE,
                                   append.specificity.metrics=TRUE, append.auc=FALSE, n.cores=self$n.cores) {
+
+      lapply.func <- if (verbose) function(...) pbapply::pblapply(..., cl=n.cores) else function(...) papply(..., n.cores=n.cores)
+      
       groups <- parseCellGroups(self, clustering, groups)
 
       groups %<>% as.factor() %>% droplevels()
@@ -247,7 +250,7 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
 
         de.genes %<>% lapply(function(x) if ((length(x) > 0) && (nrow(x) > 0)) subset(x, complete.cases(x)) else x)
         de.genes %<>% names() %>% setNames(., .) %>%
-          plapply(function(n) appendSpecificityMetricsToDE(de.genes[[n]], groups.clean, n, p2.counts=cm.merged, append.auc=append.auc), verbose=verbose, n.cores=n.cores)
+          papply(function(n) appendSpecificityMetricsToDE(de.genes[[n]], groups.clean, n, p2.counts=cm.merged, append.auc=append.auc))
       }
 
       if (verbose) cat("All done!\n")
