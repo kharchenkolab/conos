@@ -394,7 +394,7 @@ con$plotGraph(gene='GZMK', title='GZMK expression')
 
 Other community detection methods can provide a more sensitive and
 hierarchical view of the subpopulation structure. Here we run the [igraph walktrap
-community detection method](https://www.rdocumentation.org/packages/igraph/versions/0.5.1/topics/walktrap.community) on the same joint graph:
+community](https://www.rdocumentation.org/packages/igraph/versions/0.5.1/topics/walktrap.community) detection method on the same joint graph:
 
 
 ```r
@@ -410,7 +410,7 @@ Now let's visualize these new clusters:
 
 
 ```r
-con$plotPanel(clustering='walktrap',font.size=4)
+con$plotPanel(clustering='walktrap', font.size=4)
 ```
 
 ![plot of chunk unnamed-chunk-22](figure/unnamed-chunk-22-1.png)
@@ -493,44 +493,17 @@ con$embedGraph(method="UMAP", min.dist=0.01, spread=15, n.cores=4, min.prob.lowe
 ## Convert graph to adjacency list...
 ## Done
 ## Estimate nearest neighbors and commute times...
-## Estimating hitting distances: 14:53:42.
+## Estimating hitting distances: 15:10:27.
 ## Done.
-## Estimating commute distances: 14:53:45.
-## Hashing adjacency list: 14:53:45.
+## Estimating commute distances: 15:10:29.
+## Hashing adjacency list: 15:10:29.
 ## Done.
-## Estimating distances: 14:53:46.
+## Estimating distances: 15:10:30.
 ## Done
 ## Done.
-## All done!: 14:53:49.
+## All done!: 15:10:33.
 ## Done
 ## Estimate UMAP embedding...
-```
-
-```
-## 14:53:49 UMAP embedding parameters a = 0.02659 b = 0.7912
-```
-
-```
-## 14:53:49 Read 12000 rows and found 1 numeric columns
-```
-
-```
-## 14:53:49 Commencing smooth kNN distance calibration using 4 threads
-```
-
-```
-## 14:53:50 Initializing from normalized Laplacian + noise
-```
-
-```
-## 14:53:51 Commencing optimization for 1000 epochs, with 351258 positive edges using 4 threads
-```
-
-```
-## 14:54:02 Optimization finished
-```
-
-```
 ## Done
 ```
 
@@ -550,11 +523,6 @@ Now we can use this common embedding in `plotPanel` as well:
 
 ```r
 con$plotPanel(clustering='walktrap', size=0.1, use.common.embedding=TRUE)
-```
-
-```
-## Warning in if (class(embedding.type) == "matrix") {: the condition has length >
-## 1 and only the first element will be used
 ```
 
 ![plot of chunk unnamed-chunk-27](figure/unnamed-chunk-27-1.png)
@@ -722,37 +690,37 @@ head(new.label.info$label.distribution)
 ```
 
 ```
-##                                        T CD4-CD8-  progenitors      B cells
-## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.000000e+00 0.000000e+00 0.000000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 2.537168e-06 3.334665e-09 8.607192e-11
-## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.000000e+00 0.000000e+00 0.000000e+00
-## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 0.000000e+00 0.000000e+00 0.000000e+00
-## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.000000e+00 0.000000e+00 0.000000e+00
-## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.000000e+00 0.000000e+00 0.000000e+00
+##                                        T CD4-CD8-  progenitors     B cells
+## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.000000e+00 0.000000e+00 0.00000e+00
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 2.537232e-06 3.334801e-09 8.60726e-11
+## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.000000e+00 0.000000e+00 0.00000e+00
+## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 0.000000e+00 0.000000e+00 0.00000e+00
+## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.000000e+00 0.000000e+00 0.00000e+00
+## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.000000e+00 0.000000e+00 0.00000e+00
 ##                                                NK    T cyto    monocytes
 ## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.0000000000 1.0000000 0.000000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 0.0003790004 0.9996182 6.741839e-14
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 0.0003790049 0.9996182 6.742408e-14
 ## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.0000000000 1.0000000 0.000000e+00
 ## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 1.0000000000 0.0000000 0.000000e+00
 ## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.0000000000 1.0000000 0.000000e+00
 ## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.0000000000 1.0000000 0.000000e+00
 ##                                      monomyelocytes plasma cells  dying cells
 ## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1   0.000000e+00 0.000000e+00 0.000000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1   4.608165e-08 2.171168e-11 1.738232e-07
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1   4.608504e-08 2.171236e-11 1.738289e-07
 ## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1   0.000000e+00 0.000000e+00 0.000000e+00
 ## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1   0.000000e+00 0.000000e+00 0.000000e+00
 ## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1   0.000000e+00 0.000000e+00 0.000000e+00
 ## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1   0.000000e+00 0.000000e+00 0.000000e+00
 ##                                         erythroid          HSC          pDC
 ## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.000000e+00 0.000000e+00 0.000000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 5.069598e-10 1.127084e-10 1.093038e-12
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 5.069716e-10 1.127115e-10 1.093001e-12
 ## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.000000e+00 0.000000e+00 0.000000e+00
 ## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 0.000000e+00 0.000000e+00 0.000000e+00
 ## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.000000e+00 0.000000e+00 0.000000e+00
 ## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.000000e+00 0.000000e+00 0.000000e+00
 ##                                                DC
 ## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.000000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 1.865513e-14
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 1.865482e-14
 ## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.000000e+00
 ## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 0.000000e+00
 ## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.000000e+00
@@ -881,13 +849,13 @@ str( con$getClusterCountMatrices() , 1)
 
 ```
 ## List of 4
-##  $ MantonBM1_HiSeq_1: num [1:33694, 1:11] 0 0 0 1 0 0 0 0 40 5 ...
+##  $ MantonBM1_HiSeq_1: num [1:33694, 1:12] 0 0 0 1 0 0 0 0 45 5 ...
 ##   ..- attr(*, "dimnames")=List of 2
-##  $ MantonBM2_HiSeq_1: num [1:33694, 1:11] 0 0 0 0 0 0 0 0 57 4 ...
+##  $ MantonBM2_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 64 4 ...
 ##   ..- attr(*, "dimnames")=List of 2
-##  $ MantonCB1_HiSeq_1: num [1:33694, 1:11] 0 0 0 0 0 0 0 0 75 6 ...
+##  $ MantonCB1_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 79 6 ...
 ##   ..- attr(*, "dimnames")=List of 2
-##  $ MantonCB2_HiSeq_1: num [1:33694, 1:11] 0 0 0 0 0 0 0 0 147 18 ...
+##  $ MantonCB2_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 154 21 ...
 ##   ..- attr(*, "dimnames")=List of 2
 ```
 
@@ -916,10 +884,6 @@ groups:
 de.info <- getPerCellTypeDE(con, groups=as.factor(new.annot), sample.groups = samplegroups, ref.level='bm', n.cores=4)
 ```
 
-```
-## Error in validatePerCellTypeParams(con.obj, groups, sample.groups, ref.level, : You have to install DESeq2 package to use differential expression
-```
-
 …and examine the output:
 
 
@@ -928,7 +892,18 @@ str(de.info[1:3], 2)
 ```
 
 ```
-## Error in str(de.info[1:3], 2): object 'de.info' not found
+## List of 3
+##  $ B cells    :List of 3
+##   ..$ res          :'data.frame':	33694 obs. of  6 variables:
+##   ..$ cm           : num [1:33694, 1:4] 0 0 0 1 0 0 0 0 22 1 ...
+##   .. ..- attr(*, "dimnames")=List of 2
+##   ..$ sample.groups:List of 2
+##  $ DC         : logi NA
+##  $ dying cells:List of 3
+##   ..$ res          :'data.frame':	33694 obs. of  6 variables:
+##   ..$ cm           : num [1:33694, 1:4] 0 0 0 0 0 0 0 0 9 1 ...
+##   .. ..- attr(*, "dimnames")=List of 2
+##   ..$ sample.groups:List of 2
 ```
 
 
@@ -937,18 +912,24 @@ Let’s look at the results for the B cells:
 
 ```r
 res <- de.info[['B cells']]$res
-```
-
-```
-## Error in eval(expr, envir, enclos): object 'de.info' not found
-```
-
-```r
 head(res[order(res$padj,decreasing = FALSE),])
 ```
 
 ```
-## Error in h(simpleError(msg, call)): error in evaluating the argument 'x' in selecting a method for function 'head': object 'res' not found
+##                baseMean log2FoldChange     lfcSE      stat       pvalue
+## RP11-386I14.4 633.38462       3.613079 0.2969072 12.169050 4.543406e-34
+## HBA2          432.96164       3.383313 0.3732523  9.064413 1.252764e-19
+## CH17-373J23.1 434.14568       3.384284 0.3872119  8.740134 2.328349e-18
+## CD69          619.31685       2.479539 0.2987761  8.298987 1.050027e-16
+## HMGB2         172.34223      -3.137613 0.3851455 -8.146565 3.744062e-16
+## IGHA1          94.25114      -6.194636 0.7613270 -8.136630 4.064334e-16
+##                       padj
+## RP11-386I14.4 7.112247e-30
+## HBA2          9.805387e-16
+## CH17-373J23.1 1.214933e-14
+## CD69          4.109282e-13
+## HMGB2         1.060385e-12
+## IGHA1         1.060385e-12
 ```
 
 # Forcing Better Alignment

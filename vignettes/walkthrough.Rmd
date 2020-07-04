@@ -267,7 +267,7 @@ con$plotGraph(alpha=0.1)
 Observe that the graph captures the population structure irrespective
 of the sample of origin for each cell:
 
-```{r, fig.height=6, fig.width=6}
+```{r, fig.height=6, fig.width=8}
 con$plotGraph(color.by='sample', mark.groups=FALSE, alpha=0.1, show.legend=TRUE)
 ```
 
@@ -283,7 +283,7 @@ con$plotGraph(gene='GZMK', title='GZMK expression')
 
 Other community detection methods can provide a more sensitive and
 hierarchical view of the subpopulation structure. Here we run the [igraph walktrap
-community detection method](https://www.rdocumentation.org/packages/igraph/versions/0.5.1/topics/walktrap.community) on the same joint graph:
+community](https://www.rdocumentation.org/packages/igraph/versions/0.5.1/topics/walktrap.community) detection method on the same joint graph:
 
 ```{r}
 con$findCommunities(method = igraph::walktrap.community, steps=7)
@@ -297,7 +297,7 @@ though these calculations take much longer). Here we’ll get a lot of smaller c
 Now let's visualize these new clusters:
 
 ```{r, fig.width=6, fig.height=6}
-con$plotPanel(clustering='walktrap',font.size=4)
+con$plotPanel(clustering='walktrap', font.size=4)
 ```
 
 And here is the new clustering, as viewed on a joint graph:
@@ -358,7 +358,7 @@ and accuracy:
 
 > - **min.prob.lower:** minimal probability of hitting a neighbor, after which the random walk stops. Default: 1e-7.
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 con$embedGraph(method="UMAP", min.dist=0.01, spread=15, n.cores=4, min.prob.lower=1e-3)
 ```
 
@@ -375,7 +375,7 @@ subpopulations called by walktrap apparent.
 
 Now we can use this common embedding in `plotPanel` as well:
 
-```{r, fig.width=8, fig.height=8}
+```{r, fig.width=8, fig.height=8, message=FALSE, warning=FALSE}
 con$plotPanel(clustering='walktrap', size=0.1, use.common.embedding=TRUE)
 ```
 
@@ -515,7 +515,7 @@ head(de.info$`B cells`)
 ```
 
 
-```{r, fig.width=8, fig.height=8}
+```{r, fig.width=8, fig.height=6}
 cowplot::plot_grid(con$plotGraph(groups=new.annot), con$plotGraph(gene="CD74"))
 ```
 
@@ -643,7 +643,7 @@ con$buildGraph(k=15, k.self=5, alignment.strength=0.3, space='PCA', ncomps=30, n
 We can re-generate the embedding and visualize the sample distribution
 again:
 
-```{r, fig.height=6, fig.width=6, message=FALSE, warning=FALSE}
+```{r, fig.height=6, fig.width=8, message=FALSE, warning=FALSE}
 con$embedGraph()
 con$plotGraph(color.by='sample', mark.groups=FALSE, alpha=0.1, show.legend=TRUE)
 ```
