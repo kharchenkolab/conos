@@ -1,5 +1,9 @@
-Adjustment of Alignment Strength with Conos
-===========================================
+---
+title: "Adjustment of Alignment Strength with Conos"
+output:
+  rmarkdown::github_document:
+    toc: true
+---
 
 This tutorial uses the same data as the main [Walkthrough](https://github.com/hms-dbmi/conos/blob/master/vignettes/walkthrough.md) to demonstrate different options 
 for forcing alignment. It can be especially useful if the samples are grouped by some external 
@@ -74,13 +78,13 @@ con$plotGraph(color.by='sample', alpha=0.1, size=0.2, mark.groups=FALSE,
               show.legend=TRUE, legend.pos=c(1, 0))
 ```
 
-![plot of chunk unnamed-chunk-3](adjust_alignment_strength_figures/unnamed-chunk-3-1.png)
+![plot of chunk unnamed-chunk-3](figure/unnamed-chunk-3-1.png)
 
 ```r
 con$plotGraph(groups=cellannot, alpha=0.1, size=0.2)
 ```
 
-![plot of chunk unnamed-chunk-3](adjust_alignment_strength_figures/unnamed-chunk-3-2.png)
+![plot of chunk unnamed-chunk-3](figure/unnamed-chunk-3-2.png)
 
 ## Force alignment
 
@@ -95,7 +99,7 @@ con$plotGraph(groups=tissue_per_cb, alpha=0.1, size=0.2, mark.groups=FALSE,
               show.legend=TRUE, legend.pos=c(1, 0))
 ```
 
-![plot of chunk unnamed-chunk-4](adjust_alignment_strength_figures/unnamed-chunk-4-1.png)
+![plot of chunk unnamed-chunk-4](figure/unnamed-chunk-4-1.png)
 
 So we now can see a clear separation. Indeed, it depends on the research question whether different 
 tissues must be aligned completely, or they should form close, but separate clusters. And
@@ -123,7 +127,7 @@ plotConosSummary <- function(con, cell.type.annot, tissue.annot, size=0.2, alpha
 plotConosSummary(con, cellannot, tissue_per_cb)
 ```
 
-![plot of chunk unnamed-chunk-6](adjust_alignment_strength_figures/unnamed-chunk-6-1.png)
+![plot of chunk unnamed-chunk-6](figure/unnamed-chunk-6-1.png)
 
 
 ### Adjustment of the `alignment.strength` parameter
@@ -160,7 +164,7 @@ con$embedGraph()
 plotConosSummary(con, cellannot, tissue_per_cb)
 ```
 
-![plot of chunk unnamed-chunk-8](adjust_alignment_strength_figures/unnamed-chunk-8-1.png)
+![plot of chunk unnamed-chunk-8](figure/unnamed-chunk-8-1.png)
 
 Though, be aware that larger values of `alignment.strength` lead to worse cluster separation:
 
@@ -190,7 +194,7 @@ con$embedGraph()
 plotConosSummary(con, cellannot, tissue_per_cb)
 ```
 
-![plot of chunk unnamed-chunk-10](adjust_alignment_strength_figures/unnamed-chunk-10-1.png)
+![plot of chunk unnamed-chunk-10](figure/unnamed-chunk-10-1.png)
 
 And the most extreme case actually "aligns" all clusters and datasets together:
 
@@ -219,7 +223,7 @@ con$embedGraph()
 plotConosSummary(con, cellannot, tissue_per_cb)
 ```
 
-![plot of chunk unnamed-chunk-12](adjust_alignment_strength_figures/unnamed-chunk-12-1.png)
+![plot of chunk unnamed-chunk-12](figure/unnamed-chunk-12-1.png)
 
 Still, this procedure isn't explicitly aware about conditions which cause differences in datasets.
 And sometimes the above procedure allows datasets to group together, even with the most "aggressive" alignment.
@@ -260,4 +264,4 @@ con$embedGraph()
 plotConosSummary(con, cellannot, tissue_per_cb)
 ```
 
-![plot of chunk unnamed-chunk-14](adjust_alignment_strength_figures/unnamed-chunk-14-1.png)
+![plot of chunk unnamed-chunk-14](figure/unnamed-chunk-14-1.png)

@@ -31,7 +31,7 @@ panel.preprocessed <- lapply(panel, basicP2proc, n.cores=4, min.cells.per.gene=0
                              n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
 ```
 
-```{r, fig.width=4, fig.height=4}
+```{r, fig.width=6, fig.height=6}
 con <- Conos$new(panel.preprocessed, n.cores=4)
 con$buildGraph(k=20, k.self=5, space='PCA', ncomps=30)
 con$embedGraph()
@@ -46,7 +46,7 @@ con$plotGraph(groups=cellannot, alpha=0.1, size=0.2)
 
 In this dataset our samples are grouped by tissue (BM vs CB), so we can color by this factor:
 
-```{r, fig.width=4, fig.height=4}
+```{r, fig.width=6, fig.height=6}
 tissue_per_cb <- con$getDatasetPerCell() %>% substr(7, 8) %>% 
   setNames(names(con$getDatasetPerCell()))
 
@@ -74,7 +74,7 @@ plotConosSummary <- function(con, cell.type.annot, tissue.annot, size=0.2, alpha
 }
 ```
 
-```{r, fig.width=12, fig.height=4, warning=FALSE}
+```{r, fig.width=18, fig.height=6, warning=FALSE}
 plotConosSummary(con, cellannot, tissue_per_cb)
 ```
 
@@ -93,7 +93,7 @@ con$embedGraph()
 ```
 
 
-```{r, fig.width=12, fig.height=4, warning=FALSE}
+```{r, fig.width=18, fig.height=6, warning=FALSE}
 plotConosSummary(con, cellannot, tissue_per_cb)
 ```
 
@@ -105,7 +105,7 @@ con$embedGraph()
 ```
 
 
-```{r, fig.width=12, fig.height=4, warning=FALSE}
+```{r, fig.width=18, fig.height=6, warning=FALSE}
 plotConosSummary(con, cellannot, tissue_per_cb)
 ```
 
@@ -116,7 +116,7 @@ con$buildGraph(k=20, k.self=5, space='PCA', ncomps=30, alignment.strength=1.0)
 con$embedGraph()
 ```
 
-```{r, fig.width=12, fig.height=4, warning=FALSE}
+```{r, fig.width=18, fig.height=6, warning=FALSE}
 plotConosSummary(con, cellannot, tissue_per_cb)
 ```
 
@@ -138,6 +138,6 @@ con$buildGraph(k=20, k.self=5, space='PCA', ncomps=30, same.factor.downweight=0.
 con$embedGraph()
 ```
 
-```{r, fig.width=12, fig.height=4, warning=FALSE}
+```{r, fig.width=18, fig.height=6, warning=FALSE}
 plotConosSummary(con, cellannot, tissue_per_cb)
 ```

@@ -259,7 +259,7 @@ main function `conos::embeddingPlot` and will pass all visualization parameters
 to this main function. So, to get full list of the possible parameters please refer to
 `?conos::embeddingPlot` and the examples below.
 
-```{r, fig.height=8, fig.width=8, message=FALSE, warning=FALSE}
+```{r, fig.height=6, fig.width=6, message=FALSE, warning=FALSE}
 con$plotGraph(alpha=0.1)
 ```
 
@@ -267,7 +267,7 @@ con$plotGraph(alpha=0.1)
 Observe that the graph captures the population structure irrespective
 of the sample of origin for each cell:
 
-```{r, fig.height=8, fig.width=8}
+```{r, fig.height=6, fig.width=6}
 con$plotGraph(color.by='sample', mark.groups=FALSE, alpha=0.1, show.legend=TRUE)
 ```
 
@@ -296,13 +296,13 @@ though these calculations take much longer). Here we’ll get a lot of smaller c
 
 Now let's visualize these new clusters:
 
-```{r, fig.width=8, fig.height=8}
+```{r, fig.width=6, fig.height=6}
 con$plotPanel(clustering='walktrap',font.size=4)
 ```
 
 And here is the new clustering, as viewed on a joint graph:
 
-```{r, fig.width=8, fig.height=8}
+```{r, fig.width=6, fig.height=6}
 con$plotGraph(clustering='walktrap')
 ```
 
@@ -330,7 +330,7 @@ sake of example:
 con$embedGraph(alpha=0.001, sgd_batched=1e8)  
 ```
 
-```{r, fig.width=8, fig.height=8}
+```{r, fig.width=6, fig.height=6}
 con$plotGraph(clustering='walktrap', size=0.1)
 ```
 
@@ -643,7 +643,7 @@ con$buildGraph(k=15, k.self=5, alignment.strength=0.3, space='PCA', ncomps=30, n
 We can re-generate the embedding and visualize the sample distribution
 again:
 
-```{r, fig.height=8, fig.width=8, message=FALSE, warning=FALSE}
+```{r, fig.height=6, fig.width=6, message=FALSE, warning=FALSE}
 con$embedGraph()
 con$plotGraph(color.by='sample', mark.groups=FALSE, alpha=0.1, show.legend=TRUE)
 ```
