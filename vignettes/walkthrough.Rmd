@@ -578,7 +578,7 @@ cluster, between sample groups); if however more advanced models are desired
 command can be used to obtain the meta-cell counts:
 
 ```{r}
-str( con$getClusterCountMatrices() , 1)
+str(con$getClusterCountMatrices(), 1)
 ```
 
 The list above returns a pooled count matrix for each sample, where the

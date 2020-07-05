@@ -861,7 +861,7 @@ command can be used to obtain the meta-cell counts:
 
 
 ```r
-str( con$getClusterCountMatrices() , 1)
+str(con$getClusterCountMatrices(), 1)
 ```
 
 ```
