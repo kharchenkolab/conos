@@ -59,7 +59,7 @@ scaledMatricesSeurat <- function(so.objs, data.type, od.genes, var.scale) {
   }
 }
 
-scaledMatricesSeuratV3 <- function(so.objs, data.type, od.genes, var.scale) {
+scaledMatricesSeuratV3 <- function(so.objs, data.type, od.genes, var.scale, neighborhood.average) {
   checkSeuratV3()
   if (var.scale) {
     warning("Seurat doesn't support variance scaling")
@@ -72,11 +72,11 @@ scaledMatricesSeuratV3 <- function(so.objs, data.type, od.genes, var.scale) {
   )
   x.data <- lapply(
     X = so.objs,
-    Fes <- mapplyUN = function(so) {
+    FUN = function(so) {
       return(t(x = Seurat::GetAssayData(object = so, slot = slot))[, od.genes])
     }
   )
-  res <- mapply(FUN = function(so, x) { return(x}) }, so.objs, x.data )
+  res <- mapply(FUN = function(so, x) { return(x) }, so.objs, x.data )
   
   return(res)
 }

@@ -114,7 +114,7 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
         samf <- setNames(rep(names(samf),unlist(lapply(samf,length))),unlist(samf))
         if(append.global.axes) {
           cms.clust <- self$getClusterCountMatrices(groups=base.groups,common.genes=FALSE)
-          global.proj <- projectSamplesOnGlobalAxes(self$samples, cms.clust, data.type, neighborhood.average, verbose, self$n.cores)
+          global.proj <- projectSamplesOnGlobalAxes(self$samples, cms.clust, data.type, verbose, self$n.cores)
         }
       }
 
@@ -160,7 +160,7 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
 
           mnn <- getPcaBasedNeighborMatrix(self$samples[sn.pairs[,j]], od.genes=od.genes, rot=rot, data.type=data.type,
                                            k=k.cur, k1=k1, matching.method=matching.method, metric=metric, l2.sigma=l2.sigma, cor.base=cor.base,
-                                           var.scale=var.scale, neighborhood.average=neighborhood.average, common.centering=common.centering,
+                                           var.scale=var.scale, common.centering=common.centering,
                                            base.groups=base.groups, append.decoys=append.decoys, samples=self$samples, samf=samf, decoy.threshold=decoy.threshold,
                                            n.decoys=n.decoys, append.global.axes=append.global.axes, global.proj=global.proj)
         } else if (space=='genes') { ## Overdispersed Gene space
@@ -717,15 +717,15 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
         if(verbose) cat('running',sum(is.na(mi)),'additional',space,' space pairs ')
         xl2 <- papply(which(is.na(mi)), function(i) {
           if(space=='CPCA') {
-            xcp <- quickCPCA(self$samples[sn.pairs[,i]],data.type=data.type,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale,neighborhood.average=neighborhood.average, score.component.variance=score.component.variance)
+            xcp <- quickCPCA(self$samples[sn.pairs[,i]],data.type=data.type,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale, score.component.variance=score.component.variance)
           } else if(space=='JNMF') {
-            xcp <- quickJNMF(self$samples[sn.pairs[,i]],data.type=data.type,n.comps=ncomps,n.odgenes=n.odgenes,var.scale=var.scale,verbose=FALSE,max.iter=3e3,neighborhood.average=neighborhood.average)
+            xcp <- quickJNMF(self$samples[sn.pairs[,i]],data.type=data.type,n.comps=ncomps,n.odgenes=n.odgenes,var.scale=var.scale,verbose=FALSE,max.iter=3e3)
           } else if (space == 'genes') {
-            xcp <- quickNULL(p2.objs = self$samples[sn.pairs[,i]], data.type=data.type, n.odgenes=n.odgenes, var.scale = var.scale, verbose = FALSE, neighborhood.average=neighborhood.average);
+            xcp <- quickNULL(p2.objs = self$samples[sn.pairs[,i]], data.type=data.type, n.odgenes=n.odgenes, var.scale = var.scale, verbose = FALSE)
           } else if (space == 'PCA') {
-            xcp <- quickPlainPCA(self$samples[sn.pairs[,i]], data.type=data.type,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale,neighborhood.average=neighborhood.average, score.component.variance=score.component.variance)
+            xcp <- quickPlainPCA(self$samples[sn.pairs[,i]], data.type=data.type,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale, score.component.variance=score.component.variance)
           } else if (space == 'CCA' || space=='PMA') {
-            xcp <- quickCCA(self$samples[sn.pairs[,i]],data.type=data.type,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale,neighborhood.average=neighborhood.average, score.component.variance=score.component.variance,PMA=(space=='PMA'))
+            xcp <- quickCCA(self$samples[sn.pairs[,i]],data.type=data.type,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale, score.component.variance=score.component.variance,PMA=(space=='PMA'))
           }
           if(verbose) cat('.')
           xcp
