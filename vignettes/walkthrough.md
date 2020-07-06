@@ -348,9 +348,9 @@ Next we embed and visualize the complete joint graph:
 `$embedGraph` function for additional embedding options.
 
 Also, both functions `$plotGraph` and `$plotPanel` are constructed off of the
-main function `conos::embeddingPlot` and will pass all visualization parameters
+main function `sccore::embeddingPlot` and will pass all visualization parameters
 to this main function. So, to get full list of the possible parameters please refer to
-`?conos::embeddingPlot` and the examples below.
+`?sccore::embeddingPlot` and the examples below.
 
 
 ```r
