@@ -56,5 +56,5 @@ RoxygenNote: 7.1.0
 LinkingTo: Rcpp, RcppArmadillo, RcppEigen, RcppProgress, igraph
 NeedsCompilation: yes
 Remotes:
-    hms-dbmi/sccore,
+    kharchenkolab/sccore,
     jokergoo/ComplexHeatmap
