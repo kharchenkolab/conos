@@ -90,8 +90,9 @@ seuratProcV3 <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, n.pcs
 #'
 #' @export
 saveConosForScanPy <- function(con, output.path, metadata.df=NULL, cm.norm=FALSE, pseudo.pca=FALSE, pca=FALSE, n.dims=100, embedding=TRUE, alignment.graph=TRUE, verbose=FALSE) {
-  if (!dir.exists(output.path))
+  if (!dir.exists(output.path)){
     stop("Path", output.path, "doesn't exist")
+  }
 
   if (verbose) cat("Merge raw count matrices...\t")
   raw.count.matrix.merged <- con$getJointCountMatrix(raw=TRUE)
@@ -163,7 +164,6 @@ saveConosForScanPy <- function(con, output.path, metadata.df=NULL, cm.norm=FALSE
     Matrix::writeMM(graph.conn, paste0(output.path, "/graph_connectivities.mtx"))
     Matrix::writeMM(graph.dist, paste0(output.path, "/graph_distances.mtx"))
   }
-  if (verbose) cat("Done.\n")
   if (verbose) cat("All Done!")
 }
 
