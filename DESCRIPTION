@@ -31,7 +31,6 @@ Imports:
     Rcpp,
     RcppArmadillo,
     RcppProgress,
-    rhdf5,
     rlang,
     Rtsne,
     shiny,
@@ -51,6 +50,7 @@ Suggests:
     pbapply,
     PMA,
     pROC,
+    rhdf5,
     rmarkdown,
     Seurat,
     shinycssloaders
