@@ -93,10 +93,7 @@ seuratProcV3 <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, n.pcs
 #' @export
 saveConosForScanPy <- function(con, output.path, hdf5_filename, metadata.df=NULL, cm.norm=FALSE, pseudo.pca=FALSE, pca=FALSE, n.dims=100, embedding=TRUE, alignment.graph=TRUE, verbose=FALSE) {
   
-  ## fail at the beginning of the function if the package doesn't exist
-  if (requireNamespace("rhdf5", quietly = TRUE)) {
-    total_hdf5file_path = paste0(output.path, "/", hdf5_filename)
-  } else {
+  if (!requireNamespace("rhdf5", quietly = TRUE)) {
     stop("The package rhdf5 is required for saveConosForScanPy(). Please install.")
   }
 
@@ -168,6 +165,7 @@ saveConosForScanPy <- function(con, output.path, hdf5_filename, metadata.df=NULL
 
   if (verbose) cat("Write data to disk...\t\t")
   ## create HDF5 file
+  total_hdf5file_path = paste0(output.path, "/", hdf5_filename)
   rhdf5::h5createFile(total_hdf5file_path)
   ## raw.count.matrix.merged
   rhdf5::h5createGroup(total_hdf5file_path, "raw_count_matrix")
@@ -380,7 +378,7 @@ pcaFromConos <- function(p2.list, data.type='counts', k=30, ncomps=100, n.odgene
 
 #' @export
 convertToPagoda2 <- function(con, n.pcs=100, n.odgenes=2000, verbose=T, ...) {
-  if (!requireNamespace('pagoda2', quietly=T)) {
+  if (!requireNamespace('pagoda2', quietly=TRUE)) {
     stop("'pagoda2' must be installed to convert Conos to Pagoda 2")
   }
 
