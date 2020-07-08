@@ -78,7 +78,7 @@ seuratProcV3 <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, n.pcs
 #'
 #' @param con conos object
 #' @param output.path path to a folder, where intermediate files will be saved
-#' @param hdf5_filename name of HDF5 written with ScanPy files
+#' @param hdf5_filename name of HDF5 written with ScanPy files. Note: the \pkg{\link{rhdf5}} package is required
 #' @param metadata.df data.frame with additional metadata with rownames corresponding to cell ids, which should be passed to ScanPy.
 #' If NULL, only information about cell ids and origin dataset will be saved.
 #' @param cm.norm logical, include the matrix of normalised counts. Default: FALSE
@@ -88,10 +88,18 @@ seuratProcV3 <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, n.pcs
 #' @param n.dims number of dimensions for calculating PCA and/or pseudoPCA
 #' @param alignment.graph logical, include graph of connectivities and distances. Default: TRUE
 #' @param verbose verbose mode. Default: FALSE
-#' @import rhdf5
+#' @seealso The \pkg{\link{rhdf5}} package documentation \href{https://www.bioconductor.org/packages/release/bioc/html/rhdf5.html}{here}
 #'
 #' @export
 saveConosForScanPy <- function(con, output.path, hdf5_filename, metadata.df=NULL, cm.norm=FALSE, pseudo.pca=FALSE, pca=FALSE, n.dims=100, embedding=TRUE, alignment.graph=TRUE, verbose=FALSE) {
+  
+  ## fail at the beginning of the function if the package doesn't exist
+  if (requireNamespace("rhdf5", quietly = TRUE)) {
+    total_hdf5file_path = paste0(output.path, "/", hdf5_filename)
+  } else {
+    stop("The package rhdf5 is required for saveConosForScanPy(). Please install.")
+  }
+
   if (!dir.exists(output.path)){
     stop("Path", output.path, "doesn't exist")
   }
@@ -160,53 +168,52 @@ saveConosForScanPy <- function(con, output.path, hdf5_filename, metadata.df=NULL
 
   if (verbose) cat("Write data to disk...\t\t")
   ## create HDF5 file
-  total_hdf5file_path = paste0(output.path, "/", hdf5_filename)
-  h5createFile(total_hdf5file_path)
+  rhdf5::h5createFile(total_hdf5file_path)
   ## raw.count.matrix.merged
-  h5createGroup(total_hdf5file_path, "raw_count_matrix")
-  h5write(raw.count.matrix.merged@x, total_hdf5file_path, "raw_count_matrix/data")
-  h5write(dim(raw.count.matrix.merged), total_hdf5file_path, "raw_count_matrix/shape")
-  h5write(raw.count.matrix.merged@i, total_hdf5file_path, "raw_count_matrix/indices")
-  h5write(raw.count.matrix.merged@p, total_hdf5file_path, "raw_count_matrix/indptr")
+  rhdf5::h5createGroup(total_hdf5file_path, "raw_count_matrix")
+  rhdf5::h5write(raw.count.matrix.merged@x, total_hdf5file_path, "raw_count_matrix/data")
+  rhdf5::h5write(dim(raw.count.matrix.merged), total_hdf5file_path, "raw_count_matrix/shape")
+  rhdf5::h5write(raw.count.matrix.merged@i, total_hdf5file_path, "raw_count_matrix/indices")
+  rhdf5::h5write(raw.count.matrix.merged@p, total_hdf5file_path, "raw_count_matrix/indptr")
   ## metadata
-  h5createGroup(total_hdf5file_path, "metadata")
-  h5write(metadata.df, total_hdf5file_path, "metadata/metadata.df")
+  rhdf5::h5createGroup(total_hdf5file_path, "metadata")
+  rhdf5::h5write(metadata.df, total_hdf5file_path, "metadata/metadata.df")
   ## genes
-  h5createGroup(total_hdf5file_path, "genes")
-  h5write(gene.df, total_hdf5file_path, "genes/genes.df")
+  rhdf5::h5createGroup(total_hdf5file_path, "genes")
+  rhdf5::h5write(gene.df, total_hdf5file_path, "genes/genes.df")
   ## count_matrix
   if (cm.norm) {
-    h5createGroup(total_hdf5file_path, "count_matrix")
-    h5write(count.matrix.merged@x, total_hdf5file_path, "count_matrix/data")
-    h5write(dim(count.matrix.merged), total_hdf5file_path, "count_matrix/shape")
-    h5write(count.matrix.merged@i, total_hdf5file_path, "count_matrix/indices")
-    h5write(count.matrix.merged@p, total_hdf5file_path, "count_matrix/indptr")
+    rhdf5::h5createGroup(total_hdf5file_path, "count_matrix")
+    rhdf5::h5write(count.matrix.merged@x, total_hdf5file_path, "count_matrix/data")
+    rhdf5::h5write(dim(count.matrix.merged), total_hdf5file_path, "count_matrix/shape")
+    rhdf5::h5write(count.matrix.merged@i, total_hdf5file_path, "count_matrix/indices")
+    rhdf5::h5write(count.matrix.merged@p, total_hdf5file_path, "count_matrix/indptr")
   }
   if (embedding) {
-    h5createGroup(total_hdf5file_path, "embedding")
-    h5write(embedding.df, total_hdf5file_path, "embedding/embedding.df")
+    rhdf5::h5createGroup(total_hdf5file_path, "embedding")
+    rhdf5::h5write(embedding.df, total_hdf5file_path, "embedding/embedding.df")
   }
   if (pseudo.pca) {
-    h5createGroup(total_hdf5file_path, "pseudopca")
-    h5write(pseudopca.df, total_hdf5file_path, "pseudopca/pseudopca.df")
+    rhdf5::h5createGroup(total_hdf5file_path, "pseudopca")
+    rhdf5::h5write(pseudopca.df, total_hdf5file_path, "pseudopca/pseudopca.df")
   }
   if (pca) {
-    h5createGroup(total_hdf5file_path, "pca")
-    h5write(pca.df, total_hdf5file_path, "pca/pca.df")
+    rhdf5::h5createGroup(total_hdf5file_path, "pca")
+    rhdf5::h5write(pca.df, total_hdf5file_path, "pca/pca.df")
   }
   if (alignment.graph) {
     ## graph_connectivities
-    h5createGroup(total_hdf5file_path, "graph_connectivities")
-    h5write(graph.conn@x, total_hdf5file_path, "graph_connectivities/data")  
-    h5write(dim(graph.conn), total_hdf5file_path, "graph_connectivities/shape") 
-    h5write(graph.conn@i, total_hdf5file_path, "graph_connectivities/indices") 
-    h5write(graph.conn@p, total_hdf5file_path, "graph_connectivities/indptr") 
+    rhdf5::h5createGroup(total_hdf5file_path, "graph_connectivities")
+    rhdf5::h5write(graph.conn@x, total_hdf5file_path, "graph_connectivities/data")  
+    rhdf5::h5write(dim(graph.conn), total_hdf5file_path, "graph_connectivities/shape") 
+    rhdf5::h5write(graph.conn@i, total_hdf5file_path, "graph_connectivities/indices") 
+    rhdf5::h5write(graph.conn@p, total_hdf5file_path, "graph_connectivities/indptr") 
     ## graph_distances
-    h5createGroup(total_hdf5file_path, "graph_distances")
-    h5write(graph.dist@x, total_hdf5file_path, "graph_distances/data")  
-    h5write(dim(graph.dist), total_hdf5file_path, "graph_distances/shape") 
-    h5write(graph.dist@i, total_hdf5file_path, "graph_distances/indices") 
-    h5write(graph.dist@p, total_hdf5file_path, "graph_distances/indptr") 
+    rhdf5::h5createGroup(total_hdf5file_path, "graph_distances")
+    rhdf5::h5write(graph.dist@x, total_hdf5file_path, "graph_distances/data")  
+    rhdf5::h5write(dim(graph.dist), total_hdf5file_path, "graph_distances/shape") 
+    rhdf5::h5write(graph.dist@i, total_hdf5file_path, "graph_distances/indices") 
+    rhdf5::h5write(graph.dist@p, total_hdf5file_path, "graph_distances/indptr") 
   }
   if (verbose) cat("All Done!")
 }
