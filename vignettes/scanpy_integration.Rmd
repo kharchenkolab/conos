@@ -30,11 +30,24 @@ con <- Conos$new(panel.preprocessed, n.cores=4)
 con$buildGraph(k=15, k.self=5, space='PCA', ncomps=30)
 ```
 
+Find clusters and create embedding:
+
+```{r}
+con$findCommunities()
+con$embedGraph(method="UMAP")
+```
+
+Prepare metadata (can be any type of clustering of all the cells):
+
+```{r}
+metadata <- data.frame(Cluster=con$clusters$leiden$groups)
+```
+
 Save data (set `exchange_dir` to your path):
 
 ```{r}
 exchange_dir <- "~/scanpy_demo"
 dir.create(exchange_dir)
-saveConosForScanPy(con, output.path=exchange_dir, verbose=T)
+saveConosForScanPy(con, output.path=exchange_dir, verbose=TRUE)
 ```
 

@@ -162,24 +162,51 @@ saveConosForScanPy <- function(con, output.path, hdf5_filename, metadata.df=NULL
   ## create HDF5 file
   total_hdf5file_path = paste0(output.path, "/", hdf5_filename)
   h5createFile(total_hdf5file_path)
-  h5write(raw.count.matrix.merged, total_hdf5file_path, "raw_count_matrix")
-  h5write(metadata.df, total_hdf5file_path, "metadata")
-  h5write(gene.df, total_hdf5file_path, "genes")
+  ## raw.count.matrix.merged
+  h5createGroup(total_hdf5file_path, "raw_count_matrix")
+  h5write(raw.count.matrix.merged@x, total_hdf5file_path, "raw_count_matrix/data")
+  h5write(dim(raw.count.matrix.merged), total_hdf5file_path, "raw_count_matrix/shape")
+  h5write(raw.count.matrix.merged@i, total_hdf5file_path, "raw_count_matrix/indices")
+  h5write(raw.count.matrix.merged@p, total_hdf5file_path, "raw_count_matrix/indptr")
+  ## metadata
+  h5createGroup(total_hdf5file_path, "metadata")
+  h5write(metadata.df, total_hdf5file_path, "metadata/metadata.df")
+  ## genes
+  h5createGroup(total_hdf5file_path, "genes")
+  h5write(gene.df, total_hdf5file_path, "genes/genes.df")
+  ## count_matrix
   if (cm.norm) {
-    h5write(count.matrix.merged, total_hdf5file_path, "count_matrix")
+    h5createGroup(total_hdf5file_path, "count_matrix")
+    h5write(count.matrix.merged@x, total_hdf5file_path, "count_matrix/data")
+    h5write(dim(count.matrix.merged), total_hdf5file_path, "count_matrix/shape")
+    h5write(count.matrix.merged@i, total_hdf5file_path, "count_matrix/indices")
+    h5write(count.matrix.merged@p, total_hdf5file_path, "count_matrix/indptr")
   }
   if (embedding) {
-    h5write(embedding.df, total_hdf5file_path, "embedding")
+    h5createGroup(total_hdf5file_path, "embedding")
+    h5write(embedding.df, total_hdf5file_path, "embedding/embedding.df")
   }
   if (pseudo.pca) {
-    h5write(pseudopca.df, total_hdf5file_path, "pseudopca")
+    h5createGroup(total_hdf5file_path, "pseudopca")
+    h5write(pseudopca.df, total_hdf5file_path, "pseudopca/pseudopca.df")
   }
   if (pca) {
-    h5write(output.path, total_hdf5file_path, "pca")   
+    h5createGroup(total_hdf5file_path, "pca")
+    h5write(pca.df, total_hdf5file_path, "pca/pca.df")
   }
   if (alignment.graph) {
-    h5write(graph.conn, total_hdf5file_path, "graph_connectivities")   
-    h5write(graph.dist, total_hdf5file_path, "graph_distances")  
+    ## graph_connectivities
+    h5createGroup(total_hdf5file_path, "graph_connectivities")
+    h5write(graph.conn@x, total_hdf5file_path, "graph_connectivities/data")  
+    h5write(dim(graph.conn), total_hdf5file_path, "graph_connectivities/shape") 
+    h5write(graph.conn@i, total_hdf5file_path, "graph_connectivities/indices") 
+    h5write(graph.conn@p, total_hdf5file_path, "graph_connectivities/indptr") 
+    ## graph_distances
+    h5createGroup(total_hdf5file_path, "graph_distances")
+    h5write(graph.dist@x, total_hdf5file_path, "graph_distances/data")  
+    h5write(dim(graph.dist), total_hdf5file_path, "graph_distances/shape") 
+    h5write(graph.dist@i, total_hdf5file_path, "graph_distances/indices") 
+    h5write(graph.dist@p, total_hdf5file_path, "graph_distances/indptr") 
   }
   if (verbose) cat("All Done!")
 }

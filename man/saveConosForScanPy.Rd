@@ -7,6 +7,7 @@
 saveConosForScanPy(
   con,
   output.path,
+  hdf5_filename,
   metadata.df = NULL,
   cm.norm = FALSE,
   pseudo.pca = FALSE,
@@ -21,6 +22,8 @@ saveConosForScanPy(
 \item{con}{conos object}
 
 \item{output.path}{path to a folder, where intermediate files will be saved}
+
+\item{hdf5_filename}{name of HDF5 written with ScanPy files}
 
 \item{metadata.df}{data.frame with additional metadata with rownames corresponding to cell ids, which should be passed to ScanPy.
 If NULL, only information about cell ids and origin dataset will be saved.}
