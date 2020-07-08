@@ -212,5 +212,5 @@ raw_count_matrix = sparseMatrix(x = as.numeric(rawcountMat$data),
     i = rawcountMat$indices, index1=FALSE)
 ```
 
-**Note:** Please set `index1=FALSE` as the index vectors are 0-based. For more details, see the documentation for (Matrix::sparseMatrix())[https://www.rdocumentation.org/packages/Matrix/versions/1.2-18/topics/sparseMatrix]
+**Note:** Please set `index1=FALSE` as the index vectors are 0-based. For more details, see the documentation for [Matrix::sparseMatrix()](https://www.rdocumentation.org/packages/Matrix/versions/1.2-18/topics/sparseMatrix)
 
