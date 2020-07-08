@@ -78,6 +78,7 @@ seuratProcV3 <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, n.pcs
 #'
 #' @param con conos object
 #' @param output.path path to a folder, where intermediate files will be saved
+#' @param hdf5_filename name of HDF5 written with ScanPy files
 #' @param metadata.df data.frame with additional metadata with rownames corresponding to cell ids, which should be passed to ScanPy.
 #' If NULL, only information about cell ids and origin dataset will be saved.
 #' @param cm.norm logical, include the matrix of normalised counts. Default: FALSE
@@ -87,11 +88,16 @@ seuratProcV3 <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, n.pcs
 #' @param n.dims number of dimensions for calculating PCA and/or pseudoPCA
 #' @param alignment.graph logical, include graph of connectivities and distances. Default: TRUE
 #' @param verbose verbose mode. Default: FALSE
+#' @import rhdf5
 #'
 #' @export
-saveConosForScanPy <- function(con, output.path, metadata.df=NULL, cm.norm=FALSE, pseudo.pca=FALSE, pca=FALSE, n.dims=100, embedding=TRUE, alignment.graph=TRUE, verbose=FALSE) {
+saveConosForScanPy <- function(con, output.path, hdf5_filename, metadata.df=NULL, cm.norm=FALSE, pseudo.pca=FALSE, pca=FALSE, n.dims=100, embedding=TRUE, alignment.graph=TRUE, verbose=FALSE) {
   if (!dir.exists(output.path)){
     stop("Path", output.path, "doesn't exist")
+  }
+
+  if (tools::file_ext(hdf5_filename) != "h5"){
+    stop("File", hdf5_filename, "must have the file extension *.h5")
   }
 
   if (verbose) cat("Merge raw count matrices...\t")
@@ -153,16 +159,27 @@ saveConosForScanPy <- function(con, output.path, metadata.df=NULL, cm.norm=FALSE
   }
 
   if (verbose) cat("Write data to disk...\t\t")
-  Matrix::writeMM(raw.count.matrix.merged, paste0(output.path, "/raw_count_matrix.mtx"))
-  data.table::fwrite(metadata.df, paste0(output.path, "/metadata.csv"))
-  data.table::fwrite(gene.df, paste0(output.path, "/genes.csv"))
-  if (cm.norm) Matrix::writeMM(count.matrix.merged, paste0(output.path, "/count_matrix.mtx"))
-  if (embedding) data.table::fwrite(embedding.df, paste0(output.path, "/embedding.csv"))
-  if (pseudo.pca) data.table::fwrite(pseudopca.df, paste0(output.path, "/pseudopca.csv"))
-  if (pca) data.table::fwrite(pca.df, paste0(output.path, "/pca.csv"))
+  ## create HDF5 file
+  total_hdf5file_path = paste0(output.path, "/", hdf5_filename)
+  h5createFile(total_hdf5file_path)
+  h5write(raw.count.matrix.merged, total_hdf5file_path, "raw_count_matrix")
+  h5write(metadata.df, total_hdf5file_path, "metadata")
+  h5write(gene.df, total_hdf5file_path, "genes")
+  if (cm.norm) {
+    h5write(count.matrix.merged, total_hdf5file_path, "count_matrix")
+  }
+  if (embedding) {
+    h5write(embedding.df, total_hdf5file_path, "embedding")
+  }
+  if (pseudo.pca) {
+    h5write(pseudopca.df, total_hdf5file_path, "pseudopca")
+  }
+  if (pca) {
+    h5write(output.path, total_hdf5file_path, "pca")   
+  }
   if (alignment.graph) {
-    Matrix::writeMM(graph.conn, paste0(output.path, "/graph_connectivities.mtx"))
-    Matrix::writeMM(graph.dist, paste0(output.path, "/graph_distances.mtx"))
+    h5write(graph.conn, total_hdf5file_path, "graph_connectivities")   
+    h5write(graph.dist, total_hdf5file_path, "graph_distances")  
   }
   if (verbose) cat("All Done!")
 }

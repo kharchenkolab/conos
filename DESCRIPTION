@@ -12,6 +12,7 @@ Depends: R (>= 3.2.1), Matrix, igraph
 License: GPL3
 Encoding: UTF-8
 LazyData: true
+biocViews:
 Imports:
     abind,
     cowplot,
@@ -30,10 +31,12 @@ Imports:
     Rcpp,
     RcppArmadillo,
     RcppProgress,
+    rhdf5,
     rlang,
     Rtsne,
     shiny,
     stats,
+    tools,
     utils,
     viridis,
     sccore (>= 0.1)
