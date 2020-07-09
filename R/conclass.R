@@ -382,7 +382,7 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
     },
 
     #' @description plot panel of individual embeddings per sample with joint coloring
-    plotPanel=function(clustering=NULL, embedding=NULL, groups=NULL, colors=NULL, gene=NULL, use.local.clusters=FALSE, plot.theme=NULL, use.common.embedding=FALSE, embedding.type=NULL, adj.list=NULL, ...) {
+    plotPanel=function(clustering=NULL, groups=NULL, colors=NULL, gene=NULL, use.local.clusters=FALSE, plot.theme=NULL, use.common.embedding=FALSE, embedding.type=NULL, adj.list=NULL, ...) {
       if (use.local.clusters) {
         if (is.null(clustering) && !(inherits(x = self$samples[[1]], what = c('seurat', 'Seurat')))) {
           stop("You have to provide 'clustering' parameter to be able to use local clusters")
@@ -398,12 +398,12 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
         groups <- getClusteringGroups(self$clusters, clustering)
       }
 
-      if (!is.null(embedding)){
+      if (!is.null(embedding.type)){
         ## check embedding exists in list
-        if (embedding %in% names(self$embeddings)){
-          emb <- self$embeddings[[embedding]]
+        if (embedding.type %in% names(self$embeddings)){
+          emb <- self$embeddings[[embedding.type]]
         } else{
-          stop(paste("Embedding", embedding, "is not found in any of the joint embeddings"))
+          stop(paste("Embedding", embedding.type, "is not found in any of the joint embeddings"))
         }
       } else{
         ## grab last element in embeddings list
@@ -465,7 +465,7 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
     #'
     #' @param clustering name of the clustering result to show
     #' @param what show a specific plot (ari - adjusted rand index, fjc - flat Jaccard, hjc - hierarchical Jaccard, dend - cluster dendrogram)
-    plotClusterStability=function(clustering=NULL,what='all') {
+    plotClusterStability=function(clustering=NULL, what='all') {
       if(is.null(clustering)) clustering <- names(self$clusters)[[1]]
 
       if(is.null(self$clusters[[clustering]]))
@@ -552,29 +552,29 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
     #' @description Plot joint graph.
     #'
     #' @param clustering name of the clustering to use
-    #' @param embedding name of the embedding to use
+    #' @param embedding.type name of the embedding to use
     #' @param groups a factor on cells to use for coloring.
     #' @param colors a color factor (named with cell names) use for cell coloring.
     #' @param gene show expression of a gene.
     #' @param subset a subset of cells to show.
-    plotGraph=function(color.by='cluster', clustering=NULL, embedding=NULL, groups=NULL, colors=NULL, gene=NULL, plot.theme=NULL, subset=NULL, ...) {
+    plotGraph=function(color.by='cluster', clustering=NULL, embedding.type=NULL, groups=NULL, colors=NULL, gene=NULL, plot.theme=NULL, subset=NULL, ...) {
       if (length(self$embeddings) == 0) {
         self$embedGraph()
       }
       
-      if (!is.null(embedding)){
+      if (!is.null(embedding.type)){
         ## check embedding exists in list
-        if (embedding %in% names(self$embeddings)){
-          emb <- self$embeddings[[embedding]]
+        if (embedding.type %in% names(self$embeddings)){
+          emb <- self$embeddings[[embedding.type]]
         } else{
-          stop(paste("Embedding", embedding, "is not found in any of the joint embeddings"))
+          stop(paste("Embedding", embedding.type, "is not found in any of the joint embeddings"))
         }
       } else{
         ## grab last element in embeddings list
         emb <- self$embeddings[length(self$embeddings)]
       }
 
-      if(!is.null(subset)) {
+      if (!is.null(subset)) {
         emb <- emb[rownames(emb) %in% subset,,drop=FALSE]
       }
 
