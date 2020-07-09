@@ -449,16 +449,16 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
         }
         coords <- conos:::projectKNNs(wij = wij, dim=target.dims, verbose = verbose,sgd_batches = sgd_batches,gamma=gamma, M=M, seed=seed, alpha=alpha, rho=1, threads=n.cores)
         colnames(coords) <- V(self$graph)$name
-        embedding_result <- t(coords);
+        embedding.result <- t(coords);
       } else {
         if (!requireNamespace("uwot", quietly=T))
           stop("You need to install package 'uwot' to be able to use UMAP embedding.")
 
-        embedding_result <- embedGraphUmap(self$graph, verbose=verbose, return.all=F, n.cores=n.cores, target.dims=target.dims, ...)
+        embedding.result <- embedGraphUmap(self$graph, verbose=verbose, return.all=F, n.cores=n.cores, target.dims=target.dims, ...)
       }
 
-      self$embeddings[[name]] <- embedding_result
-      return(invisible(embedding_result))
+      self$embeddings[[name]] <- embedding.result
+      return(invisible(embedding.result))
     },
 
     #' @description Plot cluster stability statistics.
