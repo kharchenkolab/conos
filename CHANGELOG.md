@@ -1,5 +1,7 @@
 ## Upcoming
 
+- allow multiple embeddings in conclass (July 2020)
+
 ### Changed
 
 - Improved `plotDEheatmap` function
