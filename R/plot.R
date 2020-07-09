@@ -145,7 +145,7 @@ plotClusterBarplots <- function(conos.obj=NULL, clustering=NULL, groups=NULL,sam
     stop('conos.obj must be passed if clustering name is specified')
   }
 
-  if (is.null(groups) && is.null(conos.obj))) {
+  if (is.null(groups) && is.null(conos.obj)) {
     stop('Either groups factor on the cells or a conos object needs to be specified, both cannot be NULL')
   }
 
