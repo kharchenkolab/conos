@@ -247,7 +247,7 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
 
         de.genes %<>% lapply(function(x) if ((length(x) > 0) && (nrow(x) > 0)) subset(x, complete.cases(x)) else x)
         de.genes %<>% names() %>% setNames(., .) %>%
-          plapply(function(n) appendSpecificityMetricsToDE(de.genes[[n]], groups.clean, n, p2.counts=cm.merged, append.auc=append.auc), verbose=verbose, n.cores=n.cores)
+          papply(function(n) appendSpecificityMetricsToDE(de.genes[[n]], groups.clean, n, p2.counts=cm.merged, append.auc=append.auc), n.cores=n.cores)
       }
 
       if (verbose) cat("All done!\n")
