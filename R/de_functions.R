@@ -83,7 +83,7 @@ rawMatricesWithCommonGenes <- function(con.obj, sample.groups=NULL) {
   }
 
   ## Generate an aggregated matrix
-  raw.mats <- lapply(samples, getRawCountMatrix, transposed=T)
+  raw.mats <- lapply(samples, getRawCountMatrix, transposed=TRUE)
   common.genes <- Reduce(intersect,lapply(raw.mats, colnames))
   return(lapply(raw.mats, function(x) {x[,common.genes]}))
 }
@@ -209,7 +209,7 @@ getPerCellTypeDE <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cut
       meta$group <- relevel(meta$group, ref=ref.level)
       if (length(unique(as.character(meta$group))) < 2)
         stop('The cluster is not present in both conditions')
-      dds1 <- DESeq2::DESeqDataSetFromMatrix(cm,meta,design=~group)
+      dds1 <- DESeq2::DESeqDataSetFromMatrix(cm, meta, design=~group)
       dds1 <- DESeq2::DESeq(dds1)
       res1 <- DESeq2::results(dds1, cooksCutoff = cooks.cutoff, independentFiltering = independent.filtering)
       res1 <- as.data.frame(res1)
@@ -261,8 +261,9 @@ getPerCellTypeDECorrected <- function(con.obj, groups=NULL, sample.groups=NULL, 
                 })))
             )
             meta$group <- relevel(meta$group, ref=ref.level)
-            if (length(unique(as.character(meta$group))) < 2)
+            if (length(unique(as.character(meta$group))) < 2){
                 stop('The cluster is not present in both conditions')
+            }
 
             dds1 <- DESeq2::DESeqDataSetFromMatrix(cm,meta,design=~group)
             dds1 <- DESeq2::estimateSizeFactors(dds1)
@@ -578,8 +579,9 @@ getBetweenCellTypeCorrectedDE <- function(con.obj, sample.groups =  NULL, groups
 #' Takes data.frames with info about DE genes for single cell type and many samples and
 #' returns data.frame with aggregated info for this cell type
 aggregateDEMarkersAcrossDatasets <- function(marker.dfs, z.threshold, upregulated.only) {
-  if (length(marker.dfs) == 0)
+  if (length(marker.dfs) == 0){
     return(data.frame())
+  }
 
   z.scores.per.dataset <- lapply(marker.dfs, function(df) setNames(df$Z, rownames(df)))
   m.vals.per.dataset <- lapply(marker.dfs, function(df) setNames(df$M, rownames(df)))
@@ -594,7 +596,7 @@ aggregateDEMarkersAcrossDatasets <- function(marker.dfs, z.threshold, upregulate
   return(res[z.filter > z.threshold,])
 }
 
-getDifferentialGenesP2 <- function(p2.samples, groups, z.threshold=3.0, upregulated.only=F, verbose=T, n.cores=1) {
+getDifferentialGenesP2 <- function(p2.samples, groups, z.threshold=3.0, upregulated.only=FALSE, verbose=TRUE, n.cores=1) {
   groups %<>% as.character() %>% setNames(names(groups))
 
   if (verbose) cat("Estimating marker genes per sample\n")
@@ -616,4 +618,16 @@ getDifferentialGenesP2 <- function(p2.samples, groups, z.threshold=3.0, upregula
   markers.per.type = papply(markers.per.type, aggregateDEMarkersAcrossDatasets, z.threshold=z.threshold, upregulated.only=upregulated.only)
 
   return(markers.per.type)
+}
+
+#' Check that the count matrices contain integer counts
+#'
+#' @param input.matrix the count matrix to check during DE 
+#' @return if non-integer counts are found, a warning is returned
+#' @keyword internal
+checkCountsWholeNumbers <- function(input.matrix){
+  ## check all non-zero values whole numbers
+  if (!(all(input.matrix@x == floor(input.matrix@x)))){
+    cat("There are counts in matrix ", input.matrix, "which are not integers. This leads to DESeq errors. Please check your count matrices.")
+  }
 }
