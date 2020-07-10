@@ -2,16 +2,16 @@
 % Please edit documentation in R/de_functions.R
 \name{checkCountsWholeNumbers}
 \alias{checkCountsWholeNumbers}
-\title{Check that the count matrices contain integer counts}
+\title{Check that the count data contain only integer counts}
 \usage{
 checkCountsWholeNumbers(input.matrix)
 }
 \arguments{
-\item{input.matrix}{the count matrix to check during DE}
+\item{aggregated.samples}{the count data from aggreaged samples input to DESeq}
 }
 \value{
-if non-integer counts are found, a warning is returned
+if non-integer counts are found, an error is returned
 }
 \description{
-Check that the count matrices contain integer counts
+Check that the count data contain only integer counts
 }
