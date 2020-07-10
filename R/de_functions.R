@@ -30,6 +30,9 @@ validatePerCellTypeParams <- function(con.obj, groups, sample.groups, ref.level,
 
   if (!('Conos' %in% class(con.obj))) stop('con.obj must be a conos object')
   if (is.null(groups)) stop('groups must be specified');
+  if (any(is.na(groups))){
+    stop("groups cannot contian NAs. Please remove them.")
+  }
   if (is.null(sample.groups)) stop('sample.groups must be specified')
   if (!('list' %in% class(sample.groups))) stop('sample.groups must be a list');
   if (length(sample.groups) != 2) stop('sample.groups must be of length 2');
@@ -56,6 +59,9 @@ validateBetweenCellTypeParams <- function(con.obj, groups, sample.groups, refgro
 
   if (class(con.obj) != 'Conos') stop('con.obj must be a conos object')
   if (is.null(groups) ) stop('groups must be specified');
+  if (any(is.na(groups))){
+    stop("groups cannot contian NAs. Please remove them.")
+  }
   if (is.null(sample.groups) ) stop('sample.groups must be specified')
   if (class(sample.groups) != 'list' ) stop('sample.groups must be a list');
   #if ( length(sample.groups) != 2 ) stop('sample.groups must be of length 2');
@@ -115,6 +121,8 @@ is.error <- function (x) {
 }
 
 
+
+
 #' Do differential expression for each cell type in a conos object between the specified subsets of apps
 #' @param con.obj conos object
 #' @param groups factor specifying cell types
@@ -123,10 +131,11 @@ is.error <- function (x) {
 #' @param independent.filtering independentFiltering for DESeq2
 #' @param n.cores number of cores
 #' @param cluster.sep.chr character string of length 1 specifying a delimiter to separate cluster and app names
-#' @param return.details return detals
+#' @param remove.na boolean If TRUE, remove NAs from DESeq calculations, which often arise as comparisons not possible (default=TRUE)
+#' @param return.details return details
 #' @export getPerCellTypeDE
 getPerCellTypeDE <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cutoff = FALSE, ref.level = NULL, min.cell.count = 10,
-                             independent.filtering = FALSE, n.cores=1, cluster.sep.chr = '<!!>',return.details=TRUE) {
+                             independent.filtering = FALSE, n.cores=1, cluster.sep.chr = '<!!>', remove.na=TRUE, return.details=TRUE) {
   validatePerCellTypeParams(con.obj, groups, sample.groups, ref.level, cluster.sep.chr)
 
   ## Generate a summary dataset collapsing the cells of the same type in each sample
@@ -153,12 +162,17 @@ getPerCellTypeDE <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cut
       meta$group <- relevel(meta$group, ref=ref.level)
       if (length(unique(as.character(meta$group))) < 2)
         stop('The cluster is not present in both conditions')
+      ## check counts
+      checkCountsWholeNumbers(cm)
       dds1 <- DESeq2::DESeqDataSetFromMatrix(cm, meta, design=~group)
       dds1 <- DESeq2::DESeq(dds1)
       res1 <- DESeq2::results(dds1, cooksCutoff = cooks.cutoff, independentFiltering = independent.filtering)
       res1 <- as.data.frame(res1)
-      res1 <- res1[order(res1$padj,decreasing = FALSE),]
-      ##
+      res1 <- res1[order(res1$padj, decreasing = FALSE),]
+      ## remove NA values, which exist in log2FoldChange, lfcSE, stat, pvalue, padj
+      if (remove.na){
+        res1 <- res1[!is.na(res1$padj), ]
+      }
       if(return.details) {
         list(res=res1, cm=cm, sample.groups=sample.groups)
       } else {
@@ -168,6 +182,7 @@ getPerCellTypeDE <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cut
   }, n.cores=n.cores)
   de.res
 }
+
 
 
 #' Save differential expression as CSV table
@@ -323,9 +338,10 @@ saveDEasJSON <- function(de.results = NULL, saveprefix = NULL, gene.metadata = N
 #' @param cluster.sep.chr character string of length 1 specifying a delimiter to separate cluster and app names
 #' @param return.details logical, return detailed results
 #' @param only.paired only keep samples that that both cell types above the min.cell.count threshold
+#' @param remove.na boolean If TRUE, remove NAs from DESeq calculations (default=TRUE)
 #' @export getBetweenCellTypeDE
 getBetweenCellTypeDE <- function(con.obj, sample.groups =  NULL, groups=NULL, cooks.cutoff = FALSE, refgroup = NULL, altgroup = NULL, min.cell.count = 10,
-                                 independent.filtering = FALSE, cluster.sep.chr = '<!!>',return.details=TRUE, only.paired=TRUE) {
+                                 independent.filtering = FALSE, cluster.sep.chr = '<!!>',return.details=TRUE, only.paired=TRUE, remove.na=TRUE) {
   # TODO: do we really need sample.groups here? They are used in the corrected version for some unknown reason.
   validateBetweenCellTypeParams(con.obj, groups, sample.groups, refgroup, altgroup, cluster.sep.chr)
   ## Get the samples from the panel to use in this comparison
@@ -344,11 +360,16 @@ getBetweenCellTypeDE <- function(con.obj, sample.groups =  NULL, groups=NULL, co
   ## Select the desired samples only
   aggr2.meta$celltype <- relevel(aggr2.meta$celltype, ref = refgroup)
   aggr2 <- aggr2[,rownames(aggr2.meta)]
+  ## check counts
+  checkCountsWholeNumbers(aggr2)
   ## Generate DESeq2 comparison
   dds1 <- DESeq2::DESeqDataSetFromMatrix(aggr2, aggr2.meta, design = ~ library + celltype)
   dds1 <- DESeq2::DESeq(dds1)
   res1 <- DESeq2::results(dds1, cooksCutoff = cooks.cutoff, independentFiltering = independent.filtering)
   res1 <- res1[order(res1$padj,decreasing = FALSE),]
+  if (remove.na){
+    res1 <- res1[!is.na(res1$padj), ]
+  }
   ## Return
   if(return.details) {
     list(res=res1, cm=aggr2, meta = aggr2.meta, refgroup = refgroup, altgroup = altgroup, sample.groups=sample.groups)
@@ -361,8 +382,8 @@ generateDEMatrixMetadata <- function(mtx, refgroup, altgroup, cluster.sep.chr) {
   meta <- data.frame(
     row.names = colnames(mtx),
     sample=colnames(mtx),
-    library=strpart(colnames(mtx),cluster.sep.chr,1,fixed=T),
-    celltype = strpart(colnames(mtx),cluster.sep.chr,2,fixed=T)
+    library=strpart(colnames(mtx), cluster.sep.chr, 1, fixed=TRUE),
+    celltype = strpart(colnames(mtx), cluster.sep.chr, 2, fixed=TRUE)
   )
 
   return(subset(meta, celltype %in% c(refgroup, altgroup)))
@@ -407,6 +428,8 @@ getBetweenCellTypeCorrectedDE <- function(con.obj, sample.groups =  NULL, groups
   aggr2.meta$group <-  factor(tmp1$group[match(as.character(aggr2.meta$library), tmp1$sample)])
   aggr2.meta$group <- relevel(aggr2.meta$group, ref = ref.level)
   rm(tmp1)
+  ## check counts
+  checkCountsWholeNumbers(aggr2)
   ## Generate DESeq2 comparison
   dds1 <- DESeq2::DESeqDataSetFromMatrix(aggr2, aggr2.meta, design = ~ celltype)
   ## Apply the correction based on sample type
@@ -455,9 +478,9 @@ aggregateDEMarkersAcrossDatasets <- function(marker.dfs, z.threshold, upregulate
   z.scores.per.dataset <- lapply(marker.dfs, function(df) setNames(df$Z, rownames(df)))
   m.vals.per.dataset <- lapply(marker.dfs, function(df) setNames(df$M, rownames(df)))
   gene.union <- lapply(z.scores.per.dataset, names) %>% Reduce(union, .)
-  z.scores <- sapply(z.scores.per.dataset, `[`, gene.union) %>% rowMeans(na.rm=T)
-  m.vals <- sapply(m.vals.per.dataset, `[`, gene.union) %>% rowMeans(na.rm=T)
-  ro <- order(z.scores,decreasing=T)
+  z.scores <- sapply(z.scores.per.dataset, `[`, gene.union) %>% rowMeans(na.rm=TRUE)
+  m.vals <- sapply(m.vals.per.dataset, `[`, gene.union) %>% rowMeans(na.rm=TRUE)
+  ro <- order(z.scores,decreasing=TRUE)
   pvals <- dnorm(z.scores)
   res <- data.frame(Gene=names(z.scores), M=m.vals, Z=z.scores, PValue=pvals, PAdj=p.adjust(pvals))[ro,]
 
@@ -497,7 +520,8 @@ getDifferentialGenesP2 <- function(p2.samples, groups, z.threshold=3.0, upregula
 checkCountsWholeNumbers <- function(input.matrix){
   ## check all non-zero values whole numbers
   if (!(all(input.matrix@x == floor(input.matrix@x)))){
-    cat("There are counts in matrix ", input.matrix, "which are not integers. This leads to DESeq errors. Please check your count matrices.")
+    stop("There are counts in matrix ", input.matrix, "which are not integers. This leads to DESeq errors. Please check your count matrices.")
   }
 }
+
 
