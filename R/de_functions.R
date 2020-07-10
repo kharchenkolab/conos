@@ -519,7 +519,7 @@ getDifferentialGenesP2 <- function(p2.samples, groups, z.threshold=3.0, upregula
 #' @keyword internal
 checkCountsWholeNumbers <- function(input.matrix){
   ## check all non-zero values whole numbers
-  if (!(all(input.matrix@x == floor(input.matrix@x)))){
+  if (!(all(input.matrix == floor(input.matrix)))){
     stop("There are counts in matrix ", input.matrix, "which are not integers. This leads to DESeq errors. Please check your count matrices.")
   }
 }
