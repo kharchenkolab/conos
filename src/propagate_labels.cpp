@@ -175,7 +175,7 @@ void smooth_count_matrix_c(const std::vector<Edge> &edges, Mat &count_matrix, in
   if (!verbose)
     return;
 
-  std::cout << "Stop after " << iter << " iterations. Norm: " << inf_norm << std::endl
+  Rcpp:Rcout << "Stop after " << iter << " iterations. Norm: " << inf_norm << std::endl
             << "Min weight: " << min_weight << ", max weight: " << max_weight << ", fading: ("
             << diffusion_fading << ", " << diffusion_fading_const << ")" << std::endl;
 }
