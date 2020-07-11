@@ -7,6 +7,8 @@
 - Fixed some installation problems
 - Removed `getCorrectionVector()` (2 July 2020)
 
+### Added
+
 ## [1.3.0] - 2020-19-3
 
 ### Changed
