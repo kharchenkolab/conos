@@ -6,6 +6,9 @@
 - Fixed bug with `balancing.factor.per.sample` in `buildGraph`
 - Fixed some installation problems
 
+### Added
+- LICENSE (July 2020)
+
 ## [1.3.0] - 2020-19-3
 
 ### Changed
