@@ -7,6 +7,8 @@
 - Fixed some installation problems
 - Removed all neighborhood averaging via `neighborhood.averag` (4 July 2020)
 
+### Added
+
 ## [1.3.0] - 2020-19-3
 
 ### Changed
