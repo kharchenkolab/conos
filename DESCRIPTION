@@ -58,3 +58,5 @@ NeedsCompilation: yes
 Remotes:
     kharchenkolab/sccore,
     jokergoo/ComplexHeatmap
+Author: Peter Kharchenko [cre, aut], Nikolas Barkas [aut], Viktor Petukhov [aut]
+Maintainer: Peter Kharchenko <peter_kharchenko@hms.harvard.edu>
