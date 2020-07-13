@@ -11,7 +11,6 @@ quickCPCA(
   n.odgenes = NULL,
   var.scale = TRUE,
   verbose = TRUE,
-  neighborhood.average = FALSE,
   score.component.variance = FALSE
 )
 }
@@ -25,8 +24,6 @@ quickCPCA(
 \item{var.scale}{whether to scale variance (default=TRUE)}
 
 \item{verbose}{whether to be verbose}
-
-\item{neighborhood.average}{use neighborhood average values}
 
 \item{n.cores}{number of cores to use}
 }

@@ -77,7 +77,7 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
     },
 
     buildGraph=function(k=15, k.self=10, k.self.weight=0.1, alignment.strength=NULL, space='PCA', matching.method='mNN', metric='angular', k1=k, data.type='counts', l2.sigma=1e5, var.scale=TRUE, ncomps=40,
-                        n.odgenes=2000, neighborhood.average=FALSE, neighborhood.average.k=10, matching.mask=NULL, exclude.samples=NULL, common.centering=TRUE, verbose=TRUE,
+                        n.odgenes=2000, matching.mask=NULL, exclude.samples=NULL, common.centering=TRUE, verbose=TRUE,
                         base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, score.component.variance=FALSE,
                         balance.edge.weights=FALSE, balancing.factor.per.cell=NULL, same.factor.downweight=1.0, k.same.factor=k, balancing.factor.per.sample=NULL) {
       supported.spaces <- c("CPCA","JNMF","genes","PCA","PMA","CCA")
@@ -103,8 +103,7 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
       if(k1<k) { stop("k1 must be >= k") }
       # calculate or update pairwise alignments
       sn.pairs <- private$updatePairs(
-        space=space, ncomps=ncomps, n.odgenes=n.odgenes, verbose=verbose, var.scale=var.scale, neighborhood.average=neighborhood.average,
-        neighborhood.average.k=10, matching.mask=matching.mask, exclude.samples=exclude.samples, score.component.variance=score.component.variance
+        space=space, ncomps=ncomps, n.odgenes=n.odgenes, verbose=verbose, var.scale=var.scale, matching.mask=matching.mask, exclude.samples=exclude.samples, score.component.variance=score.component.variance
       )
       if(ncol(sn.pairs)<1) { stop("insufficient number of comparable pairs") }
       if(!is.null(base.groups)) {
@@ -115,7 +114,7 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
         samf <- setNames(rep(names(samf),unlist(lapply(samf,length))),unlist(samf))
         if(append.global.axes) {
           cms.clust <- self$getClusterCountMatrices(groups=base.groups,common.genes=FALSE)
-          global.proj <- projectSamplesOnGlobalAxes(self$samples, cms.clust, data.type, neighborhood.average, verbose, self$n.cores)
+          global.proj <- projectSamplesOnGlobalAxes(self$samples, cms.clust, data.type, verbose, self$n.cores)
         }
       }
 
@@ -161,7 +160,7 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
 
           mnn <- getPcaBasedNeighborMatrix(self$samples[sn.pairs[,j]], od.genes=od.genes, rot=rot, data.type=data.type,
                                            k=k.cur, k1=k1, matching.method=matching.method, metric=metric, l2.sigma=l2.sigma, cor.base=cor.base,
-                                           var.scale=var.scale, neighborhood.average=neighborhood.average, common.centering=common.centering,
+                                           var.scale=var.scale, common.centering=common.centering,
                                            base.groups=base.groups, append.decoys=append.decoys, samples=self$samples, samf=samf, decoy.threshold=decoy.threshold,
                                            n.decoys=n.decoys, append.global.axes=append.global.axes, global.proj=global.proj)
         } else if (space=='genes') { ## Overdispersed Gene space
@@ -713,25 +712,7 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
       return(main.theme + theme)
     },
 
-    updatePairs=function(space='PCA', data.type='counts', ncomps=50, n.odgenes=1e3, var.scale=TRUE, neighborhood.average=FALSE, neighborhood.average.k=10, matching.mask=NULL, exclude.samples=NULL, score.component.variance=FALSE, verbose=FALSE) {
-      if(neighborhood.average) {
-        # pre-calculate averaging matrices for each sample
-        if(verbose)  cat("calculating local averaging neighborhoods ")
-        for (n in names(self$samples)) {
-          r <- self$samples[[n]]
-          if(!is.null(edgeMat(r)$mat) && edgeMat(r)$k != neighborhood.average.k)
-            next
-
-          xk <- n2Knn(getPca(r)[getCellNames(r),],neighborhood.average.k,self$n.cores,FALSE)
-          xk@x <- pmax(1-xk@x,0);
-          diag(xk) <- 1;
-          xk <- t(t(xk)/colSums(xk))
-          colnames(xk) <- rownames(xk) <- getCellNames(r)
-          edgeMat(self$samples[[n]]) <- list(mat=xk, k=neighborhood.average.k)
-          if(verbose) cat(".")
-        }
-        if(verbose) cat(" done\n")
-      }
+    updatePairs=function(space='PCA', data.type='counts', ncomps=50, n.odgenes=1e3, var.scale=TRUE, matching.mask=NULL, exclude.samples=NULL, score.component.variance=FALSE, verbose=FALSE) {
 
       # make a list of all pairs
       sample.names <- names(self$samples);
@@ -770,15 +751,15 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
         if(verbose) cat('running',sum(is.na(mi)),'additional',space,' space pairs ')
         xl2 <- papply(which(is.na(mi)), function(i) {
           if(space=='CPCA') {
-            xcp <- quickCPCA(self$samples[sn.pairs[,i]],data.type=data.type,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale,neighborhood.average=neighborhood.average, score.component.variance=score.component.variance)
+            xcp <- quickCPCA(self$samples[sn.pairs[,i]],data.type=data.type,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale, score.component.variance=score.component.variance)
           } else if(space=='JNMF') {
-            xcp <- quickJNMF(self$samples[sn.pairs[,i]],data.type=data.type,n.comps=ncomps,n.odgenes=n.odgenes,var.scale=var.scale,verbose=FALSE,max.iter=3e3,neighborhood.average=neighborhood.average)
+            xcp <- quickJNMF(self$samples[sn.pairs[,i]],data.type=data.type,n.comps=ncomps,n.odgenes=n.odgenes,var.scale=var.scale,verbose=FALSE,max.iter=3e3)
           } else if (space == 'genes') {
-            xcp <- quickNULL(p2.objs = self$samples[sn.pairs[,i]], data.type=data.type, n.odgenes=n.odgenes, var.scale = var.scale, verbose = FALSE, neighborhood.average=neighborhood.average);
+            xcp <- quickNULL(p2.objs = self$samples[sn.pairs[,i]], data.type=data.type, n.odgenes=n.odgenes, var.scale = var.scale, verbose = FALSE)
           } else if (space == 'PCA') {
-            xcp <- quickPlainPCA(self$samples[sn.pairs[,i]], data.type=data.type,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale,neighborhood.average=neighborhood.average, score.component.variance=score.component.variance)
+            xcp <- quickPlainPCA(self$samples[sn.pairs[,i]], data.type=data.type,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale, score.component.variance=score.component.variance)
           } else if (space == 'CCA' || space=='PMA') {
-            xcp <- quickCCA(self$samples[sn.pairs[,i]],data.type=data.type,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale,neighborhood.average=neighborhood.average, score.component.variance=score.component.variance,PMA=(space=='PMA'))
+            xcp <- quickCCA(self$samples[sn.pairs[,i]],data.type=data.type,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale, score.component.variance=score.component.variance,PMA=(space=='PMA'))
           }
           if(verbose) cat('.')
           xcp
