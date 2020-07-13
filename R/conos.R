@@ -1181,7 +1181,7 @@ findSubcommunities <- function(con, target.clusters, clustering=NULL, groups=NUL
   return(groups.raw)
 }
 
-parseCellGroups <- function(con, clustering, groups, parse.clusters=T) {
+parseCellGroups <- function(con, clustering, groups, parse.clusters=TRUE) {
   if (!parse.clusters)
     return(groups)
 

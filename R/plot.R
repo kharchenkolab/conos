@@ -141,17 +141,20 @@ plotSamples <- function(samples, groups=NULL, colors=NULL, gene=NULL, embedding.
 #' @export
 plotClusterBarplots <- function(conos.obj=NULL, clustering=NULL, groups=NULL,sample.factor=NULL,show.entropy=TRUE,show.size=TRUE,show.composition=TRUE,legend.height=0.2) {
   ## param checking
-  if(!is.null(clustering)) {
-    if(is.null(conos.obj)) stop('conos.obj must be passed if clustering name is specified');
-    if(!clustering %in% names(conos.obj$clusters)) stop('specified clustering doesn\'t exist')
-    groups <- conos.obj$clusters[[clustering]]$groups
-  } else if (is.null(groups)) {
-    if(is.null(conos.obj)) stop('either groups factor on the cells or a conos object needs to be specified')
-    if(is.null(conos.obj$clusters[[1]])) stop('conos object lacks any clustering. run $findCommunities() first')
-    groups <- conos.obj$clusters[[1]]$groups
+  if (!is.null(clustering) && is.null(conos.obj)) {
+    stop('conos.obj must be passed if clustering name is specified')
   }
 
-  groups <- as.factor(groups)
+  if (is.null(groups) && is.null(conos.obj)) {
+    stop('Either groups factor on the cells or a conos object needs to be specified, both cannot be NULL')
+  }
+
+  groups <- parseCellGroups(conos.obj, clustering, groups)
+
+  if (!is.null(groups)) {
+    groups <- as.factor(groups)
+  }
+
   if(is.null(sample.factor)) {
     sample.factor <- conos.obj$getDatasetPerCell(); # assignment to samples
   }

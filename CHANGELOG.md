@@ -8,8 +8,12 @@
 
 ### Added
 
+- Write to HDF5 for `saveConosForScanPy()` (7 July 2020)
+- LICENSE (July 2020)
+
 ### Removed
 
+- Removed `getCorrectionVector()` and `getPerCellTypeDECorrected` (2 July 2020)
 - Removed all neighborhood averaging via `neighborhood.average` (4 July 2020)
 
 ## [1.3.0] - 2020-19-3
