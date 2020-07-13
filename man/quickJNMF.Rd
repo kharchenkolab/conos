@@ -11,8 +11,7 @@ quickJNMF(
   n.odgenes = NULL,
   var.scale = TRUE,
   verbose = TRUE,
-  max.iter = 1000,
-  neighborhood.average = FALSE
+  max.iter = 1000
 )
 }
 \description{

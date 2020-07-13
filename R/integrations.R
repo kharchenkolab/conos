@@ -356,7 +356,7 @@ pcaFromConos <- function(p2.list, data.type='counts', k=30, ncomps=100, n.odgene
   if(verbose) cat('Calculating PCs for',length(p2.list),' datasets...\n')
 
   # Get scaled matrices from a list of pagoda2 objects
-  sm <- scaledMatrices(p2.list, data.type=data.type, od.genes=od.genes, var.scale=TRUE, neighborhood.average=FALSE);
+  sm <- scaledMatrices(p2.list, data.type=data.type, od.genes=od.genes, var.scale=TRUE)
   # Transpose the scaled matrices since we want to run PCA on cells and not genes (like in quickPlainPCA)
   sm <- lapply(sm, t)
   # Get the names of all the cells
