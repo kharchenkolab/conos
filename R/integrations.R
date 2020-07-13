@@ -78,6 +78,7 @@ seuratProcV3 <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, n.pcs
 #'
 #' @param con conos object
 #' @param output.path path to a folder, where intermediate files will be saved
+#' @param hdf5_filename name of HDF5 written with ScanPy files. Note: the \pkg{\link{rhdf5}} package is required
 #' @param metadata.df data.frame with additional metadata with rownames corresponding to cell ids, which should be passed to ScanPy.
 #' If NULL, only information about cell ids and origin dataset will be saved.
 #' @param cm.norm logical, include the matrix of normalised counts. Default: FALSE
@@ -87,11 +88,22 @@ seuratProcV3 <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, n.pcs
 #' @param n.dims number of dimensions for calculating PCA and/or pseudoPCA
 #' @param alignment.graph logical, include graph of connectivities and distances. Default: TRUE
 #' @param verbose verbose mode. Default: FALSE
+#' @seealso The \pkg{\link{rhdf5}} package documentation \href{https://www.bioconductor.org/packages/release/bioc/html/rhdf5.html}{here}
 #'
 #' @export
-saveConosForScanPy <- function(con, output.path, metadata.df=NULL, cm.norm=FALSE, pseudo.pca=FALSE, pca=FALSE, n.dims=100, embedding=TRUE, alignment.graph=TRUE, verbose=FALSE) {
-  if (!dir.exists(output.path))
+saveConosForScanPy <- function(con, output.path, hdf5_filename, metadata.df=NULL, cm.norm=FALSE, pseudo.pca=FALSE, pca=FALSE, n.dims=100, embedding=TRUE, alignment.graph=TRUE, verbose=FALSE) {
+  
+  if (!requireNamespace("rhdf5", quietly = TRUE)) {
+    stop("The package rhdf5 is required for saveConosForScanPy(). Please install.")
+  }
+
+  if (!dir.exists(output.path)){
     stop("Path", output.path, "doesn't exist")
+  }
+
+  if (tools::file_ext(hdf5_filename) != "h5"){
+    stop("File", hdf5_filename, "must have the file extension *.h5")
+  }
 
   if (verbose) cat("Merge raw count matrices...\t")
   raw.count.matrix.merged <- con$getJointCountMatrix(raw=TRUE)
@@ -152,18 +164,55 @@ saveConosForScanPy <- function(con, output.path, metadata.df=NULL, cm.norm=FALSE
   }
 
   if (verbose) cat("Write data to disk...\t\t")
-  Matrix::writeMM(raw.count.matrix.merged, paste0(output.path, "/raw_count_matrix.mtx"))
-  data.table::fwrite(metadata.df, paste0(output.path, "/metadata.csv"))
-  data.table::fwrite(gene.df, paste0(output.path, "/genes.csv"))
-  if (cm.norm) Matrix::writeMM(count.matrix.merged, paste0(output.path, "/count_matrix.mtx"))
-  if (embedding) data.table::fwrite(embedding.df, paste0(output.path, "/embedding.csv"))
-  if (pseudo.pca) data.table::fwrite(pseudopca.df, paste0(output.path, "/pseudopca.csv"))
-  if (pca) data.table::fwrite(pca.df, paste0(output.path, "/pca.csv"))
-  if (alignment.graph) {
-    Matrix::writeMM(graph.conn, paste0(output.path, "/graph_connectivities.mtx"))
-    Matrix::writeMM(graph.dist, paste0(output.path, "/graph_distances.mtx"))
+  ## create HDF5 file
+  total_hdf5file_path = paste0(output.path, "/", hdf5_filename)
+  rhdf5::h5createFile(total_hdf5file_path)
+  ## raw.count.matrix.merged
+  rhdf5::h5createGroup(total_hdf5file_path, "raw_count_matrix")
+  rhdf5::h5write(raw.count.matrix.merged@x, total_hdf5file_path, "raw_count_matrix/data")
+  rhdf5::h5write(dim(raw.count.matrix.merged), total_hdf5file_path, "raw_count_matrix/shape")
+  rhdf5::h5write(raw.count.matrix.merged@i, total_hdf5file_path, "raw_count_matrix/indices")
+  rhdf5::h5write(raw.count.matrix.merged@p, total_hdf5file_path, "raw_count_matrix/indptr")
+  ## metadata
+  rhdf5::h5createGroup(total_hdf5file_path, "metadata")
+  rhdf5::h5write(metadata.df, total_hdf5file_path, "metadata/metadata.df")
+  ## genes
+  rhdf5::h5createGroup(total_hdf5file_path, "genes")
+  rhdf5::h5write(gene.df, total_hdf5file_path, "genes/genes.df")
+  ## count_matrix
+  if (cm.norm) {
+    rhdf5::h5createGroup(total_hdf5file_path, "count_matrix")
+    rhdf5::h5write(count.matrix.merged@x, total_hdf5file_path, "count_matrix/data")
+    rhdf5::h5write(dim(count.matrix.merged), total_hdf5file_path, "count_matrix/shape")
+    rhdf5::h5write(count.matrix.merged@i, total_hdf5file_path, "count_matrix/indices")
+    rhdf5::h5write(count.matrix.merged@p, total_hdf5file_path, "count_matrix/indptr")
   }
-  if (verbose) cat("Done.\n")
+  if (embedding) {
+    rhdf5::h5createGroup(total_hdf5file_path, "embedding")
+    rhdf5::h5write(embedding.df, total_hdf5file_path, "embedding/embedding.df")
+  }
+  if (pseudo.pca) {
+    rhdf5::h5createGroup(total_hdf5file_path, "pseudopca")
+    rhdf5::h5write(pseudopca.df, total_hdf5file_path, "pseudopca/pseudopca.df")
+  }
+  if (pca) {
+    rhdf5::h5createGroup(total_hdf5file_path, "pca")
+    rhdf5::h5write(pca.df, total_hdf5file_path, "pca/pca.df")
+  }
+  if (alignment.graph) {
+    ## graph_connectivities
+    rhdf5::h5createGroup(total_hdf5file_path, "graph_connectivities")
+    rhdf5::h5write(graph.conn@x, total_hdf5file_path, "graph_connectivities/data")  
+    rhdf5::h5write(dim(graph.conn), total_hdf5file_path, "graph_connectivities/shape") 
+    rhdf5::h5write(graph.conn@i, total_hdf5file_path, "graph_connectivities/indices") 
+    rhdf5::h5write(graph.conn@p, total_hdf5file_path, "graph_connectivities/indptr") 
+    ## graph_distances
+    rhdf5::h5createGroup(total_hdf5file_path, "graph_distances")
+    rhdf5::h5write(graph.dist@x, total_hdf5file_path, "graph_distances/data")  
+    rhdf5::h5write(dim(graph.dist), total_hdf5file_path, "graph_distances/shape") 
+    rhdf5::h5write(graph.dist@i, total_hdf5file_path, "graph_distances/indices") 
+    rhdf5::h5write(graph.dist@p, total_hdf5file_path, "graph_distances/indptr") 
+  }
   if (verbose) cat("All Done!")
 }
 
@@ -329,7 +378,7 @@ pcaFromConos <- function(p2.list, data.type='counts', k=30, ncomps=100, n.odgene
 
 #' @export
 convertToPagoda2 <- function(con, n.pcs=100, n.odgenes=2000, verbose=T, ...) {
-  if (!requireNamespace('pagoda2', quietly=T)) {
+  if (!requireNamespace('pagoda2', quietly=TRUE)) {
     stop("'pagoda2' must be installed to convert Conos to Pagoda 2")
   }
 
