@@ -7,6 +7,9 @@
 - Fixed some installation problems
 - Write to HDF5 for `saveConosForScanPy()` (7 July 2020)
 
+### Added
+- LICENSE (July 2020)
+
 ## [1.3.0] - 2020-19-3
 
 ### Changed
