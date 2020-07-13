@@ -121,8 +121,6 @@ is.error <- function (x) {
 }
 
 
-
-
 #' Do differential expression for each cell type in a conos object between the specified subsets of apps
 #' @param con.obj conos object
 #' @param groups factor specifying cell types
@@ -182,7 +180,6 @@ getPerCellTypeDE <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cut
   }, n.cores=n.cores)
   de.res
 }
-
 
 
 #' Save differential expression as CSV table

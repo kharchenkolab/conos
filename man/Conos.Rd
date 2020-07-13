@@ -103,8 +103,6 @@ invisible view of the full sample list
   var.scale = TRUE,
   ncomps = 40,
   n.odgenes = 2000,
-  neighborhood.average = FALSE,
-  neighborhood.average.k = 10,
   matching.mask = NULL,
   exclude.samples = NULL,
   common.centering = TRUE,
