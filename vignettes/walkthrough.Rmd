@@ -224,8 +224,7 @@ con$findCommunities(method=leiden.community, resolution=1)
 ## Visualization
 
 We can now plot the clusters we obtained. Note that the number of clusters
-between different samples now correspond to the same cell type. Also not
-the presence of cluster 5 in BM samples only, but not in CB.
+between different samples now correspond to the same cell type. 
 
 ```{r, fig.height=8, fig.width=8}
 con$plotPanel(font.size=4)
