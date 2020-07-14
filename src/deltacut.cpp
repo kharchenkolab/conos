@@ -149,7 +149,7 @@ Rcpp::List greedyModularityCutC(arma::imat& merges, arma::vec& deltaM, int N, in
   //cout<<"["; for(auto kv : vlabs) { cout<<kv.first<<" "; };   cout<<"]"<<endl;
 
 #ifdef DEBUG
-  cout<<"walking down the tree ";
+  Rcout<<"walking down the tree ";
 #endif
 
   unordered_set<int> leafNodes;
@@ -173,7 +173,7 @@ Rcpp::List greedyModularityCutC(arma::imat& merges, arma::vec& deltaM, int N, in
       double deltam=pq.top().second;
       pq.pop();
 #ifdef DEBUG
-      cout<<"considering split "<<split<<" ("<<(split+nleafs-2)<<"): ";
+      Rcout<<"considering split "<<split<<" ("<<(split+nleafs-2)<<"): ";
 #endif
       // record split
       arma::irowvec r=merges.row(split);
@@ -186,7 +186,7 @@ Rcpp::List greedyModularityCutC(arma::imat& merges, arma::vec& deltaM, int N, in
 	  arma::ivec membership=get_membership(r[i],merges,vlabs);
 	  if(minsize>0 && sum(membership) < minsize) { // size restriction
 #ifdef DEBUG
-	    cout<<"size "<<minsize<<" < minsize"<<endl;
+	    Rcout<<"size "<<minsize<<" < minsize"<<endl;
 #endif
 	    take=false;
 	  }
@@ -196,7 +196,7 @@ Rcpp::List greedyModularityCutC(arma::imat& merges, arma::vec& deltaM, int N, in
 	    breadth_map[r[i]]=breadth;
 	    if(breadth<minbreadth) {
 #ifdef DEBUG
-	      cout<<"breadth "<<breadth<<" < minbreadth"<<endl;
+	      Rcout<<"breadth "<<breadth<<" < minbreadth"<<endl;
 #endif
 	      take=false;
 	    }
@@ -206,7 +206,7 @@ Rcpp::List greedyModularityCutC(arma::imat& merges, arma::vec& deltaM, int N, in
 
       if(take) {  // take the split
 #ifdef DEBUG
-	cout<<"accepting"<<endl;
+	Rcout<<"accepting"<<endl;
 #endif
 	splitsequence.push_back(split+nleafs);
 	leafNodes.erase(split+nleafs); // splitting the node, so it's not a leaf
@@ -225,7 +225,7 @@ Rcpp::List greedyModularityCutC(arma::imat& merges, arma::vec& deltaM, int N, in
 
   if(splitsequence.empty()) {
 #ifdef DEBUG
-    cout<<"returning empty sequence"<<endl;
+    Rcout<<"returning empty sequence"<<endl;
 #endif
     return List::create(Named("splitsequence")=splitsequence);
   }
@@ -243,7 +243,7 @@ Rcpp::List greedyModularityCutC(arma::imat& merges, arma::vec& deltaM, int N, in
   arma::vec nbreadth(nm.n_rows+nmleafs);
   unordered_map<int,int> idm; // original node id to new node id translation table
 #ifdef DEBUG
-  cout<<"constructing new merge matrix "<<flush;
+  Rcout<<"constructing new merge matrix "<<flush;
 #endif
   for(auto it=splitsequence.rbegin(); it!=splitsequence.rend(); ++it) {
     double breadth=get_breadth(*it,labels,nlabels,breadth_map, merges, vlabs);
@@ -271,7 +271,7 @@ Rcpp::List greedyModularityCutC(arma::imat& merges, arma::vec& deltaM, int N, in
     nm.row(id-nmleafs)=r;
   }
 #ifdef DEBUG
-  cout<<endl;
+  Rcout<<endl;
 #endif
 
   //cout<<"filling out leaf content "<<flush;
@@ -420,7 +420,7 @@ Rcpp::List scoreTreeConsistency(arma::imat& test, arma::imat& ref, arma::ivec& l
 
   IIVM vlabs; // a place to store calculated (cell) memberships for each node
 #ifdef DEBUG
-  cout<<"phase I ... "<<flush;
+  Rcout<<"phase I ... "<<flush;
 #endif
   // phase I: walk up ref tree to form independent clusters of >=mincells
   int nleafs=ref.n_rows+1; // number of leafs
@@ -459,7 +459,7 @@ Rcpp::List scoreTreeConsistency(arma::imat& test, arma::imat& ref, arma::ivec& l
     }
   }
 #ifdef DEBUG
-  cout<<"done."<<endl;
+  Rcout<<"done."<<endl;
 #endif
   arma::imat factor(1,test.n_rows+1);
   arma::vec thresholds(ref.n_rows,arma::fill::zeros); // a vector to keep final thresholds in
@@ -471,7 +471,7 @@ Rcpp::List scoreTreeConsistency(arma::imat& test, arma::imat& ref, arma::ivec& l
     // current cut
     arma::uvec currentCut=find(lastmerge);
 #ifdef DEBUG
-    cout<<"step "<<step<<": "<<currentCut.n_elem<<" clusters. constructing factor ... "<<flush;
+    Rcout<<"step "<<step<<": "<<currentCut.n_elem<<" clusters. constructing factor ... "<<flush;
 #endif
     factor.fill(-1); // by default, cells are left unclassified
     // make up a factor
@@ -484,7 +484,7 @@ Rcpp::List scoreTreeConsistency(arma::imat& test, arma::imat& ref, arma::ivec& l
         if(j>=leafidmap.n_elem) throw std::range_error("requesting out of range node in leafidmap");
         int ni=leafidmap[j];
         if(ni> ((int)test.n_rows)) {
-          cout<<"idmap violation at j="<<j<<" ("<<ni<<"); test.n_rows="<<test.n_rows<<' '<<(ni>test.n_rows)<<endl<<flush;
+          Rcout<<"idmap violation at j="<<j<<" ("<<ni<<"); test.n_rows="<<test.n_rows<<' '<<(ni>test.n_rows)<<endl<<flush;
           throw std::range_error("out of range value in leafidmap "+j);
         }
         //if(i<10) cout<<j<<"="<<ni<<' '<<flush;
@@ -496,9 +496,9 @@ Rcpp::List scoreTreeConsistency(arma::imat& test, arma::imat& ref, arma::ivec& l
       //if(i<10) cout<<endl;
     }
 #ifdef DEBUG
-    cout<<"done; ";
+    Rcout<<"done; ";
 
-    cout<<"scoring ... "<<flush;
+    Rcout<<"scoring ... "<<flush;
 #endif
     // score current cut
     Rcpp::List a=treeJaccard(test, factor, factorTotals);
@@ -513,7 +513,7 @@ Rcpp::List scoreTreeConsistency(arma::imat& test, arma::imat& ref, arma::ivec& l
 
 
 #ifdef DEBUG
-    cout<<"merging ... ";
+    Rcout<<"merging ... ";
 #endif
 
     // step 2: walk up ref tree to merge all independent clusters (i.e. not hitting previously merged nodes, and not merging with unprocesssed nodes)
@@ -550,7 +550,7 @@ Rcpp::List scoreTreeConsistency(arma::imat& test, arma::imat& ref, arma::ivec& l
       }
     }
 #ifdef DEBUG
-    cout<<nmerges<<" merges"<<endl;
+    Rcout<<nmerges<<" merges"<<endl;
 #endif
     if(nmerges>0) hadmerges=true;
     step++;
@@ -573,7 +573,7 @@ Rcpp::List maxStableClusters(arma::imat& merges, arma::vec& thresholds, double m
   int nleafs=merges.n_rows+1; // number of leafs
   arma::vec ct(2);
 #ifdef DEBUG
-  cout<<"propagating maxthreshold ... "<<flush;
+  Rcout<<"propagating maxthreshold ... "<<flush;
 #endif
   for(int i=0;i<merges.n_rows;i++) {
     int lc=0;
@@ -608,8 +608,8 @@ Rcpp::List maxStableClusters(arma::imat& merges, arma::vec& thresholds, double m
 #endif
   }
 #ifdef DEBUG
-  cout<<"done"<<endl;
-  cout<<"determining max clusters ... ";
+  Rcout<<"done"<<endl;
+  Rcout<<"determining max clusters ... ";
 #endif
 
   // phase II: walk downwards
@@ -636,7 +636,7 @@ Rcpp::List maxStableClusters(arma::imat& merges, arma::vec& thresholds, double m
     }
   }
 #ifdef DEBUG
-  cout<<"done ("<<terminalnodes.size()<<" clusters)"<<endl;
+  Rcout<<"done ("<<terminalnodes.size()<<" clusters)"<<endl;
 #endif
   terminalnodes.shrink_to_fit();
 

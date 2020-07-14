@@ -5,13 +5,12 @@
 - Improved `plotDEheatmap` function
 - Fixed bug with `balancing.factor.per.sample` in `buildGraph`
 - Fixed some installation problems
+- Changed `std::cout` to `Rcpp::Rcout` (July 2020)
 - Revised README, vignettes (July 2020)
 
 ### Added 
+
 - added `ht_opt$message = FALSE` for ComplexHeatmap (July 2020)
-
-### Added
-
 - Write to HDF5 for `saveConosForScanPy()` (7 July 2020)
 - LICENSE (July 2020)
 
