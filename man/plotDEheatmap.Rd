@@ -13,6 +13,7 @@ plotDEheatmap(
   min.precision = NULL,
   n.genes.per.cluster = 10,
   additional.genes = NULL,
+  exclude.genes = NULL,
   labeled.gene.subset = NULL,
   expression.quantile = 0.99,
   pal = colorRampPalette(c("dodgerblue1", "grey95", "indianred1"))(1024),
@@ -29,6 +30,8 @@ plotDEheatmap(
   order.clusters = FALSE,
   split = FALSE,
   split.gap = 0,
+  cell.order = NULL,
+  averaging.window = 0,
   ...
 )
 }
@@ -48,6 +51,8 @@ plotDEheatmap(
 \item{n.genes.per.cluster}{number of genes to show for each cluster}
 
 \item{additional.genes}{optional additional genes to include (the genes will be assigned to the closest cluster)}
+
+\item{exclude.genes}{an optional list of genes to exclude from the heatmap}
 
 \item{labeled.gene.subset}{a subset of gene names to show (instead of all genes). Can be a vector of gene names, or a number of top genes (in each cluster) to show the names for.}
 
@@ -76,6 +81,10 @@ plotDEheatmap(
 \item{row.label.font.size}{font size for the row labels}
 
 \item{order.clusters}{whether to re-order the clusters according to the similarity of the expression patterns (of the genes being shown)}
+
+\item{cell.order}{explicitly supply cell order}
+
+\item{averaging.window}{optional window averaging between neighboring cells within each group (turned off by default) - useful when very large number of cells shown (requires zoo package)}
 
 \item{...}{extra parameters are passed to pheatmap}
 }
