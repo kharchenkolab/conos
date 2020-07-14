@@ -12,14 +12,14 @@ smoothMatrixOnGraph <- function(edges, edge.weights, matrix, is.label.fixed=logi
   smooth_count_matrix(edges, edge.weights, matrix, is_label_fixed=is.label.fixed, ...)
 }
 
-scaledMatricesP2 <- function(p2.objs, data.type, od.genes, var.scale, neighborhood.average) {
+scaledMatricesP2 <- function(p2.objs, data.type, od.genes, var.scale) {
   ## Common variance scaling
   if (var.scale) {
     # use geometric means for variance, as we're trying to focus on the common variance components
     cqv <- do.call(cbind, lapply(p2.objs,function(x) x$misc$varinfo[od.genes,]$qv)) %>%  log() %>% rowMeans() %>% exp()
   }
   ## Prepare the matrices
-  cproj <- lapply(p2.objs,function(r) {
+  cproj <- lapply(p2.objs, function(r) {
     if (data.type == 'counts') {
       x <- r$counts[,od.genes];
     } else if (data.type %in% names(r$reductions)){
@@ -36,17 +36,13 @@ scaledMatricesP2 <- function(p2.objs, data.type, od.genes, var.scale, neighborho
       cgsf[is.na(cgsf) | !is.finite(cgsf)] <- 0;
       x@x <- x@x*rep(cgsf,diff(x@p))
     }
-    if(neighborhood.average) {
-      ## use the averaged matrices
-      x <- Matrix::t(edgeMat(r)$mat) %*% x # TODO: looks like `$mat` doesn't exist anymore
-    }
-    x
+    return(x)
   })
 
   return(cproj)
 }
 
-scaledMatricesSeurat <- function(so.objs, data.type, od.genes, var.scale, neighborhood.average) {
+scaledMatricesSeurat <- function(so.objs, data.type, od.genes, var.scale) {
   if (var.scale) {
     warning("Seurat doesn't support variance scaling")
   }
@@ -57,8 +53,7 @@ scaledMatricesSeurat <- function(so.objs, data.type, od.genes, var.scale, neighb
     x.data <- lapply(so.objs, function(so) t(so@data)[,od.genes])
   } else {
 
-  res <- mapply(function(so, x) if(neighborhood.average) Matrix::t(edgeMat(so)$mat) %*% x else x,
-                so.objs, x.data)
+  res <- mapply(FUN = function(so, x) { return(x) }, so.objs, x.data )
 
   return(res)
   }
@@ -81,39 +76,29 @@ scaledMatricesSeuratV3 <- function(so.objs, data.type, od.genes, var.scale, neig
       return(t(x = Seurat::GetAssayData(object = so, slot = slot))[, od.genes])
     }
   )
-  res <- mapply(
-    FUN = function(so, x) {
-      return(if (neighborhood.average) {
-        Matrix::t(x = edgeMat(so)$mat) %*% x
-      } else {
-        x
-      })
-    },
-    so.objs,
-    x.data
-  )
+  res <- mapply(FUN = function(so, x) { return(x) }, so.objs, x.data )
+  
   return(res)
 }
 
-scaledMatrices <- function(samples, data.type, od.genes, var.scale, neighborhood.average) {
+scaledMatrices <- function(samples, data.type, od.genes, var.scale) {
   if (class(samples[[1]]) == "Pagoda2") {
-    return(scaledMatricesP2(samples, data.type = data.type, od.genes, var.scale, neighborhood.average))
+    return(scaledMatricesP2(samples, data.type = data.type, od.genes, var.scale))
   } else if (class(samples[[1]]) == "seurat") {
-    return(scaledMatricesSeurat(samples, data.type = data.type, od.genes, var.scale, neighborhood.average))
+    return(scaledMatricesSeurat(samples, data.type = data.type, od.genes, var.scale))
   } else if (inherits(x = samples[[1]], what = 'Seurat')) {
     return(scaledMatricesSeuratV3(
       so.objs = samples,
       data.type = data.type,
       od.genes = od.genes,
-      var.scale = var.scale,
-      neighborhood.average = neighborhood.average
+      var.scale = var.scale
     ))
   }
   stop("Unknown class of sample: ", class(samples[[1]]))
 }
 
 commonOverdispersedGenes <- function(samples, n.odgenes, verbose) {
-  od.genes <- sort(table(unlist(lapply(samples, getOverdispersedGenes, n.odgenes))),decreasing=T)
+  od.genes <- sort(table(unlist(lapply(samples, getOverdispersedGenes, n.odgenes))),decreasing=TRUE)
   common.genes <- Reduce(intersect, lapply(samples, getGenes));
   if(length(common.genes)==0) { warning(paste("samples",paste(names(samples),collapse=' and '),'do not share any common genes!')) }
   if(length(common.genes)<n.odgenes) { warning(paste("samples",paste(names(samples),collapse=' and '),'do not share enoguh common genes!')) }
@@ -125,27 +110,26 @@ commonOverdispersedGenes <- function(samples, n.odgenes, verbose) {
 }
 
 quickNULL <- function(p2.objs, data.type='counts', n.odgenes = NULL, var.scale = T,
-                      verbose = TRUE, neighborhood.average=FALSE) {
+                      verbose = TRUE) {
   if(length(p2.objs) != 2) stop('quickNULL only supports pairwise alignment');
 
   od.genes <- commonOverdispersedGenes(p2.objs, n.odgenes, verbose=verbose)
   if(length(od.genes)<5) return(NULL);
 
-  cproj <- scaledMatrices(p2.objs, data.type=data.type, od.genes=od.genes, var.scale=var.scale,
-                          neighborhood.average=neighborhood.average)
+  cproj <- scaledMatrices(p2.objs, data.type=data.type, od.genes=od.genes, var.scale=var.scale)
 
   return(list(genespace1=cproj[[1]], genespace2=cproj[[2]]))
 }
 
 #' Perform pairwise JNMF
-quickJNMF <- function(p2.objs, data.type='counts', n.comps = 30, n.odgenes=NULL, var.scale=TRUE, verbose =TRUE, max.iter=1000, neighborhood.average=FALSE) {
+quickJNMF <- function(p2.objs, data.type='counts', n.comps = 30, n.odgenes=NULL, var.scale=TRUE, verbose =TRUE, max.iter=1000) {
   ## Stop if more than 2 samples
   if (length(p2.objs) != 2) stop('quickJNMF only supports pairwise alignment');
 
   od.genes <- commonOverdispersedGenes(p2.objs, n.odgenes, verbose=verbose)
   if(length(od.genes)<5) return(NULL);
 
-  cproj <- scaledMatrices(p2.objs, data.type=data.type, od.genes=od.genes, var.scale=var.scale, neighborhood.average=neighborhood.average) %>%
+  cproj <- scaledMatrices(p2.objs, data.type=data.type, od.genes=od.genes, var.scale=var.scale) %>%
     lapply(as.matrix)
 
   rjnmf.seed <- 12345
@@ -184,9 +168,8 @@ cpcaFast <- function(covl,ncells,ncomp=10,maxit=1000,tol=1e-6,use.irlba=TRUE,ver
 #' @param n.odgenes number of overdispersed genes to take from each dataset
 #' @param var.scale whether to scale variance (default=TRUE)
 #' @param verbose whether to be verbose
-#' @param neighborhood.average use neighborhood average values
 #' @param n.cores number of cores to use
-quickCPCA <- function(r.n,data.type='counts',ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=TRUE,neighborhood.average=FALSE, score.component.variance=FALSE) {
+quickCPCA <- function(r.n, data.type='counts', ncomps=100, n.odgenes=NULL, var.scale=TRUE, verbose=TRUE, score.component.variance=FALSE) {
   od.genes <- commonOverdispersedGenes(r.n, n.odgenes, verbose=verbose)
   if(length(od.genes)<5) return(NULL);
 
@@ -200,7 +183,7 @@ quickCPCA <- function(r.n,data.type='counts',ncomps=100,n.odgenes=NULL,var.scale
   ##   covmat <- spcov(x,cMeans);
   ## }
 
-  sm <- scaledMatrices(r.n, data.type=data.type, od.genes=od.genes, var.scale=var.scale, neighborhood.average=neighborhood.average)
+  sm <- scaledMatrices(r.n, data.type=data.type, od.genes=od.genes, var.scale=var.scale)
   covl <- lapply(sm,function(x) spcov(as(x, "dgCMatrix"), Matrix::colMeans(x)))
   ## # centering
   ## if(common.centering) {
@@ -244,15 +227,14 @@ quickCPCA <- function(r.n,data.type='counts',ncomps=100,n.odgenes=NULL,var.scale
 #' @param var.scale whether to scale variance (default=TRUE)
 #' @param verbose whether to be verbose
 #' @param cgsf an optional set of common genes to align on
-#' @param neighborhood.average use neighborhood average values
 #' @param n.cores number of cores to use
-quickPlainPCA <- function(r.n,data.type='counts',ncomps=30,n.odgenes=NULL,var.scale=TRUE,verbose=TRUE,neighborhood.average=FALSE, score.component.variance=FALSE, n.cores=30) {
+quickPlainPCA <- function(r.n,data.type='counts',ncomps=30,n.odgenes=NULL,var.scale=TRUE,verbose=TRUE, score.component.variance=FALSE, n.cores=30) {
   od.genes <- commonOverdispersedGenes(r.n, n.odgenes, verbose=verbose)
   if(length(od.genes)<5) return(NULL);
 
   if(verbose) cat('calculating PCs for',length(r.n),' datasets ...')
 
-  sm <- scaledMatrices(r.n, data.type=data.type, od.genes=od.genes, var.scale=var.scale, neighborhood.average=neighborhood.average);
+  sm <- scaledMatrices(r.n, data.type=data.type, od.genes=od.genes, var.scale=var.scale);
   pcs <- lapply(sm, function(x) {
     cm <- Matrix::colMeans(x);
     ncomps <- min(c(nrow(cm)-1,ncol(cm)-1,round(ncomps/2)));
@@ -292,15 +274,14 @@ quickPlainPCA <- function(r.n,data.type='counts',ncomps=30,n.odgenes=NULL,var.sc
 #' @param n.odgenes number of overdispersed genes to take from each dataset
 #' @param var.scale whether to scale variance (default=TRUE)
 #' @param verbose whether to be verbose
-#' @param neighborhood.average use neighborhood average values
 #' @param n.cores number of cores to use
-quickCCA <- function(r.n,data.type='counts',ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=TRUE,neighborhood.average=FALSE, PMA=FALSE, score.component.variance=FALSE) {
+quickCCA <- function(r.n,data.type='counts',ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=TRUE, PMA=FALSE, score.component.variance=FALSE) {
 
   od.genes <- commonOverdispersedGenes(r.n, n.odgenes, verbose=verbose)
   if(length(od.genes)<5) return(NULL);
 
   ncomps <- min(ncomps, length(od.genes) - 1)
-  sm <- scaledMatrices(r.n, data.type=data.type, od.genes=od.genes, var.scale=var.scale, neighborhood.average=neighborhood.average)
+  sm <- scaledMatrices(r.n, data.type=data.type, od.genes=od.genes, var.scale=var.scale)
   sm <- lapply(sm,function(m) m[rowSums(m)>0,])
   sm <- lapply(sm,scale,scale=F) # center
   if(PMA) {
@@ -622,7 +603,7 @@ getOdGenesUniformly <- function(samples, n.genes) {
 }
 
 
-projectSamplesOnGlobalAxes <- function(samples, cms.clust, data.type, neighborhood.average, verbose, n.cores) {
+projectSamplesOnGlobalAxes <- function(samples, cms.clust, data.type, verbose, n.cores) {
   if(verbose) cat('calculating global projections ');
 
   # calculate global eigenvectors
@@ -637,10 +618,10 @@ projectSamplesOnGlobalAxes <- function(samples, cms.clust, data.type, neighborho
   tcc <- tcc[,gns,drop=F];
 
   if(verbose) cat('.');
-  global.pca <- prcomp(log10(tcc+1),center=T,scale=T,retx=F)
+  global.pca <- prcomp(log10(tcc+1),center=TRUE,scale=TRUE,retx=FALSE)
   # project samples onto the global axes
   global.proj <- papply(samples,function(s) {
-    smat <- as.matrix(scaledMatrices(list(s), data.type=data.type, od.genes=gns, var.scale=F, neighborhood.average=neighborhood.average)[[1]])
+    smat <- as.matrix(scaledMatrices(list(s), data.type=data.type, od.genes=gns, var.scale=FALSE)[[1]])
     if(verbose) cat('.')
     #smat <- as.matrix(conos:::getRawCountMatrix(s,transposed=TRUE)[,gns])
     #smat <- log10(smat/rowSums(smat)*1e3+1)
@@ -652,7 +633,7 @@ projectSamplesOnGlobalAxes <- function(samples, cms.clust, data.type, neighborho
   return(global.proj)
 }
 
-getDecoyProjections <- function(samples, samf, data.type, var.scale, cproj, neighborhood.average, base.groups, decoy.threshold, n.decoys) {
+getDecoyProjections <- function(samples, samf, data.type, var.scale, cproj, base.groups, decoy.threshold, n.decoys) {
   cproj.decoys <- lapply(cproj, function(d) {
     tg <- tabulate(as.integer(base.groups[rownames(d)]),nbins=length(levels(base.groups)))
     nvi <- which(tg < decoy.threshold)
@@ -668,7 +649,7 @@ getDecoyProjections <- function(samples, samf, data.type, var.scale, cproj, neig
         # get the matrices
         do.call(rbind,lapply(samples[unique(samf[decoy.cells])],function(s) {
           gn <- intersect(getGenes(s),colnames(d));
-          m <- scaledMatrices(list(s),data.type=data.type, od.genes=gn, var.scale=var.scale, neighborhood.average=neighborhood.average)[[1]]
+          m <- scaledMatrices(list(s),data.type=data.type, od.genes=gn, var.scale=var.scale)[[1]]
           m <- m[rownames(m) %in% decoy.cells,,drop=F]
           # append missing genes
           gd <- setdiff(colnames(d),gn)
@@ -853,11 +834,11 @@ convertDistanceToSimilarity <- function(distances, metric, l2.sigma=1e5, cor.bas
   return(exp(-distances / l2.sigma))
 }
 
-getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, k1=k, data.type='counts', var.scale=T, neighborhood.average=F, common.centering=T,
+getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, k1=k, data.type='counts', var.scale=T, common.centering=T,
                                       matching.method='mNN', metric='angular', l2.sigma=1e5, cor.base=1, subset.cells=NULL,
                                       base.groups=NULL, append.decoys=F, samples=NULL, samf=NULL, decoy.threshold=1, n.decoys=k*2, append.global.axes=T, global.proj=NULL) {
   # create matrices, adjust variance
-  cproj <- scaledMatrices(sample.pair, data.type=data.type, od.genes=od.genes, var.scale=var.scale, neighborhood.average=neighborhood.average)
+  cproj <- scaledMatrices(sample.pair, data.type=data.type, od.genes=od.genes, var.scale=var.scale)
 
   # determine the centering
   if (common.centering) {
@@ -869,7 +850,7 @@ getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, k1=k, data.
 
   # append decoy cells if needed
   if(!is.null(base.groups) && append.decoys) {
-    cproj.decoys <- getDecoyProjections(samples, samf, data.type, var.scale, cproj, neighborhood.average, base.groups, decoy.threshold, n.decoys)
+    cproj.decoys <- getDecoyProjections(samples, samf, data.type, var.scale, cproj, base.groups, decoy.threshold, n.decoys)
     cproj <- lapply(sn(names(cproj)),function(n) rbind(cproj[[n]],cproj.decoys[[n]]))
   }
 
@@ -1200,7 +1181,7 @@ findSubcommunities <- function(con, target.clusters, clustering=NULL, groups=NUL
   return(groups.raw)
 }
 
-parseCellGroups <- function(con, clustering, groups, parse.clusters=T) {
+parseCellGroups <- function(con, clustering, groups, parse.clusters=TRUE) {
   if (!parse.clusters)
     return(groups)
 
