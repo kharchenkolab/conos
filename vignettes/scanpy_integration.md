@@ -1,18 +1,23 @@
-Convert Conos object to ScanPy
+
+Convert Conos Object to ScanPy
 ==============================
+
+First load the Conos library and the corresponding data:
+
 
 ```r
 library(conos)
 ```
-
-Load data:
 
 
 ```r
 panel <- readRDS(file.path(find.package('conos'), 'extdata', 'panel.rds'))
 ```
 
-Run Pagoda 2:
+
+
+Run Pagoda2:
+
 
 
 ```r
@@ -213,4 +218,3 @@ raw_count_matrix = sparseMatrix(x = as.numeric(rawcountMat$data),
 ```
 
 **Note:** Please set `index1=FALSE` as the index vectors are 0-based. For more details, see the documentation for [Matrix::sparseMatrix()](https://www.rdocumentation.org/packages/Matrix/versions/1.2-18/topics/sparseMatrix)
-
