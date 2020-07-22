@@ -6,9 +6,6 @@ validatePerCellTypeParams <- function(con.obj, groups, sample.groups, ref.level,
 
   if (!('Conos' %in% class(con.obj))) stop('con.obj must be a conos object')
   if (is.null(groups)) stop('groups must be specified');
-  if (any(is.na(groups))){
-    stop("groups cannot contian NAs. Please remove them.")
-  }
   if (is.null(sample.groups)) stop('sample.groups must be specified')
   if (!('list' %in% class(sample.groups))) stop('sample.groups must be a list');
   if (length(sample.groups) != 2) stop('sample.groups must be of length 2');
@@ -35,9 +32,6 @@ validateBetweenCellTypeParams <- function(con.obj, groups, sample.groups, refgro
 
   if (class(con.obj) != 'Conos') stop('con.obj must be a conos object')
   if (is.null(groups) ) stop('groups must be specified');
-  if (any(is.na(groups))){
-    stop("groups cannot contian NAs. Please remove them.")
-  }
   if (is.null(sample.groups) ) stop('sample.groups must be specified')
   if (class(sample.groups) != 'list' ) stop('sample.groups must be a list');
   #if ( length(sample.groups) != 2 ) stop('sample.groups must be of length 2');
