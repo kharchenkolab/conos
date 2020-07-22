@@ -19,8 +19,8 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
     #' @field expression.adj adjusted expression values
     expression.adj = list(),
 
-    #' @field embedding joint embedding
-    embedding = NULL,
+    #' @field embeddings list of joint embeddings
+    embeddings = list(),
 
     #' @field n.cores number of cores
     n.cores = 1,
@@ -397,9 +397,22 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
       } else if (is.null(groups) && is.null(colors) && is.null(gene)) {
         groups <- getClusteringGroups(self$clusters, clustering)
       }
+
+      if (!is.null(embedding.type)){
+        ## check embedding exists in list
+        if (embedding.type %in% names(self$embeddings)){
+          emb <- self$embeddings[[embedding.type]]
+        } else{
+          stop(paste("Embedding", embedding.type, "is not found in any of the joint embeddings"))
+        }
+      } else{
+        ## grab last element in embeddings list
+        emb <- self$embeddings[length(self$embeddings)]
+      }
+
       if(use.common.embedding) {
-        embedding.type <- self$embedding
-        adj.list <- c(ggplot2::lims(x=range(self$embedding[,1]), y=range(self$embedding[,2])), adj.list)
+        embedding.type <- emb
+        adj.list <- c(ggplot2::lims(x=range(emb[,1]), y=range(emb[,2])), adj.list)
       }
 
       gg <- plotSamples(self$samples, groups=groups, colors=colors, gene=gene, plot.theme=private$adjustTheme(plot.theme), embedding.type=embedding.type, adj.list=adj.list, ...)
@@ -408,8 +421,9 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
     },
 
     #' @description  Generate an embedding of a joint graph.
-
+    #'
     #' @param method embedding method. Currently largeVis and UMAP are supported
+    #' @param name optional name of the embedding result (will default to the method name; otherwise, "embedding")
     #' @param M, gamma, alpha, sgd__batched - largeVis parameters (defaults are 1, 1, 0.01, 1e8 respectively).
     #' @param perplexity perplexity passed to largeVis (defaults to NA).
     #' @param seed random seed for the largeVis algorithm. Default: 1.
@@ -417,9 +431,16 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
     #' @param n.cores number of cores, overrides class field
     #' @param verbose verbose mode. Default: TRUE.
     #' @param ... additional arguments, passed to UMAP embedding (run ?conos:::embedGraphUmap for more info)
-    embedGraph=function(method='largeVis', M=1, gamma=1, alpha=0.1, perplexity=NA, sgd_batches=1e8, seed=1, verbose=TRUE, target.dims=2, n.cores=self$n.cores, ...) {
+    embedGraph=function(method='largeVis', name=NULL, M=1, gamma=1, alpha=0.1, perplexity=NA, sgd_batches=1e8, seed=1, verbose=TRUE, target.dims=2, n.cores=self$n.cores, ...) {
       supported.methods <- c('largeVis', 'UMAP')
       if(!method %in% supported.methods) { stop(paste0("currently, only the following embeddings are supported: ",paste(supported.methods,collapse=' '))) }
+
+      if (is.null(name)) {
+        name <- method
+        if(is.null(name)) {
+          name <- "embedding"
+        }
+      }
 
       if (method == 'largeVis') {
         wij <- as_adj(self$graph,attr='weight');
@@ -428,22 +449,23 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
         }
         coords <- conos:::projectKNNs(wij = wij, dim=target.dims, verbose = verbose,sgd_batches = sgd_batches,gamma=gamma, M=M, seed=seed, alpha=alpha, rho=1, threads=n.cores)
         colnames(coords) <- V(self$graph)$name
-        self$embedding <- t(coords);
+        embedding.result <- t(coords);
       } else {
         if (!requireNamespace("uwot", quietly=T))
           stop("You need to install package 'uwot' to be able to use UMAP embedding.")
 
-        self$embedding <- embedGraphUmap(self$graph, verbose=verbose, return.all=F, n.cores=n.cores, target.dims=target.dims, ...)
+        embedding.result <- embedGraphUmap(self$graph, verbose=verbose, return.all=F, n.cores=n.cores, target.dims=target.dims, ...)
       }
 
-      return(invisible(self$embedding))
+      self$embeddings[[name]] <- embedding.result
+      return(invisible(embedding.result))
     },
 
     #' @description Plot cluster stability statistics.
     #'
     #' @param clustering name of the clustering result to show
     #' @param what show a specific plot (ari - adjusted rand index, fjc - flat Jaccard, hjc - hierarchical Jaccard, dend - cluster dendrogram)
-    plotClusterStability=function(clustering=NULL,what='all') {
+    plotClusterStability=function(clustering=NULL, what='all') {
       if(is.null(clustering)) clustering <- names(self$clusters)[[1]]
 
       if(is.null(self$clusters[[clustering]]))
@@ -530,23 +552,35 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
     #' @description Plot joint graph.
     #'
     #' @param clustering name of the clustering to use
+    #' @param embedding.type name of the embedding to use
     #' @param groups a factor on cells to use for coloring.
     #' @param colors a color factor (named with cell names) use for cell coloring.
     #' @param gene show expression of a gene.
     #' @param subset a subset of cells to show.
-    plotGraph=function(color.by='cluster', clustering=NULL, groups=NULL, colors=NULL, gene=NULL, plot.theme=NULL, subset=NULL, ...) {
-      if(is.null(self$embedding)) {
+    plotGraph=function(color.by='cluster', clustering=NULL, embedding.type=NULL, groups=NULL, colors=NULL, gene=NULL, plot.theme=NULL, subset=NULL, ...) {
+      if (length(self$embeddings) == 0) {
         self$embedGraph()
       }
+      
+      if (!is.null(embedding.type)){
+        ## check embedding exists in list
+        if (embedding.type %in% names(self$embeddings)){
+          emb <- self$embeddings[[embedding.type]]
+        } else{
+          stop(paste("Embedding", embedding.type, "is not found in any of the joint embeddings"))
+        }
+      } else{
+        ## grab last element in embeddings list
+        emb <- self$embeddings[length(self$embeddings)]
+      }
 
-      emb <- self$embedding;
-      if(!is.null(subset)) {
-        emb <- emb[rownames(emb) %in% subset,,drop=F]
+      if (!is.null(subset)) {
+        emb <- emb[rownames(emb) %in% subset,,drop=FALSE]
       }
 
       if (!is.null(gene)) {
         colors <- lapply(self$samples, getGeneExpression, gene) %>% Reduce(c, .)
-        if(all(is.na(colors))) stop(paste("gene",gene,"is not found in any of the samples"))
+        if(all(is.na(colors))) stop(paste("Gene",gene,"is not found in any of the samples"))
       }
 
       if(is.null(groups) && is.null(colors)) {
@@ -555,7 +589,7 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
         } else if(color.by == 'sample') {
           groups <- self$getDatasetPerCell()
         } else {
-          stop('supported values of color.by are ("cluster" and "sample")')
+          stop('Supported values of color.by are ("cluster" and "sample")')
         }
       }
 

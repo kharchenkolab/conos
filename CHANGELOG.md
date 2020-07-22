@@ -1,5 +1,7 @@
 ## Upcoming
 
+- allow multiple embeddings in conclass (July 2020)
+
 ### Changed
 
 - Improved `plotDEheatmap` function
@@ -13,12 +15,17 @@
 - Added checks for `getPerCellTypeDE()` for errors, removing NAs
 - Added `ht_opt$message = FALSE` for ComplexHeatmap (July 2020)
 - Write to HDF5 for `saveConosForScanPy()` (7 July 2020)
+- multiple embeddings in Conos object (July 2020)
+- Write to HDF5 for `saveConosForScanPy()` (July 2020)
+- added `ht_opt$message = FALSE` for ComplexHeatmap (July 2020)
+- Write to HDF5 for `saveConosForScanPy()` (July 2020)
 - LICENSE (July 2020)
 
 ### Removed
 
 - Removed `getCorrectionVector()` and `getPerCellTypeDECorrected` (July 2020)
 - Removed all neighborhood averaging via `neighborhood.average` (July 2020)
+
 
 ## [1.3.0] - 2020-19-3
 
