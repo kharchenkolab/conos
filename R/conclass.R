@@ -2,7 +2,7 @@
 #' @description The class encompasses sample collections, providing methods for calculating and visualizing joint graph and communities.
 #' @import methods
 #' @export Conos
-Conos <- R6::R6Class("Conos", lock_objects=F,
+Conos <- R6::R6Class("Conos", lock_objects=FALSE,
   public = list(
     #' @field samples list of samples (Pagoda 2 or Seurat objects)
     samples = list(),
@@ -22,6 +22,10 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
     #' @field embeddings list of joint embeddings
     embeddings = list(),
 
+    ## deprecated
+    ## embedding joint embedding
+    embedding = NULL,
+
     #' @field n.cores number of cores
     n.cores = 1,
 
@@ -29,7 +33,7 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
     misc = list(),
     override.conos.plot.theme = FALSE,
 
-    initialize=function(x, ..., n.cores=parallel::detectCores(logical=F), verbose=TRUE, override.conos.plot.theme=FALSE) {
+    initialize=function(x, ..., n.cores=parallel::detectCores(logical=FALSE), verbose=TRUE, override.conos.plot.theme=FALSE) {
       self$n.cores <- n.cores;
       self$override.conos.plot.theme <- override.conos.plot.theme;
 
@@ -399,11 +403,16 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
       }
 
       if (!is.null(embedding.type)){
-        ## check embedding exists in list
-        if (embedding.type %in% names(self$embeddings)){
-          emb <- self$embeddings[[embedding.type]]
+        ## check if deprecated 'self$embedding' used
+        if (is.null(self$embedding)){
+          .Deprecated("embeddings")
         } else{
-          stop(paste("Embedding", embedding.type, "is not found in any of the joint embeddings"))
+          ## check embedding exists in list
+          if (embedding.type %in% names(self$embeddings)){
+            emb <- self$embeddings[[embedding.type]]
+          } else{
+            stop(paste("Embedding", embedding.type, "is not found in any of the joint embeddings"))
+          }
         }
       } else{
         ## grab last element in embeddings list
@@ -411,8 +420,15 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
       }
 
       if(use.common.embedding) {
-        embedding.type <- emb
-        adj.list <- c(ggplot2::lims(x=range(emb[,1]), y=range(emb[,2])), adj.list)
+        if (!is.null(self$embedding)){
+          .Deprecated("embeddings")
+          embedding.type <- self$embedding
+          adj.list <- c(ggplot2::lims(x=range(self$embedding[,1]), y=range(self$embedding[,2])), adj.list)
+        } else{
+          ## use embeddings
+          embedding.type <- emb
+          adj.list <- c(ggplot2::lims(x=range(emb[,1]), y=range(emb[,2])), adj.list)
+        }
       }
 
       gg <- plotSamples(self$samples, groups=groups, colors=colors, gene=gene, plot.theme=private$adjustTheme(plot.theme), embedding.type=embedding.type, adj.list=adj.list, ...)
@@ -449,12 +465,16 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
         }
         coords <- conos:::projectKNNs(wij = wij, dim=target.dims, verbose = verbose,sgd_batches = sgd_batches,gamma=gamma, M=M, seed=seed, alpha=alpha, rho=1, threads=n.cores)
         colnames(coords) <- V(self$graph)$name
-        embedding.result <- t(coords);
+        if (!is.null(self$embedding)){
+          self$embedding <- t(coords)
+        } else{
+          embedding.result <- t(coords)
+        }
       } else {
-        if (!requireNamespace("uwot", quietly=T))
+        if (!requireNamespace("uwot", quietly=TRUE))
           stop("You need to install package 'uwot' to be able to use UMAP embedding.")
 
-        embedding.result <- embedGraphUmap(self$graph, verbose=verbose, return.all=F, n.cores=n.cores, target.dims=target.dims, ...)
+        embedding.result <- embedGraphUmap(self$graph, verbose=verbose, return.all=FALSE, n.cores=n.cores, target.dims=target.dims, ...)
       }
 
       self$embeddings[[name]] <- embedding.result
@@ -575,6 +595,12 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
       }
 
       if (!is.null(subset)) {
+        emb <- emb[rownames(emb) %in% subset,,drop=FALSE]
+      }
+      ## catch for deprecated 'embedding'
+      if ( !is.null(subset) && !is.null(embedding) ){
+        .Deprecated("embeddings")
+        emb <- self$embedding
         emb <- emb[rownames(emb) %in% subset,,drop=FALSE]
       }
 
