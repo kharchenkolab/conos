@@ -1,4 +1,7 @@
 #' @importFrom dplyr %>%
+#' @importFrom ComplexHeatmap ht_opt
+#' @importFrom ComplexHeatmap Heatmap
+#' @importFrom ComplexHeatmap HeatmapAnnotation
 NULL
 
 #' @export
@@ -550,6 +553,14 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,m
   if(show.gene.clusters) {
     ra <- ComplexHeatmap::HeatmapAnnotation(df=rannot,which='row',show_annotation_name=FALSE, show_legend=FALSE, border=border,col=column.metadata.colors)
   } else { ra <- NULL }
+
+  ## turns off ComplexHeatmap warning:
+  ## `use_raster` is automatically set to TRUE for a matrix with more than
+  ## 2000 columns. You can control `use_raster` argument by explicitly
+  ## setting TRUE/FALSE to it.
+  ## Set `ht_opt$message = FALSE` to turn off this message.
+  ## 
+  ht_opt$message = FALSE
 
   #ComplexHeatmap::Heatmap(x, col=pal, cluster_rows=FALSE, cluster_columns=FALSE, show_column_names=FALSE, top_annotation=ha , left_annotation=ra, column_split=groups[colnames(x)], row_split=rannot[,1], row_gap = unit(0, "mm"), column_gap = unit(0, "mm"), border=T,  ...);
   if(split) {

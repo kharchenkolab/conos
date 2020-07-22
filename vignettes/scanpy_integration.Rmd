@@ -1,21 +1,19 @@
 ---
-title: "Convert Conos object to ScanPy"
+title: "Convert Conos Object to ScanPy"
 output:
   rmarkdown::github_document:
     toc: true
 ---
 
-```{r, message=FALSE, warning=FALSE}
-library(conos)
-```
 
-Load data:
+First load the Conos library and the corresponding data:
 
 ```{r}
+library(conos)
 panel <- readRDS(file.path(find.package('conos'), 'extdata', 'panel.rds'))
 ```
 
-Run Pagoda 2:
+Run Pagoda2:
 
 ```{r}
 library(pagoda2)
@@ -23,12 +21,14 @@ panel.preprocessed <- lapply(panel, basicP2proc, n.cores=4, min.cells.per.gene=0
                              get.largevis=FALSE, make.geneknn=FALSE)
 ```
 
-Align datasets:
+Align the datasets:
 
 ```{r}
 con <- Conos$new(panel.preprocessed, n.cores=4)
 con$buildGraph(k=15, k.self=5, space='PCA', ncomps=30)
 ```
+
+
 
 Find clusters and create embedding:
 
@@ -44,6 +44,7 @@ metadata <- data.frame(Cluster=con$clusters$leiden$groups)
 ```
 
 Save data (set `exchange_dir` to your path):
+
 
 ```{r}
 exchange_dir <- "~/scanpy_demo"
