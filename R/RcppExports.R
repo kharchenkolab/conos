@@ -33,8 +33,8 @@ pareDownHubEdges <- function(sY, rowN, k, klow = -1L) {
     .Call('_conos_pareDownHubEdges', PACKAGE = 'conos', sY, rowN, k, klow)
 }
 
-getSumWeightMatrix <- function(weights, row_inds, col_inds, factor_levels) {
-    .Call('_conos_getSumWeightMatrix', PACKAGE = 'conos', weights, row_inds, col_inds, factor_levels)
+getSumWeightMatrix <- function(weights, row_inds, col_inds, factor_levels, normalize = TRUE) {
+    .Call('_conos_getSumWeightMatrix', PACKAGE = 'conos', weights, row_inds, col_inds, factor_levels, normalize)
 }
 
 adjustWeightsByCellBalancingC <- function(weights, row_inds, col_inds, factor_levels, dividers) {
