@@ -1,20 +1,19 @@
 Package: conos
-Title: Clustering on Netowrk of Samples
+Title: Clustering on Network of Samples
 Version: 1.3.0
 Authors@R: c(person("Peter", "Kharchenko", email = "peter_kharchenko@hms.harvard.edu", role = c("aut", "cre")),
              person("Nikolas","Barkas", email="nikolas_barkas@hms.harvard.edu", role="aut"),
              person("Viktor","Petukhov", email="viktor.s.petuhov@ya.ru", role="aut"))
-Description: Wire together large collections of single-cell RNA-seq datasets. The package focuses on uniform
-  mapping of homologous cell types across heterogeneous sample collections. For instance, a collection of
-  dozens of peripheral blood samples from cancer patients, combined with dozens of controls. And perhaps also
-  including samples of a related tissue, such as lymph nodes.
+Description: Wires together large collections of single-cell RNA-seq datasets, which allows for both the identification of recurrent cell clusters and the propagation of information between datasets in multi-sample or atlas-scale collections. Conos focuses on the uniform mapping of homologous cell types across heterogeneous sample collections. For instance, users could investigate a collection of dozens of peripheral blood samples from cancer patients combined with dozens of controls, which perhaps includes samples of a related tissue such as lymph nodes.
 Depends: R (>= 3.2.1), Matrix, igraph
-License: GPL3
+License: GPL3 + file LICENSE
 Encoding: UTF-8
 LazyData: true
+biocViews:
 Imports:
     abind,
     cowplot,
+    ComplexHeatmap (>= 2.0.0),
     dendextend,
     dplyr,
     entropy,
@@ -34,12 +33,12 @@ Imports:
     Rtsne,
     shiny,
     stats,
+    tools,
     utils,
     viridis,
     sccore (>= 0.1)
 Suggests:
     clues,
-    ComplexHeatmap (>= 2.0.0),
     d3heatmap,
     DESeq2,
     entropy,
@@ -48,13 +47,16 @@ Suggests:
     pbapply,
     PMA,
     pROC,
+    rhdf5,
     rmarkdown,
     Seurat,
     shinycssloaders
 VignetteBuilder: knitr
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
 LinkingTo: Rcpp, RcppArmadillo, RcppEigen, RcppProgress, igraph
 NeedsCompilation: yes
 Remotes:
-    hms-dbmi/sccore,
+    kharchenkolab/sccore,
     jokergoo/ComplexHeatmap
+Author: Peter Kharchenko [cre, aut], Nikolas Barkas [aut], Viktor Petukhov [aut]
+Maintainer: Peter Kharchenko <peter_kharchenko@hms.harvard.edu>

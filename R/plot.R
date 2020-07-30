@@ -1,4 +1,7 @@
 #' @importFrom dplyr %>%
+#' @importFrom ComplexHeatmap ht_opt
+#' @importFrom ComplexHeatmap Heatmap
+#' @importFrom ComplexHeatmap HeatmapAnnotation
 NULL
 
 #' @export
@@ -141,17 +144,20 @@ plotSamples <- function(samples, groups=NULL, colors=NULL, gene=NULL, embedding.
 #' @export
 plotClusterBarplots <- function(conos.obj=NULL, clustering=NULL, groups=NULL,sample.factor=NULL,show.entropy=TRUE,show.size=TRUE,show.composition=TRUE,legend.height=0.2) {
   ## param checking
-  if(!is.null(clustering)) {
-    if(is.null(conos.obj)) stop('conos.obj must be passed if clustering name is specified');
-    if(!clustering %in% names(conos.obj$clusters)) stop('specified clustering doesn\'t exist')
-    groups <- conos.obj$clusters[[clustering]]$groups
-  } else if (is.null(groups)) {
-    if(is.null(conos.obj)) stop('either groups factor on the cells or a conos object needs to be specified')
-    if(is.null(conos.obj$clusters[[1]])) stop('conos object lacks any clustering. run $findCommunities() first')
-    groups <- conos.obj$clusters[[1]]$groups
+  if (!is.null(clustering) && is.null(conos.obj)) {
+    stop('conos.obj must be passed if clustering name is specified')
   }
 
-  groups <- as.factor(groups)
+  if (is.null(groups) && is.null(conos.obj)) {
+    stop('Either groups factor on the cells or a conos object needs to be specified, both cannot be NULL')
+  }
+
+  groups <- parseCellGroups(conos.obj, clustering, groups)
+
+  if (!is.null(groups)) {
+    groups <- as.factor(groups)
+  }
+
   if(is.null(sample.factor)) {
     sample.factor <- conos.obj$getDatasetPerCell(); # assignment to samples
   }
@@ -547,6 +553,14 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,m
   if(show.gene.clusters) {
     ra <- ComplexHeatmap::HeatmapAnnotation(df=rannot,which='row',show_annotation_name=FALSE, show_legend=FALSE, border=border,col=column.metadata.colors)
   } else { ra <- NULL }
+
+  ## turns off ComplexHeatmap warning:
+  ## `use_raster` is automatically set to TRUE for a matrix with more than
+  ## 2000 columns. You can control `use_raster` argument by explicitly
+  ## setting TRUE/FALSE to it.
+  ## Set `ht_opt$message = FALSE` to turn off this message.
+  ## 
+  ht_opt$message = FALSE
 
   #ComplexHeatmap::Heatmap(x, col=pal, cluster_rows=FALSE, cluster_columns=FALSE, show_column_names=FALSE, top_annotation=ha , left_annotation=ra, column_split=groups[colnames(x)], row_split=rannot[,1], row_gap = unit(0, "mm"), column_gap = unit(0, "mm"), border=T,  ...);
   if(split) {
