@@ -223,8 +223,7 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
       return(invisible(g))
     },
 
-    getDifferentialGenes=function(clustering=NULL, groups=NULL, z.threshold=3.0, upregulated.only=F, verbose=T, plot=FALSE, n.genes.to.show=10, inner.clustering=FALSE,
-                                  append.specificity.metrics=TRUE, append.auc=FALSE, n.cores=self$n.cores) {
+    getDifferentialGenes=function(clustering=NULL, groups=NULL, z.threshold=3.0, upregulated.only=FALSE, verbose=TRUE, plot=FALSE, n.genes.to.show=10, inner.clustering=FALSE, append.specificity.metrics=TRUE, append.auc=TRUE, n.cores=self$n.cores) {
       
       groups <- parseCellGroups(self, clustering, groups)
 
@@ -247,7 +246,7 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
 
         de.genes %<>% lapply(function(x) if ((length(x) > 0) && (nrow(x) > 0)) subset(x, complete.cases(x)) else x)
         de.genes %<>% names() %>% setNames(., .) %>%
-          sccore::plapply(function(n) appendSpecificityMetricsToDE(de.genes[[n]], groups.clean, n, p2.counts=cm.merged, append.auc=append.auc), verbose=verbose, n.cores=n.cores)
+          sccore::plapply(function(n) appendSpecificityMetricsToDE(de.genes[[n]], groups.clean, n, p2.counts=cm.merged, append.auc=append.auc), progress=verbose, n.cores=n.cores)
       }
 
       if (verbose) cat("All done!\n")
@@ -573,7 +572,7 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
     #' @param tol tolerance after which the diffusion stops. Default: 5e-3.
     #' @param name name to save the correction. Default: diffusion.
     #' @param verbose verbose mode. Default: TRUE.
-    #' @param count.matrix alternative gene count matrix to correct. Default: joint count matrix for all datasets.
+    #' @param count.matrix alternative gene count matrix to correct (rows: genes, columns: cells; has to be dense matrix). Default: joint count matrix for all datasets.
     correctGenes=function(genes=NULL, n.od.genes=500, fading=10.0, fading.const=0.5, max.iters=15, tol=5e-3, name='diffusion', verbose=TRUE, count.matrix=NULL, normalize=TRUE) {
       edges <- igraph::as_edgelist(self$graph)
       edge.weights <- igraph::edge.attributes(self$graph)$weight
@@ -588,6 +587,13 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
         count.matrix <- Reduce(rbind, lapply(cms, function(x) x[, genes])) %>% as.matrix()
       } else {
         count.matrix <- t(count.matrix)
+      }
+      vn <- V(self$graph)$name;
+      if(!all(rownames(count.matrix)==vn)) { # subset to a common set of genes
+        if(!all(vn %in% rownames(count.matrix))) {
+          stop("count.matrix does not provide values for all the vertices in the alignment graph!")
+        }
+        count.matrix <- count.matrix[vn,]
       }
 
       cm <- smoothMatrixOnGraph(edges, edge.weights, count.matrix, max_n_iters=max.iters, diffusion_fading=fading,
