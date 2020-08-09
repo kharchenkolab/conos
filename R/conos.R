@@ -589,7 +589,7 @@ postProcessWalktrapClusters <- function(p2list, pjc, no.cl = 200, size.cutoff = 
 #' @param samples list of pagoda2 objects
 #' @param n.genes number of overdispersed genes to extract
 getOdGenesUniformly <- function(samples, n.genes) {
-  if (!("Pagoda2" %in% class(con$samples[[1]])))
+  if (!("Pagoda2" %in% class(samples[[1]])))
     stop("This function is currently supported only for Pagoda2 objects")
 
   gene.info <- lapply(samples, function(s)
