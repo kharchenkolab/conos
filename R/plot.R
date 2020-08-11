@@ -37,8 +37,9 @@ getClusteringGroups <- function(clusters, clustering) {
 ##' @param panel.size vector with two numbers, which specified (width, height) of the panel in inches. Ignored if raster == FALSE.
 ##' @param adjust.func function to adjust plots before combining them to single panel. Can be used, for example, to provide color pallette of guides of the plots.
 ##' @param subset a subset of cells to show (vector of cell names)
+##' @param return.plotlist return a list of ggplot objects instead of a combined plot (default:FALSE)
 ##' @return ggplot2 object with the panel of plots
-plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow=NULL, raster=FALSE, panel.size=NULL, adjust.func=NULL, title.size=6,raster.width=NULL, raster.height=NULL, adj.list=NULL, subset=NULL, ...) {
+plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow=NULL, raster=FALSE, panel.size=NULL, adjust.func=NULL, title.size=6,raster.width=NULL, raster.height=NULL, adj.list=NULL, subset=NULL, return.plotlist=FALSE, ...) {
   if (is.null(panel.size)) {
     panel.size <- dev.size(units="in")
   } else if (length(panel.size) == 1) {
@@ -87,6 +88,8 @@ plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow
   if (!is.null(adjust.func)) {
     plot.list <- lapply(plot.list, adjust.func)
   }
+  
+  if(return.plotlist) return(plot.list)
 
   return(cowplot::plot_grid(plotlist=plot.list, ncol=ncol, nrow=nrow))
 }
@@ -353,8 +356,8 @@ plotComponentVariance <- function(conos.obj, space='PCA',plot.theme=theme_bw()) 
 ##' @export
 plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,min.precision=NULL,n.genes.per.cluster=10,additional.genes=NULL,exclude.genes=NULL, labeled.gene.subset=NULL, expression.quantile=0.99,pal=colorRampPalette(c('dodgerblue1','grey95','indianred1'))(1024),ordering='-AUC',column.metadata=NULL,show.gene.clusters=TRUE, remove.duplicates=TRUE, column.metadata.colors=NULL, show.cluster.legend=TRUE, show_heatmap_legend=FALSE, border=TRUE, return.details=FALSE, row.label.font.size=10, order.clusters=FALSE, split=FALSE, split.gap=0, cell.order=NULL, averaging.window=0, ...) {
 
-  if (!requireNamespace("ComplexHeatmap", quietly = TRUE) || (substr(packageVersion("ComplexHeatmap"), 1, 1) <= "1")) {
-    stop("ComplexHeatmap >= 2.0 package needs to be installed to use plotDEheatmap. Please run \"devtools::install_github('jokergoo/ComplexHeatmap')\".")
+  if (!requireNamespace("ComplexHeatmap", quietly = TRUE) || packageVersion("ComplexHeatmap") < "2.4") {
+    stop("ComplexHeatmap >= 2.4 package needs to be installed to use plotDEheatmap. Please run \"devtools::install_github('jokergoo/ComplexHeatmap')\".")
   }
 
   groups <- as.factor(groups)
@@ -500,7 +503,7 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,m
 
 
   if(!is.null(cell.order)) {
-    o <- cell.order[cell.order %in% colnames(o)]
+    o <- cell.order[cell.order %in% colnames(x)]
   } else { 
     o <- order(groups[colnames(x)])
   }
@@ -585,3 +588,4 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,m
 
   return(ha)
 }
+
