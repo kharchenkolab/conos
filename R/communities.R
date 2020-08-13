@@ -11,7 +11,7 @@
 ##' @param level what level of multitrap clustering to use in the starting step. By default, uses the top level. An integer can be specified for a lower level (i.e. 1).
 ##' @param ... passed to walktrap
 ##' @return a fakeCommunities object that has methods membership() and as.dendrogram() to mimic regular igraph returns
-multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=F), hclust.link='single', min.community.size=10, verbose=FALSE, level=NULL, ...) {
+multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=FALSE), hclust.link='single', min.community.size=10, verbose=FALSE, level=NULL, ...) {
   .Deprecated()
 
   if(verbose) cat("running multilevel ... ");
@@ -116,7 +116,7 @@ multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=F),
 ##' @param level what level of multitrap clustering to use in the starting step. By default, uses the top level. An integer can be specified for a lower level (i.e. 1).
 ##' @param ... passed to walktrap
 ##' @return a fakeCommunities object that has methods membership() and as.dendrogram() to mimic regular igraph returns
-multimulti.community <- function(graph, n.cores=parallel::detectCores(logical=F), hclust.link='single', min.community.size=10, verbose=FALSE, level=NULL, ...) {
+multimulti.community <- function(graph, n.cores=parallel::detectCores(logical=FALSE), hclust.link='single', min.community.size=10, verbose=FALSE, level=NULL, ...) {
   .Deprecated()
 
   if(verbose) cat("running multilevel 1 ... ");
@@ -202,7 +202,7 @@ leiden.community <- function(graph, resolution=1.0, n.iterations=2) {
 ##' @param ... passed to leiden.communities
 ##' @return a fakeCommunities object that has methods membership() ... does not return a dendrogram ... see cltrap.community() to constructo that
 ##' @export
-rleiden.community <- function(graph, max.depth=2, n.cores=parallel::detectCores(logical=F), min.community.size=10, verbose=FALSE, resolution=1, cur.depth=1, hierarchical=TRUE, ...) {
+rleiden.community <- function(graph, max.depth=2, n.cores=parallel::detectCores(logical=FALSE), min.community.size=10, verbose=FALSE, resolution=1, cur.depth=1, hierarchical=TRUE, ...) {
 
   if(verbose & cur.depth==1) cat(paste0("running ",max.depth,"-recursive Leiden clustering: "));
   if(length(resolution)>1) {

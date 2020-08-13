@@ -72,7 +72,7 @@ plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow
   plot.list <- lapply(names(embeddings), function(n) {
     emb <- embeddings[[n]];
     if(!is.null(subset)) {
-      emb <- emb[rownames(emb) %in% subset,,drop=F]
+      emb <- emb[rownames(emb) %in% subset,,drop=FALSE]
     }
     embeddingPlot(emb, groups=groups, colors=colors, raster=raster,
                   raster.width=raster.width, raster.height=raster.height, ...) +
@@ -114,7 +114,7 @@ plotSamples <- function(samples, groups=NULL, colors=NULL, gene=NULL, embedding.
     }
   }
   if(class(embedding.type)=='matrix') { # actual embedding was passed
-    embeddings <- lapply(samples,function(r) embedding.type[rownames(embedding.type) %in% getCellNames(r),,drop=F])
+    embeddings <- lapply(samples,function(r) embedding.type[rownames(embedding.type) %in% getCellNames(r),,drop=FALSE])
     embeddings <- embeddings[unlist(lapply(embeddings,function(x) nrow(x)>0))]
   } else { # extract embeddings from samples
     embeddings <- lapply(samples, getEmbedding, embedding.type)
@@ -181,8 +181,8 @@ plotClusterBarplots <- function(conos.obj=NULL, clustering=NULL, groups=NULL,sam
   pl <- list(clp + ggplot2::theme(legend.position="none"));
 
   if(show.entropy) {
-    if (!requireNamespace("entropy", quietly=T))
-      stop("You need to install 'entropy' package to use 'show.entropy=T'")
+    if (!requireNamespace("entropy", quietly=TRUE))
+      stop("You need to install 'entropy' package to use 'show.entropy=TRUE'")
 
     n.samples <- nrow(xt);
     ne <- 1-apply(xt, 2, entropy::KL.empirical, y2=rowSums(xt), unit=c('log2')) / log2(n.samples) # relative entropy
@@ -306,7 +306,7 @@ plotComponentVariance <- function(conos.obj, space='PCA',plot.theme=theme_bw()) 
 
   if(!is.null(pairs[[space]])) stop(paste("no pairs for space",space,"found. Please run buildGraph() or updatePairs() first, with score.component.variance=TRUE"))
 
-  nvs <- lapply(pairs,'[[','nv'); nvs <- setNames(unlist(nvs,recursive=F,use.names=F),unlist(lapply(nvs,names)))
+  nvs <- lapply(pairs,'[[','nv'); nvs <- setNames(unlist(nvs,recursive=FALSE,use.names=FALSE),unlist(lapply(nvs,names)))
   if(length(nvs)<1) stop("no variance information found. Please run buildGraph() or updatePairs() with score.component.variance=TRUE")
   if(space=='PCA') { # omit duplicates
     nvs <- nvs[unique(names(nvs))]
@@ -425,16 +425,16 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,m
       age <- do.call(rbind,lapply(sn(genes.to.add),function(gene) conos:::getGeneExpression(con,gene)))
       
       # for each gene, measure average correlation with genes of each cluster
-      acc <- do.call(rbind,lapply(expl,function(og) rowMeans(cor(t(age),t(og)),na.rm=T)))
-      acc <- acc[,apply(acc,2,function(x) any(is.finite(x))),drop=F]
+      acc <- do.call(rbind,lapply(expl,function(og) rowMeans(cor(t(age),t(og)),na.rm=TRUE)))
+      acc <- acc[,apply(acc,2,function(x) any(is.finite(x))),drop=FALSE]
       acc.best <- na.omit(apply(acc,2,which.max))
       
       for(i in 1:length(acc.best)) {
         gn <- names(acc.best)[i];
-        expl[[acc.best[i]]] <- rbind(expl[[acc.best[i]]],age[gn,,drop=F])
+        expl[[acc.best[i]]] <- rbind(expl[[acc.best[i]]],age[gn,,drop=FALSE])
       }
       if(additional.genes.only) { # leave only genes that were explictly specified
-        expl <- lapply(expl,function(d) d[rownames(d) %in% additional.genes,,drop=F])
+        expl <- lapply(expl,function(d) d[rownames(d) %in% additional.genes,,drop=FALSE])
         expl <- expl[unlist(lapply(expl,nrow))>0]
         
       }
@@ -444,7 +444,7 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,m
   # omit genes that should be excluded
   if(!is.null(exclude.genes)) {
     expl <- lapply(expl,function(x) {
-      x[!rownames(x) %in% exclude.genes,,drop=F]
+      x[!rownames(x) %in% exclude.genes,,drop=FALSE]
     })
   }
 
@@ -455,7 +455,7 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,m
 
   if(order.clusters) {
     # group clusters based on expression similarity (of the genes shown)
-    xc <- do.call(cbind,tapply(1:ncol(exp),groups[colnames(exp)],function(ii) rowMeans(exp[,ii,drop=F])))
+    xc <- do.call(cbind,tapply(1:ncol(exp),groups[colnames(exp)],function(ii) rowMeans(exp[,ii,drop=FALSE])))
     hc <- hclust(as.dist(2-cor(xc)),method='ward.D2')
     groups <- factor(groups,levels=hc$labels[hc$order])
     expl <- expl[levels(groups)]
@@ -468,7 +468,7 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,m
     # check if zoo is installed
     if(requireNamespace("zoo", quietly = TRUE)) {
       exp <- do.call(cbind,tapply(1:ncol(exp),as.factor(groups[colnames(exp)]),function(ii) {
-        xa <- t(zoo::rollapply(as.matrix(t(exp[,ii,drop=F])),averaging.window,mean,align='left',partial=T))
+        xa <- t(zoo::rollapply(as.matrix(t(exp[,ii,drop=FALSE])),averaging.window,mean,align='left',partial=TRUE))
         colnames(xa) <- colnames(exp)[ii]
         xa
       }))
@@ -565,7 +565,7 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,m
   ## 
   ht_opt$message = FALSE
 
-  #ComplexHeatmap::Heatmap(x, col=pal, cluster_rows=FALSE, cluster_columns=FALSE, show_column_names=FALSE, top_annotation=ha , left_annotation=ra, column_split=groups[colnames(x)], row_split=rannot[,1], row_gap = unit(0, "mm"), column_gap = unit(0, "mm"), border=T,  ...);
+  #ComplexHeatmap::Heatmap(x, col=pal, cluster_rows=FALSE, cluster_columns=FALSE, show_column_names=FALSE, top_annotation=ha , left_annotation=ra, column_split=groups[colnames(x)], row_split=rannot[,1], row_gap = unit(0, "mm"), column_gap = unit(0, "mm"), border=TRUE,  ...);
   if(split) {
     ha <- ComplexHeatmap::Heatmap(x, name='expression', col=pal, cluster_rows=FALSE, cluster_columns=FALSE, show_row_names=is.null(labeled.gene.subset), show_column_names=FALSE, top_annotation=ha , left_annotation=ra, border=border,  show_heatmap_legend=show_heatmap_legend, row_names_gp = grid::gpar(fontsize = row.label.font.size), column_split=groups[colnames(x)], row_split=rannot[,1], row_gap = unit(split.gap, "mm"), column_gap = unit(split.gap, "mm"), ...);
   } else {

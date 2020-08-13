@@ -5,7 +5,7 @@ extendMatrix <- function(mtx, col.names) {
   return(cbind(mtx, ext.mtx)[,col.names])
 }
 
-mergeCountMatrices <- function(cms, transposed=F) {
+mergeCountMatrices <- function(cms, transposed=FALSE) {
   if (!transposed) {
     cms %<>% lapply(Matrix::t)
   }
@@ -113,7 +113,7 @@ saveConosForScanPy <- function(con, output.path, hdf5_filename, metadata.df=NULL
   gene.df <- data.frame(gene=colnames(raw.count.matrix.merged))
 
   if (!is.null(metadata.df)) {
-    metadata.df %<>% .[cell.ids, , drop=F] %>% dplyr::mutate(CellId=cell.ids)
+    metadata.df %<>% .[cell.ids, , drop=FALSE] %>% dplyr::mutate(CellId=cell.ids)
   } else {
     metadata.df <- tibble::tibble(CellId=cell.ids)
   }
@@ -365,7 +365,7 @@ pcaFromConos <- function(p2.list, data.type='counts', k=30, ncomps=100, n.odgene
   pcs <- lapply(sm, function(x) {
     cm <- Matrix::colMeans(x);
     ncomps <- min(c(nrow(cm)-1,ncol(cm)-1,ncomps))
-    res <- irlba::irlba(x, nv=ncomps, nu=0, center=cm, right_only=F, reorth=T)
+    res <- irlba::irlba(x, nv=ncomps, nu=0, center=cm, right_only=FALSE, reorth=TRUE)
     res
   })
 
@@ -377,12 +377,12 @@ pcaFromConos <- function(p2.list, data.type='counts', k=30, ncomps=100, n.odgene
 }
 
 #' @export
-convertToPagoda2 <- function(con, n.pcs=100, n.odgenes=2000, verbose=T, ...) {
+convertToPagoda2 <- function(con, n.pcs=100, n.odgenes=2000, verbose=TRUE, ...) {
   if (!requireNamespace('pagoda2', quietly=TRUE)) {
     stop("'pagoda2' must be installed to convert Conos to Pagoda 2")
   }
 
-  p2 <- con$getJointCountMatrix(raw=T) %>% Matrix::t() %>%
+  p2 <- con$getJointCountMatrix(raw=TRUE) %>% Matrix::t() %>%
     Pagoda2$new(n.cores=con$n.cores, verbose=verbose, ...)
 
   if (n.pcs > 0) {
