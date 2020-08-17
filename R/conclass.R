@@ -22,7 +22,6 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @field embeddings list of joint embeddings
     embeddings = list(),
 
-    ## deprecated
     ## embedding joint embedding
     embedding = NULL,
 
@@ -402,33 +401,25 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         groups <- getClusteringGroups(self$clusters, clustering)
       }
 
-      if (!is.null(embedding.type)){
-        ## check if deprecated 'self$embedding' used
-        if (is.null(self$embedding)){
-          .Deprecated("embeddings")
-        } else{
+      if(use.common.embedding) {
+        if (!is.null(embedding.type)){
+          ## embedding.type can only be 'largeVis', 'UMAP'
+          if (!embedding.type %in%  c('largeVis', 'UMAP')){ 
+            stop(paste0("Currently, only the following embeddings are supported: ", paste(c('largeVis', 'UMAP'), collapse=' '))) 
+          }
           ## check embedding exists in list
           if (embedding.type %in% names(self$embeddings)){
             emb <- self$embeddings[[embedding.type]]
-          } else{
-            stop(paste("Embedding", embedding.type, "is not found in any of the joint embeddings"))
+          } else {
+            ## embedding.type not in list of self$embeddings, so generate it
+            self$embedGraph(method=embedding.type)
+            emb <- self$embeddings[[embedding.type]]
           }
-        }
-      } else{
-        ## grab last element in embeddings list
-        emb <- self$embeddings[length(self$embeddings)]
-      }
-
-      if(use.common.embedding) {
-        if (!is.null(self$embedding)){
-          .Deprecated("embeddings")
-          embedding.type <- self$embedding
-          adj.list <- c(ggplot2::lims(x=range(self$embedding[,1]), y=range(self$embedding[,2])), adj.list)
         } else{
-          ## use embeddings
-          embedding.type <- emb
-          adj.list <- c(ggplot2::lims(x=range(emb[,1]), y=range(emb[,2])), adj.list)
+          ## embedding.type=NULL, so grab last element in embeddings list
+          emb <- self$embeddings[length(self$embeddings)]
         }
+        adj.list <- c(ggplot2::lims(x=range(emb[,1]), y=range(emb[,2])), adj.list)
       }
 
       gg <- plotSamples(self$samples, groups=groups, colors=colors, gene=gene, plot.theme=private$adjustTheme(plot.theme), embedding.type=embedding.type, adj.list=adj.list, ...)
@@ -449,13 +440,13 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @param ... additional arguments, passed to UMAP embedding (run ?conos:::embedGraphUmap for more info)
     embedGraph=function(method='largeVis', name=NULL, M=1, gamma=1, alpha=0.1, perplexity=NA, sgd_batches=1e8, seed=1, verbose=TRUE, target.dims=2, n.cores=self$n.cores, ...) {
       supported.methods <- c('largeVis', 'UMAP')
-      if(!method %in% supported.methods) { stop(paste0("currently, only the following embeddings are supported: ",paste(supported.methods,collapse=' '))) }
+      if(!method %in% supported.methods) { 
+        stop(paste0("Currently, only the following embeddings are supported: ",paste(supported.methods,collapse=' '))) 
+      }
 
+      ## if name=NULL, set the value to the value from method 
       if (is.null(name)) {
         name <- method
-        if(is.null(name)) {
-          name <- "embedding"
-        }
       }
 
       if (method == 'largeVis') {
@@ -465,16 +456,17 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         }
         coords <- conos:::projectKNNs(wij = wij, dim=target.dims, verbose = verbose,sgd_batches = sgd_batches,gamma=gamma, M=M, seed=seed, alpha=alpha, rho=1, threads=n.cores)
         colnames(coords) <- V(self$graph)$name
-        if (!is.null(self$embedding)){
-          self$embedding <- t(coords)
-        } else{
-          embedding.result <- t(coords)
+        self$embedding <- t(coords)
+        embedding.result <- self$embedding
         }
       } else {
-        if (!requireNamespace("uwot", quietly=TRUE))
+        ## method == 'UMAP'
+        if (!requireNamespace("uwot", quietly=TRUE)){
           stop("You need to install package 'uwot' to be able to use UMAP embedding.")
+        }
 
-        embedding.result <- embedGraphUmap(self$graph, verbose=verbose, return.all=FALSE, n.cores=n.cores, target.dims=target.dims, ...)
+        self$embedding <- embedGraphUmap(self$graph, verbose=verbose, return.all=FALSE, n.cores=n.cores, target.dims=target.dims, ...)
+        embedding.result <- self$embedding
       }
 
       self$embeddings[[name]] <- embedding.result
@@ -583,30 +575,30 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       }
       
       if (!is.null(embedding.type)){
+        ## embedding.type can only be 'largeVis', 'UMAP'
+        if (!embedding.type %in%  c('largeVis', 'UMAP')){ 
+          stop(paste0("Currently, only the following embeddings are supported: ", paste(c('largeVis', 'UMAP'), collapse=' '))) 
+        }
         ## check embedding exists in list
         if (embedding.type %in% names(self$embeddings)){
           emb <- self$embeddings[[embedding.type]]
-        } else{
-          stop(paste("Embedding", embedding.type, "is not found in any of the joint embeddings"))
+        } else {
+          ## embedding.type not in list of self$embeddings, so generate it
+          self$embedGraph(method=embedding.type)
+          emb <- self$embeddings[[embedding.type]]
         }
       } else{
-        ## grab last element in embeddings list
+        ## embedding.type=NULL, so grab last element in embeddings list
         emb <- self$embeddings[length(self$embeddings)]
       }
 
       if (!is.null(subset)) {
         emb <- emb[rownames(emb) %in% subset,,drop=FALSE]
       }
-      ## catch for deprecated 'embedding'
-      if ( !is.null(subset) && !is.null(embedding) ){
-        .Deprecated("embeddings")
-        emb <- self$embedding
-        emb <- emb[rownames(emb) %in% subset,,drop=FALSE]
-      }
 
       if (!is.null(gene)) {
         colors <- lapply(self$samples, getGeneExpression, gene) %>% Reduce(c, .)
-        if(all(is.na(colors))) stop(paste("Gene",gene,"is not found in any of the samples"))
+        if(all(is.na(colors))) stop(paste("Gene", gene,"is not found in any of the samples"))
       }
 
       if(is.null(groups) && is.null(colors)) {

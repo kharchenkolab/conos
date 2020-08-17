@@ -1,9 +1,8 @@
 ## Upcoming
 
-- allow multiple embeddings in conclass (July 2020)
-
 ### Changed
 
+- allow multiple embeddings in conclass (July 2020)
 - Improved `plotDEheatmap` function
 - Fixed bug with `balancing.factor.per.sample` in `buildGraph`
 - Fixed some installation problems
