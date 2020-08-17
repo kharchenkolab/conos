@@ -59,7 +59,7 @@ rawMatricesWithCommonGenes <- function(con.obj, sample.groups=NULL) {
   }
 
   ## Generate an aggregated matrix
-  raw.mats <- lapply(samples, getRawCountMatrix, transposed=T)
+  raw.mats <- lapply(samples, getRawCountMatrix, transposed=TRUE)
   common.genes <- Reduce(intersect,lapply(raw.mats, colnames))
   return(lapply(raw.mats, function(x) {x[,common.genes]}))
 }
@@ -337,8 +337,8 @@ generateDEMatrixMetadata <- function(mtx, refgroup, altgroup, cluster.sep.chr) {
   meta <- data.frame(
     row.names = colnames(mtx),
     sample=colnames(mtx),
-    library=strpart(colnames(mtx),cluster.sep.chr,1,fixed=T),
-    celltype = strpart(colnames(mtx),cluster.sep.chr,2,fixed=T)
+    library=strpart(colnames(mtx),cluster.sep.chr,1,fixed=TRUE),
+    celltype = strpart(colnames(mtx),cluster.sep.chr,2,fixed=TRUE)
   )
 
   return(subset(meta, celltype %in% c(refgroup, altgroup)))
@@ -430,9 +430,9 @@ aggregateDEMarkersAcrossDatasets <- function(marker.dfs, z.threshold, upregulate
   z.scores.per.dataset <- lapply(marker.dfs, function(df) setNames(df$Z, rownames(df)))
   m.vals.per.dataset <- lapply(marker.dfs, function(df) setNames(df$M, rownames(df)))
   gene.union <- lapply(z.scores.per.dataset, names) %>% Reduce(union, .)
-  z.scores <- sapply(z.scores.per.dataset, `[`, gene.union) %>% rowMeans(na.rm=T)
-  m.vals <- sapply(m.vals.per.dataset, `[`, gene.union) %>% rowMeans(na.rm=T)
-  ro <- order(z.scores,decreasing=T)
+  z.scores <- sapply(z.scores.per.dataset, `[`, gene.union) %>% rowMeans(na.rm=TRUE) %>% setNames(gene.union)
+  m.vals <- sapply(m.vals.per.dataset, `[`, gene.union) %>% rowMeans(na.rm=TRUE) %>% setNames(gene.union)
+  ro <- order(z.scores,decreasing=TRUE)
   pvals <- dnorm(z.scores)
   res <- data.frame(Gene=names(z.scores), M=m.vals, Z=z.scores, PValue=pvals, PAdj=p.adjust(pvals))[ro,]
 
@@ -440,7 +440,7 @@ aggregateDEMarkersAcrossDatasets <- function(marker.dfs, z.threshold, upregulate
   return(res[z.filter > z.threshold,])
 }
 
-getDifferentialGenesP2 <- function(p2.samples, groups, z.threshold=3.0, upregulated.only=F, verbose=T, n.cores=1) {
+getDifferentialGenesP2 <- function(p2.samples, groups, z.threshold=3.0, upregulated.only=FALSE, verbose=TRUE, n.cores=1) {
 
   groups %<>% as.character() %>% setNames(names(groups))
 

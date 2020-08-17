@@ -589,7 +589,7 @@ postProcessWalktrapClusters <- function(p2list, pjc, no.cl = 200, size.cutoff = 
 #' @param samples list of pagoda2 objects
 #' @param n.genes number of overdispersed genes to extract
 getOdGenesUniformly <- function(samples, n.genes) {
-  if (!("Pagoda2" %in% class(con$samples[[1]])))
+  if (!("Pagoda2" %in% class(samples[[1]])))
     stop("This function is currently supported only for Pagoda2 objects")
 
   gene.info <- lapply(samples, function(s)
@@ -657,6 +657,7 @@ getDecoyProjections <- function(samples, samf, data.type, var.scale, cproj, base
             m <- cbind(m,Matrix(0,nrow=nrow(m),ncol=length(gd),dimnames=list(rownames(m),gd),sparse=T))
             m <- m[,colnames(d),drop=F] # fix gene order
           }
+          m
         }))
       } else {
         # empty matrix
@@ -670,29 +671,32 @@ getDecoyProjections <- function(samples, samf, data.type, var.scale, cproj, base
   return(cproj.decoys)
 }
 
-getLocalEdges <- function(samples, k.self, k.self.weight, metric, l2.sigma, verbose, n.cores) {
+getLocalNeighbors <- function(samples, k.self, k.self.weight, metric, l2.sigma, verbose, n.cores) {
   if(verbose) cat('local pairs ')
-  x <- data.frame(do.call(rbind, papply(samples, function(x) {
+  x <- papply(samples, function(x) {
     pca <- getPca(x)
     if (is.null(pca)) {
       stop("PCA must be estimated for all samples")
     }
-
+    
     xk <- n2Knn(pca, k.self + 1, 1, verbose=FALSE, indexType=metric) # +1 accounts for self-edges that will be removed in the next line
     diag(xk) <- 0; # no self-edges
     xk <- as(drop0(xk),'dgTMatrix')
+    xk@x <- convertDistanceToSimilarity(xk@x, metric=metric, l2.sigma=l2.sigma) * k.self.weight
+    rownames(xk) <- colnames(xk) <- rownames(pca);
     if(verbose) cat(".")
-
-    data.frame(mA.lab=rownames(pca)[xk@i+1], mB.lab=rownames(pca)[xk@j+1],
-               w=convertDistanceToSimilarity(xk@x, metric=metric, l2.sigma=l2.sigma), stringsAsFactors=F)
-  }, n.cores=n.cores, mc.preschedule=TRUE)), stringsAsFactors=F)
-
-  x$w <- x$w * k.self.weight
-  x$type <- 0;
+    xk
+  }, n.cores=n.cores, mc.preschedule=TRUE)
   if(verbose) cat(' done\n')
-
-  return(x)
+  x
 }
+
+getLocalEdges <- function(local.neighbors) {
+  do.call(rbind,lapply(local.neighbors,function(xk) {
+    data.frame(mA.lab=rownames(xk)[xk@i+1], mB.lab=colnames(xk)[xk@j+1],w=xk@x, type=0, stringsAsFactors=F)
+  }))
+}
+
 
 
 ##' Find threshold of cluster detectability
@@ -859,7 +863,7 @@ getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, k1=k, data.
     x <- t(as.matrix(t(x))-centering[[n]])
     x %*% rot;
   })
-
+  
   if(!is.null(base.groups) && append.global.axes) {
     #cpproj <- lapply(sn(names(cpproj)),function(n) cbind(cpproj[[n]],global.proj[[n]])) # case without decoys
     cpproj <- lapply(sn(names(cpproj)),function(n) {

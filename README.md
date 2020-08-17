@@ -123,7 +123,7 @@ show.velocity.on.embedding.cor(vi$emb, vel.info, cc = cc.velo$cc, n = 200, scale
 
 ## Installation
 
-Native installations have been tested in Linux and Mac OS. Normally, installations should take under 10 minutes.
+Native installations have been tested in Linux and Mac OS. Normally, installations should take under 10 minutes. **Note:** We currently do not support installations on Windows.
 
 ### Native installation
 
@@ -164,7 +164,7 @@ brew install openssl curl-openssl
 ```
 (You may need to run `brew uninstall curl` in order for `brew install curl-openssl` to be successful.)
 
-**Note:** It is possible to install `pagoda2` and `conos` on OS X, however some users have reported issues with the OpenMP configuration. For instructions, see the [pagoda2](https://github.com/hms-dbmi/pagoda2#mac-dependencies) README.
+For further instructions on installing Conos with Mac OS, please refer to the following wiki page: [Installing Conos for Mac OS](https://github.com/kharchenkolab/conos/wiki/Installing-Conos-for-Mac-OS)
 
 ### Installing Conos as Docker container
 

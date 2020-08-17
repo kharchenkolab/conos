@@ -82,6 +82,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     buildGraph=function(k=15, k.self=10, k.self.weight=0.1, alignment.strength=NULL, space='PCA', matching.method='mNN', metric='angular', k1=k, data.type='counts', l2.sigma=1e5, var.scale=TRUE, ncomps=40,
                         n.odgenes=2000, matching.mask=NULL, exclude.samples=NULL, common.centering=TRUE, verbose=TRUE,
                         base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, score.component.variance=FALSE,
+                        snn= FALSE, snn.quantile=0.9,min.snn.jaccard=0,min.snn.weight=0, snn.k=k.self,
                         balance.edge.weights=FALSE, balancing.factor.per.cell=NULL, same.factor.downweight=1.0, k.same.factor=k, balancing.factor.per.sample=NULL) {
       supported.spaces <- c("CPCA","JNMF","genes","PCA","PMA","CCA")
       if(!space %in% supported.spaces) {
@@ -95,6 +96,17 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       if(!metric %in% supported.metrics) {
         stop(paste0("only the following distance metrics are currently supported: ['",paste(supported.metrics,collapse="' '"),"']"))
       }
+
+      if(!is.null(snn.quantile) && !is.na(snn.quantile)) {
+        if(length(snn.quantile)==1)  {
+          snn.quantile <- c(1-snn.quantile,snn.quantile)
+        } 
+        snn.quantile <- sort(snn.quantile,decreasing=F)
+        if(snn.quantile[1]<0 | snn.quantile[2]>1) {
+          stop("snn.quantile must be one or two numbers in the [0,1] range")
+        }
+      }
+      
       if (!is.null(alignment.strength)) {
         alignment.strength %<>% max(0) %>% min(1)
         k1 <- sapply(self$samples, function(sample) ncol(getCountMatrix(sample))) %>% max() %>%
@@ -120,6 +132,14 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           global.proj <- projectSamplesOnGlobalAxes(self$samples, cms.clust, data.type, verbose, self$n.cores)
         }
       }
+
+
+      if(snn) {
+        local.neighbors <- getLocalNeighbors(self$samples[! names(self$samples) %in% exclude.samples], snn.k, k.self.weight, metric, l2.sigma=l2.sigma, verbose, self$n.cores)
+      } else {
+        local.neighbors <- NULL
+      }
+
 
       # determine inter-sample mapping
       if(verbose) cat('inter-sample links using ',matching.method,' ');
@@ -158,7 +178,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           if(ncomps > ncol(rot)) {
             warning(paste0("specified ncomps (",ncomps,") is greater than the cached version (",ncol(rot),")"))
           } else {
-            rot <- rot[,1:ncomps,drop=F]
+            rot <- rot[,1:ncomps,drop=FALSE]
           }
 
           mnn <- getPcaBasedNeighborMatrix(self$samples[sn.pairs[,j]], od.genes=od.genes, rot=rot, data.type=data.type,
@@ -176,25 +196,60 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           stop("Unknown space: ", space)
         }
 
+        if(snn) { # optionally, perform shared neighbor weighting, a la SeuratV3, scran
+          
+          m1 <- cbind(mnn,t(local.neighbors[[sn.pairs[1,j] ]]))
+          m2 <- rbind(local.neighbors[[sn.pairs[2,j] ]], mnn)
+
+          mnn1 <- mnn; mnn1@x <- rep(1,length(mnn1@x))
+          m1@x <- rep(1,length(m1@x)); m2@x <- rep(1,length(m2@x))
+
+          x <- ((m1 %*% m2) * mnn1) / pmax(outer(rowSums(m1),colSums(m2),FUN=pmin),1);
+          
+          # scale by Jaccard coefficient
+
+          if(min.snn.jaccard>0) {
+            x@x[x@x<min.snn.jaccard] <- 0;
+          }
+          
+          if(!is.null(snn.quantile) && !is.na(snn.quantile)) {
+            xq <- quantile(x@x,p=c(snn.quantile[1],snn.quantile[2]))
+            x@x <- pmax(0,pmin(1,(x@x-xq[1])/pmax(1,diff(xq))))
+          }
+          
+          x <- drop0(x)
+          if(min.snn.weight>0) {
+            mnn <- as(drop0(mnn*min.snn.weight + mnn*x),'dgTMatrix')
+          } else {
+            mnn <- as(drop0(mnn*x),'dgTMatrix')
+          }
+
+        }
+
+        
         if(verbose) cat(".")
-        return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=mnn@x,stringsAsFactors=F))
+        return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=mnn@x,stringsAsFactors=FALSE))
       },n.cores=self$n.cores,mc.preschedule=TRUE)
 
       if(verbose) cat(" done\n")
       ## Merge the results into a edge table
       el <- do.call(rbind,mnnres)
       el$type <- 1; # encode connection type 1- intersample, 0- intrasample
-      # append some local edges
+      # append local edges
       if(k.self>0) {
-        if(verbose) cat('local pairs ')
-        x <- getLocalEdges(self$samples[! names(self$samples) %in% exclude.samples], k.self, k.self.weight, metric, l2.sigma=l2.sigma, verbose, self$n.cores)
-        el <- rbind(el,x)
+        if(is.null(local.neighbors) || snn.k!=k.self) { # recalculate local neighbors
+          local.neighbors <- getLocalNeighbors(self$samples[! names(self$samples) %in% exclude.samples], k.self, k.self.weight, metric, l2.sigma=l2.sigma, verbose, self$n.cores)
+        }
+        el <- rbind(el,getLocalEdges(local.neighbors))
       }
       if(verbose) cat('building graph .')
+      el <- el[el[,3]>0,];
       g  <- graph_from_edgelist(as.matrix(el[,c(1,2)]), directed =FALSE)
       E(g)$weight <- el[,3]
       E(g)$type <- el[,4]
+      
       if(verbose) cat('.')
+
       # collapse duplicate edges
       g <- simplify(g, edge.attr.comb=list(weight="sum", type = "first"))
       if(verbose) cat('done\n')
@@ -218,7 +273,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         g <- igraph::as_adjacency_matrix(g, attr="weight") %>%
           adjustWeightsByCellBalancing(factor.per.cell=balancing.factor.per.cell, balance.weights=balance.edge.weights,
                                        same.factor.downweight=same.factor.downweight) %>%
-          igraph::graph_from_adjacency_matrix(mode="undirected", weighted=T)
+          igraph::graph_from_adjacency_matrix(mode="undirected", weighted=TRUE)
 
         if(verbose) cat('done\n');
       }
@@ -226,8 +281,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       return(invisible(g))
     },
 
-    getDifferentialGenes=function(clustering=NULL, groups=NULL, z.threshold=3.0, upregulated.only=F, verbose=T, plot=FALSE, n.genes.to.show=10, inner.clustering=FALSE,
-                                  append.specificity.metrics=TRUE, append.auc=FALSE, n.cores=self$n.cores) {
+    getDifferentialGenes=function(clustering=NULL, groups=NULL, z.threshold=3.0, upregulated.only=FALSE, verbose=TRUE, plot=FALSE, n.genes.to.show=10, inner.clustering=FALSE, append.specificity.metrics=TRUE, append.auc=TRUE, n.cores=self$n.cores) {
       
       groups <- parseCellGroups(self, clustering, groups)
 
@@ -250,7 +304,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
         de.genes %<>% lapply(function(x) if ((length(x) > 0) && (nrow(x) > 0)) subset(x, complete.cases(x)) else x)
         de.genes %<>% names() %>% setNames(., .) %>%
-          sccore::plapply(function(n) appendSpecificityMetricsToDE(de.genes[[n]], groups.clean, n, p2.counts=cm.merged, append.auc=append.auc), verbose=verbose, n.cores=n.cores)
+          sccore::plapply(function(n) appendSpecificityMetricsToDE(de.genes[[n]], groups.clean, n, p2.counts=cm.merged, append.auc=append.auc), progress=verbose, n.cores=n.cores)
       }
 
       if (verbose) cat("All done!\n")
@@ -289,7 +343,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
       # test stability
       if(test.stability) {
-        if (!requireNamespace("clues", quietly=T))
+        if (!requireNamespace("clues", quietly=TRUE))
           stop("You need to install package 'clues' to be able to use 'test.stability'.")
 
         subset.clustering <- function(g,f=stability.subsampling.fraction,seed=NULL, ...) {
@@ -315,7 +369,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
             i2 <- which(p1==p1[i1[[1]]])
             length(intersect(i1,i2))/length(unique(c(i1,i2)))
           })
-        },n.cores=self$n.cores,mc.preschedule=T))
+        },n.cores=self$n.cores,mc.preschedule=TRUE))
 
         # Adjusted rand index
         if(verbose) cat("adjusted Rand ... ")
@@ -349,14 +403,14 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           # assess stability for that hierarchy (to visualize internal node stability)
           # for the original clustering and every subsample clustering,
           if(verbose) cat("upper clustering ... ")
-          cgraph <- getClusterGraph(self$graph,cls.groups,plot=F,normalize=F)
+          cgraph <- getClusterGraph(self$graph,cls.groups,plot=FALSE,normalize=FALSE)
           chwt <- walktrap.community(cgraph,steps=9)
           clm <- igraph:::complete.dend(chwt,FALSE)
 
           if(verbose) cat("clusterTree Jaccard ... ")
           jc.hstats <- do.call(rbind, papply(sr,function(st1) {
             mf <- membership(st1); mf <- as.factor(setNames(as.character(mf),names(mf)))
-            st1g <- getClusterGraph(self$graph,mf,plot=F,normalize=T)
+            st1g <- getClusterGraph(self$graph,mf,plot=FALSE,normalize=TRUE)
             st1w <- walktrap.community(st1g, steps=8)
 
             #merges <- st1w$merge; leaf.factor <- mf; clusters <- cls.groups
@@ -460,6 +514,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         embedding.result <- self$embedding
         }
       } else {
+
         ## method == 'UMAP'
         if (!requireNamespace("uwot", quietly=TRUE)){
           stop("You need to install package 'uwot' to be able to use UMAP embedding.")
@@ -549,7 +604,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         }
         xy <- dendextend::get_nodes_xy(d)
         to <- t.dfirst(hc$merge)
-        plot(d,las=2,axes=F)
+        plot(d,las=2,axes=FALSE)
         # flat on the left
         #x <- apply(st$flat$jc,2,median)
         #text(xy,labels=round(x[to],2),col='blue',adj=c(-0.1,-1.24),cex=0.8)
@@ -625,7 +680,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @param tol tolerance after which the diffusion stops. Default: 5e-3.
     #' @param name name to save the correction. Default: diffusion.
     #' @param verbose verbose mode. Default: TRUE.
-    #' @param count.matrix alternative gene count matrix to correct. Default: joint count matrix for all datasets.
+    #' @param count.matrix alternative gene count matrix to correct (rows: genes, columns: cells; has to be dense matrix). Default: joint count matrix for all datasets.
     correctGenes=function(genes=NULL, n.od.genes=500, fading=10.0, fading.const=0.5, max.iters=15, tol=5e-3, name='diffusion', verbose=TRUE, count.matrix=NULL, normalize=TRUE) {
       edges <- igraph::as_edgelist(self$graph)
       edge.weights <- igraph::edge.attributes(self$graph)$weight
@@ -640,6 +695,13 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         count.matrix <- Reduce(rbind, lapply(cms, function(x) x[, genes])) %>% as.matrix()
       } else {
         count.matrix <- t(count.matrix)
+      }
+      vn <- V(self$graph)$name;
+      if(!all(rownames(count.matrix)==vn)) { # subset to a common set of genes
+        if(!all(vn %in% rownames(count.matrix))) {
+          stop("count.matrix does not provide values for all the vertices in the alignment graph!")
+        }
+        count.matrix <- count.matrix[vn,]
       }
 
       cm <- smoothMatrixOnGraph(edges, edge.weights, count.matrix, max_n_iters=max.iters, diffusion_fading=fading,
@@ -688,7 +750,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         m <- conos:::getRawCountMatrix(s,trans=TRUE); # rows are cells
         cl <- factor(groups[match(rownames(m),names(groups))],levels=levels(groups));
         tc <- colSumByFactor(m,cl);
-        if(omit.na.cells) { tc <- tc[-1,,drop=F] }
+        if(omit.na.cells) { tc <- tc[-1,,drop=FALSE] }
         t(tc);
       })
       # bring to a common gene space
@@ -710,7 +772,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     },
 
     getJointCountMatrix=function(raw=FALSE) {
-      lapply(self$samples, (if (raw) getRawCountMatrix else getCountMatrix), transposed=T) %>%
+      lapply(self$samples, (if (raw) getRawCountMatrix else getCountMatrix), transposed=TRUE) %>%
         mergeCountMatrices(transposed=T)
     }
   ),
@@ -763,7 +825,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       nm <- match(apply(sn.pairs,2,paste,collapse='.vs.'),names(self$pairs[[space]]));
       mi[which(!is.na(nm))] <- na.omit(nm);
       # try reverse match as well
-      nm <- match(apply(sn.pairs[c(2,1),,drop=F],2,paste,collapse='.vs.'),names(self$pairs[[space]]));
+      nm <- match(apply(sn.pairs[c(2,1),,drop=FALSE],2,paste,collapse='.vs.'),names(self$pairs[[space]]));
       mi[which(!is.na(nm))] <- na.omit(nm);
       if(verbose) cat('found',sum(!is.na(mi)),'out of',length(mi),'cached',space,' space pairs ... ')
       if(any(is.na(mi))) { # some pairs are missing
@@ -784,7 +846,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           xcp
         },n.cores=self$n.cores,mc.preschedule=(space=='PCA'));
 
-        names(xl2) <- apply(sn.pairs[,which(is.na(mi)),drop=F],2,paste,collapse='.vs.');
+        names(xl2) <- apply(sn.pairs[,which(is.na(mi)),drop=FALSE],2,paste,collapse='.vs.');
         xl2 <- xl2[!unlist(lapply(xl2,is.null))]
         self$pairs[[space]] <- c(self$pairs[[space]],xl2);
       }
@@ -793,7 +855,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       mi <- rep(NA,ncol(sn.pairs));
       nm <- match(apply(sn.pairs,2,paste,collapse='.vs.'),names(self$pairs[[space]]));
       mi[which(!is.na(nm))] <- na.omit(nm);
-      nm <- match(apply(sn.pairs[c(2,1),,drop=F],2,paste,collapse='.vs.'),names(self$pairs[[space]]));
+      nm <- match(apply(sn.pairs[c(2,1),,drop=FALSE],2,paste,collapse='.vs.'),names(self$pairs[[space]]));
       mi[which(!is.na(nm))] <- na.omit(nm);
       if(any(is.na(mi))) {
         warning("unable to get complete set of pair comparison results")

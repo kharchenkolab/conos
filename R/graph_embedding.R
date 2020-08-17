@@ -43,9 +43,9 @@ embedKnnGraph <- function(commute.times, n.neighbors, names=NULL, verbose=TRUE, 
   return(umap)
 }
 
-embedGraphUmap <- function(graph, verbose=T, min.prob=1e-3, min.visited.verts=1000, n.cores=1,
+embedGraphUmap <- function(graph, verbose=TRUE, min.prob=1e-3, min.visited.verts=1000, n.cores=1,
                            max.hitting.nn.num=0, max.commute.nn.num=0, min.prob.lower=1e-7,
-                           n.neighbors=40, n.epochs=1000, spread=15, min.dist=0.001, return.all=F,
+                           n.neighbors=40, n.epochs=1000, spread=15, min.dist=0.001, return.all=FALSE,
                            n.sgd.cores=n.cores, ...) {
   conn.comps <- igraph::components(graph)
   if (conn.comps$no > 1) {
