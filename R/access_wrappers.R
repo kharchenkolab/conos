@@ -68,16 +68,16 @@ setMethod(
   }
 )
 
-setGeneric("getCountMatrix", function(sample, transposed=F) standardGeneric("getCountMatrix"))
-setMethod("getCountMatrix", signature("Pagoda2"), function(sample, transposed=F) if (transposed) sample$counts else Matrix::t(sample$counts))
-setMethod("getCountMatrix", signature("seurat"), function(sample, transposed=F) {
+setGeneric("getCountMatrix", function(sample, transposed=FALSE) standardGeneric("getCountMatrix"))
+setMethod("getCountMatrix", signature("Pagoda2"), function(sample, transposed=FALSE) if (transposed) sample$counts else Matrix::t(sample$counts))
+setMethod("getCountMatrix", signature("seurat"), function(sample, transposed=FALSE) {
   cm <- if (is.null(sample@scale.data)) sample@data else sample@scale.data
   if (transposed)
     return(Matrix::t(cm))
 
   return(cm)
 })
-setMethod('getCountMatrix', signature('Seurat'), function(sample, transposed=F) {
+setMethod('getCountMatrix', signature('Seurat'), function(sample, transposed=FALSE) {
     checkSeuratV3()
     dat <- Seurat::GetAssayData(object = sample, slot = 'scale.data')
     dims <- dim(x = dat)
@@ -114,8 +114,8 @@ getGeneExpression.default <- function(sample, gene) {
   return(stats::setNames(rep(NA, ncol(count.matrix)), colnames(count.matrix)))
 }
 
-setGeneric("getRawCountMatrix", function(sample, transposed=F) standardGeneric("getRawCountMatrix"))
-setMethod("getRawCountMatrix", signature("Pagoda2"), function(sample, transposed=F) if (transposed) sample$misc$rawCounts else t(sample$misc$rawCounts))
+setGeneric("getRawCountMatrix", function(sample, transposed=FALSE) standardGeneric("getRawCountMatrix"))
+setMethod("getRawCountMatrix", signature("Pagoda2"), function(sample, transposed=FALSE) if (transposed) sample$misc$rawCounts else t(sample$misc$rawCounts))
 setMethod(
   f = "getRawCountMatrix",
   signature = signature("seurat"),
@@ -150,7 +150,7 @@ setMethod(
     return(rd)
   }
 )
-setMethod("getRawCountMatrix", signature("Conos"), function(sample, transposed=F) { m <- sample$getJointCountMatrix(raw=TRUE); if (transposed) t(m) else m })
+setMethod("getRawCountMatrix", signature("Conos"), function(sample, transposed=FALSE) { m <- sample$getJointCountMatrix(raw=TRUE); if (transposed) t(m) else m })
 
 setGeneric("getEmbedding", function(sample, type) standardGeneric("getEmbedding"))
 setMethod("getEmbedding", signature("Pagoda2"), function(sample, type) sample$embeddings$PCA[[type]])
