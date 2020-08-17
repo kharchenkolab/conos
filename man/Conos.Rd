@@ -55,7 +55,7 @@ The class encompasses sample collections, providing methods for calculating and 
 \if{html}{\out{<div class="r">}}\preformatted{Conos$new(
   x,
   ...,
-  n.cores = parallel::detectCores(logical = F),
+  n.cores = parallel::detectCores(logical = FALSE),
   verbose = TRUE,
   override.conos.plot.theme = FALSE
 )}\if{html}{\out{</div>}}
@@ -113,6 +113,11 @@ invisible view of the full sample list
   decoy.threshold = 1,
   n.decoys = k * 2,
   score.component.variance = FALSE,
+  snn = FALSE,
+  snn.quantile = 0.9,
+  min.snn.jaccard = 0,
+  min.snn.weight = 0,
+  snn.k = k.self,
   balance.edge.weights = FALSE,
   balancing.factor.per.cell = NULL,
   same.factor.downweight = 1,
@@ -131,13 +136,13 @@ invisible view of the full sample list
   clustering = NULL,
   groups = NULL,
   z.threshold = 3,
-  upregulated.only = F,
-  verbose = T,
+  upregulated.only = FALSE,
+  verbose = TRUE,
   plot = FALSE,
   n.genes.to.show = 10,
   inner.clustering = FALSE,
   append.specificity.metrics = TRUE,
-  append.auc = FALSE,
+  append.auc = TRUE,
   n.cores = self$n.cores
 )}\if{html}{\out{</div>}}
 }
@@ -337,7 +342,7 @@ Smooth expression of genes, so they better represent structure of the graph.
 
 \item{\code{verbose}}{verbose mode. Default: TRUE.}
 
-\item{\code{count.matrix}}{alternative gene count matrix to correct. Default: joint count matrix for all datasets.}
+\item{\code{count.matrix}}{alternative gene count matrix to correct (rows: genes, columns: cells; has to be dense matrix). Default: joint count matrix for all datasets.}
 }
 \if{html}{\out{</div>}}
 }

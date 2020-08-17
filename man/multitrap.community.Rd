@@ -6,7 +6,7 @@
 \usage{
 multitrap.community(
   graph,
-  n.cores = parallel::detectCores(logical = F),
+  n.cores = parallel::detectCores(logical = FALSE),
   hclust.link = "single",
   min.community.size = 10,
   verbose = FALSE,
