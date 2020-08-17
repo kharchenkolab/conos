@@ -13,7 +13,7 @@ biocViews:
 Imports:
     abind,
     cowplot,
-    ComplexHeatmap (>= 2.0.0),
+    ComplexHeatmap (>= 2.5.4),
     dendextend,
     dplyr,
     entropy,
