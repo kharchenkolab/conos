@@ -79,6 +79,7 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
     buildGraph=function(k=15, k.self=10, k.self.weight=0.1, alignment.strength=NULL, space='PCA', matching.method='mNN', metric='angular', k1=k, data.type='counts', l2.sigma=1e5, var.scale=TRUE, ncomps=40,
                         n.odgenes=2000, matching.mask=NULL, exclude.samples=NULL, common.centering=TRUE, verbose=TRUE,
                         base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, score.component.variance=FALSE,
+                        snn= FALSE, snn.quantile=0.9,min.snn.jaccard=0,min.snn.weight=0, snn.k=k.self,
                         balance.edge.weights=FALSE, balancing.factor.per.cell=NULL, same.factor.downweight=1.0, k.same.factor=k, balancing.factor.per.sample=NULL) {
       supported.spaces <- c("CPCA","JNMF","genes","PCA","PMA","CCA")
       if(!space %in% supported.spaces) {
@@ -92,6 +93,17 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
       if(!metric %in% supported.metrics) {
         stop(paste0("only the following distance metrics are currently supported: ['",paste(supported.metrics,collapse="' '"),"']"))
       }
+
+      if(!is.null(snn.quantile) && !is.na(snn.quantile)) {
+        if(length(snn.quantile)==1)  {
+          snn.quantile <- c(1-snn.quantile,snn.quantile)
+        } 
+        snn.quantile <- sort(snn.quantile,decreasing=F)
+        if(snn.quantile[1]<0 | snn.quantile[2]>1) {
+          stop("snn.quantile must be one or two numbers in the [0,1] range")
+        }
+      }
+      
       if (!is.null(alignment.strength)) {
         alignment.strength %<>% max(0) %>% min(1)
         k1 <- sapply(self$samples, function(sample) ncol(getCountMatrix(sample))) %>% max() %>%
@@ -117,6 +129,14 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
           global.proj <- projectSamplesOnGlobalAxes(self$samples, cms.clust, data.type, verbose, self$n.cores)
         }
       }
+
+
+      if(snn) {
+        local.neighbors <- getLocalNeighbors(self$samples[! names(self$samples) %in% exclude.samples], snn.k, k.self.weight, metric, l2.sigma=l2.sigma, verbose, self$n.cores)
+      } else {
+        local.neighbors <- NULL
+      }
+
 
       # determine inter-sample mapping
       if(verbose) cat('inter-sample links using ',matching.method,' ');
@@ -173,6 +193,37 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
           stop("Unknown space: ", space)
         }
 
+        if(snn) { # optionally, perform shared neighbor weighting, a la SeuratV3, scran
+          
+          m1 <- cbind(mnn,t(local.neighbors[[sn.pairs[1,j] ]]))
+          m2 <- rbind(local.neighbors[[sn.pairs[2,j] ]], mnn)
+
+          mnn1 <- mnn; mnn1@x <- rep(1,length(mnn1@x))
+          m1@x <- rep(1,length(m1@x)); m2@x <- rep(1,length(m2@x))
+
+          x <- ((m1 %*% m2) * mnn1) / pmax(outer(rowSums(m1),colSums(m2),FUN=pmin),1);
+          
+          # scale by Jaccard coefficient
+
+          if(min.snn.jaccard>0) {
+            x@x[x@x<min.snn.jaccard] <- 0;
+          }
+          
+          if(!is.null(snn.quantile) && !is.na(snn.quantile)) {
+            xq <- quantile(x@x,p=c(snn.quantile[1],snn.quantile[2]))
+            x@x <- pmax(0,pmin(1,(x@x-xq[1])/pmax(1,diff(xq))))
+          }
+          
+          x <- drop0(x)
+          if(min.snn.weight>0) {
+            mnn <- as(drop0(mnn*min.snn.weight + mnn*x),'dgTMatrix')
+          } else {
+            mnn <- as(drop0(mnn*x),'dgTMatrix')
+          }
+
+        }
+
+        
         if(verbose) cat(".")
         return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=mnn@x,stringsAsFactors=F))
       },n.cores=self$n.cores,mc.preschedule=TRUE)
@@ -181,17 +232,21 @@ Conos <- R6::R6Class("Conos", lock_objects=F,
       ## Merge the results into a edge table
       el <- do.call(rbind,mnnres)
       el$type <- 1; # encode connection type 1- intersample, 0- intrasample
-      # append some local edges
+      # append local edges
       if(k.self>0) {
-        if(verbose) cat('local pairs ')
-        x <- getLocalEdges(self$samples[! names(self$samples) %in% exclude.samples], k.self, k.self.weight, metric, l2.sigma=l2.sigma, verbose, self$n.cores)
-        el <- rbind(el,x)
+        if(is.null(local.neighbors) || snn.k!=k.self) { # recalculate local neighbors
+          local.neighbors <- getLocalNeighbors(self$samples[! names(self$samples) %in% exclude.samples], k.self, k.self.weight, metric, l2.sigma=l2.sigma, verbose, self$n.cores)
+        }
+        el <- rbind(el,getLocalEdges(local.neighbors))
       }
       if(verbose) cat('building graph .')
+      el <- el[el[,3]>0,];
       g  <- graph_from_edgelist(as.matrix(el[,c(1,2)]), directed =FALSE)
       E(g)$weight <- el[,3]
       E(g)$type <- el[,4]
+      
       if(verbose) cat('.')
+
       # collapse duplicate edges
       g <- simplify(g, edge.attr.comb=list(weight="sum", type = "first"))
       if(verbose) cat('done\n')
