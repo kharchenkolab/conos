@@ -634,8 +634,8 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @description Plot joint graph.
     #'
     #' @param clustering name of the clustering to use
-    #' @param name Optional name of the embedding result (default=NULL)
-    #' @param embedding.type name of the type of embedding to use (default=NULL)
+    #' @param name Name of the previously created embedding result from embedGraph() (default=NULL)
+    #' @param embedding.type Name of the type of embedding created by embedGraph(), either 'largeVis' or 'UMAP' (default=NULL)
     #' @param groups a factor on cells to use for coloring.
     #' @param colors a color factor (named with cell names) use for cell coloring.
     #' @param gene show expression of a gene.

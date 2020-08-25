@@ -281,6 +281,7 @@ Plot joint graph.
 \if{html}{\out{<div class="r">}}\preformatted{Conos$plotGraph(
   color.by = "cluster",
   clustering = NULL,
+  name = NULL,
   embedding.type = NULL,
   groups = NULL,
   colors = NULL,
@@ -296,7 +297,9 @@ Plot joint graph.
 \describe{
 \item{\code{clustering}}{name of the clustering to use}
 
-\item{\code{embedding.type}}{name of the type of embedding to use (default=NULL)}
+\item{\code{name}}{Name of the previously created embedding result from embedGraph() (default=NULL)}
+
+\item{\code{embedding.type}}{Name of the type of embedding created by embedGraph(), either 'largeVis' or 'UMAP' (default=NULL)}
 
 \item{\code{groups}}{a factor on cells to use for coloring.}
 
@@ -305,8 +308,6 @@ Plot joint graph.
 \item{\code{gene}}{show expression of a gene.}
 
 \item{\code{subset}}{a subset of cells to show.}
-
-\item{\code{name}}{Optional name of the embedding result (default=NULL)}
 }
 \if{html}{\out{</div>}}
 }
