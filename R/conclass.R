@@ -640,7 +640,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @param colors a color factor (named with cell names) use for cell coloring.
     #' @param gene show expression of a gene.
     #' @param subset a subset of cells to show.
-    plotGraph=function(color.by='cluster', clustering=NULL, embedding.type=NULL, groups=NULL, colors=NULL, gene=NULL, plot.theme=NULL, subset=NULL, ...) {
+    plotGraph=function(color.by='cluster', clustering=NULL, name=NULL, embedding.type=NULL, groups=NULL, colors=NULL, gene=NULL, plot.theme=NULL, subset=NULL, ...) {
       if (length(self$embeddings) == 0) {
         self$embedGraph() ## default method='largeVis'
       }
