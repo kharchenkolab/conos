@@ -439,7 +439,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     },
 
     #' @description plot panel of individual embeddings per sample with joint coloring
-    plotPanel=function(clustering=NULL, groups=NULL, colors=NULL, gene=NULL, use.local.clusters=FALSE, plot.theme=NULL, use.common.embedding=FALSE, embedding.type=NULL, adj.list=NULL, ...) {
+    plotPanel=function(clustering=NULL, groups=NULL, colors=NULL, gene=NULL, use.local.clusters=FALSE, plot.theme=NULL, use.common.embedding=FALSE, name=NULL, embedding.type=NULL, adj.list=NULL, ...) {
       if (use.local.clusters) {
         if (is.null(clustering) && !(inherits(x = self$samples[[1]], what = c('seurat', 'Seurat')))) {
           stop("You have to provide 'clustering' parameter to be able to use local clusters")
@@ -456,26 +456,43 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       }
 
       if(use.common.embedding) {
-        if (!is.null(embedding.type)){
-          ## embedding.type can only be 'largeVis', 'UMAP'
-          if (!embedding.type %in%  c('largeVis', 'UMAP')){ 
-            stop(paste0("Currently, only the following embeddings are supported: ", paste(c('largeVis', 'UMAP'), collapse=' '))) 
-          }
-          ## check embedding exists in list
+        ## if use.common.embedding, pass the Conos embedding to plotSamples
+        ## else pass the 'embedding.type' to plotSamples
+        if (!is.null(name)){
+          ## check if name exists in list
           if (embedding.type %in% names(self$embeddings)){
-            emb <- self$embeddings[[embedding.type]]
+            embedding.type <- self$embeddings[[name]]
           } else {
-            ## embedding.type not in list of self$embeddings, so generate it
-            self$embedGraph(method=embedding.type)
-            emb <- self$embeddings[[embedding.type]]
+            ## name not in list of self$embeddings, so user is confused
+            ## throw error
+            stop(paste0("No embedding named '", name, "' found. Please generate this with embedGraph()."))
           }
         } else{
-          ## embedding.type=NULL, so grab last element in embeddings list
-          emb <- self$embeddings[length(self$embeddings)]
+          ## name is NULL
+          ## but user is trying to specify an embedding.type
+          if (!is.null(embedding.type)){
+            ## embedding.type can only be 'largeVis', 'UMAP'
+            if (!embedding.type %in%  c('largeVis', 'UMAP')){ 
+              stop(paste0("Currently, only the following embeddings are supported: ", paste(c('largeVis', 'UMAP'), collapse=' '))) 
+            }
+            ## check embedding exists in list
+            if (embedding.type %in% names(self$embeddings)){
+              embedding.type <- self$embeddings[[embedding.type]]
+            } else {
+              ## embedding.type not in list of self$embeddings, so generate it
+              self$embedGraph(method=embedding.type)
+              embedding.type <- self$embeddings[[embedding.type]]
+            }
+          } else{
+            ## embedding.type=NULL, so grab last element in embeddings list
+            embedding.type <- self$embeddings[length(self$embeddings)]
+          }
         }
-        adj.list <- c(ggplot2::lims(x=range(emb[,1]), y=range(emb[,2])), adj.list)
+        ## here, 'embedding.type' is now the Conos embedding passed along to plotSamples
+        adj.list <- c(ggplot2::lims(x=range(embedding.type[,1]), y=range(embedding.type[,2])), adj.list)
       }
 
+      ## In plotSamples, "embedding.type" can either be a name for embeddings of individual samples, but it also can be a matrix with embedding
       gg <- plotSamples(self$samples, groups=groups, colors=colors, gene=gene, plot.theme=private$adjustTheme(plot.theme), embedding.type=embedding.type, adj.list=adj.list, ...)
 
       return(gg)
@@ -484,7 +501,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @description  Generate an embedding of a joint graph.
     #'
     #' @param method embedding method. Currently largeVis and UMAP are supported
-    #' @param name optional name of the embedding result (will default to the method name; otherwise, "embedding")
+    #' @param name Optional name of the embedding result (if NULL will default to the method name, either largeVis' or 'UMAP')
     #' @param M, gamma, alpha, sgd__batched - largeVis parameters (defaults are 1, 1, 0.01, 1e8 respectively).
     #' @param perplexity perplexity passed to largeVis (defaults to NA).
     #' @param seed random seed for the largeVis algorithm. Default: 1.
@@ -512,9 +529,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         colnames(coords) <- V(self$graph)$name
         self$embedding <- t(coords)
         embedding.result <- self$embedding
-        }
       } else {
-
         ## method == 'UMAP'
         if (!requireNamespace("uwot", quietly=TRUE)){
           stop("You need to install package 'uwot' to be able to use UMAP embedding.")
@@ -619,33 +634,48 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @description Plot joint graph.
     #'
     #' @param clustering name of the clustering to use
-    #' @param embedding.type name of the embedding to use
+    #' @param name Optional name of the embedding result (default=NULL)
+    #' @param embedding.type name of the type of embedding to use (default=NULL)
     #' @param groups a factor on cells to use for coloring.
     #' @param colors a color factor (named with cell names) use for cell coloring.
     #' @param gene show expression of a gene.
     #' @param subset a subset of cells to show.
     plotGraph=function(color.by='cluster', clustering=NULL, embedding.type=NULL, groups=NULL, colors=NULL, gene=NULL, plot.theme=NULL, subset=NULL, ...) {
       if (length(self$embeddings) == 0) {
-        self$embedGraph()
+        self$embedGraph() ## default method='largeVis'
       }
-      
-      if (!is.null(embedding.type)){
-        ## embedding.type can only be 'largeVis', 'UMAP'
-        if (!embedding.type %in%  c('largeVis', 'UMAP')){ 
-          stop(paste0("Currently, only the following embeddings are supported: ", paste(c('largeVis', 'UMAP'), collapse=' '))) 
-        }
-        ## check embedding exists in list
-        if (embedding.type %in% names(self$embeddings)){
-          emb <- self$embeddings[[embedding.type]]
+  
+      if (!is.null(name)){
+        ## check if name exists in list
+        if (name %in% names(self$embeddings)){
+          emb <- self$embeddings[[name]]
         } else {
-          ## embedding.type not in list of self$embeddings, so generate it
-          self$embedGraph(method=embedding.type)
-          emb <- self$embeddings[[embedding.type]]
+          ## name not in list of self$embeddings, so user is confused
+          ## throw error
+          stop(paste0("No embedding named '", name, "' found. Please generate this with embedGraph()."))
         }
       } else{
-        ## embedding.type=NULL, so grab last element in embeddings list
-        emb <- self$embeddings[length(self$embeddings)]
+        ## name is NULL
+        ## but user is trying to specify an embedding.type
+        if (!is.null(embedding.type)){
+          ## embedding.type can only be 'largeVis', 'UMAP'
+          if (!embedding.type %in%  c('largeVis', 'UMAP')){ 
+            stop(paste0("Currently, only the following embeddings are supported: ", paste(c('largeVis', 'UMAP'), collapse=' '))) 
+          }
+          ## check embedding exists in list
+          if (embedding.type %in% names(self$embeddings)){
+            emb <- self$embeddings[[embedding.type]]
+          } else {
+            ## embedding.type not in list of self$embeddings, so generate it
+            self$embedGraph(method=embedding.type)
+            emb <- self$embeddings[[embedding.type]]
+          }
+        } else{
+          ## embedding.type=NULL, so grab last element in embeddings list
+          emb <- self$embeddings[length(self$embeddings)]
+        }
       }
+
 
       if (!is.null(subset)) {
         emb <- emb[rownames(emb) %in% subset,,drop=FALSE]

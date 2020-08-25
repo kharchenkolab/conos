@@ -18,6 +18,7 @@ plotEmbeddings(
   raster.height = NULL,
   adj.list = NULL,
   subset = NULL,
+  return.plotlist = FALSE,
   ...
 )
 }
@@ -43,6 +44,8 @@ plotEmbeddings(
 \item{raster.height}{height of the plot in inches. (default=NULL) Ignored if raster == FALSE.}
 
 \item{subset}{a subset of cells to show (vector of cell names)}
+
+\item{return.plotlist}{return a list of ggplot objects instead of a combined plot (default:FALSE)}
 
 \item{...}{
   Arguments passed on to \code{\link[ggrepel:geom_text_repel]{ggrepel::geom_label_repel}}

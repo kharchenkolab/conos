@@ -7,7 +7,7 @@
 rleiden.community(
   graph,
   max.depth = 2,
-  n.cores = parallel::detectCores(logical = F),
+  n.cores = parallel::detectCores(logical = FALSE),
   min.community.size = 10,
   verbose = FALSE,
   resolution = 1,

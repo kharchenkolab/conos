@@ -19,7 +19,7 @@ The class encompasses sample collections, providing methods for calculating and 
 
 \item{\code{expression.adj}}{adjusted expression values}
 
-\item{\code{embedding}}{joint embedding}
+\item{\code{embeddings}}{list of joint embeddings}
 
 \item{\code{n.cores}}{number of cores}
 
@@ -55,7 +55,7 @@ The class encompasses sample collections, providing methods for calculating and 
 \if{html}{\out{<div class="r">}}\preformatted{Conos$new(
   x,
   ...,
-  n.cores = parallel::detectCores(logical = F),
+  n.cores = parallel::detectCores(logical = FALSE),
   verbose = TRUE,
   override.conos.plot.theme = FALSE
 )}\if{html}{\out{</div>}}
@@ -113,6 +113,11 @@ invisible view of the full sample list
   decoy.threshold = 1,
   n.decoys = k * 2,
   score.component.variance = FALSE,
+  snn = FALSE,
+  snn.quantile = 0.9,
+  min.snn.jaccard = 0,
+  min.snn.weight = 0,
+  snn.k = k.self,
   balance.edge.weights = FALSE,
   balancing.factor.per.cell = NULL,
   same.factor.downweight = 1,
@@ -131,13 +136,13 @@ invisible view of the full sample list
   clustering = NULL,
   groups = NULL,
   z.threshold = 3,
-  upregulated.only = F,
-  verbose = T,
+  upregulated.only = FALSE,
+  verbose = TRUE,
   plot = FALSE,
   n.genes.to.show = 10,
   inner.clustering = FALSE,
   append.specificity.metrics = TRUE,
-  append.auc = FALSE,
+  append.auc = TRUE,
   n.cores = self$n.cores
 )}\if{html}{\out{</div>}}
 }
@@ -194,6 +199,7 @@ plot panel of individual embeddings per sample with joint coloring
   use.local.clusters = FALSE,
   plot.theme = NULL,
   use.common.embedding = FALSE,
+  name = NULL,
   embedding.type = NULL,
   adj.list = NULL,
   ...
@@ -209,6 +215,7 @@ Generate an embedding of a joint graph.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Conos$embedGraph(
   method = "largeVis",
+  name = NULL,
   M = 1,
   gamma = 1,
   alpha = 0.1,
@@ -226,6 +233,8 @@ Generate an embedding of a joint graph.
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{method}}{embedding method. Currently largeVis and UMAP are supported}
+
+\item{\code{name}}{Optional name of the embedding result (if NULL will default to the method name, either largeVis' or 'UMAP')}
 
 \item{\code{M, }}{gamma, alpha, sgd__batched - largeVis parameters (defaults are 1, 1, 0.01, 1e8 respectively).}
 
@@ -272,6 +281,7 @@ Plot joint graph.
 \if{html}{\out{<div class="r">}}\preformatted{Conos$plotGraph(
   color.by = "cluster",
   clustering = NULL,
+  embedding.type = NULL,
   groups = NULL,
   colors = NULL,
   gene = NULL,
@@ -286,6 +296,8 @@ Plot joint graph.
 \describe{
 \item{\code{clustering}}{name of the clustering to use}
 
+\item{\code{embedding.type}}{name of the type of embedding to use (default=NULL)}
+
 \item{\code{groups}}{a factor on cells to use for coloring.}
 
 \item{\code{colors}}{a color factor (named with cell names) use for cell coloring.}
@@ -293,6 +305,8 @@ Plot joint graph.
 \item{\code{gene}}{show expression of a gene.}
 
 \item{\code{subset}}{a subset of cells to show.}
+
+\item{\code{name}}{Optional name of the embedding result (default=NULL)}
 }
 \if{html}{\out{</div>}}
 }
@@ -337,7 +351,7 @@ Smooth expression of genes, so they better represent structure of the graph.
 
 \item{\code{verbose}}{verbose mode. Default: TRUE.}
 
-\item{\code{count.matrix}}{alternative gene count matrix to correct. Default: joint count matrix for all datasets.}
+\item{\code{count.matrix}}{alternative gene count matrix to correct (rows: genes, columns: cells; has to be dense matrix). Default: joint count matrix for all datasets.}
 }
 \if{html}{\out{</div>}}
 }
