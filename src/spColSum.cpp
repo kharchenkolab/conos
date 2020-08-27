@@ -35,7 +35,7 @@ NumericMatrix colSumByFactor(SEXP sY,  IntegerVector rowSel) {
 
   int ncols=p.size()-1;
 
-  if(nlevels==0) { stop("colSumByFac(): supplied factor doesn't have any levels!"); }
+  if(nlevels==0) { stop("colSumByFactor(): supplied factor doesn't have any levels!"); }
   //arma::mat sumM(nlevels+1,ncols,arma::fill::zeros);
   NumericMatrix sumM(nlevels+1,ncols); 
 

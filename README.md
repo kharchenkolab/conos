@@ -1,19 +1,19 @@
 # Conos
 
-- [Conos: Clustering on Network of Samples](#clustering-on-network-of-samples)
+- [Conos: Clustering on Network of Samples](#conos-clustering-on-network-of-samples)
+- [Tutorials](#tutorials)
+  * [Usage: Alignment of Datasets](#usage-alignment-of-datasets)
+  * [Integration with ScanPy](#integration-with-scanpy)
+  * [Running RNA velocity on a conos object](#running-rna-velocity-on-a-conos-object)
 - [Installation](#installation)
   * [Native installation](#native-installation)
     + [System dependencies](#system-dependencies)
-      - [Ubuntu Dependencies](#ubuntu-dependencies)
-      - [Red Hat-based distributions Dependencies](#red-hat-based-distributions-dependencies)
+      - [Ubuntu dependencies](#ubuntu-dependencies)
+      - [Red Hat-based distributions dependencies](#red-hat-based-distributions-dependencies)
       - [OS X](#os-x)
-  * [Installing Conos as Docker Container](#installing-conos-as-docker-container)
-    + [Ready-to-run docker image](#ready-to-run-docker-image)
-    + [Building docker image on the fly](#building-docker-image-on-the-fly)
-- [Usage examples](#usage-example)
-  * [Alignment of datasets](#alignment-of-datasets)
-  * [Integration with ScanPy](#integration-with-scanpy)
-  * [Running RNA velocity on a conos object](#running-rna-velocity-on-a-conos-object)
+  * [Installing Conos as a Docker container](#installing-conos-as-docker-container)
+    + [Ready-to-run Docker image](#ready-to-run-docker-image)
+    + [Building Docker image from the Dockerfile](#building-docker-image-from-the-dockerfile)
 - [Reference](#reference)
   
 ## Conos: Clustering On Network Of Samples
@@ -40,93 +40,18 @@ Conos is robust to heterogeneity of samples within a collection, as well as nois
 * **What do I need to run it?**
 Conos is an R package. Currently, it supports pre-processing (filtering, normalization, etc.) of the individual datasets using [pagoda2](https://github.com/hms-dbmi/pagoda2) or [Seurat](https://satijalab.org/seurat/).
 
-## Installation
 
-Native installations have been tested in Linux. Normal installation should take under 10 minutes.
-
-### Native installation
-
-Please make sure that the `devtools` package is installed (use `install.packages("devtools")` if installation is needed).
-Then install [pagoda2](https://github.com/hms-dbmi/pagoda2) (or Seurat), then install `conos`:
-```r
-devtools::install_github("hms-dbmi/conos")
-```
-
-If you have problems with `sccore` package, run `devtools::install_github("hms-dbmi/sccore")` before installing `conos`.
-
-#### System dependencies
-
-The dependencies are inherited from [pagoda2](https://github.com/hms-dbmi/pagoda2):
-
-##### Ubuntu Dependencies
-
-To install system dependencies using `apt-get`, use the following:
-```sh
-sudo apt-get update
-sudo apt-get -y install libcurl4-openssl-dev libssl-dev
-```
-
-##### Red Hat-based distributions Dependencies
-
-For Red Hat distributions using `yum`, use the following command:
-
-```sh
-yum install openssl-devel libcurl-devel
-```
-
-##### OS X
-
-Using the Mac OS package manager [Homebrew](https://brew.sh/), try the following command:
-
-```sh
-brew install openssl curl-openssl
-```
-(You may need to run `brew uninstall curl` in order for `brew install curl-openssl` to be successful.)
-
-**Note:** It is possible to install `pagoda2` and `conos` on OS X, however some users have reported issues with the OpenMP configuration. For instructions, see the [pagoda2](https://github.com/hms-dbmi/pagoda2#mac-dependencies) README.
-
-### Installing Conos as Docker Container
-
-If your system configuration is making it difficult to install `conos` natively, an alternative way to get `conos` running is through a docker container.
-
-**Note:** on OS X, Docker Machine has Memory and CPU limits. To control it, please check instructions either for [CLI](https://stackoverflow.com/questions/32834082/how-to-increase-docker-machine-memory-mac/32834453#32834453) or for [Docker Desktop](https://docs.docker.com/docker-for-mac/#advanced).
-
-#### Ready-to-run docker image
-
-The docker distribution has the latest version and also includes the [Pagoda2 package](https://github.com/hms-dbmi/pagoda2). To start a docker container, first [install docker](https://docs.docker.com/install/) on your platform and then start the `pagoda2` container with the following command in the shell:
-
-```
-docker run -p 8787:8787 -e PASSWORD=pass docker.io/vpetukhov/conos:latest
-```
-
-The first time you run this command, it will download several large images so make sure that you have fast internet access setup. You can then point your browser to http://localhost:8787/ to get an Rstudio environment with `pagoda2` and `conos` installed (log in using credentials *rstudio* / *pass*). Explore the docker [--mount option]([https://docs.docker.com/storage/volumes/) to allow access of the docker image to your local files.
-
-**Note:** If you already downloaded the docker image and want to update it, please pull the latest image with: 
-```
-docker pull vpetukhov/conos:latest
-```
-
-#### Building docker image on the fly
-
-If you want to build image by your own, download the [Dockerfile](https://github.com/hms-dbmi/conos/blob/master/dockers/Dockerfile) (available in this repo under `/dockers`) and run to following command to build it:
-```
-docker build -t conos .
-```
-This will create a "conos" docker image on your system (please be patient, as the build takes approximately 30-50 minutes).
-You can then run it using the following command:
-```
-docker run -d -p 8787:8787 -e PASSWORD=pass --name conos -it conos
-```
-
-## Usage examples
+## Tutorials
 
 To see the class documentation, run `?Conos`.
 
-### Alignment of datasets
+### Usage: Alignment of Datasets
 
-Please see the [Conos tutorial](vignettes/walkthrough.md) for detailed usage. The overall runtime of the tutorial should be approximately 5 minutes.
+Please see the [Conos tutorial walkthrough](vignettes/walkthrough.md) for a detailed example of how to use Conos. The overall runtime of the tutorial should be approximately 5 minutes.
 
-Additional examples: [forcing better alignment](vignettes/adjust_alignment_strength.md), [integrating RNA-seq and ATAC-seq](http://pklab.med.harvard.edu/peterk/conos/atac_rna/example.html).
+Additional tutorials for Conos include: 
+* [Adjustment of Alignment Strength with Conos](vignettes/adjust_alignment_strength.md)
+* [Integrating RNA-seq and ATAC-seq](http://pklab.med.harvard.edu/peterk/conos/atac_rna/example.html).
 
 Given a list of individual processed samples (`pl`), Conos processing can be as simple as this:
 ```r
@@ -194,6 +119,86 @@ show.velocity.on.embedding.cor(vi$emb, vel.info, cc = cc.velo$cc, n = 200, scale
                                xlab = "UMAP1", ylab = "UMAP2")
 
 ```
+
+
+## Installation
+
+Native installations have been tested in Linux and Mac OS. Normally, installations should take under 10 minutes. **Note:** We currently do not support installations on Windows.
+
+### Native installation
+
+Please make sure that the `devtools` package is installed (use `install.packages("devtools")` if installation is needed).
+Then install [pagoda2](https://github.com/hms-dbmi/pagoda2) (or Seurat), then install `conos`:
+```r
+devtools::install_github("hms-dbmi/conos")
+```
+
+If you have problems with `sccore` package, run `devtools::install_github("hms-dbmi/sccore")` before installing `conos`.
+
+#### System dependencies
+
+The dependencies are inherited from [pagoda2](https://github.com/hms-dbmi/pagoda2):
+
+##### Ubuntu dependencies
+
+To install system dependencies using `apt-get`, use the following:
+```sh
+sudo apt-get update
+sudo apt-get -y install libcurl4-openssl-dev libssl-dev
+```
+
+##### Red Hat-based distributions dependencies
+
+For Red Hat distributions using `yum`, use the following command:
+
+```sh
+yum install openssl-devel libcurl-devel
+```
+
+##### OS X
+
+Using the Mac OS package manager [Homebrew](https://brew.sh/), try the following command:
+
+```sh
+brew install openssl curl-openssl
+```
+(You may need to run `brew uninstall curl` in order for `brew install curl-openssl` to be successful.)
+
+For further instructions on installing Conos with Mac OS, please refer to the following wiki page: [Installing Conos for Mac OS](https://github.com/kharchenkolab/conos/wiki/Installing-Conos-for-Mac-OS)
+
+### Installing Conos as Docker container
+
+If your system configuration is making it difficult to install `conos` natively, an alternative way to get `conos` running is through a docker container.
+
+**Note:** on OS X, Docker Machine has Memory and CPU limits. To control it, please check instructions either for [CLI](https://stackoverflow.com/questions/32834082/how-to-increase-docker-machine-memory-mac/32834453#32834453) or for [Docker Desktop](https://docs.docker.com/docker-for-mac/#advanced).
+
+#### Ready-to-run Docker image
+
+The docker distribution has the latest version and also includes the [Pagoda2 package](https://github.com/hms-dbmi/pagoda2). To start a docker container, first [install docker](https://docs.docker.com/install/) on your platform and then start the `pagoda2` container with the following command in the shell:
+
+```
+docker run -p 8787:8787 -e PASSWORD=pass docker.io/vpetukhov/conos:latest
+```
+
+The first time you run this command, it will download several large images so make sure that you have fast internet access setup. You can then point your browser to http://localhost:8787/ to get an Rstudio environment with `pagoda2` and `conos` installed (log in using credentials *rstudio* / *pass*). Explore the docker [--mount option]([https://docs.docker.com/storage/volumes/) to allow access of the docker image to your local files.
+
+**Note:** If you already downloaded the docker image and want to update it, please pull the latest image with: 
+```
+docker pull vpetukhov/conos:latest
+```
+
+#### Building Docker image from the Dockerfile
+
+If you want to build image by your own, download the [Dockerfile](https://github.com/hms-dbmi/conos/blob/master/dockers/Dockerfile) (available in this repo under `/dockers`) and run to following command to build it:
+```
+docker build -t conos .
+```
+This will create a "conos" docker image on your system (please be patient, as the build takes approximately 30-50 minutes).
+You can then run it using the following command:
+```
+docker run -d -p 8787:8787 -e PASSWORD=pass --name conos -it conos
+```
+
 
 ## Reference
 

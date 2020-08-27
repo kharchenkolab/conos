@@ -125,8 +125,6 @@ Build the joint graph that encompasses all the samples, establishing weighted in
   var.scale = TRUE,
   ncomps = 40,
   n.odgenes = 2000,
-  neighborhood.average = FALSE,
-  neighborhood.average.k = 10,
   matching.mask = NULL,
   exclude.samples = NULL,
   common.centering = TRUE,

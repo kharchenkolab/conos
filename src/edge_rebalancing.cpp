@@ -12,7 +12,8 @@ using namespace Rcpp;
 
 // [[Rcpp::export]]
 Rcpp::NumericMatrix getSumWeightMatrix(const std::vector<double> &weights, const std::vector<int> &row_inds,
-                                       const std::vector<int> &col_inds, const std::vector<int> &factor_levels) {
+                                       const std::vector<int> &col_inds, const std::vector<int> &factor_levels,
+                                       bool normalize=true) {
   Rcpp::NumericMatrix m(factor_levels.size(), *std::max_element(factor_levels.begin(), factor_levels.end()));
   for (int i = 0; i < weights.size(); ++i) {
     int cur_row = row_inds.at(i), cur_col = col_inds.at(i);
@@ -22,6 +23,9 @@ Rcpp::NumericMatrix getSumWeightMatrix(const std::vector<double> &weights, const
     m(cur_row, col_fac) += edge_weight;
     m(cur_col, row_fac) += edge_weight;
   }
+
+  if (!normalize)
+    return m;
 
   auto rs = as<Rcpp::NumericVector>(Rcpp::rowSums(m));
   for (int i = 0; i < rs.size(); ++i) {
