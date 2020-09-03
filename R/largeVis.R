@@ -156,7 +156,7 @@ projectKNNs <- function(wij, # symmetric sparse matrix
 #' The formula used is the one used by the \code{LargeVis} reference implementation.  This is substantially less than the recommendation \eqn{E * 10000} in the original paper.
 #'
 #' @param N Number of vertices.
-#' @param E Number of edges.
+#' @param E Number of edges (default = 150 * N / 2)
 #'
 #' @return The recommended number of sgd batches.
 #'
