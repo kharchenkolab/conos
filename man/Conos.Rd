@@ -206,6 +206,13 @@ plot panel of individual embeddings per sample with joint coloring
 )}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{embedding.type}}{Name of the type of embedding created by embedGraph(), either 'largeVis' or 'UMAP' (default=NULL)}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-embedGraph"></a>}}

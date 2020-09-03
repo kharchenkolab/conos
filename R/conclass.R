@@ -439,6 +439,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     },
 
     #' @description plot panel of individual embeddings per sample with joint coloring
+    #' @param embedding.type Name of the type of embedding created by embedGraph(), either 'largeVis' or 'UMAP' (default=NULL)
     plotPanel=function(clustering=NULL, groups=NULL, colors=NULL, gene=NULL, use.local.clusters=FALSE, plot.theme=NULL, use.common.embedding=FALSE, name=NULL, embedding.type=NULL, adj.list=NULL, ...) {
       if (use.local.clusters) {
         if (is.null(clustering) && !(inherits(x = self$samples[[1]], what = c('seurat', 'Seurat')))) {
