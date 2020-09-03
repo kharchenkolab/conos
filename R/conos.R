@@ -104,7 +104,7 @@ commonOverdispersedGenes <- function(samples, n.odgenes, verbose) {
   if(length(common.genes)<n.odgenes) { warning(paste("samples",paste(names(samples),collapse=' and '),'do not share enoguh common genes!')) }
   od.genes <- od.genes[names(od.genes) %in% common.genes]
 
-  if(verbose) cat("using",length(od.genes),"od genes\n")
+  if(verbose) message("using",length(od.genes),"od genes\n")
 
   return(names(od.genes)[1:min(length(od.genes),n.odgenes)])
 }
@@ -175,7 +175,7 @@ quickCPCA <- function(r.n, data.type='counts', ncomps=100, n.odgenes=NULL, var.s
 
   ncomps <- min(ncomps, length(od.genes) - 1)
 
-  if(verbose) cat('calculating covariances for',length(r.n),' datasets ...')
+  if(verbose) message('calculating covariances for',length(r.n),' datasets ...')
 
   ## # use internal C++ implementation
   ## sparse.cov <- function(x,cMeans=NULL){
@@ -195,11 +195,11 @@ quickCPCA <- function(r.n, data.type='counts', ncomps=100, n.odgenes=NULL, var.s
 
   ## covl <- lapply(covl,sparse.cov,cMeans=centering)
 
-  if(verbose) cat(' done\n')
+  if(verbose) message(' done\n')
 
   #W: get counts
   ncells <- unlist(lapply(sm,nrow))
-  if(verbose) cat('common PCs ...')
+  if(verbose) message('common PCs ...')
   #xcp <- cpca(covl,ncells,ncomp=ncomps)
   res <- cpcaFast(covl,ncells,ncomp=ncomps,verbose=verbose,maxit=500,tol=1e-5);
   #system.time(res <- cpca:::cpca_stepwise_base(covl,ncells,k=ncomps))
@@ -216,7 +216,7 @@ quickCPCA <- function(r.n, data.type='counts', ncomps=100, n.odgenes=NULL, var.s
     # calculate projection
     res$nv <- v1;
   }
-  if(verbose) cat(' done\n')
+  if(verbose) message(' done\n')
   return(res);
 }
 
@@ -232,7 +232,7 @@ quickPlainPCA <- function(r.n,data.type='counts',ncomps=30,n.odgenes=NULL,var.sc
   od.genes <- commonOverdispersedGenes(r.n, n.odgenes, verbose=verbose)
   if(length(od.genes)<5) return(NULL);
 
-  if(verbose) cat('calculating PCs for',length(r.n),' datasets ...')
+  if(verbose) message('calculating PCs for',length(r.n),' datasets ...')
 
   sm <- scaledMatrices(r.n, data.type=data.type, od.genes=od.genes, var.scale=var.scale);
   pcs <- lapply(sm, function(x) {
@@ -262,7 +262,7 @@ quickPlainPCA <- function(r.n,data.type='counts',ncomps=30,n.odgenes=NULL,var.sc
   if(score.component.variance) {
     res$nv <- lapply(pcs,function(x) x$nv)
   }
-  if(verbose) cat(' done\n')
+  if(verbose) message(' done\n')
 
   return(res);
 }
@@ -604,12 +604,12 @@ getOdGenesUniformly <- function(samples, n.genes) {
 
 
 projectSamplesOnGlobalAxes <- function(samples, cms.clust, data.type, verbose, n.cores) {
-  if(verbose) cat('calculating global projections ');
+  if(verbose) message('calculating global projections ');
 
   # calculate global eigenvectors
 
   gns <- Reduce(intersect,lapply(cms.clust,rownames))
-  if(verbose) cat('.');
+  if(verbose) message('.');
   if(length(gns) < length(cms.clust)) stop("insufficient number of common genes")
   tcc <- Reduce('+',lapply(cms.clust,function(x) x[gns,]))
   tcc <- t(tcc)/colSums(tcc)*1e6;
@@ -617,18 +617,18 @@ projectSamplesOnGlobalAxes <- function(samples, cms.clust, data.type, verbose, n
   gns <- gns[is.finite(gv) & gv>0]
   tcc <- tcc[,gns,drop=F];
 
-  if(verbose) cat('.');
+  if(verbose) message('.');
   global.pca <- prcomp(log10(tcc+1),center=TRUE,scale=TRUE,retx=FALSE)
   # project samples onto the global axes
   global.proj <- papply(samples,function(s) {
     smat <- as.matrix(scaledMatrices(list(s), data.type=data.type, od.genes=gns, var.scale=FALSE)[[1]])
-    if(verbose) cat('.')
+    if(verbose) message('.')
     #smat <- as.matrix(conos:::getRawCountMatrix(s,transposed=TRUE)[,gns])
     #smat <- log10(smat/rowSums(smat)*1e3+1)
     smat <- scale(smat,scale=T,center=T); smat[is.nan(smat)] <- 0;
     sproj <- smat %*% global.pca$rotation
   },n.cores=n.cores)
-  if(verbose) cat('. done\n');
+  if(verbose) message('. done\n');
 
   return(global.proj)
 }
@@ -672,7 +672,7 @@ getDecoyProjections <- function(samples, samf, data.type, var.scale, cproj, base
 }
 
 getLocalNeighbors <- function(samples, k.self, k.self.weight, metric, l2.sigma, verbose, n.cores) {
-  if(verbose) cat('local pairs ')
+  if(verbose) message('local pairs ')
   x <- papply(samples, function(x) {
     pca <- getPca(x)
     if (is.null(pca)) {
@@ -684,10 +684,10 @@ getLocalNeighbors <- function(samples, k.self, k.self.weight, metric, l2.sigma, 
     xk <- as(drop0(xk),'dgTMatrix')
     xk@x <- convertDistanceToSimilarity(xk@x, metric=metric, l2.sigma=l2.sigma) * k.self.weight
     rownames(xk) <- colnames(xk) <- rownames(pca);
-    if(verbose) cat(".")
+    if(verbose) message(".")
     xk
   }, n.cores=n.cores, mc.preschedule=TRUE)
-  if(verbose) cat(' done\n')
+  if(verbose) message(' done\n')
   x
 }
 
@@ -995,7 +995,7 @@ adjustWeightsByCellBalancing <- function(adj.mtx, factor.per.cell, balance.weigh
       weights.adj <- adjustWeightsByCellBalancingC(weights.adj, adj.mtx@i, adj.mtx@j, as.integer(factor.per.cell), w.dividers)
 
       if (verbose && i %% 10 == 0) {
-        cat("Difference from balanced state:", sum(abs(w.dividers[w.dividers > 1e-10] - 1)), "\n")
+        message("Difference from balanced state:", sum(abs(w.dividers[w.dividers > 1e-10] - 1)), "\n")
       }
     }
   }
@@ -1032,14 +1032,14 @@ scanKModularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.in
   k.seq <- seq(min,max,by=by);
   n.cores <- con$n.cores;
   con$n.cores <- 1;
-  if(verbose) cat(paste0(ifelse(scan.k.self,'k.self=(','k=('),min,', ',max,') ['))
+  if(verbose) message(paste0(ifelse(scan.k.self,'k.self=(','k=('),min,', ',max,') ['))
   xl <- conos:::papply(k.seq,function(kv) {
     if(scan.k.self) {
       x <- con$buildGraph(k.self=kv, ..., verbose=FALSE)
     } else {
       x <- con$buildGraph(k=kv, ..., verbose=FALSE)
     }
-    if(verbose) cat('.')
+    if(verbose) message('.')
     if(omit.internal.edges) {
       x <- delete_edges(x,which(E(x)$type==0))
       #adj.mtx <- as_adj(x,attr='weight')
@@ -1051,7 +1051,7 @@ scanKModularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.in
     xc <- multilevel.community(x)
     modularity(xc)
   },n.cores=30)
-  if(verbose) cat(']\n')
+  if(verbose) message(']\n')
   con$n.cores <- n.cores;
 
   k.sens <- data.frame(k=k.seq,m=as.numeric(unlist(xl)))

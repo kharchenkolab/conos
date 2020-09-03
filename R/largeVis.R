@@ -5,8 +5,8 @@
 #' Rescale the weights in an edge matrix to match a given perplexity.
 #'
 #' @param x A sparse matrix
-#' @param threads The maximum number of threads to spawn. Determined automatically if \code{NULL} (the default).
-#' @param perplexity Given perplexity.
+#' @param threads numeric The maximum number of threads to spawn. Determined automatically if \code{NULL} (default=NULL)
+#' @param perplexity numeric Given perplexity (default=50)
 #'
 #' @return A \code{list} with the following components: \describe{
 #'    \item{'dist'}{An [N,K] matrix of the distances to the nearest neighbors.}
@@ -129,7 +129,7 @@ projectKNNs <- function(wij, # symmetric sparse matrix
   #################################################
   # SGD
   #################################################
-  if (verbose) cat("Estimating embeddings.\n")
+  if (verbose) message("Estimating embeddings.\n")
   coords <- sgd(coords,
                 targets_i = is,
                 sources_j = js,
