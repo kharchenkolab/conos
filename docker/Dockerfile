@@ -27,6 +27,6 @@ RUN \
   R -e 'install.packages("Seurat")'
 
 RUN \
-  R -e 'devtools::install_github("hms-dbmi/pagoda2")' && \
+  R -e 'devtools::install_github("kharchenkolab/pagoda2")' && \
   R -e 'BiocManager::install(c("GO.db", "org.Hs.eg.db","org.Mm.eg.db", "pcaMethods","DESeq2","BiocGenerics"), suppressUpdates=TRUE);' && \
-  R -e 'devtools::install_github("hms-dbmi/conos")'
+  R -e 'devtools::install_github("kharchenkolab/conos")'
