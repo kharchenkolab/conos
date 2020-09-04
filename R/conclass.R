@@ -349,7 +349,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           sg <- induced_subgraph(g,vi)
           method(sg,...)
         }
-        if(verbose) { message("running",stability.subsamples,"subsampling iterations ... ")}
+        if(verbose) { message("running ",stability.subsamples," subsampling iterations ... ")}
         if(is.null(sr)) {
           sr <- papply(1:stability.subsamples,function(i) subset.clustering(self$graph,f=stability.subsampling.fraction,seed=i),n.cores=self$n.cores)
         }
@@ -746,7 +746,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       sample.names <- names(self$samples);
       if(!is.null(exclude.samples)) {
         mi <- sample.names %in% exclude.samples;
-        if(verbose) { message("excluded", sum(mi), "out of", length(sample.names), "samples, based on supplied exclude.samples\n") }
+        if(verbose) { message("excluded ", sum(mi), " out of ", length(sample.names), " samples, based on supplied exclude.samples\n") }
         sample.names <- sample.names[!mi];
       }
 
@@ -761,7 +761,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           cbind(sample.names[selected.ids %% length(sample.names) + 1]) %>%
           t()
 
-        if(verbose) message("Use", ncol(sn.pairs), "pairs, based on the passed exclude.pairs\n")
+        if(verbose) message("Use ", ncol(sn.pairs), " pairs, based on the passed exclude.pairs\n")
       } else {
         sn.pairs <- combn(sample.names, 2);
       }
@@ -774,9 +774,9 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       # try reverse match as well
       nm <- match(apply(sn.pairs[c(2,1),,drop=FALSE],2,paste,collapse='.vs.'),names(self$pairs[[space]]));
       mi[which(!is.na(nm))] <- na.omit(nm);
-      if(verbose) message('found',sum(!is.na(mi)),'out of',length(mi),'cached',space,' space pairs ... ')
+      if(verbose) message('found ',sum(!is.na(mi)),' out of ',length(mi),' cached ',space,' space pairs ... ')
       if(any(is.na(mi))) { # some pairs are missing
-        if(verbose) message('running',sum(is.na(mi)),'additional',space,' space pairs ')
+        if(verbose) message('running ',sum(is.na(mi)),' additional ',space,' space pairs ')
         xl2 <- papply(which(is.na(mi)), function(i) {
           if(space=='CPCA') {
             xcp <- quickCPCA(self$samples[sn.pairs[,i]],data.type=data.type,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale, score.component.variance=score.component.variance)

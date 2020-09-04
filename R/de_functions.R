@@ -210,7 +210,7 @@ saveDEasJSON <- function(de.results = NULL, saveprefix = NULL, gene.metadata = N
     ## Find de instances that didn't work (usually because cell type is absent from one or more sample types)
     n.error <- sum(unlist(lapply(de.results, is.error)))
     if(n.error > 0) {
-        message("Warning: ", n.error,' of ', length(de.results) ,' results have returned an error; ignoring...\n')
+        message("Warning: ", n.error,' of ', length(de.results),' results have returned an error; ignoring...\n')
     }
 
     ## get the de results that worked

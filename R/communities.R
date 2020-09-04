@@ -25,7 +25,7 @@ multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=FAL
     mem <- mt$memberships[level,]; names(mem) <- mt$names;
   }
 
-  if(verbose) message("found",length(unique(mem)),"communities\nrunning walktraps ... ")
+  if(verbose) message("found ",length(unique(mem))," communities\nrunning walktraps ... ")
 
   # calculate hierarchy on the multilevel clusters
   cgraph <- getClusterGraph(graph,mem)
@@ -51,7 +51,7 @@ multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=FAL
     x
   })
 
-  if(verbose) message("found",sum(unlist(lapply(mbl,function(x) length(unique(x))))),"communities\nmerging dendrograms ... ")
+  if(verbose) message("found ",sum(unlist(lapply(mbl,function(x) length(unique(x)))))," communities\nmerging dendrograms ... ")
 
 
   wtld <- lapply(wtl,as.dendrogram)
@@ -130,7 +130,7 @@ multimulti.community <- function(graph, n.cores=parallel::detectCores(logical=FA
     mem <- mt$memberships[level,]; names(mem) <- mt$names;
   }
 
-  if(verbose) message("found",length(unique(mem)),"communities\nrunning multilevel 2 ... ")
+  if(verbose) message("found ",length(unique(mem))," communities\nrunning multilevel 2 ... ")
 
   # calculate hierarchy on the multilevel clusters
   cgraph <- getClusterGraph(graph,mem)
@@ -155,7 +155,7 @@ multimulti.community <- function(graph, n.cores=parallel::detectCores(logical=FA
     x
   })
 
-  if(verbose) message("found",sum(unlist(lapply(mbl,function(x) length(unique(x))))),"communities\nmerging ... ")
+  if(verbose) message("found ",sum(unlist(lapply(mbl,function(x) length(unique(x)))))," communities\nmerging ... ")
 
   # combined clustering factor
   fv <- unlist(lapply(sn(names(wtl)),function(cn) {

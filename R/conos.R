@@ -104,7 +104,7 @@ commonOverdispersedGenes <- function(samples, n.odgenes, verbose) {
   if(length(common.genes)<n.odgenes) { warning(paste("samples",paste(names(samples),collapse=' and '),'do not share enoguh common genes!')) }
   od.genes <- od.genes[names(od.genes) %in% common.genes]
 
-  if(verbose) message("using",length(od.genes),"od genes\n")
+  if(verbose) message("using ",length(od.genes)," od genes\n")
 
   return(names(od.genes)[1:min(length(od.genes),n.odgenes)])
 }
@@ -175,7 +175,7 @@ quickCPCA <- function(r.n, data.type='counts', ncomps=100, n.odgenes=NULL, var.s
 
   ncomps <- min(ncomps, length(od.genes) - 1)
 
-  if(verbose) message('calculating covariances for',length(r.n),' datasets ...')
+  if(verbose) message('calculating covariances for ',length(r.n),' datasets ...')
 
   ## # use internal C++ implementation
   ## sparse.cov <- function(x,cMeans=NULL){
@@ -232,7 +232,7 @@ quickPlainPCA <- function(r.n,data.type='counts',ncomps=30,n.odgenes=NULL,var.sc
   od.genes <- commonOverdispersedGenes(r.n, n.odgenes, verbose=verbose)
   if(length(od.genes)<5) return(NULL);
 
-  if(verbose) message('calculating PCs for',length(r.n),' datasets ...')
+  if(verbose) message('calculating PCs for ',length(r.n),' datasets ...')
 
   sm <- scaledMatrices(r.n, data.type=data.type, od.genes=od.genes, var.scale=var.scale);
   pcs <- lapply(sm, function(x) {
@@ -995,7 +995,7 @@ adjustWeightsByCellBalancing <- function(adj.mtx, factor.per.cell, balance.weigh
       weights.adj <- adjustWeightsByCellBalancingC(weights.adj, adj.mtx@i, adj.mtx@j, as.integer(factor.per.cell), w.dividers)
 
       if (verbose && i %% 10 == 0) {
-        message("Difference from balanced state:", sum(abs(w.dividers[w.dividers > 1e-10] - 1)), "\n")
+        message("Difference from balanced state: ", sum(abs(w.dividers[w.dividers > 1e-10] - 1)), "\n")
       }
     }
   }
