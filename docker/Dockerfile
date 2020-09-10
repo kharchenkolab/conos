@@ -1,4 +1,4 @@
-FROM rocker/tidyverse:3.5.1
+FROM rocker/tidyverse:4.0.0
 
 RUN apt-get update --yes && apt-get install --no-install-recommends --yes \
   build-essential \
