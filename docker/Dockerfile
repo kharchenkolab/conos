@@ -23,7 +23,7 @@ RUN apt-get update --yes && apt-get install --no-install-recommends --yes \
   libhdf5-dev
 
 RUN \
-  R -e 'chooseCRANmirror(ind=52); install.packages(c("RcppEigen", "urltools", "Rtsne","BiocManager"))' && \
+  R -e 'chooseCRANmirror(ind=52); install.packages(c("Rcpp", "RcppEigen", "urltools", "Rtsne","BiocManager", "igraph"))' && \
   R -e 'install.packages("Seurat")'
 
 RUN \
