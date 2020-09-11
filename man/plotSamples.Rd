@@ -18,7 +18,7 @@ plotSamples(
 
 \item{groups}{vector of cluster labels, names contain cell names (default=NULL)}
 
-\item{colors}{vector of numbers, which must be shouwn with point colors, names contain cell names. (default=NULL) This argument is ignored if groups are provided.}
+\item{colors}{vector of numbers, which must be shouwn with point colors, names contain cell names (default=NULL). This argument is ignored if groups are provided.}
 
 \item{gene}{gene name. If this parameter is provided, points are colored by expression of this gene.}
 

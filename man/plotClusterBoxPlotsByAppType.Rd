@@ -14,11 +14,11 @@ plotClusterBoxPlotsByAppType(
 \arguments{
 \item{conos.obj}{conos object}
 
-\item{clustering}{name of the clustering to use}
+\item{clustering}{name of the clustering to use (default=NULL)}
 
-\item{apptypes}{a factor specifying how to group the samples}
+\item{apptypes}{a factor specifying how to group the samples (default=NULL)}
 
-\item{return.details}{if TRUE return a list with the plot and the summary data.frame}
+\item{return.details}{boolean If TRUE return a list with the plot and the summary data.frame (default=FALSE)}
 }
 \description{
 Generate boxplot per cluster of the proportion of cells in each celltype

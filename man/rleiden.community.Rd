@@ -2,12 +2,12 @@
 % Please edit documentation in R/communities.R
 \name{rleiden.community}
 \alias{rleiden.community}
-\title{recursive leiden communities}
+\title{Recursive leiden communities}
 \usage{
 rleiden.community(
   graph,
   max.depth = 2,
-  n.cores = parallel::detectCores(logical = F),
+  n.cores = parallel::detectCores(logical = FALSE),
   min.community.size = 10,
   verbose = FALSE,
   resolution = 1,
@@ -19,17 +19,17 @@ rleiden.community(
 \arguments{
 \item{graph}{graph}
 
-\item{max.depth}{recursive depth}
+\item{max.depth}{numeric Recursive depth (default=2)}
 
-\item{n.cores}{number of cores to use}
+\item{n.cores}{numeric Number of cores to use (default=parallel::detectCores(logical=FALSE))}
 
-\item{min.community.size}{minimal community size parameter for the walktrap communities .. communities smaller than that will be merged}
+\item{min.community.size}{numeric Minimal community size parameter for the walktrap communities .. communities smaller than that will be merged (default=10)}
 
-\item{verbose}{whether to output progress messages}
+\item{verbose}{boolean Whether to output progress messages (default=FALSE)}
 
-\item{resolution}{resolution parameter passed to leiden.communities (either a single value, or a value equivalent to max.depth)}
+\item{resolution}{boolean Parameter passed to leiden.communities (either a single value, or a value equivalent to max.depth) (default=1)}
 
-\item{...}{passed to leiden.communities}
+\item{...}{arguments passed to leiden.communities}
 }
 \value{
 a fakeCommunities object that has methods membership() ... does not return a dendrogram ... see cltrap.community() to constructo that
