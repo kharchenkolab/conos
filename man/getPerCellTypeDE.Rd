@@ -14,6 +14,7 @@ getPerCellTypeDE(
   independent.filtering = FALSE,
   n.cores = 1,
   cluster.sep.chr = "<!!>",
+  remove.na = TRUE,
   return.details = TRUE
 )
 }
@@ -32,7 +33,9 @@ getPerCellTypeDE(
 
 \item{cluster.sep.chr}{character string of length 1 specifying a delimiter to separate cluster and app names}
 
-\item{return.details}{return detals}
+\item{remove.na}{boolean If TRUE, remove NAs from DESeq calculations, which often arise as comparisons not possible (default=TRUE)}
+
+\item{return.details}{return details}
 }
 \description{
 Do differential expression for each cell type in a conos object between the specified subsets of apps
