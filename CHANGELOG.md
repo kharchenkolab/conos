@@ -15,7 +15,7 @@
 - added `ht_opt$message = FALSE` for ComplexHeatmap (July 2020)
 - Added checks for `getPerCellTypeDE()` for errors, removing NAs (July 2020)
 - Added `ht_opt$message = FALSE` for ComplexHeatmap (July 2020)
-- Write to HDF5 for `saveConosForScanPy()` (7 July 2020)
+- Write to HDF5 for `saveConosForScanPy()` (July 2020)
 - LICENSE (July 2020)
 
 ### Removed
