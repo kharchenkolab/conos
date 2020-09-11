@@ -269,7 +269,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         }
 
         
-        if(verbose) message(".")
+        if(verbose) cat(".")
         return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=mnn@x, stringsAsFactors=FALSE))
       },n.cores=self$n.cores,mc.preschedule=TRUE)
 
@@ -290,7 +290,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       E(g)$weight <- el[,3]
       E(g)$type <- el[,4]
       
-      if(verbose) message('.')
+      if(verbose) cat(".")
 
       # collapse duplicate edges
       g <- simplify(g, edge.attr.comb=list(weight="sum", type = "first"))
@@ -870,7 +870,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           } else if (space == 'CCA' || space=='PMA') {
             xcp <- quickCCA(self$samples[sn.pairs[,i]],data.type=data.type,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale, score.component.variance=score.component.variance,PMA=(space=='PMA'))
           }
-          if(verbose) message('.')
+          if(verbose) cat(".")
           xcp
         },n.cores=self$n.cores,mc.preschedule=(space=='PCA'));
 
