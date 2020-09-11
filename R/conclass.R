@@ -273,7 +273,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=mnn@x, stringsAsFactors=FALSE))
       },n.cores=self$n.cores,mc.preschedule=TRUE)
 
-      if(verbose) message(" done\n")
+      if(verbose) message(" done")
       ## Merge the results into a edge table
       el <- do.call(rbind,mnnres)
       el$type <- 1; # encode connection type 1- intersample, 0- intrasample
@@ -294,7 +294,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
       # collapse duplicate edges
       g <- simplify(g, edge.attr.comb=list(weight="sum", type = "first"))
-      if(verbose) message('done\n')
+      if(verbose) message('done')
 
       if (!is.null(balancing.factor.per.sample)) {
         if (is.null(balancing.factor.per.cell)) {
@@ -317,7 +317,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
                                        same.factor.downweight=same.factor.downweight) %>%
           igraph::graph_from_adjacency_matrix(mode="undirected", weighted=TRUE)
 
-        if(verbose) message('done\n');
+        if(verbose) message('done')
       }
       self$graph <- g;
       return(invisible(g))
@@ -350,7 +350,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       }
 
       if (append.specificity.metrics) {
-        if (verbose) message("Estimating specificity metrics\n")
+        if (verbose) message("Estimating specificity metrics")
 
         cm.merged <- self$getJointCountMatrix(raw=TRUE)
         groups.clean <- groups %>% .[!is.na(.)] %>% .[names(.) %in% rownames(cm.merged)]
@@ -360,7 +360,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           sccore::plapply(function(n) appendSpecificityMetricsToDE(de.genes[[n]], groups.clean, n, p2.counts=cm.merged, append.auc=append.auc), progress=verbose, n.cores=n.cores)
       }
 
-      if (verbose) message("All done!\n")
+      if (verbose) message("All done!")
 
       return(de.genes)
     },
@@ -410,7 +410,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           sr <- papply(1:stability.subsamples,function(i) subset.clustering(self$graph,f=stability.subsampling.fraction,seed=i),n.cores=self$n.cores)
         }
 
-        if(verbose) { message("done\n")}
+        if(verbose) { message("done")}
 
         if(verbose) message("calculating flat stability stats ... ")
         # Jaccard coefficient for each cluster against all, plus random expecctation
@@ -429,7 +429,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         # Adjusted rand index
         if(verbose) message("adjusted Rand ... ")
         ari <- unlist(conos:::papply(sr,function(o) { ol <- membership(o); clues::adjustedRand(as.integer(ol),as.integer(cls.groups[names(ol)]),randMethod='HA') },n.cores=self$n.cores))
-        if(verbose) message("done\n");
+        if(verbose) message("done");
 
         res$stability <- list(flat=list(jc=jc.stats,ari=ari))
 
@@ -479,7 +479,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         res$stability$upper.tree <- clm
         res$stability$sr <- sr
         res$stability$hierarchical <- list(jc=jc.hstats);
-        if(verbose) message("done\n");
+        if(verbose) message("done")
 
       }
 
@@ -827,7 +827,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       sample.names <- names(self$samples);
       if(!is.null(exclude.samples)) {
         mi <- sample.names %in% exclude.samples;
-        if(verbose) { message("excluded ", sum(mi), " out of ", length(sample.names), " samples, based on supplied exclude.samples\n") }
+        if(verbose) { message("excluded ", sum(mi), " out of ", length(sample.names), " samples, based on supplied exclude.samples") }
         sample.names <- sample.names[!mi];
       }
 
@@ -842,7 +842,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           cbind(sample.names[selected.ids %% length(sample.names) + 1]) %>%
           t()
 
-        if(verbose) message("Use ", ncol(sn.pairs), " pairs, based on the passed exclude.pairs\n")
+        if(verbose) message("Use ", ncol(sn.pairs), " pairs, based on the passed exclude.pairs")
       } else {
         sn.pairs <- combn(sample.names, 2);
       }
@@ -889,7 +889,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         warning("unable to get complete set of pair comparison results")
         sn.pairs <- sn.pairs[,!is.na(mi),drop=FALSE]
       }
-      if(verbose) message(" done\n");
+      if(verbose) message(" done")
       return(invisible(sn.pairs))
     }
   )
