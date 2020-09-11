@@ -184,7 +184,7 @@ The first time you run this command, it will download several large images so ma
 
 **Note:** If you already downloaded the docker image and want to update it, please pull the latest image with: 
 ```
-docker pull vpetukhov/conos:latest
+docker pull pkharchenkolab/conos:latest
 ```
 
 #### Building Docker image from the Dockerfile
