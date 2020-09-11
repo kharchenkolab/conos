@@ -15,7 +15,8 @@ getBetweenCellTypeDE(
   independent.filtering = FALSE,
   cluster.sep.chr = "<!!>",
   return.details = TRUE,
-  only.paired = TRUE
+  only.paired = TRUE,
+  remove.na = TRUE
 )
 }
 \arguments{
@@ -40,6 +41,8 @@ getBetweenCellTypeDE(
 \item{return.details}{logical, return detailed results}
 
 \item{only.paired}{only keep samples that that both cell types above the min.cell.count threshold}
+
+\item{remove.na}{boolean If TRUE, remove NAs from DESeq calculations (default=TRUE)}
 }
 \description{
 Compare two cell types across the entire panel

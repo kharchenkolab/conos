@@ -38,7 +38,7 @@ In essence, Conos will take a large, potentially heterogeneous panel of samples 
 Conos is robust to heterogeneity of samples within a collection, as well as noise. The ability to resolve finer subpopulation structure improves as the size of the panel increases.
 
 * **What do I need to run it?**
-Conos is an R package. Currently, it supports pre-processing (filtering, normalization, etc.) of the individual datasets using [pagoda2](https://github.com/hms-dbmi/pagoda2) or [Seurat](https://satijalab.org/seurat/).
+Conos is an R package. Currently, it supports pre-processing (filtering, normalization, etc.) of the individual datasets using [pagoda2](https://github.com/kharchenkolab/pagoda2) or [Seurat](https://satijalab.org/seurat/).
 
 
 ## Tutorials
@@ -128,16 +128,16 @@ Native installations have been tested in Linux and Mac OS. Normally, installatio
 ### Native installation
 
 Please make sure that the `devtools` package is installed (use `install.packages("devtools")` if installation is needed).
-Then install [pagoda2](https://github.com/hms-dbmi/pagoda2) (or Seurat), then install `conos`:
+Then install [pagoda2](https://github.com/kharchenkolab/pagoda2) (or Seurat), then install `conos`:
 ```r
-devtools::install_github("hms-dbmi/conos")
+devtools::install_github("kharchenkolabconos")
 ```
 
-If you have problems with `sccore` package, run `devtools::install_github("hms-dbmi/sccore")` before installing `conos`.
+If you have problems with `sccore` package, run `devtools::install_github("kharchenkolab/sccore")` before installing `conos`.
 
 #### System dependencies
 
-The dependencies are inherited from [pagoda2](https://github.com/hms-dbmi/pagoda2):
+The dependencies are inherited from [pagoda2](https://github.com/kharchenkolab/pagoda2):
 
 ##### Ubuntu dependencies
 
@@ -174,7 +174,7 @@ If your system configuration is making it difficult to install `conos` natively,
 
 #### Ready-to-run Docker image
 
-The docker distribution has the latest version and also includes the [Pagoda2 package](https://github.com/hms-dbmi/pagoda2). To start a docker container, first [install docker](https://docs.docker.com/install/) on your platform and then start the `pagoda2` container with the following command in the shell:
+The docker distribution has the latest version and also includes the [Pagoda2 package](https://github.com/kharchenkolab/pagoda2). To start a docker container, first [install docker](https://docs.docker.com/install/) on your platform and then start the `pagoda2` container with the following command in the shell:
 
 ```
 docker run -p 8787:8787 -e PASSWORD=pass docker.io/vpetukhov/conos:latest
@@ -184,12 +184,12 @@ The first time you run this command, it will download several large images so ma
 
 **Note:** If you already downloaded the docker image and want to update it, please pull the latest image with: 
 ```
-docker pull vpetukhov/conos:latest
+docker pull pkharchenkolab/conos:latest
 ```
 
 #### Building Docker image from the Dockerfile
 
-If you want to build image by your own, download the [Dockerfile](https://github.com/hms-dbmi/conos/blob/master/dockers/Dockerfile) (available in this repo under `/dockers`) and run to following command to build it:
+If you want to build image by your own, download the [Dockerfile](https://github.com/kharchenkolab/conos/blob/master/dockers/Dockerfile) (available in this repo under `/dockers`) and run to following command to build it:
 ```
 docker build -t conos .
 ```

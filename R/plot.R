@@ -7,11 +7,11 @@ NULL
 #' @export
 sccore::embeddingPlot
 
-##' Extract specified clustering from list of conos clusterings
-##'
-##' @param clusters list of conos clusterings
-##' @param clustering name of extracted clustering
-##' @return vector of clusters, named with cell names
+#' Extract specified clustering from list of conos clusterings
+#'
+#' @param clusters list of conos clusterings
+#' @param clustering name of extracted clustering
+#' @return vector of clusters, named with cell names
 getClusteringGroups <- function(clusters, clustering) {
   if (length(clusters) < 1) {
     stop("generate a joint clustering first")
@@ -28,17 +28,17 @@ getClusteringGroups <- function(clusters, clustering) {
   return(clusters[[clustering]]$groups)
 }
 
-##' Plot panel of specified embeddings
-##'
-##' @inheritParams sccore::embeddingPlot
-##' @param embeddings list of two-column matrices with (x, y) coordinates of the embeddings. Each mutrix must have cell names in rownames.
-##' @param ncol number of columns in the panel
-##' @param nrow number of rows in the panel
-##' @param panel.size vector with two numbers, which specified (width, height) of the panel in inches. Ignored if raster == FALSE.
-##' @param adjust.func function to adjust plots before combining them to single panel. Can be used, for example, to provide color pallette of guides of the plots.
-##' @param subset a subset of cells to show (vector of cell names)
-##' @param return.plotlist return a list of ggplot objects instead of a combined plot (default:FALSE)
-##' @return ggplot2 object with the panel of plots
+#' Plot panel of specified embeddings
+#'
+#' @inheritParams sccore::embeddingPlot
+#' @param embeddings list of two-column matrices with (x, y) coordinates of the embeddings. Each mutrix must have cell names in rownames.
+#' @param ncol number of columns in the panel
+#' @param nrow number of rows in the panel
+#' @param panel.size vector with two numbers, which specified (width, height) of the panel in inches. Ignored if raster == FALSE.
+#' @param adjust.func function to adjust plots before combining them to single panel. Can be used, for example, to provide color pallette of guides of the plots.
+#' @param subset a subset of cells to show (vector of cell names)
+#' @param return.plotlist return a list of ggplot objects instead of a combined plot (default=FALSE)
+#' @return ggplot2 object with the panel of plots
 plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow=NULL, raster=FALSE, panel.size=NULL, adjust.func=NULL, title.size=6,raster.width=NULL, raster.height=NULL, adj.list=NULL, subset=NULL, return.plotlist=FALSE, ...) {
   if (is.null(panel.size)) {
     panel.size <- dev.size(units="in")
@@ -94,13 +94,13 @@ plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow
   return(cowplot::plot_grid(plotlist=plot.list, ncol=ncol, nrow=nrow))
 }
 
-##' Plot panel of specified embeddings, extracting them from pagoda2 objects
-##'
-##' @inheritParams plotEmbeddings
-##' @param samples list of pagoda2 or Seurat objects
-##' @param gene gene name. If this parameter is provided, points are colored by expression of this gene.
-##' @param embedding.type type of embedding. Default: tSNE. If a numeric matrix is passed, interpreted as an actual embedding.
-##' @return ggplot2 object with the panel of plots
+#' Plot panel of specified embeddings, extracting them from pagoda2 objects
+#'
+#' @inheritParams plotEmbeddings
+#' @param samples list of pagoda2 or Seurat objects
+#' @param gene gene name. If this parameter is provided, points are colored by expression of this gene.
+#' @param embedding.type type of embedding. Default: tSNE. If a numeric matrix is passed, interpreted as an actual embedding.
+#' @return ggplot2 object with the panel of plots
 plotSamples <- function(samples, groups=NULL, colors=NULL, gene=NULL, embedding.type=NULL, ...) {
   if (!is.null(groups)) {
     groups <- as.factor(groups)
@@ -135,6 +135,7 @@ plotSamples <- function(samples, groups=NULL, colors=NULL, gene=NULL, embedding.
 
 #' Plots barplots per sample of composition of each pagoda2 application based on
 #' selected clustering
+#'
 #' @param conos.obj A conos object
 #' @param clustering name of clustering in the current object
 #' @param groups arbitrary grouping of cells (to use instead of the clustering)
@@ -206,10 +207,11 @@ plotClusterBarplots <- function(conos.obj=NULL, clustering=NULL, groups=NULL,sam
 
 
 #' Generate boxplot per cluster of the proportion of cells in each celltype
+#'
 #' @param conos.obj conos object
-#' @param clustering name of the clustering to use
-#' @param apptypes a factor specifying how to group the samples
-#' @param return.details if TRUE return a list with the plot and the summary data.frame
+#' @param clustering name of the clustering to use (default=NULL)
+#' @param apptypes a factor specifying how to group the samples (default=NULL)
+#' @param return.details boolean If TRUE return a list with the plot and the summary data.frame (default=FALSE)
 plotClusterBoxPlotsByAppType <- function(conos.obj, clustering=NULL, apptypes=NULL, return.details=FALSE) {
     type <- 'proportions'
     ## param checking
@@ -256,11 +258,11 @@ plotClusterBoxPlotsByAppType <- function(conos.obj, clustering=NULL, apptypes=NU
 
 #' Get markers for global clusters
 #' @param conos.obj conos object
-#' @param clustering name of the clustering to use
-#' @param min.samples.expressing minimum number of samples that must have the genes upregulated in the respective cluster
-#' @param min.percent.samples.expression minumum percent of samples that must have the gene upregulated
+#' @param clustering character Name of the clustering to use (default='multi level')
+#' @param min.samples.expressing numeric Minimum number of samples that must have the genes upregulated in the respective cluster (default=0)
+#' @param min.percent.samples.expression numeric Minumum percent of samples that must have the gene upregulated (default=0)
 getGlobalClusterMarkers <- function(conos.obj, clustering='multi level',
-                                    min.samples.expressing=0,min.percent.samples.expressing=0){
+                                    min.samples.expressing=0, min.percent.samples.expressing=0){
   .Deprecated("getDifferentialGenes")
     ## get the groups from the clusters
     groups <- as.factor(conos.obj$clusters[[clustering]]$groups)
@@ -292,15 +294,15 @@ getGlobalClusterMarkers <- function(conos.obj, clustering='multi level',
     zp
 }
 
-##' Plot fraction of variance explained by the successive reduced space components (PCA, CPCA)
-##'
-##' Requires buildGraph() or updatePairs() to be ran first with the argument score.component.variance=TRUE.
-##'
-##' @title Plot variance explained by the successive components
-##' @param conos.obj conos object
-##' @param space reduction space to be analyzed (currently, component variance scoring is only supported by PCA and CPCA)
-##' @return ggplot
-##' @export
+#' Plot fraction of variance explained by the successive reduced space components (PCA, CPCA)
+#'
+#' Requires buildGraph() or updatePairs() to be ran first with the argument score.component.variance=TRUE.
+#'
+#' @title Plot variance explained by the successive components
+#' @param conos.obj conos object
+#' @param space character Reduction space to be analyzed (currently, component variance scoring is only supported by PCA and CPCA) (default='PCA')
+#' @return ggplot
+#' @export
 plotComponentVariance <- function(conos.obj, space='PCA',plot.theme=theme_bw()) {
   pairs <- conos.obj$pairs[[space]]
 
@@ -324,36 +326,36 @@ plotComponentVariance <- function(conos.obj, space='PCA',plot.theme=theme_bw()) 
 
 }
 
-##' Plot a heatmap of differential genes
-##'
-##' @param con conos (or p2) object
-##' @param groups groups in which the DE genes were determined (so that the cells can be ordered correctly)
-##' @param de differential expression result (list of data frames)
-##' @param min.auc optional minimum AUC threshold
-##' @param min.specificity optional minimum specificity threshold
-##' @param min.precision optional minimum precision threshold
-##' @param n.genes.per.cluster number of genes to show for each cluster
-##' @param additional.genes optional additional genes to include (the genes will be assigned to the closest cluster)
-##' @param exclude.genes an optional list of genes to exclude from the heatmap
-##' @param labeled.gene.subset a subset of gene names to show (instead of all genes). Can be a vector of gene names, or a number of top genes (in each cluster) to show the names for.
-##' @param expression.quantile expression quantile to show (0.98 by default)
-##' @param pal palette to use for the main heatmap
-##' @param ordering order by which the top DE genes (to be shown) are determined (default "-AUC")
-##' @param column.metadata additional column metadata, passed either as a data.frame with rows named as cells, or as a list of named cell factors.
-##' @param show.gene.clusters whether to show gene cluster color codes
-##' @param remove.duplicates remove duplicated genes (leaving them in just one of the clusters)
-##' @param column.metadata.colors a list of color specifications for additional column metadata, specified according to the HeatmapMetadata format. Use "clusters" slot to specify cluster colors.
-##' @param show.cluster.legend whether to show the cluster legend
-##' @param show_heatmap_legend whether to show the expression heatmap legend
-##' @param border show borders around the heatmap and annotations
-##' @param return.details if TRUE will return a list containing the heatmap (ha), but also raw matrix (x), expression list (expl) and other info to produce the heatmap on your own.
-##' @param row.label.font.size font size for the row labels
-##' @param order.clusters whether to re-order the clusters according to the similarity of the expression patterns (of the genes being shown)
-##' @param cell.order explicitly supply cell order
-##' @param averaging.window optional window averaging between neighboring cells within each group (turned off by default) - useful when very large number of cells shown (requires zoo package)
-##' @param ... extra parameters are passed to pheatmap
-##' @return ComplexHeatmap::Heatmap object (see return.details param for other output)
-##' @export
+#' Plot a heatmap of differential genes
+#'
+#' @param con conos (or p2) object
+#' @param groups groups in which the DE genes were determined (so that the cells can be ordered correctly)
+#' @param de differential expression result (list of data frames)
+#' @param min.auc optional minimum AUC threshold
+#' @param min.specificity optional minimum specificity threshold
+#' @param min.precision optional minimum precision threshold
+#' @param n.genes.per.cluster number of genes to show for each cluster
+#' @param additional.genes optional additional genes to include (the genes will be assigned to the closest cluster)
+#' @param exclude.genes an optional list of genes to exclude from the heatmap
+#' @param labeled.gene.subset a subset of gene names to show (instead of all genes). Can be a vector of gene names, or a number of top genes (in each cluster) to show the names for.
+#' @param expression.quantile expression quantile to show (0.98 by default)
+#' @param pal palette to use for the main heatmap
+#' @param ordering order by which the top DE genes (to be shown) are determined (default "-AUC")
+#' @param column.metadata additional column metadata, passed either as a data.frame with rows named as cells, or as a list of named cell factors.
+#' @param show.gene.clusters whether to show gene cluster color codes
+#' @param remove.duplicates remove duplicated genes (leaving them in just one of the clusters)
+#' @param column.metadata.colors a list of color specifications for additional column metadata, specified according to the HeatmapMetadata format. Use "clusters" slot to specify cluster colors.
+#' @param show.cluster.legend whether to show the cluster legend
+#' @param show_heatmap_legend whether to show the expression heatmap legend
+#' @param border show borders around the heatmap and annotations
+#' @param return.details if TRUE will return a list containing the heatmap (ha), but also raw matrix (x), expression list (expl) and other info to produce the heatmap on your own.
+#' @param row.label.font.size font size for the row labels
+#' @param order.clusters whether to re-order the clusters according to the similarity of the expression patterns (of the genes being shown)
+#' @param cell.order explicitly supply cell order
+#' @param averaging.window optional window averaging between neighboring cells within each group (turned off by default) - useful when very large number of cells shown (requires zoo package)
+#' @param ... extra parameters are passed to pheatmap
+#' @return ComplexHeatmap::Heatmap object (see return.details param for other output)
+#' @export
 plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,min.precision=NULL,n.genes.per.cluster=10,additional.genes=NULL,exclude.genes=NULL, labeled.gene.subset=NULL, expression.quantile=0.99,pal=colorRampPalette(c('dodgerblue1','grey95','indianred1'))(1024),ordering='-AUC',column.metadata=NULL,show.gene.clusters=TRUE, remove.duplicates=TRUE, column.metadata.colors=NULL, show.cluster.legend=TRUE, show_heatmap_legend=FALSE, border=TRUE, return.details=FALSE, row.label.font.size=10, order.clusters=FALSE, split=FALSE, split.gap=0, cell.order=NULL, averaging.window=0, ...) {
 
   if (!requireNamespace("ComplexHeatmap", quietly = TRUE) || packageVersion("ComplexHeatmap") < "2.4") {

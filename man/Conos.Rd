@@ -135,6 +135,11 @@ Build the joint graph that encompasses all the samples, establishing weighted in
   decoy.threshold = 1,
   n.decoys = k * 2,
   score.component.variance = FALSE,
+  snn = FALSE,
+  snn.quantile = 0.9,
+  min.snn.jaccard = 0,
+  min.snn.weight = 0,
+  snn.k = k.self,
   balance.edge.weights = FALSE,
   balancing.factor.per.cell = NULL,
   same.factor.downweight = 1,
@@ -228,7 +233,7 @@ Calculates differential genes. Estimates base mean, z-score, p-values, specifici
   n.genes.to.show = 10,
   inner.clustering = FALSE,
   append.specificity.metrics = TRUE,
-  append.auc = FALSE,
+  append.auc = TRUE,
   n.cores = self$n.cores
 )}\if{html}{\out{</div>}}
 }
@@ -488,7 +493,7 @@ Smooth expression of genes, so they better represent structure of the graph.
 
 \item{\code{verbose}}{provide verbose output}
 
-\item{\code{count.matrix}}{alternative gene count matrix to correct. Default: joint count matrix for all datasets.}
+\item{\code{count.matrix}}{alternative gene count matrix to correct (rows: genes, columns: cells; has to be dense matrix). Default: joint count matrix for all datasets.}
 }
 \if{html}{\out{</div>}}
 }

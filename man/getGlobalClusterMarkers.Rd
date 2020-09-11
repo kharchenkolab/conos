@@ -14,11 +14,11 @@ getGlobalClusterMarkers(
 \arguments{
 \item{conos.obj}{conos object}
 
-\item{clustering}{name of the clustering to use}
+\item{clustering}{character Name of the clustering to use (default='multi level')}
 
-\item{min.samples.expressing}{minimum number of samples that must have the genes upregulated in the respective cluster}
+\item{min.samples.expressing}{numeric Minimum number of samples that must have the genes upregulated in the respective cluster (default=0)}
 
-\item{min.percent.samples.expression}{minumum percent of samples that must have the gene upregulated}
+\item{min.percent.samples.expression}{numeric Minumum percent of samples that must have the gene upregulated (default=0)}
 }
 \description{
 Get markers for global clusters
