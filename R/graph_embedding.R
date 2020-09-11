@@ -57,20 +57,20 @@ embedGraphUmap <- function(graph, verbose=TRUE, min.prob=1e-3, min.visited.verts
     max.hitting.nn.num <- length(igraph::V(graph)) - 1
   }
 
-  if (verbose) cat("Convert graph to adjacency list...\n")
+  if (verbose) message("Convert graph to adjacency list...\n")
   adj.info <- graphToAdjList(graph);
-  if (verbose) cat("Done\n")
+  if (verbose) message("Done\n")
 
-  if (verbose) cat("Estimate nearest neighbors and commute times...\n")
+  if (verbose) message("Estimate nearest neighbors and commute times...\n")
   commute.times <- get_nearest_neighbors(adj.info$idx, adj.info$probabilities, min_prob=min.prob,
                                          min_visited_verts=min.visited.verts, n_cores=n.cores, max_hitting_nn_num=max.hitting.nn.num,
                                          max_commute_nn_num=max.commute.nn.num, min_prob_lower=min.prob.lower, verbose=verbose)
-  if (verbose) cat("Done\n")
+  if (verbose) message("Done\n")
 
-  if (verbose) cat("Estimate UMAP embedding...\n")
+  if (verbose) message("Estimate UMAP embedding...\n")
   umap <- embedKnnGraph(commute.times, n.neighbors=n.neighbors, names=adj.info$names, n_threads=n.cores,
                         n_epochs=n.epochs, spread=spread, min_dist=min.dist, verbose=verbose, n_sgd_threads=n.sgd.cores, ...)
-  if (verbose) cat("Done\n")
+  if (verbose) message("Done\n")
 
   if (return.all)
     return(list(adj.info=adj.info, commute.times=commute.times, umap=umap))

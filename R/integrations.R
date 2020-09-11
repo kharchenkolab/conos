@@ -105,9 +105,9 @@ saveConosForScanPy <- function(con, output.path, hdf5_filename, metadata.df=NULL
     stop("File", hdf5_filename, "must have the file extension *.h5")
   }
 
-  if (verbose) cat("Merge raw count matrices...\t")
+  if (verbose) message("Merge raw count matrices...\t")
   raw.count.matrix.merged <- con$getJointCountMatrix(raw=TRUE)
-  if (verbose) cat("Done.\n")
+  if (verbose) message("Done.\n")
 
   cell.ids <- rownames(raw.count.matrix.merged)
   gene.df <- data.frame(gene=colnames(raw.count.matrix.merged))
@@ -120,16 +120,16 @@ saveConosForScanPy <- function(con, output.path, hdf5_filename, metadata.df=NULL
   metadata.df$Dataset <- as.character(con$getDatasetPerCell()[cell.ids])
 
   if (cm.norm) {
-    if (verbose) cat("Merge count matrices...\t\t")
+    if (verbose) message("Merge count matrices...\t\t")
     count.matrix.merged <- con$getJointCountMatrix(raw=FALSE)
-    if (verbose) cat("Done.\n")
+    if (verbose) message("Done.\n")
   }
 
   if (embedding){
-    if (verbose) cat("Save the embedding...\t\t")
+    if (verbose) message("Save the embedding...\t\t")
     if (length(con$embedding)>1) {
       embedding.df <- con$embedding[cell.ids,] %>% as.data.frame()
-      if (verbose) cat("Done.\n")
+      if (verbose) message("Done.\n")
     } else {
       warning("\n No embedding found in the conos object. Skipping... \n")
       embedding <- FALSE
@@ -139,31 +139,31 @@ saveConosForScanPy <- function(con, output.path, hdf5_filename, metadata.df=NULL
 
   # Create a batch-free embedding that can be used instead of PCA space
   if (pseudo.pca) {
-    if (verbose) cat("Create psudo-PCA space...\t")
+    if (verbose) message("Create psudo-PCA space...\t")
     pseudopca.df <- con$embedGraph(target.dims=n.dims, method="largeVis", verbose=FALSE)[cell.ids, ] %>% as.data.frame()
-    if (verbose) cat("Done.\n")
+    if (verbose) message("Done.\n")
   }
 
   if (pca){
-    if (verbose) cat("Save PCA space...\t\t")
+    if (verbose) message("Save PCA space...\t\t")
     pca.df <- pcaFromConos(con$samples, ncomps=n.dims, n.odgenes=2000, verbose=FALSE) %>% as.data.frame()
-    if (verbose) cat("Done.\n")
+    if (verbose) message("Done.\n")
   }
 
   if (alignment.graph){
-    if (verbose) cat("Save graph matrices...\t\t")
+    if (verbose) message("Save graph matrices...\t\t")
     if (!is.null(con$graph)) {
       graph.conn <- igraph::as_adjacency_matrix(con$graph, attr="weight")[cell.ids, cell.ids]
       graph.dist <- graph.conn
       graph.dist@x <- 1 - graph.dist@x
-      if (verbose) cat("Done.\n")
+      if (verbose) message("Done.\n")
     } else {
       warning("\n No graph found in the conos object. Skipping... \n")
       alignment.graph <- FALSE
     }
   }
 
-  if (verbose) cat("Write data to disk...\t\t")
+  if (verbose) message("Write data to disk...\t\t")
   ## create HDF5 file
   total_hdf5file_path = paste0(output.path, "/", hdf5_filename)
   rhdf5::h5createFile(total_hdf5file_path)
@@ -213,7 +213,7 @@ saveConosForScanPy <- function(con, output.path, hdf5_filename, metadata.df=NULL
     rhdf5::h5write(graph.dist@i, total_hdf5file_path, "graph_distances/indices") 
     rhdf5::h5write(graph.dist@p, total_hdf5file_path, "graph_distances/indptr") 
   }
-  if (verbose) cat("All Done!")
+  if (verbose) message("All Done!")
 }
 
 #' Create and preprocess a Seurat object
@@ -288,11 +288,11 @@ velocityInfoConos <- function(cms.list, con, clustering=NULL, groups=NULL, n.odg
     stop("No embedding found in the conos object. Run 'con$embedGraph()' before running this function.")
   }
 
-  if (verbose) cat("Merging raw count matrices...\n")
+  if (verbose) message("Merging raw count matrices...\n")
   # Merge samples to get names of relevant cells and genes
   raw.count.matrix.merged <- con$getJointCountMatrix(raw=TRUE)
 
-  if (verbose) cat("Merging velocity files...\n")
+  if (verbose) message("Merging velocity files...\n")
   # Intersect genes and cells between the conos object and all the velocity files
   cms.list <- lapply(cms.list, prepareVelocity, genes=colnames(raw.count.matrix.merged), cells=rownames(raw.count.matrix.merged))
   # Keep only genes present in velocity files from all the samples
@@ -309,7 +309,7 @@ velocityInfoConos <- function(cms.list, con, clustering=NULL, groups=NULL, n.odg
   nmat <- nmat[,order(match(colnames(nmat), rownames(emb)))]
   smat <- smat[,order(match(colnames(smat), rownames(emb)))]
 
-  if (verbose) cat("Calculating cell distances...\n")
+  if (verbose) message("Calculating cell distances...\n")
   # Get PCA results for all the samples from the conos object
   pcs <- pcaFromConos(con$samples, n.odgenes=n.odgenes)
   # Again, keep the order of cells consistent
@@ -317,12 +317,12 @@ velocityInfoConos <- function(cms.list, con, clustering=NULL, groups=NULL, n.odg
   # Calculate the cell distances based on correlation
   cell.dist <- as.dist(1 - velocyto.R::armaCor(t(pcs)))
 
-  if (verbose) cat("Filtering velocity...\n")
+  if (verbose) message("Filtering velocity...\n")
   emat %<>% velocyto.R::filter.genes.by.cluster.expression(groups, min.max.cluster.average=min.max.cluster.average.emat)
   nmat %<>% velocyto.R::filter.genes.by.cluster.expression(groups, min.max.cluster.average=min.max.cluster.average.nmat)
   smat %<>% velocyto.R::filter.genes.by.cluster.expression(groups, min.max.cluster.average=min.max.cluster.average.smat)
 
-  if (verbose) cat("All Done!")
+  if (verbose) message("All Done!")
   return(list(cell.dist=cell.dist, emat=emat, nmat=nmat, smat=smat, cell.colors=cell.colors, emb=emb))
 }
 
@@ -353,7 +353,7 @@ pcaFromConos <- function(p2.list, data.type='counts', k=30, ncomps=100, n.odgene
   od.genes <- commonOverdispersedGenes(p2.list, n.odgenes, verbose = FALSE)
   if(length(od.genes)<5) return(NULL)
 
-  if(verbose) cat('Calculating PCs for',length(p2.list),' datasets...\n')
+  if(verbose) message('Calculating PCs for',length(p2.list),' datasets...\n')
 
   # Get scaled matrices from a list of pagoda2 objects
   sm <- scaledMatrices(p2.list, data.type=data.type, od.genes=od.genes, var.scale=TRUE)
@@ -386,9 +386,9 @@ convertToPagoda2 <- function(con, n.pcs=100, n.odgenes=2000, verbose=TRUE, ...) 
     Pagoda2$new(n.cores=con$n.cores, verbose=verbose, ...)
 
   if (n.pcs > 0) {
-    if (verbose) cat("Estimating PCA... ")
+    if (verbose) message("Estimating PCA... ")
     p2$reductions$PCA <- pcaFromConos(con$samples, ncomps=n.pcs, n.odgenes=n.odgenes, verbose=FALSE)
-    if (verbose) cat("Done\n")
+    if (verbose) message("Done\n")
   }
 
   p2$graphs$conos <- con$graph

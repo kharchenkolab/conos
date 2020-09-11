@@ -142,7 +142,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
 
       # determine inter-sample mapping
-      if(verbose) cat('inter-sample links using ',matching.method,' ');
+      if(verbose) message('inter-sample links using ',matching.method,' ');
       cached.pairs <- self$pairs[[space]]
       cor.base <- 1 + min(1, alignment.strength * 10)
       mnnres <- papply(1:ncol(sn.pairs), function(j) {
@@ -227,11 +227,11 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         }
 
         
-        if(verbose) cat(".")
+        if(verbose) message(".")
         return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=mnn@x,stringsAsFactors=FALSE))
       },n.cores=self$n.cores,mc.preschedule=TRUE)
 
-      if(verbose) cat(" done\n")
+      if(verbose) message(" done\n")
       ## Merge the results into a edge table
       el <- do.call(rbind,mnnres)
       el$type <- 1; # encode connection type 1- intersample, 0- intrasample
@@ -242,17 +242,17 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         }
         el <- rbind(el,getLocalEdges(local.neighbors))
       }
-      if(verbose) cat('building graph .')
+      if(verbose) message('building graph .')
       el <- el[el[,3]>0,];
       g  <- graph_from_edgelist(as.matrix(el[,c(1,2)]), directed =FALSE)
       E(g)$weight <- el[,3]
       E(g)$type <- el[,4]
       
-      if(verbose) cat('.')
+      if(verbose) message('.')
 
       # collapse duplicate edges
       g <- simplify(g, edge.attr.comb=list(weight="sum", type = "first"))
-      if(verbose) cat('done\n')
+      if(verbose) message('done\n')
 
       if (!is.null(balancing.factor.per.sample)) {
         if (is.null(balancing.factor.per.cell)) {
@@ -264,7 +264,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       }
 
       if (balance.edge.weights || !is.null(balancing.factor.per.cell)) {
-        if(verbose) cat('balancing edge weights ');
+        if(verbose) message('balancing edge weights ');
 
         if (is.null(balancing.factor.per.cell)) {
           balancing.factor.per.cell <- self$getDatasetPerCell()
@@ -275,7 +275,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
                                        same.factor.downweight=same.factor.downweight) %>%
           igraph::graph_from_adjacency_matrix(mode="undirected", weighted=TRUE)
 
-        if(verbose) cat('done\n');
+        if(verbose) message('done\n');
       }
       self$graph <- g;
       return(invisible(g))
@@ -297,7 +297,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       }
 
       if (append.specificity.metrics) {
-        if (verbose) cat("Estimating specificity metrics\n")
+        if (verbose) message("Estimating specificity metrics\n")
 
         cm.merged <- self$getJointCountMatrix(raw=TRUE)
         groups.clean <- groups %>% .[!is.na(.)] %>% .[names(.) %in% rownames(cm.merged)]
@@ -307,7 +307,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           sccore::plapply(function(n) appendSpecificityMetricsToDE(de.genes[[n]], groups.clean, n, p2.counts=cm.merged, append.auc=append.auc), progress=verbose, n.cores=n.cores)
       }
 
-      if (verbose) cat("All done!\n")
+      if (verbose) message("All done!\n")
 
       return(de.genes)
     },
@@ -352,14 +352,14 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           sg <- induced_subgraph(g,vi)
           method(sg,...)
         }
-        if(verbose) { cat("running",stability.subsamples,"subsampling iterations ... ")}
+        if(verbose) { message("running ",stability.subsamples," subsampling iterations ... ")}
         if(is.null(sr)) {
           sr <- papply(1:stability.subsamples,function(i) subset.clustering(self$graph,f=stability.subsampling.fraction,seed=i),n.cores=self$n.cores)
         }
 
-        if(verbose) { cat("done\n")}
+        if(verbose) { message("done\n")}
 
-        if(verbose) cat("calculating flat stability stats ... ")
+        if(verbose) message("calculating flat stability stats ... ")
         # Jaccard coefficient for each cluster against all, plus random expecctation
         jc.stats <- do.call(rbind,conos:::papply(sr,function(o) {
           p1 <- membership(o);
@@ -372,14 +372,14 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         },n.cores=self$n.cores,mc.preschedule=TRUE))
 
         # Adjusted rand index
-        if(verbose) cat("adjusted Rand ... ")
+        if(verbose) message("adjusted Rand ... ")
         ari <- unlist(conos:::papply(sr,function(o) { ol <- membership(o); clues::adjustedRand(as.integer(ol),as.integer(cls.groups[names(ol)]),randMethod='HA') },n.cores=self$n.cores))
-        if(verbose) cat("done\n");
+        if(verbose) message("done\n");
 
         res$stability <- list(flat=list(jc=jc.stats,ari=ari))
 
         # hierarchical measures
-        if(verbose) cat("calculating hierarchical stability stats ... ")
+        if(verbose) message("calculating hierarchical stability stats ... ")
         if(is.hierarchical(cls)) {
           # hierarchical to hierarchical stability analysis - cut reference
           # determine hierarchy of clusters (above the cut)
@@ -396,18 +396,18 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           clm <- t.get.walktrap.upper.merges(cls)
           res$stability$upper.tree <- clm
 
-          if(verbose) cat("tree Jaccard ... ")
+          if(verbose) message("tree Jaccard ... ")
           jc.hstats <- do.call(rbind, papply(sr,function(z) bestClusterThresholds(z,cls.groups,clm)$threshold, n.cores=self$n.cores))
         } else {
           # compute cluster hierarchy based on cell mixing (and then something)
           # assess stability for that hierarchy (to visualize internal node stability)
           # for the original clustering and every subsample clustering,
-          if(verbose) cat("upper clustering ... ")
+          if(verbose) message("upper clustering ... ")
           cgraph <- getClusterGraph(self$graph,cls.groups,plot=FALSE,normalize=FALSE)
           chwt <- walktrap.community(cgraph,steps=9)
           clm <- igraph:::complete.dend(chwt,FALSE)
 
-          if(verbose) cat("clusterTree Jaccard ... ")
+          if(verbose) message("clusterTree Jaccard ... ")
           jc.hstats <- do.call(rbind, papply(sr,function(st1) {
             mf <- membership(st1); mf <- as.factor(setNames(as.character(mf),names(mf)))
             st1g <- getClusterGraph(self$graph,mf,plot=FALSE,normalize=TRUE)
@@ -422,7 +422,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         res$stability$upper.tree <- clm
         res$stability$sr <- sr
         res$stability$hierarchical <- list(jc=jc.hstats);
-        if(verbose) cat("done\n");
+        if(verbose) message("done\n");
 
       }
 
@@ -830,7 +830,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       sample.names <- names(self$samples);
       if(!is.null(exclude.samples)) {
         mi <- sample.names %in% exclude.samples;
-        if(verbose) { cat("excluded", sum(mi), "out of", length(sample.names), "samples, based on supplied exclude.samples\n") }
+        if(verbose) { message("excluded ", sum(mi), " out of ", length(sample.names), " samples, based on supplied exclude.samples\n") }
         sample.names <- sample.names[!mi];
       }
 
@@ -845,7 +845,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           cbind(sample.names[selected.ids %% length(sample.names) + 1]) %>%
           t()
 
-        if(verbose) cat("Use", ncol(sn.pairs), "pairs, based on the passed exclude.pairs\n")
+        if(verbose) message("Use ", ncol(sn.pairs), " pairs, based on the passed exclude.pairs\n")
       } else {
         sn.pairs <- combn(sample.names, 2);
       }
@@ -858,9 +858,9 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       # try reverse match as well
       nm <- match(apply(sn.pairs[c(2,1),,drop=FALSE],2,paste,collapse='.vs.'),names(self$pairs[[space]]));
       mi[which(!is.na(nm))] <- na.omit(nm);
-      if(verbose) cat('found',sum(!is.na(mi)),'out of',length(mi),'cached',space,' space pairs ... ')
+      if(verbose) message('found ',sum(!is.na(mi)),' out of ',length(mi),' cached ',space,' space pairs ... ')
       if(any(is.na(mi))) { # some pairs are missing
-        if(verbose) cat('running',sum(is.na(mi)),'additional',space,' space pairs ')
+        if(verbose) message('running ',sum(is.na(mi)),' additional ',space,' space pairs ')
         xl2 <- papply(which(is.na(mi)), function(i) {
           if(space=='CPCA') {
             xcp <- quickCPCA(self$samples[sn.pairs[,i]],data.type=data.type,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale, score.component.variance=score.component.variance)
@@ -873,7 +873,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           } else if (space == 'CCA' || space=='PMA') {
             xcp <- quickCCA(self$samples[sn.pairs[,i]],data.type=data.type,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale, score.component.variance=score.component.variance,PMA=(space=='PMA'))
           }
-          if(verbose) cat('.')
+          if(verbose) message('.')
           xcp
         },n.cores=self$n.cores,mc.preschedule=(space=='PCA'));
 
@@ -892,7 +892,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         warning("unable to get complete set of pair comparison results")
         sn.pairs <- sn.pairs[,!is.na(mi),drop=FALSE]
       }
-      if(verbose) cat(" done\n");
+      if(verbose) message(" done\n");
       return(invisible(sn.pairs))
     }
   )
