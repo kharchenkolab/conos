@@ -27,21 +27,21 @@ plotEmbeddings(
 
 \item{groups}{vector of cluster labels, names contain cell names (default=NULL)}
 
-\item{colors}{vector of numbers, which must be shouwn with point colors, names contain cell names. (default=NULL) This argument is ignored if groups are provided.}
+\item{colors}{vector of numbers, which must be shouwn with point colors, names contain cell names (default=NULL). This argument is ignored if groups are provided.}
 
 \item{ncol}{number of columns in the panel}
 
 \item{nrow}{number of rows in the panel}
 
-\item{raster}{boolean whether layer with the points be rasterized (default=FALSE) Setting of this argument to TRUE is useful when you need to export a plot with large number of points}
+\item{raster}{boolean whether layer with the points be rasterized (default=FALSE). Setting of this argument to TRUE is useful when you need to export a plot with large number of points}
 
 \item{panel.size}{vector with two numbers, which specified (width, height) of the panel in inches. Ignored if raster == FALSE.}
 
 \item{adjust.func}{function to adjust plots before combining them to single panel. Can be used, for example, to provide color pallette of guides of the plots.}
 
-\item{raster.width}{width of the plot in inches. (default=NULL) Ignored if raster == FALSE.}
+\item{raster.width}{width of the plot in inches. (default=NULL). Ignored if raster == FALSE.}
 
-\item{raster.height}{height of the plot in inches. (default=NULL) Ignored if raster == FALSE.}
+\item{raster.height}{height of the plot in inches. (default=NULL). Ignored if raster == FALSE.}
 
 \item{subset}{a subset of cells to show (vector of cell names)}
 

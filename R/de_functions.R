@@ -163,7 +163,7 @@ saveDEasCSV <- function(de.results=NULL,saveprefix=NULL,gene.metadata=NULL) {
     ## find errors
     n.error <- sum(unlist(lapply(de.results,is.error)))
     if(n.error > 0) {
-        cat("Warning: ", n.error, " of ", length(de.results), ' results have returned an error; ignoring...\n')
+        message("Warning: ", n.error, " of ", length(de.results), ' results have returned an error; ignoring...\n')
     }
 
     de.results <- de.results[!unlist(lapply(de.results,is.error))]
@@ -216,7 +216,7 @@ saveDEasJSON <- function(de.results = NULL, saveprefix = NULL, gene.metadata = N
     ## Find de instances that didn't work (usually because cell type is absent from one or more sample types)
     n.error <- sum(unlist(lapply(de.results, is.error)))
     if(n.error > 0) {
-        cat("Warning: ", n.error,' of ', length(de.results) ,' results have returned an error; ignoring...\n')
+        message("Warning: ", n.error,' of ', length(de.results),' results have returned an error; ignoring...\n')
     }
 
     ## get the de results that worked
@@ -460,7 +460,7 @@ getDifferentialGenesP2 <- function(p2.samples, groups, z.threshold=3.0, upregula
 
   groups %<>% as.character() %>% setNames(names(groups))
 
-  if (verbose) cat("Estimating marker genes per sample\n")
+  if (verbose) message("Estimating marker genes per sample\n")
   markers.per.sample <- sccore::plapply(p2.samples, function(p2) {
     if (length(intersect(rownames(p2$counts), names(groups))) < 3) {
       list()
@@ -473,7 +473,7 @@ getDifferentialGenesP2 <- function(p2.samples, groups, z.threshold=3.0, upregula
     }
   })
 
-  if (verbose) cat("Aggregating marker genes\n")
+  if (verbose) message("Aggregating marker genes\n")
   markers.per.type <- unique(groups) %>% setNames(., .) %>%
     lapply(function(id) lapply(markers.per.sample, `[[`, id) %>% .[!sapply(., is.null)])
   markers.per.type = sccore::plapply(markers.per.type, aggregateDEMarkersAcrossDatasets, z.threshold=z.threshold, upregulated.only=upregulated.only)

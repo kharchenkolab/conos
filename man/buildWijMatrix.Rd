@@ -15,9 +15,9 @@ buildWijMatrix(x, threads = NULL, perplexity = 50)
 \arguments{
 \item{x}{A sparse matrix}
 
-\item{threads}{The maximum number of threads to spawn. Determined automatically if \code{NULL} (the default).}
+\item{threads}{numeric The maximum number of threads to spawn. Determined automatically if \code{NULL} (default=NULL)}
 
-\item{perplexity}{Given perplexity.}
+\item{perplexity}{numeric Given perplexity (default=50)}
 }
 \value{
 A \code{list} with the following components: \describe{
