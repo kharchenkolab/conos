@@ -33,7 +33,7 @@ In essense, Conos will take a large, potentially heterogeneous panel of samples 
 Conos is robust to heterogeneity of samples within collection, as well as noise. The ability to resolve finer subpopulation structure improves as the size of the panel increases.
 
 * What do I need to run it?
-Conos is an R package. Currently, it supports pre-processing (filtering, normalization, etc.) of the individual datasets using [pagoda2](https://github.com/hms-dbmi/pagoda2) or [Seurat](https://satijalab.org/seurat/).
+Conos is an R package. Currently, it supports pre-processing (filtering, normalization, etc.) of the individual datasets using [pagoda2](https://github.com/kharchenkolab/pagoda2) or [Seurat](https://satijalab.org/seurat/).
 
 ## Installation
 
@@ -42,16 +42,16 @@ Native installations have been tested in Linux. Normal installation should take 
 ### Native installation
 
 Please make sure devtools package is installed (use `install.packages("devtools")` to install it if needed).
-Then install [pagoda2](https://github.com/hms-dbmi/pagoda2) (or Seurat), then install conos:
+Then install [pagoda2](https://github.com/kharchenkolab/pagoda2) (or Seurat), then install conos:
 ```r
-devtools::install_github("hms-dbmi/conos")
+devtools::install_github("kharchenkolab/conos")
 ```
 
-If you have problems with `sccore` package, run `devtools::install_github("hms-dbmi/sccore")` before installing Conos.
+If you have problems with the `sccore` package, run `devtools::install_github("kharchenkolab/sccore")` before installing Conos.
 
 #### System dependencies
 
-The dependencies are inherited from [pagoda2](https://github.com/hms-dbmi/pagoda2):
+The dependencies are inherited from [pagoda2](https://github.com/kharchenkolab/pagoda2):
 
 ##### Ubuntu Dependencies
 
@@ -69,7 +69,7 @@ yum install openssl-devel libcurl-devel
 
 ##### OS X
 
-It is possible to install pagoda2 and Conos on OS X, however some users have reported issues with OpenMP configuration. For instructions see [pagoda2](https://github.com/hms-dbmi/pagoda2#mac-dependencies) readme.
+It is possible to install pagoda2 and Conos on OS X, however some users have reported issues with OpenMP configuration. For instructions see [pagoda2](https://github.com/kharchenkolab/pagoda2#mac-dependencies) readme.
 
 ### Installing Conos as Docker Container
 
@@ -79,7 +79,7 @@ If your system configuration is making it difficult to install Conos natively, a
 
 #### Ready-to-run docker image
 
-The docker distribution has the latest version and also includes the [Pagoda2 package](https://github.com/hms-dbmi/pagoda2). To start a docker container, first [install docker](https://docs.docker.com/install/) on your platform and then start the pagoda container with the following command in the shell:
+The docker distribution has the latest version and also includes the [Pagoda2 package](https://github.com/kharchenkolab/pagoda2). To start a docker container, first [install docker](https://docs.docker.com/install/) on your platform and then start the pagoda container with the following command in the shell:
 
 ```
 docker run -p 8787:8787 -e PASSWORD=pass docker.io/vpetukhov/conos:latest
@@ -89,12 +89,12 @@ The first time you run the command it will download several images so make sure 
 
 **Note:** if you already downloaded the docker image and want to update it, please run 
 ```
-docker pull vpetukhov/conos:latest
+docker pull pkharchenkolab/conos:latest
 ```
 
 #### Building docker image on the fly
 
-If you want to build image by your own, download the [Dockerfile](https://github.com/hms-dbmi/conos/blob/master/dockers/Dockerfile) (available in this repo under `/dockers`) and run to following command to build it:
+If you want to build image by your own, download the [Dockerfile](https://github.com/kharchenkolab/conos/blob/master/dockers/Dockerfile) (available in this repo under `/dockers`) and run to following command to build it:
 ```
 docker build -t conos .
 ```
