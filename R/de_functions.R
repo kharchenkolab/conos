@@ -64,9 +64,18 @@ rawMatricesWithCommonGenes <- function(con.obj, sample.groups=NULL) {
   return(lapply(raw.mats, function(x) {x[,common.genes]}))
 }
 
-collapseCellsByType <- function(cm, groups, min.cell.count=10) {
+collapseCellsByType <- function(cm, groups, min.cell.count=10, max.cell.count=Inf) {
   groups <- as.factor(groups);
-  cl <- factor(groups[match(rownames(cm),names(groups))],levels=levels(groups));
+  cl <- setNames(factor(groups[match(rownames(cm),names(groups))],levels=levels(groups)),rownames(cm));
+  if(is.finite(max.cell.count)) {
+    vc <- unlist(tapply(names(cl),cl,function(nn) {
+      if(length(nn)>max.cell.count) { nn <- sample(nn,max.cell.count) }
+      return(nn)
+    }))
+    cl <- cl[names(cl) %in% vc]
+    cm <- cm[names(cl),]
+  }
+
   tc <- colSumByFactor(cm,cl);
   tc <- tc[-1,,drop=FALSE]  # omit NA cells
   tc[table(cl)>=min.cell.count,,drop=FALSE]
@@ -96,21 +105,26 @@ is.error <- function (x) {
 #' @param groups factor specifying cell types
 #' @param sample.groups a list of two character vector specifying the app groups to compare
 #' @param cooks.cutoff cooksCutoff for DESeq2
+#' @param ref.level the reference level of the sample.groups against which the comparison should be made (default, NULL, will pick the first one)
+#' @param min.cell.count minimal number of cells per cluster for a sample to be taken into account in a comparison
+#' @param max.cell.count maximal number of cells per cluster per sample to include in a comparison (useful for comparing the number of DE genes between cell types)
+#' @param test which DESeq2 test to use (options: "LRT" (default), "Wald")
 #' @param independent.filtering independentFiltering for DESeq2
 #' @param n.cores number of cores
 #' @param cluster.sep.chr character string of length 1 specifying a delimiter to separate cluster and app names
 #' @param return.details return detals
 #' @export getPerCellTypeDE
-getPerCellTypeDE <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cutoff = FALSE, ref.level = NULL, min.cell.count = 10,
+getPerCellTypeDE <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cutoff = FALSE, ref.level = NULL, min.cell.count = 10, max.cell.count=Inf, test="LRT",
                              independent.filtering = FALSE, n.cores=1, cluster.sep.chr = '<!!>',return.details=TRUE) {
   validatePerCellTypeParams(con.obj, groups, sample.groups, ref.level, cluster.sep.chr)
 
   ## Generate a summary dataset collapsing the cells of the same type in each sample
   ## and merging everything in one matrix
   aggr2 <- rawMatricesWithCommonGenes(con.obj, sample.groups) %>%
-    lapply(collapseCellsByType, groups=groups, min.cell.count=min.cell.count) %>%
+    lapply(collapseCellsByType, groups=groups, min.cell.count=min.cell.count, max.cell.count=max.cell.count) %>%
     rbindDEMatrices(cluster.sep.chr=cluster.sep.chr)
   gc()
+
   ## For every cell type get differential expression results
   de.res <- papply(sn(levels(groups)), function(l) {
     tryCatch({
@@ -130,7 +144,11 @@ getPerCellTypeDE <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cut
       if (length(unique(as.character(meta$group))) < 2)
         stop('The cluster is not present in both conditions')
       dds1 <- DESeq2::DESeqDataSetFromMatrix(cm,meta,design=~group)
-      dds1 <- DESeq2::DESeq(dds1)
+      if(test=="LRT") {
+        dds1 <- DESeq2::DESeq(dds1,test="LRT", reduced = ~ 1)
+      } else { # defaults to Wald 
+        dds1 <- DESeq2::DESeq(dds1)
+      }
       res1 <- DESeq2::results(dds1, cooksCutoff = cooks.cutoff, independentFiltering = independent.filtering)
       res1 <- as.data.frame(res1)
       res1 <- res1[order(res1$padj,decreasing = FALSE),]
