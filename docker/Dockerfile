@@ -1,4 +1,4 @@
-FROM rocker/tidyverse:3.5.1
+FROM rocker/tidyverse:4.0.0
 
 RUN apt-get update --yes && apt-get install --no-install-recommends --yes \
   build-essential \
@@ -23,10 +23,10 @@ RUN apt-get update --yes && apt-get install --no-install-recommends --yes \
   libhdf5-dev
 
 RUN \
-  R -e 'chooseCRANmirror(ind=52); install.packages(c("RcppEigen", "urltools", "Rtsne","BiocManager"))' && \
+  R -e 'chooseCRANmirror(ind=52); install.packages(c("Rcpp", "RcppEigen", "urltools", "Rtsne","BiocManager", "igraph"))' && \
   R -e 'install.packages("Seurat")'
 
 RUN \
-  R -e 'devtools::install_github("hms-dbmi/pagoda2")' && \
+  R -e 'devtools::install_github("kharchenkolab/pagoda2")' && \
   R -e 'BiocManager::install(c("GO.db", "org.Hs.eg.db","org.Mm.eg.db", "pcaMethods","DESeq2","BiocGenerics"), suppressUpdates=TRUE);' && \
-  R -e 'devtools::install_github("hms-dbmi/conos")'
+  R -e 'devtools::install_github("kharchenkolab/conos")'

@@ -9,7 +9,7 @@ The class encompasses sample collections, providing methods for calculating and 
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
-\item{\code{samples}}{list of samples (Pagoda 2 or Seurat objects)}
+\item{\code{samples}}{list of samples (Pagoda2 or Seurat objects)}
 
 \item{\code{pairs}}{pairwise alignment results}
 
@@ -24,6 +24,8 @@ The class encompasses sample collections, providing methods for calculating and 
 \item{\code{n.cores}}{number of cores}
 
 \item{\code{misc}}{list with unstractured additional info}
+
+\item{\code{override.conos.plot.theme}}{}
 }
 \if{html}{\out{</div>}}
 }
@@ -51,16 +53,33 @@ The class encompasses sample collections, providing methods for calculating and 
 \if{html}{\out{<a id="method-new"></a>}}
 \if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
+initialize Conos class
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Conos$new(
   x,
   ...,
-  n.cores = parallel::detectCores(logical = F),
+  n.cores = parallel::detectCores(logical = FALSE),
   verbose = TRUE,
   override.conos.plot.theme = FALSE
 )}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{x}}{a named list of pagoda2 or Seurat objects (one per sample)}
+
+\item{\code{n.cores}}{number of cores (default=parallel::detectCores(logical=FALSE))}
+
+\item{\code{verbose}}{provide verbose output}
+
+\item{\code{override.conos.plot.theme}}{(default=FALSE)}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+a new 'Conos' object
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-addSamples"></a>}}
@@ -77,6 +96,8 @@ initialize or add a set of samples to the conos panel. Note: this will simply ad
 \item{\code{x}}{a named list of pagoda2 or Seurat objects (one per sample)}
 
 \item{\code{replace}}{whether the existing samples should be purged before adding new ones}
+
+\item{\code{verbose}}{provide verbose output}
 }
 \if{html}{\out{</div>}}
 }
@@ -88,6 +109,7 @@ invisible view of the full sample list
 \if{html}{\out{<a id="method-buildGraph"></a>}}
 \if{latex}{\out{\hypertarget{method-buildGraph}{}}}
 \subsection{Method \code{buildGraph()}}{
+Build the joint graph that encompasses all the samples, establishing weighted inter-sample cell-to-cell links
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Conos$buildGraph(
   k = 15,
@@ -113,6 +135,11 @@ invisible view of the full sample list
   decoy.threshold = 1,
   n.decoys = k * 2,
   score.component.variance = FALSE,
+  snn = FALSE,
+  snn.quantile = 0.9,
+  min.snn.jaccard = 0,
+  min.snn.weight = 0,
+  snn.k = k.self,
   balance.edge.weights = FALSE,
   balancing.factor.per.cell = NULL,
   same.factor.downweight = 1,
@@ -121,27 +148,124 @@ invisible view of the full sample list
 )}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{k}}{(default=15)}
+
+\item{\code{k}}{k.self (default=10)}
+
+\item{\code{k}}{k.self.weight (default=0.1)}
+
+\item{\code{k}}{alignment.strength (default=NULL)}
+
+\item{\code{k}}{space (default='PCA')}
+
+\item{\code{k}}{matching.method (default=='mNN')}
+
+\item{\code{k}}{metric (default='angular')}
+
+\item{\code{k}}{k1 (default=k)}
+
+\item{\code{k}}{data.type (default='counts')}
+
+\item{\code{k}}{l2.sigma (default=1e5)}
+
+\item{\code{k}}{var.scale (default=TRUE)}
+
+\item{\code{k}}{ncomps (default=40)}
+
+\item{\code{k}}{n.odgenes (default=2000)}
+
+\item{\code{k}}{neighborhood.average (default=FALSE)}
+
+\item{\code{k}}{neighborhood.average.k (default=10)}
+
+\item{\code{k}}{matching.mask (default=NULL)}
+
+\item{\code{k}}{exclude.samples (default=NULL)}
+
+\item{\code{k}}{common.centering (default=TRUE)}
+
+\item{\code{k}}{base.groups (default=NULL)}
+
+\item{\code{k}}{append.global.axes (default=TRUE)}
+
+\item{\code{k}}{append.decoys (default=TRUE)}
+
+\item{\code{k}}{decoy.threshold (default=1)}
+
+\item{\code{k}}{n.decoys (default=k*2)}
+
+\item{\code{k}}{score.component.variance (default=FALSE)}
+
+\item{\code{k}}{balance.edge.weights (default=FALSE)}
+
+\item{\code{k}}{balancing.factor.per.cell (default=NULL)}
+
+\item{\code{k}}{same.factor.downweight (default=1.0)}
+
+\item{\code{k}}{k.same.factor (default=k)}
+
+\item{\code{k}}{balancing.factor.per.sample (default=NULL)}
+
+\item{\code{verbose}}{provide verbose output}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+joint graph to be used for downstream analysis
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-getDifferentialGenes"></a>}}
 \if{latex}{\out{\hypertarget{method-getDifferentialGenes}{}}}
 \subsection{Method \code{getDifferentialGenes()}}{
+Calculates differential genes. Estimates base mean, z-score, p-values, specificity, precision, expressionFraction, AUC (if append.auc=TRUE)
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Conos$getDifferentialGenes(
   clustering = NULL,
   groups = NULL,
   z.threshold = 3,
-  upregulated.only = F,
-  verbose = T,
+  upregulated.only = FALSE,
+  verbose = TRUE,
   plot = FALSE,
   n.genes.to.show = 10,
   inner.clustering = FALSE,
   append.specificity.metrics = TRUE,
-  append.auc = FALSE,
+  append.auc = TRUE,
   n.cores = self$n.cores
 )}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{clustering}}{name of the clustering to use}
+
+\item{\code{groups}}{a factor on cells to use for coloring.}
+
+\item{\code{z.threshold}}{(default=3.0)}
+
+\item{\code{upregulated.only}}{(default=FALSE)}
+
+\item{\code{verbose}}{provide verbose output}
+
+\item{\code{n.genes.to.show}}{(default=10)}
+
+\item{\code{inner.clustering}}{(default=FALSE)}
+
+\item{\code{append.specificity.metrics}}{(default=TRUE)}
+
+\item{\code{append.auc}}{(default=FALSE)}
+
+\item{\code{n.cores}}{number of cores (default=parallel::detectCores(logical=FALSE))}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+list of DE results
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-findCommunities"></a>}}
@@ -172,6 +296,8 @@ find joint communities
 
 \item{\code{name}}{optional name of the clustering result (will default to the algorithm name)}
 
+\item{\code{verbose}}{provide verbose output}
+
 \item{\code{...}}{extra parameters are passed to the specified community detection method}
 }
 \if{html}{\out{</div>}}
@@ -200,6 +326,28 @@ plot panel of individual embeddings per sample with joint coloring
 )}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{clustering}}{name of the clustering to use}
+
+\item{\code{groups}}{a factor on cells to use for coloring.}
+
+\item{\code{colors}}{a color factor (named with cell names) use for cell coloring.}
+
+\item{\code{gene}}{show expression of a gene.}
+
+\item{\code{use.common.embedding}}{(default=FALSE)}
+
+\item{\code{embedding.type}}{(default=NULL)}
+
+\item{\code{adj.list}}{(default=NULL)}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+ggplot2 object with the panel of plots
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-embedGraph"></a>}}
@@ -225,7 +373,7 @@ Generate an embedding of a joint graph.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{method}}{embedding method. Currently largeVis and UMAP are supported}
+\item{\code{method}}{embedding method. Currently 'largeVis' and 'UMAP' are supported}
 
 \item{\code{M, }}{gamma, alpha, sgd__batched - largeVis parameters (defaults are 1, 1, 0.01, 1e8 respectively).}
 
@@ -233,15 +381,18 @@ Generate an embedding of a joint graph.
 
 \item{\code{seed}}{random seed for the largeVis algorithm. Default: 1.}
 
-\item{\code{verbose}}{verbose mode. Default: TRUE.}
+\item{\code{verbose}}{provide verbose output}
 
-\item{\code{target.dims}}{numer of dimensions for the reduction. Default: 2. Higher dimensions can be used to generate embeddings for subsequent reductions by other methods, such as tSNE}
+\item{\code{target.dims}}{number of dimensions for the reduction. Default: 2. Higher dimensions can be used to generate embeddings for subsequent reductions by other methods, such as tSNE}
 
-\item{\code{n.cores}}{number of cores, overrides class field}
+\item{\code{n.cores}}{number of cores (default=parallel::detectCores(logical=FALSE))}
 
 \item{\code{...}}{additional arguments, passed to UMAP embedding (run ?conos:::embedGraphUmap for more info)}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+joint graph embedding
 }
 }
 \if{html}{\out{<hr>}}
@@ -258,7 +409,7 @@ Plot cluster stability statistics.
 \describe{
 \item{\code{clustering}}{name of the clustering result to show}
 
-\item{\code{what}}{show a specific plot (ari - adjusted rand index, fjc - flat Jaccard, hjc - hierarchical Jaccard, dend - cluster dendrogram)}
+\item{\code{what}}{Show a specific plot (ari - adjusted rand index, fjc - flat Jaccard, hjc - hierarchical Jaccard, dend - cluster dendrogram) (default='all')}
 }
 \if{html}{\out{</div>}}
 }
@@ -284,6 +435,8 @@ Plot joint graph.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
+\item{\code{color.by}}{(default='cluster')}
+
 \item{\code{clustering}}{name of the clustering to use}
 
 \item{\code{groups}}{a factor on cells to use for coloring.}
@@ -295,6 +448,9 @@ Plot joint graph.
 \item{\code{subset}}{a subset of cells to show.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+ggplot2 plot of joint graph
 }
 }
 \if{html}{\out{<hr>}}
@@ -335,9 +491,9 @@ Smooth expression of genes, so they better represent structure of the graph.
 
 \item{\code{name}}{name to save the correction. Default: diffusion.}
 
-\item{\code{verbose}}{verbose mode. Default: TRUE.}
+\item{\code{verbose}}{provide verbose output}
 
-\item{\code{count.matrix}}{alternative gene count matrix to correct. Default: joint count matrix for all datasets.}
+\item{\code{count.matrix}}{alternative gene count matrix to correct (rows: genes, columns: cells; has to be dense matrix). Default: joint count matrix for all datasets.}
 }
 \if{html}{\out{</div>}}
 }
@@ -355,7 +511,7 @@ Estimate labeling distribution for each vertex, based on provided labels.
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{method}}{type of propagation. Either 'diffusion' or 'solver'. 'solver' gives better result
-but has bad asymptotics, so is inappropriate for datasets > 20k cells. Default: 'diffusion.'}
+but has bad asymptotics, so is inappropriate for datasets > 20k cells. (default='diffusion')}
 
 \item{\code{...}}{additional arguments for conos:::propagateLabels* functions}
 }
@@ -369,6 +525,7 @@ matrix with distribution of label probabilities for each vertex by rows.
 \if{html}{\out{<a id="method-getClusterCountMatrices"></a>}}
 \if{latex}{\out{\hypertarget{method-getClusterCountMatrices}{}}}
 \subsection{Method \code{getClusterCountMatrices()}}{
+Estimate per-cluster molecule count matrix by summing up the molecules of each gene for all of the cells in each cluster.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Conos$getClusterCountMatrices(
   clustering = NULL,
@@ -381,9 +538,9 @@ matrix with distribution of label probabilities for each vertex by rows.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{clustering}}{the name of the clustering that should be used}
+\item{\code{clustering}}{name of the clustering to use}
 
-\item{\code{groups}}{explicitly provided cell grouping}
+\item{\code{groups}}{a factor on cells to use for coloring.}
 
 \item{\code{common.genes}}{bring individual sample matrices to a common gene list}
 
@@ -399,19 +556,34 @@ a list of per-sample uniform dense matrices with rows being genes, and columns b
 \if{html}{\out{<a id="method-getDatasetPerCell"></a>}}
 \if{latex}{\out{\hypertarget{method-getDatasetPerCell}{}}}
 \subsection{Method \code{getDatasetPerCell()}}{
+applies 'getCellNames()' on all samples
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Conos$getDatasetPerCell()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+list of cellnames for all samples
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-getJointCountMatrix"></a>}}
 \if{latex}{\out{\hypertarget{method-getJointCountMatrix}{}}}
 \subsection{Method \code{getJointCountMatrix()}}{
+something
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Conos$getJointCountMatrix(raw = FALSE)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{raw}}{If TRUE, return merged "raw" count matrices. Otherwise, return the merged count matrices.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+list of merged count matrices
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-clone"></a>}}

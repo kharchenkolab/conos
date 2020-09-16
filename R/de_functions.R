@@ -107,14 +107,15 @@ is.error <- function (x) {
 #' @param cooks.cutoff cooksCutoff for DESeq2
 #' @param ref.level the reference level of the sample.groups against which the comparison should be made (default, NULL, will pick the first one)
 #' @param min.cell.count minimal number of cells per cluster for a sample to be taken into account in a comparison
+#' @param remove.na boolean If TRUE, remove NAs from DESeq calculations, which often arise as comparisons not possible (default=TRUE)
 #' @param max.cell.count maximal number of cells per cluster per sample to include in a comparison (useful for comparing the number of DE genes between cell types)
 #' @param test which DESeq2 test to use (options: "LRT" (default), "Wald")
 #' @param independent.filtering independentFiltering for DESeq2
 #' @param n.cores number of cores
 #' @param cluster.sep.chr character string of length 1 specifying a delimiter to separate cluster and app names
-#' @param return.details return detals
+#' @param return.details return details
 #' @export getPerCellTypeDE
-getPerCellTypeDE <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cutoff = FALSE, ref.level = NULL, min.cell.count = 10, max.cell.count=Inf, test="LRT",
+getPerCellTypeDE <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cutoff = FALSE, ref.level = NULL, min.cell.count = 10, remove.na=TRUE, max.cell.count=Inf, test="LRT",
                              independent.filtering = FALSE, n.cores=1, cluster.sep.chr = '<!!>',return.details=TRUE) {
   validatePerCellTypeParams(con.obj, groups, sample.groups, ref.level, cluster.sep.chr)
 
@@ -141,9 +142,12 @@ getPerCellTypeDE <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cut
       if (!ref.level %in% levels(meta$group))
         stop('The reference level is absent in this comparison')
       meta$group <- relevel(meta$group, ref=ref.level)
-      if (length(unique(as.character(meta$group))) < 2)
+      if (length(unique(as.character(meta$group))) < 2) {
         stop('The cluster is not present in both conditions')
-      dds1 <- DESeq2::DESeqDataSetFromMatrix(cm,meta,design=~group)
+      }
+      ## check counts
+      checkCountsWholeNumbers(cm)
+      dds1 <- DESeq2::DESeqDataSetFromMatrix(cm, meta, design=~group)
       if(test=="LRT") {
         dds1 <- DESeq2::DESeq(dds1,test="LRT", reduced = ~ 1)
       } else { # defaults to Wald 
@@ -151,8 +155,11 @@ getPerCellTypeDE <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cut
       }
       res1 <- DESeq2::results(dds1, cooksCutoff = cooks.cutoff, independentFiltering = independent.filtering)
       res1 <- as.data.frame(res1)
-      res1 <- res1[order(res1$padj,decreasing = FALSE),]
-      ##
+      res1 <- res1[order(res1$padj, decreasing = FALSE),]
+      ## remove NA values, which exist in log2FoldChange, lfcSE, stat, pvalue, padj
+      if (remove.na){
+        res1 <- res1[!is.na(res1$padj), ]
+      }
       if(return.details) {
         list(res=res1, cm=cm, sample.groups=sample.groups)
       } else {
@@ -175,7 +182,7 @@ saveDEasCSV <- function(de.results=NULL,saveprefix=NULL,gene.metadata=NULL) {
     ## find errors
     n.error <- sum(unlist(lapply(de.results,is.error)))
     if(n.error > 0) {
-        cat("Warning: ", n.error, " of ", length(de.results), ' results have returned an error; ignoring...\n')
+        message("Warning: ", n.error, " of ", length(de.results), ' results have returned an error; ignoring...\n')
     }
 
     de.results <- de.results[!unlist(lapply(de.results,is.error))]
@@ -228,7 +235,7 @@ saveDEasJSON <- function(de.results = NULL, saveprefix = NULL, gene.metadata = N
     ## Find de instances that didn't work (usually because cell type is absent from one or more sample types)
     n.error <- sum(unlist(lapply(de.results, is.error)))
     if(n.error > 0) {
-        cat("Warning: ", n.error,' of ', length(de.results) ,' results have returned an error; ignoring...\n')
+        message("Warning: ", n.error,' of ', length(de.results),' results have returned an error; ignoring...\n')
     }
 
     ## get the de results that worked
@@ -317,9 +324,10 @@ saveDEasJSON <- function(de.results = NULL, saveprefix = NULL, gene.metadata = N
 #' @param cluster.sep.chr character string of length 1 specifying a delimiter to separate cluster and app names
 #' @param return.details logical, return detailed results
 #' @param only.paired only keep samples that that both cell types above the min.cell.count threshold
+#' @param remove.na boolean If TRUE, remove NAs from DESeq calculations (default=TRUE)
 #' @export getBetweenCellTypeDE
 getBetweenCellTypeDE <- function(con.obj, sample.groups =  NULL, groups=NULL, cooks.cutoff = FALSE, refgroup = NULL, altgroup = NULL, min.cell.count = 10,
-                                 independent.filtering = FALSE, cluster.sep.chr = '<!!>',return.details=TRUE, only.paired=TRUE) {
+                                 independent.filtering = FALSE, cluster.sep.chr = '<!!>',return.details=TRUE, only.paired=TRUE, remove.na=TRUE) {
   # TODO: do we really need sample.groups here? They are used in the corrected version for some unknown reason.
   validateBetweenCellTypeParams(con.obj, groups, sample.groups, refgroup, altgroup, cluster.sep.chr)
   ## Get the samples from the panel to use in this comparison
@@ -338,11 +346,16 @@ getBetweenCellTypeDE <- function(con.obj, sample.groups =  NULL, groups=NULL, co
   ## Select the desired samples only
   aggr2.meta$celltype <- relevel(aggr2.meta$celltype, ref = refgroup)
   aggr2 <- aggr2[,rownames(aggr2.meta)]
+  ## check counts
+  checkCountsWholeNumbers(aggr2)
   ## Generate DESeq2 comparison
   dds1 <- DESeq2::DESeqDataSetFromMatrix(aggr2, aggr2.meta, design = ~ library + celltype)
   dds1 <- DESeq2::DESeq(dds1)
   res1 <- DESeq2::results(dds1, cooksCutoff = cooks.cutoff, independentFiltering = independent.filtering)
   res1 <- res1[order(res1$padj,decreasing = FALSE),]
+  if (remove.na){
+    res1 <- res1[!is.na(res1$padj), ]
+  }
   ## Return
   if(return.details) {
     list(res=res1, cm=aggr2, meta = aggr2.meta, refgroup = refgroup, altgroup = altgroup, sample.groups=sample.groups)
@@ -355,8 +368,8 @@ generateDEMatrixMetadata <- function(mtx, refgroup, altgroup, cluster.sep.chr) {
   meta <- data.frame(
     row.names = colnames(mtx),
     sample=colnames(mtx),
-    library=strpart(colnames(mtx),cluster.sep.chr,1,fixed=TRUE),
-    celltype = strpart(colnames(mtx),cluster.sep.chr,2,fixed=TRUE)
+    library=strpart(colnames(mtx), cluster.sep.chr, 1, fixed=TRUE),
+    celltype = strpart(colnames(mtx), cluster.sep.chr, 2, fixed=TRUE)
   )
 
   return(subset(meta, celltype %in% c(refgroup, altgroup)))
@@ -401,6 +414,8 @@ getBetweenCellTypeCorrectedDE <- function(con.obj, sample.groups =  NULL, groups
   aggr2.meta$group <-  factor(tmp1$group[match(as.character(aggr2.meta$library), tmp1$sample)])
   aggr2.meta$group <- relevel(aggr2.meta$group, ref = ref.level)
   rm(tmp1)
+  ## check counts
+  checkCountsWholeNumbers(aggr2)
   ## Generate DESeq2 comparison
   dds1 <- DESeq2::DESeqDataSetFromMatrix(aggr2, aggr2.meta, design = ~ celltype)
   ## Apply the correction based on sample type
@@ -442,14 +457,15 @@ getBetweenCellTypeCorrectedDE <- function(con.obj, sample.groups =  NULL, groups
 #' Takes data.frames with info about DE genes for single cell type and many samples and
 #' returns data.frame with aggregated info for this cell type
 aggregateDEMarkersAcrossDatasets <- function(marker.dfs, z.threshold, upregulated.only) {
-  if (length(marker.dfs) == 0)
+  if (length(marker.dfs) == 0){
     return(data.frame())
+  }
 
   z.scores.per.dataset <- lapply(marker.dfs, function(df) setNames(df$Z, rownames(df)))
   m.vals.per.dataset <- lapply(marker.dfs, function(df) setNames(df$M, rownames(df)))
   gene.union <- lapply(z.scores.per.dataset, names) %>% Reduce(union, .)
-  z.scores <- sapply(z.scores.per.dataset, `[`, gene.union) %>% rowMeans(na.rm=TRUE) %>% setNames(gene.union)
-  m.vals <- sapply(m.vals.per.dataset, `[`, gene.union) %>% rowMeans(na.rm=TRUE) %>% setNames(gene.union)
+  z.scores <- sapply(z.scores.per.dataset, `[`, gene.union) %>% rowMeans(na.rm=TRUE)
+  m.vals <- sapply(m.vals.per.dataset, `[`, gene.union) %>% rowMeans(na.rm=TRUE)
   ro <- order(z.scores,decreasing=TRUE)
   pvals <- dnorm(z.scores)
   res <- data.frame(Gene=names(z.scores), M=m.vals, Z=z.scores, PValue=pvals, PAdj=p.adjust(pvals))[ro,]
@@ -458,11 +474,12 @@ aggregateDEMarkersAcrossDatasets <- function(marker.dfs, z.threshold, upregulate
   return(res[z.filter > z.threshold,])
 }
 
+
 getDifferentialGenesP2 <- function(p2.samples, groups, z.threshold=3.0, upregulated.only=FALSE, verbose=TRUE, n.cores=1) {
 
   groups %<>% as.character() %>% setNames(names(groups))
 
-  if (verbose) cat("Estimating marker genes per sample\n")
+  if (verbose) message("Estimating marker genes per sample\n")
   markers.per.sample <- sccore::plapply(p2.samples, function(p2) {
     if (length(intersect(rownames(p2$counts), names(groups))) < 3) {
       list()
@@ -475,10 +492,24 @@ getDifferentialGenesP2 <- function(p2.samples, groups, z.threshold=3.0, upregula
     }
   })
 
-  if (verbose) cat("Aggregating marker genes\n")
+  if (verbose) message("Aggregating marker genes\n")
   markers.per.type <- unique(groups) %>% setNames(., .) %>%
     lapply(function(id) lapply(markers.per.sample, `[[`, id) %>% .[!sapply(., is.null)])
   markers.per.type = sccore::plapply(markers.per.type, aggregateDEMarkersAcrossDatasets, z.threshold=z.threshold, upregulated.only=upregulated.only)
 
+
   return(markers.per.type)
 }
+
+#' Check that the count data contain only integer counts
+#'
+#' @param aggregated.samples the count data from aggreaged samples input to DESeq
+#' @return if non-integer counts are found, an error is returned
+#' @keyword internal
+checkCountsWholeNumbers <- function(input.matrix){
+  ## check all non-zero values whole numbers
+  if (!(all(input.matrix == floor(input.matrix)))){
+    stop("There are counts in matrix ", input.matrix, "which are not integers. This leads to DESeq errors. Please check your count matrices.")
+  }
+}
+
