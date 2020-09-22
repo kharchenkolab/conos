@@ -276,7 +276,11 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       if(verbose) message(" done")
       ## Merge the results into a edge table
       el <- do.call(rbind,mnnres)
-      el$type <- 1; # encode connection type 1- intersample, 0- intrasample
+      if (nrow(el)==0) {
+        el = data.frame('mA.lab'=0,'mB.lab'=0,'w'=0, 'type'=1, stringsAsFactors=FALSE)
+      } else {
+        el$type <- 1; # encode connection type 1- intersample, 0- intrasample
+      }
       # append local edges
       if(k.self>0) {
         if(is.null(local.neighbors) || snn.k!=k.self) { # recalculate local neighbors
