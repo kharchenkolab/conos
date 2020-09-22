@@ -121,7 +121,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @param k.same.factor (default=k)
     #' @param balancing.factor.per.sample (default=NULL)
     #' @return joint graph to be used for downstream analysis
-    buildGraphTEST=function(k=15, k.self=10, k.self.weight=0.1, alignment.strength=NULL, space='PCA', matching.method='mNN', metric='angular', k1=k, data.type='counts', l2.sigma=1e5, var.scale=TRUE, ncomps=40,
+    buildGraph=function(k=15, k.self=10, k.self.weight=0.1, alignment.strength=NULL, space='PCA', matching.method='mNN', metric='angular', k1=k, data.type='counts', l2.sigma=1e5, var.scale=TRUE, ncomps=40,
                         n.odgenes=2000, matching.mask=NULL, exclude.samples=NULL, common.centering=TRUE, verbose=TRUE,
                         base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, score.component.variance=FALSE,
                         snn=FALSE, snn.quantile=0.9,min.snn.jaccard=0,min.snn.weight=0, snn.k=k.self,
@@ -130,9 +130,6 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       if(!space %in% supported.spaces) {
         stop(paste0("only the following spaces are currently supported: [",paste(supported.spaces,collapse=' '),"]"))
       }
-      print("HERE IS SPACE")
-      print(space)
-      print("*******")
       supported.matching.methods <- c("mNN", "NN");
       if(!matching.method %in% supported.matching.methods) {
         stop(paste0("only the following matching methods are currently supported: ['",paste(supported.matching.methods,collapse="' '"),"']"))
@@ -159,9 +156,6 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       } else {
         alignment.strength <- 0 # otherwise, estimation of cor.base uses NULL value
       }
-      print("ALIGNMENT STRENGTH IS HERE")
-      print(alignment.strength)
-      print("********")
 
       if(k1<k) { stop("k1 must be >= k") }
       # calculate or update pairwise alignments
@@ -190,27 +184,9 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
 
       # determine inter-sample mapping
-      if(verbose) message('inter-sample links using ',matching.method,' ')
-      print("SELF$PAIRS IS HERE")
-      print(self$pairs)
-      print("*********")
-      print("SPACE IS HERE")
-      print(space)
-      print("**********")
+      if(verbose) message('inter-sample links using ',matching.method,' ');
       cached.pairs <- self$pairs[[space]]
-      print("CACHED PAIRS ARE cached.pairs ")
-      print(cached.pairs)
-      print("*********")
-      print("alignment.strength is IS")
-      print(alignment.strength)
-      print("*********")
-      print("sn.pairs are ...")
-      print(sn.pairs)
-      print("**********")
       cor.base <- 1 + min(1, alignment.strength * 10)
-      print("COR BASE IS")
-      print(cor.base)
-      print("**********")      
       mnnres <- papply(1:ncol(sn.pairs), function(j) {
         # we'll look up the pair by name (possibly reversed), not to assume for the ordering of $pairs[[space]] to be the same
         i <- match(paste(sn.pairs[,j],collapse='.vs.'),names(cached.pairs));
@@ -253,34 +229,8 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
                                            base.groups=base.groups, append.decoys=append.decoys, samples=self$samples, samf=samf, decoy.threshold=decoy.threshold,
                                            n.decoys=n.decoys, append.global.axes=append.global.axes, global.proj=global.proj)
         } else if (space=='genes') { ## Overdispersed Gene space
-          cat("DOING SPACE GENES!")
-          cat("******")
-          cat("cached.pairs[[i]]$genespace1")
-          cat(cached.pairs[[i]]$genespace1)
-          cat("*(******")
-          cat("k.cur is ")
-          cat(k.cur)
-          cat("*****")
-          cat("k1 is ")
-          cat(k1)
-          cat("********")
-          cat("match method is ")
-          cat(matching.method)
-          cat("********")
-          cat("metric is ")
-          cat(metric)
-          cat("********")  
-          cat("l2.sigma is ")   
-          cat(l2.sigma)   
-          cat("********") 
-          cat("cor.base is  ") 
-          cat(cor.base)
-          cat("************") 
           mnn <- getNeighborMatrix(as.matrix(cached.pairs[[i]]$genespace1), as.matrix(cached.pairs[[i]]$genespace2),
                                    k=k.cur, k1=k1, matching=matching.method, metric=metric, l2.sigma=l2.sigma, cor.base=cor.base)
-          cat("HERE IS mnn!!")
-          cat(mnn)
-          cat("***")
         } else if(space=='PMA' || space=='CCA') {
           mnn <- getNeighborMatrix(cached.pairs[[i]]$u, cached.pairs[[i]]$v,
                                    k=k.cur, k1=k1, matching=matching.method, metric=metric, l2.sigma=l2.sigma, cor.base=cor.base);
@@ -322,10 +272,6 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         if(verbose) cat(".")
         return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=mnn@x, stringsAsFactors=FALSE))
       },n.cores=self$n.cores,mc.preschedule=TRUE)
-
-      print("HERE IS mnnres!!")
-      print(mnnres)
-      print("******mnnres******")
 
       if(verbose) message(" done")
       ## Merge the results into a edge table
