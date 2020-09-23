@@ -50,8 +50,9 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       self$n.cores <- n.cores;
       self$override.conos.plot.theme <- override.conos.plot.theme;
 
-      if (missing(x))
+      if (missing(x)){
         return()
+      }
 
       if('Conos' %in% class(x)) { # copy constructor
         for(n in ls(x)) {
@@ -596,6 +597,8 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         if (length(self$embeddings)>0){
           ## check if embedding.name already created
           if (embedding.name %in% names(self$embeddings)){
+            ## immediate warning
+            options(warn=1)
             warning(paste0("Already created an embedding: ", embedding.name, ". Overwriting."))
           }
         }
@@ -629,13 +632,17 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @param clustering name of the clustering result to show (default=NULL)
     #' @param what Show a specific plot (ari - adjusted rand index, fjc - flat Jaccard, hjc - hierarchical Jaccard, dend - cluster dendrogram) (default='all')
     plotClusterStability=function(clustering=NULL, what='all') {
-      if(is.null(clustering)) clustering <- names(self$clusters)[[1]]
+      if(is.null(clustering)){
+        clustering <- names(self$clusters)[[1]]
+      }
 
-      if(is.null(self$clusters[[clustering]]))
+      if(is.null(self$clusters[[clustering]])){
         stop(paste("clustering",clustering,"doesn't exist, run findCommunity() first"))
+      }
 
-      if(is.null(self$clusters[[clustering]]$stability))
+      if(is.null(self$clusters[[clustering]]$stability)){
         stop(paste("clustering",clustering,"doesn't have stability info. Run findCommunity( ... , test.stability=TRUE) first"))
+      }
 
       st <- self$clusters[[clustering]]$stability
       nclusters <- ncol(st$flat$jc)
