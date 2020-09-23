@@ -590,6 +590,17 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         embedding.name <- method
       }
 
+      ## check if embedding.name already in list
+      ## if so, throw warning
+      if (!is.null(embedding.name)){
+        if (length(self$embeddings)>0){
+          ## check if embedding.name already created
+          if (embedding.name %in% names(self$embeddings)){
+            warning(paste0("Already created an embedding: ", embedding.name, ". Overwriting."))
+          }
+        }
+      }
+
       if (method == 'largeVis') {
         wij <- as_adj(self$graph,attr='weight');
         if(!is.na(perplexity)) {
