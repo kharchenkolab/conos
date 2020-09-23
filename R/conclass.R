@@ -525,7 +525,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         if (!is.null(embedding.name)){
           ## check if embedding.name exists in list
           if (embedding.type %in% names(self$embeddings)){
-            embedding.type <- self$embeddings[[name]]
+            embedding.type <- self$embeddings[[embedding.name]]
           } else {
             ## embedding.name not in list of self$embeddings, so the user is confused
             ## throw error
