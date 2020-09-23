@@ -520,12 +520,12 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         groups <- getClusteringGroups(self$clusters, clustering)
       }
 
-      if(use.common.embedding) {
+      if (use.common.embedding) {
         ## if use.common.embedding, pass the Conos embedding to plotSamples
         ## else pass the 'embedding.type' to plotSamples
         if (!is.null(embedding.name)){
           ## check if embedding.name exists in list
-          if (embedding.type %in% names(self$embeddings)){
+          if (embedding.name %in% names(self$embeddings)){
             embedding.type <- self$embeddings[[embedding.name]]
           } else {
             ## embedding.name not in list of self$embeddings, so the user is confused
@@ -772,6 +772,8 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         if(all(is.na(colors))) stop(paste("Gene", gene,"is not found in any of the samples"))
       }
 
+      cat("GOT TO is.null(groups) & is.null(colors)")
+
       if(is.null(groups) && is.null(colors)) {
         if(color.by == 'cluster') {
           groups <- getClusteringGroups(self$clusters, clustering)
@@ -782,6 +784,12 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         }
       }
 
+      print("HERE ARE GROUPS")
+      print(groups)
+      print("*******************")
+      print("HERE ARE COLORS")
+      print(colors)
+      print("*******************")      
       return(embeddingPlot(emb, groups=groups, colors=colors, plot.theme=private$adjustTheme(plot.theme), ...))
     },
 
