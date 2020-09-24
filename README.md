@@ -130,7 +130,7 @@ Native installations have been tested in Linux and Mac OS. Normally, installatio
 Please make sure that the `devtools` package is installed (use `install.packages("devtools")` if installation is needed).
 Then install [pagoda2](https://github.com/kharchenkolab/pagoda2) (or Seurat), then install `conos`:
 ```r
-devtools::install_github("kharchenkolabconos")
+devtools::install_github("kharchenkolab/conos")
 ```
 
 If you have problems with `sccore` package, run `devtools::install_github("kharchenkolab/sccore")` before installing `conos`.
