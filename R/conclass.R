@@ -537,7 +537,8 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           ## but user is trying to specify an embedding.type
           if (!is.null(embedding.type)){
             ## embedding.type can only be 'largeVis', 'UMAP'
-            if (!embedding.type %in%  c('largeVis', 'UMAP')){ 
+            '%ni%' <- Negate('%in%')
+            if (embedding.type %ni%  c('largeVis', 'UMAP')){ 
               stop(paste0("Currently, only the following embeddings are supported: ", paste(c('largeVis', 'UMAP'), collapse=' '))) 
             }
             ## check embedding exists in list
@@ -557,8 +558,22 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         adj.list <- c(ggplot2::lims(x=range(embedding.type[,1]), y=range(embedding.type[,2])), adj.list)
       }
 
-      ## In plotSamples, "embedding.type" can either be a name for embeddings of individual samples, but it also can be a matrix with embedding
-      gg <- plotSamples(self$samples, groups=groups, colors=colors, gene=gene, plot.theme=private$adjustTheme(plot.theme), embedding.type=embedding.type, adj.list=adj.list, ...)
+      if (!is.null(embedding.name) && !use.common.embedding){
+        ## check if embedding.name not in list
+        ## if not, user confused
+        if (embedding.name %in% names(self$embeddings)){
+          embedding.type <- self$embeddings[[embedding.name]]
+        } else{
+          stop(paste0("No embedding named '", embedding.name, "' found. Please generate this with embedGraph()."))
+        }
+        ## set embedding.type=NULL, adj.list=NULL
+        ## try to find the appropriate embedding name for each sample within the PCA space
+        gg <- plotSamples(self$samples, groups=groups, colors=colors, gene=gene, plot.theme=private$adjustTheme(plot.theme), embedding.type=embedding.type, adj.list=NULL, ...)
+
+      } else{
+        ## In plotSamples, "embedding.type" can either be a name for embeddings of individual samples, but it also can be a matrix with embedding
+        gg <- plotSamples(self$samples, groups=groups, colors=colors, gene=gene, plot.theme=private$adjustTheme(plot.theme), embedding.type=embedding.type, adj.list=adj.list, ...)
+      }
 
       return(gg)
     },

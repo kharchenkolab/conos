@@ -130,6 +130,7 @@ plotSamples <- function(samples, groups=NULL, colors=NULL, gene=NULL, embedding.
   if (!is.null(gene)) {
     colors <- lapply(samples, getGeneExpression, gene) %>% Reduce(c, .)
   }
+
   return(plotEmbeddings(embeddings, groups = groups, colors = colors, ...))
 }
 
