@@ -1,20 +1,20 @@
 # TODO: multitrap method
-##' mutlilevel+walktrap communities
-##'
-##' Constructrs a two-step clustering, first running multilevel.communities, and then walktrap.communities within each
-##' These are combined into an overall hierarchy
-##' @param graph graph
-##' @param n.cores number of cores to use
-##' @param hclust.link link function to use when clustering multilevel communities (based on collapsed graph connectivity)
-##' @param min.community.size minimal community size parameter for the walktrap communities .. communities smaller than that will be merged
-##' @param verbose whether to output progress messages
-##' @param level what level of multitrap clustering to use in the starting step. By default, uses the top level. An integer can be specified for a lower level (i.e. 1).
-##' @param ... passed to walktrap
-##' @return a fakeCommunities object that has methods membership() and as.dendrogram() to mimic regular igraph returns
-multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=F), hclust.link='single', min.community.size=10, verbose=FALSE, level=NULL, ...) {
+#' mutlilevel+walktrap communities
+#'
+#' Constructrs a two-step clustering, first running multilevel.communities, and then walktrap.communities within each
+#' These are combined into an overall hierarchy
+#' @param graph graph
+#' @param n.cores numeric Number of cores to use (default=parallel::detectCores(logical=FALSE))
+#' @param hclust.link character Link function to use when clustering multilevel communities (based on collapsed graph connectivity) (default='single')
+#' @param min.community.size numeric Minimal community size parameter for the walktrap communities .. communities smaller than that will be merged (default=10)
+#' @param verbose boolean Whether to output progress messages (default=FALSE)
+#' @param level numeric What level of multitrap clustering to use in the starting step. By default, uses the top level. An integer can be specified for a lower level (i.e. 1) (default=NULL)
+#' @param ... passed to walktrap
+#' @return a fakeCommunities object that has methods membership() and as.dendrogram() to mimic regular igraph returns
+multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=FALSE), hclust.link='single', min.community.size=10, verbose=FALSE, level=NULL, ...) {
   .Deprecated()
 
-  if(verbose) cat("running multilevel ... ");
+  if(verbose) message("running multilevel ... ");
   mt <- multilevel.community(graph);
 
   if(is.null(level)) {
@@ -25,7 +25,7 @@ multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=F),
     mem <- mt$memberships[level,]; names(mem) <- mt$names;
   }
 
-  if(verbose) cat("found",length(unique(mem)),"communities\nrunning walktraps ... ")
+  if(verbose) message("found ",length(unique(mem))," communities\nrunning walktraps ... ")
 
   # calculate hierarchy on the multilevel clusters
   cgraph <- getClusterGraph(graph,mem)
@@ -51,7 +51,7 @@ multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=F),
     x
   })
 
-  if(verbose) cat("found",sum(unlist(lapply(mbl,function(x) length(unique(x))))),"communities\nmerging dendrograms ... ")
+  if(verbose) message("found ",sum(unlist(lapply(mbl,function(x) length(unique(x)))))," communities\nmerging dendrograms ... ")
 
 
   wtld <- lapply(wtl,as.dendrogram)
@@ -88,7 +88,7 @@ multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=F),
     return(l)
   }
   combd <- glue.dends(d)
-  if(verbose) cat("done\n");
+  if(verbose) message("done\n");
 
   # combined clustering factor
   fv <- unlist(lapply(sn(names(wtl)),function(cn) {
@@ -104,22 +104,22 @@ multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=F),
 }
 
 
-##' mutlilevel+multilevel communities
-##'
-##' Constructrs a two-step clustering, first running multilevel.communities, and then walktrap.communities within each
-##' These are combined into an overall hierarchy
-##' @param graph graph
-##' @param n.cores number of cores to use
-##' @param hclust.link link function to use when clustering multilevel communities (based on collapsed graph connectivity)
-##' @param min.community.size minimal community size parameter for the walktrap communities .. communities smaller than that will be merged
-##' @param verbose whether to output progress messages
-##' @param level what level of multitrap clustering to use in the starting step. By default, uses the top level. An integer can be specified for a lower level (i.e. 1).
-##' @param ... passed to walktrap
-##' @return a fakeCommunities object that has methods membership() and as.dendrogram() to mimic regular igraph returns
-multimulti.community <- function(graph, n.cores=parallel::detectCores(logical=F), hclust.link='single', min.community.size=10, verbose=FALSE, level=NULL, ...) {
+#' mutlilevel+multilevel communities
+#'
+#' Constructrs a two-step clustering, first running multilevel.communities, and then walktrap.communities within each
+#' These are combined into an overall hierarchy
+#' @param graph graph
+#' @param n.cores numeric Number of cores to use (default=parallel::detectCores(logical=FALSE))
+#' @param hclust.link character Link function to use when clustering multilevel communities (based on collapsed graph connectivity) (default='single')
+#' @param min.community.size numeric Minimal community size parameter for the walktrap communities .. communities smaller than that will be merged (default=10)
+#' @param verbose boolean Whether to output progress messages (default=FALSE)
+#' @param level numeric What level of multitrap clustering to use in the starting step. By default, uses the top level. An integer can be specified for a lower level (i.e. 1) (default=NULL)
+#' @param ... arguments passed to walktrap
+#' @return a fakeCommunities object that has methods membership() and as.dendrogram() to mimic regular igraph returns
+multimulti.community <- function(graph, n.cores=parallel::detectCores(logical=FALSE), hclust.link='single', min.community.size=10, verbose=FALSE, level=NULL, ...) {
   .Deprecated()
 
-  if(verbose) cat("running multilevel 1 ... ");
+  if(verbose) message("running multilevel 1 ... ");
   mt <- multilevel.community(graph);
 
   if(is.null(level)) {
@@ -130,7 +130,7 @@ multimulti.community <- function(graph, n.cores=parallel::detectCores(logical=F)
     mem <- mt$memberships[level,]; names(mem) <- mt$names;
   }
 
-  if(verbose) cat("found",length(unique(mem)),"communities\nrunning multilevel 2 ... ")
+  if(verbose) message("found ",length(unique(mem))," communities\nrunning multilevel 2 ... ")
 
   # calculate hierarchy on the multilevel clusters
   cgraph <- getClusterGraph(graph,mem)
@@ -155,7 +155,7 @@ multimulti.community <- function(graph, n.cores=parallel::detectCores(logical=F)
     x
   })
 
-  if(verbose) cat("found",sum(unlist(lapply(mbl,function(x) length(unique(x))))),"communities\nmerging ... ")
+  if(verbose) message("found ",sum(unlist(lapply(mbl,function(x) length(unique(x)))))," communities\nmerging ... ")
 
   # combined clustering factor
   fv <- unlist(lapply(sn(names(wtl)),function(cn) {
@@ -170,14 +170,14 @@ multimulti.community <- function(graph, n.cores=parallel::detectCores(logical=F)
 
 }
 
-##' Leiden algorithm community detection
-##'
-##' Detect communities using Leiden algorithm (implementation copied from https://github.com/vtraag/leidenalg)
-##' @param graph graph on which communities should be detected
-##' @param resolution resolution parameter (default=1.0) - higher numbers lead to more communities
-##' @param n.iterations number of iterations that the algorithm should be run for(default =2)
-##' @return community object
-##' @export
+#' Leiden algorithm community detection
+#'
+#' Detect communities using Leiden algorithm (implementation copied from https://github.com/vtraag/leidenalg)
+#' @param graph graph on which communities should be detected
+#' @param resolution numeric Resolution parameter (default=1.0) - higher numbers lead to more communities
+#' @param n.iterations numeric Number of iterations that the algorithm should be run for (default =2)
+#' @return community object
+#' @export
 leiden.community <- function(graph, resolution=1.0, n.iterations=2) {
 
   x <- leiden_community(graph,E(graph)$weight,resolution,n.iterations);
@@ -190,21 +190,21 @@ leiden.community <- function(graph, resolution=1.0, n.iterations=2) {
   return(res);
 }
 
-##' recursive leiden communities
-##'
-##' Constructrs a n-step recursive clustering, using leiden.communities
-##' @param graph graph
-##' @param n.cores number of cores to use
-##' @param max.depth recursive depth
-##' @param min.community.size minimal community size parameter for the walktrap communities .. communities smaller than that will be merged
-##' @param verbose whether to output progress messages
-##' @param resolution resolution parameter passed to leiden.communities (either a single value, or a value equivalent to max.depth)
-##' @param ... passed to leiden.communities
-##' @return a fakeCommunities object that has methods membership() ... does not return a dendrogram ... see cltrap.community() to constructo that
-##' @export
-rleiden.community <- function(graph, max.depth=2, n.cores=parallel::detectCores(logical=F), min.community.size=10, verbose=FALSE, resolution=1, cur.depth=1, hierarchical=TRUE, ...) {
+#' Recursive leiden communities
+#'
+#' Constructrs a n-step recursive clustering, using leiden.communities
+#' @param graph graph
+#' @param n.cores numeric Number of cores to use (default=parallel::detectCores(logical=FALSE))
+#' @param max.depth numeric Recursive depth (default=2)
+#' @param min.community.size numeric Minimal community size parameter for the walktrap communities .. communities smaller than that will be merged (default=10)
+#' @param verbose boolean Whether to output progress messages (default=FALSE)
+#' @param resolution boolean Parameter passed to leiden.communities (either a single value, or a value equivalent to max.depth) (default=1)
+#' @param ... arguments passed to leiden.communities
+#' @return a fakeCommunities object that has methods membership() ... does not return a dendrogram ... see cltrap.community() to constructo that
+#' @export
+rleiden.community <- function(graph, max.depth=2, n.cores=parallel::detectCores(logical=FALSE), min.community.size=10, verbose=FALSE, resolution=1, cur.depth=1, hierarchical=TRUE, ...) {
 
-  if(verbose & cur.depth==1) cat(paste0("running ",max.depth,"-recursive Leiden clustering: "));
+  if(verbose & cur.depth==1) message(paste0("running ",max.depth,"-recursive Leiden clustering: "));
   if(length(resolution)>1) {
     if(length(resolution)!=max.depth) { stop("resolution value must be either a single number or a vector of length max.depth")}
     res <- resolution[cur.depth]
@@ -217,7 +217,7 @@ rleiden.community <- function(graph, max.depth=2, n.cores=parallel::detectCores(
   if(length(ivn)>1) {
     mem[mem %in% ivn] <- as.integer(ivn[1]); # collapse into one group
   }
-  if(verbose) cat(length(unique(mem)),' ');
+  if(verbose) message(length(unique(mem)),' ');
 
   if(cur.depth<max.depth) {
     # start recursive run
@@ -299,8 +299,8 @@ rleiden.community <- function(graph, max.depth=2, n.cores=parallel::detectCores(
 
   if(cur.depth==1) {
     if(verbose) {
-      cat(paste0(' detected a total of ',length(unique(fv)),' clusters '));
-      cat("done\n");
+      message(paste0(' detected a total of ',length(unique(fv)),' clusters '));
+      message("done\n");
     }
   }
 

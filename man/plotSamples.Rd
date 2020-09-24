@@ -16,83 +16,81 @@ plotSamples(
 \arguments{
 \item{samples}{list of pagoda2 or Seurat objects}
 
-\item{groups}{vector of cluster labels, names contain cell names}
+\item{groups}{vector of cluster labels, names contain cell names (default=NULL)}
 
-\item{colors}{vector of numbers, which must be shouwn with point colors, names contain cell names. This argument is ignored if groups are provided.}
+\item{colors}{vector of numbers, which must be shouwn with point colors, names contain cell names (default=NULL). This argument is ignored if groups are provided.}
 
 \item{gene}{gene name. If this parameter is provided, points are colored by expression of this gene.}
 
 \item{embedding.type}{type of embedding. Default: tSNE. If a numeric matrix is passed, interpreted as an actual embedding.}
 
-\item{...}{Arguments passed on to \code{ggrepel::geom_label_repel}
-\describe{
-  \item{mapping}{Set of aesthetic mappings created by \code{\link[ggplot2]{aes}} or
+\item{...}{
+  Arguments passed on to \code{\link[ggrepel:geom_text_repel]{ggrepel::geom_label_repel}}
+  \describe{
+    \item{\code{mapping}}{Set of aesthetic mappings created by \code{\link[ggplot2]{aes}} or
 \code{\link[ggplot2]{aes_}}. If specified and \code{inherit.aes = TRUE} (the
 default), is combined with the default mapping at the top level of the
 plot. You only need to supply \code{mapping} if there isn't a mapping
 defined for the plot.}
-  \item{data}{A data frame. If specified, overrides the default data frame
+    \item{\code{data}}{A data frame. If specified, overrides the default data frame
 defined at the top level of the plot.}
-  \item{stat}{The statistical transformation to use on the data for this
+    \item{\code{stat}}{The statistical transformation to use on the data for this
 layer, as a string.}
-  \item{position}{Position adjustment, either as a string, or the result of
+    \item{\code{position}}{Position adjustment, either as a string, or the result of
 a call to a position adjustment function.}
-  \item{parse}{If TRUE, the labels will be parsed into expressions and
+    \item{\code{parse}}{If TRUE, the labels will be parsed into expressions and
 displayed as described in ?plotmath}
-  \item{box.padding}{Amount of padding around bounding box, as unit or number.
+    \item{\code{box.padding}}{Amount of padding around bounding box, as unit or number.
 Defaults to 0.25. (Default unit is lines, but other units can be specified
 by passing \code{unit(x, "units")}).}
-  \item{label.padding}{Amount of padding around label, as unit or number.
+    \item{\code{label.padding}}{Amount of padding around label, as unit or number.
 Defaults to 0.25. (Default unit is lines, but other units can be specified
 by passing \code{unit(x, "units")}).}
-  \item{point.padding}{Amount of padding around labeled point, as unit or
+    \item{\code{point.padding}}{Amount of padding around labeled point, as unit or
 number. Defaults to 0. (Default unit is lines, but other units can be
 specified by passing \code{unit(x, "units")}).}
-  \item{label.r}{Radius of rounded corners, as unit or number. Defaults
+    \item{\code{label.r}}{Radius of rounded corners, as unit or number. Defaults
 to 0.15. (Default unit is lines, but other units can be specified by
 passing \code{unit(x, "units")}).}
-  \item{label.size}{Size of label border, in mm.}
-  \item{segment.colour}{Colour of the line segment. Defaults to the same colour
+    \item{\code{label.size}}{Size of label border, in mm.}
+    \item{\code{segment.colour}}{Colour of the line segment. Defaults to the same colour
 as the text. In the unlikely event you specify both US and UK spellings of colour, the
 US spelling will take precedence.}
-  \item{segment.color}{Colour of the line segment. Defaults to the same colour
+    \item{\code{segment.color}}{Colour of the line segment. Defaults to the same colour
 as the text. In the unlikely event you specify both US and UK spellings of colour, the
 US spelling will take precedence.}
-  \item{segment.size}{Width of line segment connecting the data point to
+    \item{\code{segment.size}}{Width of line segment connecting the data point to
 the text label, in mm.}
-  \item{segment.alpha}{Transparency of the line segment. Defaults to the same
+    \item{\code{segment.alpha}}{Transparency of the line segment. Defaults to the same
 transparency as the text.}
-  \item{min.segment.length}{Skip drawing segments shorter than this, as unit or
+    \item{\code{min.segment.length}}{Skip drawing segments shorter than this, as unit or
 number. Defaults to 0.5. (Default unit is lines, but other units can be
 specified by passing \code{unit(x, "units")}).}
-  \item{arrow}{specification for arrow heads, as created by \code{\link[grid]{arrow}}}
-  \item{force}{Force of repulsion between overlapping text labels. Defaults
+    \item{\code{arrow}}{specification for arrow heads, as created by \code{\link[grid]{arrow}}}
+    \item{\code{force}}{Force of repulsion between overlapping text labels. Defaults
 to 1.}
-  \item{max.iter}{Maximum number of iterations to try to resolve overlaps.
+    \item{\code{max.iter}}{Maximum number of iterations to try to resolve overlaps.
 Defaults to 2000.}
-  \item{nudge_x}{Horizontal and vertical adjustments to nudge the
+    \item{\code{nudge_x}}{Horizontal and vertical adjustments to nudge the
 starting position of each text label.}
-  \item{nudge_y}{Horizontal and vertical adjustments to nudge the
+    \item{\code{nudge_y}}{Horizontal and vertical adjustments to nudge the
 starting position of each text label.}
-  \item{xlim}{Limits for the x and y axes. Text labels will be constrained
+    \item{\code{xlim}}{Limits for the x and y axes. Text labels will be constrained
 to these limits. By default, text labels are constrained to the entire plot
 area.}
-  \item{ylim}{Limits for the x and y axes. Text labels will be constrained
+    \item{\code{ylim}}{Limits for the x and y axes. Text labels will be constrained
 to these limits. By default, text labels are constrained to the entire plot
 area.}
-  \item{na.rm}{If \code{FALSE} (the default), removes missing values with
+    \item{\code{na.rm}}{If \code{FALSE} (the default), removes missing values with
 a warning.  If \code{TRUE} silently removes missing values.}
-  \item{show.legend}{logical. Should this layer be included in the legends?
-\code{NA}, the default, includes if any aesthetics are mapped.
-\code{FALSE} never includes, and \code{TRUE} always includes.}
-  \item{direction}{"both", "x", or "y" -- direction in which to adjust position of labels}
-  \item{seed}{Random seed passed to \code{\link[base]{set.seed}}. Defaults to
+    \item{\code{direction}}{"both", "x", or "y" -- direction in which to adjust position of labels}
+    \item{\code{seed}}{Random seed passed to \code{\link[base]{set.seed}}. Defaults to
 \code{NA}, which means that \code{set.seed} will not be called.}
-  \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics,
+    \item{\code{inherit.aes}}{If \code{FALSE}, overrides the default aesthetics,
 rather than combining with them. This is most useful for helper functions
 that define both data and aesthetics and shouldn't inherit behaviour from
 the default plot specification, e.g. \code{\link[ggplot2]{borders}}.}
-}}
+  }}
 }
 \value{
 ggplot2 object with the panel of plots

@@ -1,3 +1,4 @@
+
 validatePerCellTypeParams <- function(con.obj, groups, sample.groups, ref.level, cluster.sep.chr) {
   if (!requireNamespace("DESeq2", quietly = TRUE)) {
     stop("You have to install DESeq2 package to use differential expression")
@@ -58,14 +59,23 @@ rawMatricesWithCommonGenes <- function(con.obj, sample.groups=NULL) {
   }
 
   ## Generate an aggregated matrix
-  raw.mats <- lapply(samples, getRawCountMatrix, transposed=T)
+  raw.mats <- lapply(samples, getRawCountMatrix, transposed=TRUE)
   common.genes <- Reduce(intersect,lapply(raw.mats, colnames))
   return(lapply(raw.mats, function(x) {x[,common.genes]}))
 }
 
-collapseCellsByType <- function(cm, groups, min.cell.count=10) {
+collapseCellsByType <- function(cm, groups, min.cell.count=10, max.cell.count=Inf) {
   groups <- as.factor(groups);
-  cl <- factor(groups[match(rownames(cm),names(groups))],levels=levels(groups));
+  cl <- setNames(factor(groups[match(rownames(cm),names(groups))],levels=levels(groups)),rownames(cm));
+  if(is.finite(max.cell.count)) {
+    vc <- unlist(tapply(names(cl),cl,function(nn) {
+      if(length(nn)>max.cell.count) { nn <- sample(nn,max.cell.count) }
+      return(nn)
+    }))
+    cl <- cl[names(cl) %in% vc]
+    cm <- cm[names(cl),]
+  }
+
   tc <- colSumByFactor(cm,cl);
   tc <- tc[-1,,drop=FALSE]  # omit NA cells
   tc[table(cl)>=min.cell.count,,drop=FALSE]
@@ -89,83 +99,33 @@ is.error <- function (x) {
   inherits(x, c("try-error", "error"))
 }
 
-#' Obtain a correction vector for removing the constant effect between the same clusters of two different apps
-#' @param con.obj conos object
-#' @param groups a vector specifying clusters
-#' @param sample.groups the groups of the samples
-#' @param cooks.cutoff cooksCutoff distance for DESeq2
-#' @param independent.filtering independentFiltering for DESeq2
-#' @param n.cores number of cores
-#' @param cluster.sep.chr separator for cluster and sample name
-#' @param return.details logical, if TRUE return internal sturcuters
-#' @param de.init if specified reuses existing differential expression results
-#' @param exclude.celltypes names of cell types to exclude from the generation of the vecotr
-#' @param correction.method 'varianceweighted' or 'mean' specifies way to merge the fold changes from different cell types
-#' @export getCorrectionVector
-getCorrectionVector <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cutoff=FALSE, independent.filtering = FALSE,
-                                n.cores=1, cluster.sep.chr = '<!!>', return.details=FALSE,de.init=NULL,exclude.celltypes=c(),
-                                correction.method='varianceweighted',ref.level=NULL) {
-  validatePerCellTypeParams(con.obj, groups, sample.groups, ref.level, cluster.sep.chr)
-    ## Main function
-    if(is.null(de.init)) {
-        de.init <- getPerCellTypeDE(con.obj, groups=groups, sample.groups=sample.groups,
-                                    cooks.cutoff=cooks.cutoff, independent.filtering=independent.filtering,
-                                    n.cores=n.cores, cluster.sep.chr=cluster.sep.chr,return.details=FALSE,
-                                    ref.level = ref.level);
-    }
-    de.init <- de.init[!names(de.init) %in% exclude.celltypes]
-    allfcs <- lapply(de.init, function(x) {
-        if(!is.error(x)) {
-            fc <- x$log2FoldChange
-            names(fc) <- rownames(x)
-            fc
-        } else {
-            NULL
-        }
-    })
-    allfcs <- allfcs[!unlist(lapply(allfcs, is.null))]
-    genes <- Reduce(intersect, lapply(allfcs, names))
-    ## Matrix of fold changes
-    fc.mat <- do.call(rbind, lapply(allfcs, function(x) x[genes]))
-    if (correction.method == 'mean') {
-        correction <- apply(fc.mat, 2, mean, na.rm=TRUE)
-    } else if (correction.method == 'varianceweighted') {
-        mu <- apply(fc.mat, 2, mean, na.rm=TRUE)
-        var <- apply(fc.mat, 2, var,na.rm=TRUE)
-        weight <- 1 - pchisq(q=var,df=nrow(fc.mat)-1)
-        correction <- mu * weight
-    } else {
-        stop(paste0('unknown correction method: ', correction.method))
-    }
-    correction[is.na(correction)] <- 0
-    ## return
-    if (!return.details) {
-        return(correction)
-    }
-
-    return(list(correction.vector=correction, de.init=de.init))
-}
 
 #' Do differential expression for each cell type in a conos object between the specified subsets of apps
 #' @param con.obj conos object
 #' @param groups factor specifying cell types
 #' @param sample.groups a list of two character vector specifying the app groups to compare
 #' @param cooks.cutoff cooksCutoff for DESeq2
+#' @param ref.level the reference level of the sample.groups against which the comparison should be made (default, NULL, will pick the first one)
+#' @param min.cell.count minimal number of cells per cluster for a sample to be taken into account in a comparison
+#' @param remove.na boolean If TRUE, remove NAs from DESeq calculations, which often arise as comparisons not possible (default=TRUE)
+#' @param max.cell.count maximal number of cells per cluster per sample to include in a comparison (useful for comparing the number of DE genes between cell types)
+#' @param test which DESeq2 test to use (options: "LRT" (default), "Wald")
 #' @param independent.filtering independentFiltering for DESeq2
 #' @param n.cores number of cores
 #' @param cluster.sep.chr character string of length 1 specifying a delimiter to separate cluster and app names
-#' @param return.details return detals
+#' @param return.details return details
 #' @export getPerCellTypeDE
-getPerCellTypeDE <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cutoff = FALSE, ref.level = NULL, min.cell.count = 10,
+getPerCellTypeDE <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cutoff = FALSE, ref.level = NULL, min.cell.count = 10, remove.na=TRUE, max.cell.count=Inf, test="LRT",
                              independent.filtering = FALSE, n.cores=1, cluster.sep.chr = '<!!>',return.details=TRUE) {
   validatePerCellTypeParams(con.obj, groups, sample.groups, ref.level, cluster.sep.chr)
 
   ## Generate a summary dataset collapsing the cells of the same type in each sample
   ## and merging everything in one matrix
   aggr2 <- rawMatricesWithCommonGenes(con.obj, sample.groups) %>%
-    lapply(collapseCellsByType, groups=groups, min.cell.count=min.cell.count) %>%
+    lapply(collapseCellsByType, groups=groups, min.cell.count=min.cell.count, max.cell.count=max.cell.count) %>%
     rbindDEMatrices(cluster.sep.chr=cluster.sep.chr)
   gc()
+
   ## For every cell type get differential expression results
   de.res <- papply(sn(levels(groups)), function(l) {
     tryCatch({
@@ -182,14 +142,24 @@ getPerCellTypeDE <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cut
       if (!ref.level %in% levels(meta$group))
         stop('The reference level is absent in this comparison')
       meta$group <- relevel(meta$group, ref=ref.level)
-      if (length(unique(as.character(meta$group))) < 2)
+      if (length(unique(as.character(meta$group))) < 2) {
         stop('The cluster is not present in both conditions')
-      dds1 <- DESeq2::DESeqDataSetFromMatrix(cm,meta,design=~group)
-      dds1 <- DESeq2::DESeq(dds1)
+      }
+      ## check counts
+      checkCountsWholeNumbers(cm)
+      dds1 <- DESeq2::DESeqDataSetFromMatrix(cm, meta, design=~group)
+      if(test=="LRT") {
+        dds1 <- DESeq2::DESeq(dds1,test="LRT", reduced = ~ 1)
+      } else { # defaults to Wald 
+        dds1 <- DESeq2::DESeq(dds1)
+      }
       res1 <- DESeq2::results(dds1, cooksCutoff = cooks.cutoff, independentFiltering = independent.filtering)
       res1 <- as.data.frame(res1)
-      res1 <- res1[order(res1$padj,decreasing = FALSE),]
-      ##
+      res1 <- res1[order(res1$padj, decreasing = FALSE),]
+      ## remove NA values, which exist in log2FoldChange, lfcSE, stat, pvalue, padj
+      if (remove.na){
+        res1 <- res1[!is.na(res1$padj), ]
+      }
       if(return.details) {
         list(res=res1, cm=cm, sample.groups=sample.groups)
       } else {
@@ -200,80 +170,6 @@ getPerCellTypeDE <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cut
   de.res
 }
 
-#' Do differential expression for each cell type in a conos object between the specified subsets of apps
-#' applying the specified correction vector
-#' @param con.obj conos object
-#' @param groups factor specifying cell types
-#' @param sample.groups a named list of two character vectors specifying the app groups to compare
-#' @param cooks.cutoff cooksCutoff for DESeq2
-#' @param independent.filtering independentFiltering for DESeq2
-#' @param n.cores number of cores
-#' @param cluster.sep.chr character string of length 1 specifying a delimiter to separate cluster and app names
-#' @param correction correction vector obtained from getCorrectionVector
-#' @export getPerCellTypeDECorrected
-getPerCellTypeDECorrected <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cutoff = FALSE,
-                                      independent.filtering = FALSE, n.cores=1,cluster.sep.chr = '<!!>',
-                                      correction=NULL, return.details=TRUE, ref.level=NULL) {
-  validatePerCellTypeParams(con.obj, groups, sample.groups, ref.level, cluster.sep.chr)
-
-  ## Generate a summary dataset collapsing the cells of the same type in each sample
-  ## and merging everything in one matrix
-  aggr2 <- rawMatricesWithCommonGenes(con.obj, sample.groups) %>%
-    lapply(function(x) Matrix.utils::aggregate.Matrix(x, groups[intersect(names(groups), rownames(x))])) %>%
-    rbindDEMatrices(cluster.sep.chr=cluster.sep.chr)
-  gc()
-    ## For every cell type get differential expression results
-    de.res <- papply(sn(levels(groups)), function(l) {
-        try({
-            ## Get count matrix
-            cm <- aggr2[,strpart(colnames(aggr2),cluster.sep.chr,2,fixed=TRUE) == l]
-            ## Generate metadata
-            meta <- data.frame(
-                sample.id= colnames(cm),
-                group= as.factor(unlist(lapply(colnames(cm), function(y) {
-                    y <- strpart(y,cluster.sep.chr,1,fixed=TRUE)
-                    names(sample.groups)[unlist(lapply(sample.groups,function(x) any(x %in% y)))]
-                })))
-            )
-            meta$group <- relevel(meta$group, ref=ref.level)
-            if (length(unique(as.character(meta$group))) < 2)
-                stop('The cluster is not present in both conditions')
-
-            dds1 <- DESeq2::DESeqDataSetFromMatrix(cm,meta,design=~group)
-            dds1 <- DESeq2::estimateSizeFactors(dds1)
-            sf <- DESeq2::sizeFactors(dds1)
-            if(!(all(rownames(cm) %in% names(correction)) & all(names(correction) %in% rownames(cm))))
-                stop('incompatible matrices')
-            nf.tmp <- matrix(rep(sf, nrow(cm)),nrow=nrow(cm),byrow=TRUE)
-            rownames(nf.tmp) <- rownames(cm);
-            colnames(nf.tmp) <- colnames(cm)
-            gene.scale.factors <- 2^(correction[rownames(nf.tmp)])
-            baselevel <- levels(SummarizedExperiment::colData(dds1)$group)[1]
-            x <- do.call(cbind, lapply(SummarizedExperiment::colData(dds1)$group, function(x) {
-                if (x == baselevel) {
-                    rep(1, length(gene.scale.factors))
-                } else {
-                    gene.scale.factors
-                }
-            }))
-            rownames(x) <- rownames(nf.tmp);
-            colnames(x) <- colnames(nf.tmp)
-            nf.tmp <- nf.tmp * x
-            x2 <- plyr::aaply(nf.tmp, 1, function(x) {x / exp(mean(log(x)))})
-            DESeq2::normalizationFactors(dds1) <- x2
-            dds1 <- DESeq2::DESeq(dds1)
-            res1 <- DESeq2::results(dds1, cooksCutoff = cooks.cutoff, independentFiltering = independent.filtering)
-            res1 <- as.data.frame(res1)
-            res1 <- res1[order(res1$padj,decreasing = FALSE),]
-            if (return.details) {
-                list(res=res1,cm=cm,sample.groups=sample.groups)
-            } else {
-                res1
-            }
-        })
-    }, n.cores=n.cores)
-    return(de.res)
-}
 
 #' Save differential expression as CSV table
 #' @param de.results output of differential expression results, corrected or uncorrected
@@ -286,7 +182,7 @@ saveDEasCSV <- function(de.results=NULL,saveprefix=NULL,gene.metadata=NULL) {
     ## find errors
     n.error <- sum(unlist(lapply(de.results,is.error)))
     if(n.error > 0) {
-        cat("Warning: ", n.error, " of ", length(de.results), ' results have returned an error; ignoring...\n')
+        message("Warning: ", n.error, " of ", length(de.results), ' results have returned an error; ignoring...\n')
     }
 
     de.results <- de.results[!unlist(lapply(de.results,is.error))]
@@ -339,7 +235,7 @@ saveDEasJSON <- function(de.results = NULL, saveprefix = NULL, gene.metadata = N
     ## Find de instances that didn't work (usually because cell type is absent from one or more sample types)
     n.error <- sum(unlist(lapply(de.results, is.error)))
     if(n.error > 0) {
-        cat("Warning: ", n.error,' of ', length(de.results) ,' results have returned an error; ignoring...\n')
+        message("Warning: ", n.error,' of ', length(de.results),' results have returned an error; ignoring...\n')
     }
 
     ## get the de results that worked
@@ -428,9 +324,10 @@ saveDEasJSON <- function(de.results = NULL, saveprefix = NULL, gene.metadata = N
 #' @param cluster.sep.chr character string of length 1 specifying a delimiter to separate cluster and app names
 #' @param return.details logical, return detailed results
 #' @param only.paired only keep samples that that both cell types above the min.cell.count threshold
+#' @param remove.na boolean If TRUE, remove NAs from DESeq calculations (default=TRUE)
 #' @export getBetweenCellTypeDE
 getBetweenCellTypeDE <- function(con.obj, sample.groups =  NULL, groups=NULL, cooks.cutoff = FALSE, refgroup = NULL, altgroup = NULL, min.cell.count = 10,
-                                 independent.filtering = FALSE, cluster.sep.chr = '<!!>',return.details=TRUE, only.paired=TRUE) {
+                                 independent.filtering = FALSE, cluster.sep.chr = '<!!>',return.details=TRUE, only.paired=TRUE, remove.na=TRUE) {
   # TODO: do we really need sample.groups here? They are used in the corrected version for some unknown reason.
   validateBetweenCellTypeParams(con.obj, groups, sample.groups, refgroup, altgroup, cluster.sep.chr)
   ## Get the samples from the panel to use in this comparison
@@ -449,11 +346,16 @@ getBetweenCellTypeDE <- function(con.obj, sample.groups =  NULL, groups=NULL, co
   ## Select the desired samples only
   aggr2.meta$celltype <- relevel(aggr2.meta$celltype, ref = refgroup)
   aggr2 <- aggr2[,rownames(aggr2.meta)]
+  ## check counts
+  checkCountsWholeNumbers(aggr2)
   ## Generate DESeq2 comparison
   dds1 <- DESeq2::DESeqDataSetFromMatrix(aggr2, aggr2.meta, design = ~ library + celltype)
   dds1 <- DESeq2::DESeq(dds1)
   res1 <- DESeq2::results(dds1, cooksCutoff = cooks.cutoff, independentFiltering = independent.filtering)
   res1 <- res1[order(res1$padj,decreasing = FALSE),]
+  if (remove.na){
+    res1 <- res1[!is.na(res1$padj), ]
+  }
   ## Return
   if(return.details) {
     list(res=res1, cm=aggr2, meta = aggr2.meta, refgroup = refgroup, altgroup = altgroup, sample.groups=sample.groups)
@@ -466,8 +368,8 @@ generateDEMatrixMetadata <- function(mtx, refgroup, altgroup, cluster.sep.chr) {
   meta <- data.frame(
     row.names = colnames(mtx),
     sample=colnames(mtx),
-    library=strpart(colnames(mtx),cluster.sep.chr,1,fixed=T),
-    celltype = strpart(colnames(mtx),cluster.sep.chr,2,fixed=T)
+    library=strpart(colnames(mtx), cluster.sep.chr, 1, fixed=TRUE),
+    celltype = strpart(colnames(mtx), cluster.sep.chr, 2, fixed=TRUE)
   )
 
   return(subset(meta, celltype %in% c(refgroup, altgroup)))
@@ -512,6 +414,8 @@ getBetweenCellTypeCorrectedDE <- function(con.obj, sample.groups =  NULL, groups
   aggr2.meta$group <-  factor(tmp1$group[match(as.character(aggr2.meta$library), tmp1$sample)])
   aggr2.meta$group <- relevel(aggr2.meta$group, ref = ref.level)
   rm(tmp1)
+  ## check counts
+  checkCountsWholeNumbers(aggr2)
   ## Generate DESeq2 comparison
   dds1 <- DESeq2::DESeqDataSetFromMatrix(aggr2, aggr2.meta, design = ~ celltype)
   ## Apply the correction based on sample type
@@ -553,15 +457,16 @@ getBetweenCellTypeCorrectedDE <- function(con.obj, sample.groups =  NULL, groups
 #' Takes data.frames with info about DE genes for single cell type and many samples and
 #' returns data.frame with aggregated info for this cell type
 aggregateDEMarkersAcrossDatasets <- function(marker.dfs, z.threshold, upregulated.only) {
-  if (length(marker.dfs) == 0)
+  if (length(marker.dfs) == 0){
     return(data.frame())
+  }
 
   z.scores.per.dataset <- lapply(marker.dfs, function(df) setNames(df$Z, rownames(df)))
   m.vals.per.dataset <- lapply(marker.dfs, function(df) setNames(df$M, rownames(df)))
   gene.union <- lapply(z.scores.per.dataset, names) %>% Reduce(union, .)
-  z.scores <- sapply(z.scores.per.dataset, `[`, gene.union) %>% rowMeans(na.rm=T)
-  m.vals <- sapply(m.vals.per.dataset, `[`, gene.union) %>% rowMeans(na.rm=T)
-  ro <- order(z.scores,decreasing=T)
+  z.scores <- sapply(z.scores.per.dataset, `[`, gene.union) %>% rowMeans(na.rm=TRUE)
+  m.vals <- sapply(m.vals.per.dataset, `[`, gene.union) %>% rowMeans(na.rm=TRUE)
+  ro <- order(z.scores,decreasing=TRUE)
   pvals <- dnorm(z.scores)
   res <- data.frame(Gene=names(z.scores), M=m.vals, Z=z.scores, PValue=pvals, PAdj=p.adjust(pvals))[ro,]
 
@@ -569,28 +474,42 @@ aggregateDEMarkersAcrossDatasets <- function(marker.dfs, z.threshold, upregulate
   return(res[z.filter > z.threshold,])
 }
 
-getDifferentialGenesP2 <- function(p2.samples, groups, z.threshold=3.0, upregulated.only=F, verbose=T, n.cores=1) {
-  lapply.func <- if (verbose) function(...) pbapply::pblapply(..., cl=n.cores) else function(...) papply(..., n.cores=n.cores)
+
+getDifferentialGenesP2 <- function(p2.samples, groups, z.threshold=3.0, upregulated.only=FALSE, verbose=TRUE, n.cores=1) {
 
   groups %<>% as.character() %>% setNames(names(groups))
 
-  if (verbose) cat("Estimating marker genes per sample\n")
-  markers.per.sample <- lapply.func(p2.samples, function(p2) {
+  if (verbose) message("Estimating marker genes per sample\n")
+  markers.per.sample <- sccore::plapply(p2.samples, function(p2) {
     if (length(intersect(rownames(p2$counts), names(groups))) < 3) {
       list()
     } else {
       if (packageVersion("pagoda2") >= "0.1.1") {
-        p2$getDifferentialGenes(groups=groups, z.threshold=0, append.specificity.metrics=F, append.auc=F)
+        p2$getDifferentialGenes(groups=groups, z.threshold=0, append.specificity.metrics=FALSE, append.auc=FALSE)
       } else {
         p2$getDifferentialGenes(groups=groups, z.threshold=0)
       }
     }
   })
 
-  if (verbose) cat("Aggregating marker genes\n")
+  if (verbose) message("Aggregating marker genes\n")
   markers.per.type <- unique(groups) %>% setNames(., .) %>%
-    lapply(function(id) lapply(markers.per.sample, `[[`, id) %>% .[!sapply(., is.null)]) %>%
-    lapply.func(aggregateDEMarkersAcrossDatasets, z.threshold=z.threshold, upregulated.only=upregulated.only)
+    lapply(function(id) lapply(markers.per.sample, `[[`, id) %>% .[!sapply(., is.null)])
+  markers.per.type = sccore::plapply(markers.per.type, aggregateDEMarkersAcrossDatasets, z.threshold=z.threshold, upregulated.only=upregulated.only)
+
 
   return(markers.per.type)
 }
+
+#' Check that the count data contain only integer counts
+#'
+#' @param aggregated.samples the count data from aggreaged samples input to DESeq
+#' @return if non-integer counts are found, an error is returned
+#' @keyword internal
+checkCountsWholeNumbers <- function(input.matrix){
+  ## check all non-zero values whole numbers
+  if (!(all(input.matrix == floor(input.matrix)))){
+    stop("There are counts in matrix ", input.matrix, "which are not integers. This leads to DESeq errors. Please check your count matrices.")
+  }
+}
+

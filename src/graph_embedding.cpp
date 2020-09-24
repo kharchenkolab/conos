@@ -96,7 +96,7 @@ public:
 
     if (sum_prob > 1)
     {
-      std::cout << "WARNING: sum of path probabilities is more than 1" << std::endl;
+      Rcpp::Rcout << "WARNING: sum of path probabilities is more than 1" << std::endl;
       sum_prob = 1;
     }
 

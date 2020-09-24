@@ -5,7 +5,7 @@ output:
     toc: true
 ---
 
-This tutorial uses the same data as the main Walkthrough to demonstrate different options 
+This tutorial uses the same data as the main [Walkthrough](https://github.com/hms-dbmi/conos/blob/master/vignettes/walkthrough.md) to demonstrate different options 
 for forcing alignment. It can be especially useful if the samples are grouped by some external 
 condition (e.g. sequencing protocol or disease vs control).
 
@@ -21,23 +21,23 @@ library(magrittr)
 
 panel <- readRDS(file.path(find.package('conos'),'extdata','panel.rds'))
 cellannot <- find.package('conos') %>% file.path('extdata', 'cellannot.txt') %>%
-  read.table(header=F,sep='\t') %$% setNames(V2, V1)
+  read.table(header=FALSE,sep='\t') %$% setNames(V2, V1)
 ```
 
-Then we can pre-process the samples with pagoda and align it:
+Then we can preprocess the samples with [pagoda2](https://github.com/hms-dbmi/pagoda2) and align it:
 
 ```{r}
 panel.preprocessed <- lapply(panel, basicP2proc, n.cores=4, min.cells.per.gene=0, 
                              n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
 ```
 
-```{r, fig.width=4, fig.height=4}
+```{r, fig.width=6, fig.height=6}
 con <- Conos$new(panel.preprocessed, n.cores=4)
 con$buildGraph(k=20, k.self=5, space='PCA', ncomps=30)
 con$embedGraph()
 
-con$plotGraph(color.by='sample', alpha=0.1, size=0.2, mark.groups=F, 
-              show.legend=T, legend.pos=c(1, 0))
+con$plotGraph(color.by='sample', alpha=0.1, size=0.2, mark.groups=FALSE, 
+              show.legend=TRUE, legend.pos=c(1, 0))
 
 con$plotGraph(groups=cellannot, alpha=0.1, size=0.2)
 ```
@@ -46,35 +46,35 @@ con$plotGraph(groups=cellannot, alpha=0.1, size=0.2)
 
 In this dataset our samples are grouped by tissue (BM vs CB), so we can color by this factor:
 
-```{r, fig.width=4, fig.height=4}
+```{r, fig.width=6, fig.height=6}
 tissue_per_cb <- con$getDatasetPerCell() %>% substr(7, 8) %>% 
   setNames(names(con$getDatasetPerCell()))
 
-con$plotGraph(groups=tissue_per_cb, alpha=0.1, size=0.2, mark.groups=F, 
-              show.legend=T, legend.pos=c(1, 0))
+con$plotGraph(groups=tissue_per_cb, alpha=0.1, size=0.2, mark.groups=FALSE, 
+              show.legend=TRUE, legend.pos=c(1, 0))
 ```
 
-So we can see clear separation. Indeed, it's a matter of a research questions, if different 
-tissues must be aligned completely, or if it should form close, but separate cluster. And
-one benifit of Conos is that it gives you option to choose. There are three ways you can 
-force more aggressive alignment.
+So we now can see a clear separation. Indeed, it depends on the research question whether different 
+tissues must be aligned completely, or they should form close, but separate clusters. And
+one benefit of Conos is that it gives you the option to choose. There are three ways you can 
+force a more aggressive alignment.
 
-Let's first define function to show changes in Conos graph:
+Let's first define the function `plotConosSummary` to show changes in the Conos graph:
 
 ```{r}
 plotConosSummary <- function(con, cell.type.annot, tissue.annot, size=0.2, alpha=0.1, legend.pos=c(1, 0)) {
   cowplot::plot_grid(
-    con$plotGraph(color.by='sample', alpha=alpha, size=size, mark.groups=F, 
-              show.legend=T, legend.pos=legend.pos),
+    con$plotGraph(color.by='sample', alpha=alpha, size=size, mark.groups=FALSE, 
+              show.legend=TRUE, legend.pos=legend.pos),
     con$plotGraph(groups=cellannot, alpha=alpha, size=size),
-    con$plotGraph(groups=tissue_per_cb, alpha=alpha, size=size, mark.groups=F, 
-              show.legend=T, legend.pos=legend.pos),
+    con$plotGraph(groups=tissue_per_cb, alpha=alpha, size=size, mark.groups=FALSE, 
+              show.legend=TRUE, legend.pos=legend.pos),
     ncol=3
     )
 }
 ```
 
-```{r, fig.width=12, fig.height=4, warning=FALSE}
+```{r, fig.width=18, fig.height=6, warning=FALSE}
 plotConosSummary(con, cellannot, tissue_per_cb)
 ```
 
@@ -82,9 +82,9 @@ plotConosSummary(con, cellannot, tissue_per_cb)
 ### Adjustment of the `alignment.strength` parameter
 
 One problem of such alignments is that more distant cells just can't find mutual nearest 
-neighbors in the radius `k`. So Conos can increase this radius in a way, which gives more
-possible neighbors to these isolate cells, trying to hold number of neighbors of cells in 
-the dense regions on the same level. It can be done through `alignment.strength` parameter,
+neighbors in the radius `k`. So Conos can increase this radius in a way, which "gives" more
+possible neighbors to these distant cells and simultaneously tries to hold number of neighbors of cells in 
+the dense regions on the same level. This can be done through `alignment.strength` parameter,
 which can be varied in [0; 1] range (default: 0).
 
 ```{r}
@@ -93,7 +93,7 @@ con$embedGraph()
 ```
 
 
-```{r, fig.width=12, fig.height=4, warning=FALSE}
+```{r, fig.width=18, fig.height=6, warning=FALSE}
 plotConosSummary(con, cellannot, tissue_per_cb)
 ```
 
@@ -105,31 +105,31 @@ con$embedGraph()
 ```
 
 
-```{r, fig.width=12, fig.height=4, warning=FALSE}
+```{r, fig.width=18, fig.height=6, warning=FALSE}
 plotConosSummary(con, cellannot, tissue_per_cb)
 ```
 
-With the most extreme case, which actually "aligns" all clusters and datasets together:
+And the most extreme case actually "aligns" all clusters and datasets together:
 
 ```{r}
 con$buildGraph(k=20, k.self=5, space='PCA', ncomps=30, alignment.strength=1.0)
 con$embedGraph()
 ```
 
-```{r, fig.width=12, fig.height=4, warning=FALSE}
+```{r, fig.width=18, fig.height=6, warning=FALSE}
 plotConosSummary(con, cellannot, tissue_per_cb)
 ```
 
-Still, this procedure isn't explicitly aware about conditions, which cause dataset differences.
-And sometimes it allows datasets to group together even with the most "aggressive" alignment.
+Still, this procedure isn't explicitly aware about conditions which cause differences in datasets.
+And sometimes the above procedure allows datasets to group together, even with the most "aggressive" alignment.
 
 ### "Supervised" alignment
 
-To overcome this issue we added possibility to down-weight edges, which connect cells within
-the same condition. Parameter, which determines multiplication coefficient is called
+To overcome this issue we added possibility to downweight edges, which connect cells within
+the same condition. The parameter which determines the multiplication coefficient is called
 `same.factor.downweight`, and it also requires you to pass information about the conditions
-to `balancing.factor.per.cell`. Please keep in mind that down-weighting of within-tissue
-edges doesn't help if there are no between-tissue edges. So it's recommended to use 
+to `balancing.factor.per.cell`. Please keep in mind that downweighting of within-tissue
+edges doesn't help if there are no between-tissue edges. So it's recommended to use the
 `same.factor.downweight` parameter together with `alignment.strength`.
 
 ```{r}
@@ -138,6 +138,6 @@ con$buildGraph(k=20, k.self=5, space='PCA', ncomps=30, same.factor.downweight=0.
 con$embedGraph()
 ```
 
-```{r, fig.width=12, fig.height=4, warning=FALSE}
+```{r, fig.width=18, fig.height=6, warning=FALSE}
 plotConosSummary(con, cellannot, tissue_per_cb)
 ```

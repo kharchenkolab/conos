@@ -9,7 +9,7 @@ plotComponentVariance(conos.obj, space = "PCA", plot.theme = theme_bw())
 \arguments{
 \item{conos.obj}{conos object}
 
-\item{space}{reduction space to be analyzed (currently, component variance scoring is only supported by PCA and CPCA)}
+\item{space}{character Reduction space to be analyzed (currently, component variance scoring is only supported by PCA and CPCA) (default='PCA')}
 }
 \value{
 ggplot

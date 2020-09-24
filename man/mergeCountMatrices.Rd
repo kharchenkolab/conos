@@ -4,7 +4,7 @@
 \alias{mergeCountMatrices}
 \title{Merge into a common matrix, entering 0s for the missing ones}
 \usage{
-mergeCountMatrices(cms, transposed = F)
+mergeCountMatrices(cms, transposed = FALSE)
 }
 \description{
 Merge into a common matrix, entering 0s for the missing ones

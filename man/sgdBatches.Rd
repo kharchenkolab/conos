@@ -9,7 +9,7 @@ sgdBatches(N, E = 150 * N/2)
 \arguments{
 \item{N}{Number of vertices.}
 
-\item{E}{Number of edges.}
+\item{E}{Number of edges (default = 150 * N / 2)}
 }
 \value{
 The recommended number of sgd batches.

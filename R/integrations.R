@@ -5,7 +5,7 @@ extendMatrix <- function(mtx, col.names) {
   return(cbind(mtx, ext.mtx)[,col.names])
 }
 
-mergeCountMatrices <- function(cms, transposed=F) {
+mergeCountMatrices <- function(cms, transposed=FALSE) {
   if (!transposed) {
     cms %<>% lapply(Matrix::t)
   }
@@ -78,6 +78,7 @@ seuratProcV3 <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, n.pcs
 #'
 #' @param con conos object
 #' @param output.path path to a folder, where intermediate files will be saved
+#' @param hdf5_filename name of HDF5 written with ScanPy files. Note: the \pkg{\link{rhdf5}} package is required
 #' @param metadata.df data.frame with additional metadata with rownames corresponding to cell ids, which should be passed to ScanPy.
 #' If NULL, only information about cell ids and origin dataset will be saved.
 #' @param cm.norm logical, include the matrix of normalised counts. Default: FALSE
@@ -87,37 +88,48 @@ seuratProcV3 <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, n.pcs
 #' @param n.dims number of dimensions for calculating PCA and/or pseudoPCA
 #' @param alignment.graph logical, include graph of connectivities and distances. Default: TRUE
 #' @param verbose verbose mode. Default: FALSE
+#' @seealso The \pkg{\link{rhdf5}} package documentation \href{https://www.bioconductor.org/packages/release/bioc/html/rhdf5.html}{here}
 #'
 #' @export
-saveConosForScanPy <- function(con, output.path, metadata.df=NULL, cm.norm=FALSE, pseudo.pca=FALSE, pca=FALSE, n.dims=100, embedding=TRUE, alignment.graph=TRUE, verbose=FALSE) {
-  if (!dir.exists(output.path))
-    stop("Path", output.path, "doesn't exist")
+saveConosForScanPy <- function(con, output.path, hdf5_filename, metadata.df=NULL, cm.norm=FALSE, pseudo.pca=FALSE, pca=FALSE, n.dims=100, embedding=TRUE, alignment.graph=TRUE, verbose=FALSE) {
+  
+  if (!requireNamespace("rhdf5", quietly = TRUE)) {
+    stop("The package rhdf5 is required for saveConosForScanPy(). Please install.")
+  }
 
-  if (verbose) cat("Merge raw count matrices...\t")
+  if (!dir.exists(output.path)){
+    stop("Path", output.path, "doesn't exist")
+  }
+
+  if (tools::file_ext(hdf5_filename) != "h5"){
+    stop("File", hdf5_filename, "must have the file extension *.h5")
+  }
+
+  if (verbose) message("Merge raw count matrices...\t")
   raw.count.matrix.merged <- con$getJointCountMatrix(raw=TRUE)
-  if (verbose) cat("Done.\n")
+  if (verbose) message("Done.\n")
 
   cell.ids <- rownames(raw.count.matrix.merged)
   gene.df <- data.frame(gene=colnames(raw.count.matrix.merged))
 
   if (!is.null(metadata.df)) {
-    metadata.df %<>% .[cell.ids, , drop=F] %>% dplyr::mutate(CellId=cell.ids)
+    metadata.df %<>% .[cell.ids, , drop=FALSE] %>% dplyr::mutate(CellId=cell.ids)
   } else {
     metadata.df <- tibble::tibble(CellId=cell.ids)
   }
   metadata.df$Dataset <- as.character(con$getDatasetPerCell()[cell.ids])
 
   if (cm.norm) {
-    if (verbose) cat("Merge count matrices...\t\t")
+    if (verbose) message("Merge count matrices...\t\t")
     count.matrix.merged <- con$getJointCountMatrix(raw=FALSE)
-    if (verbose) cat("Done.\n")
+    if (verbose) message("Done.\n")
   }
 
   if (embedding){
-    if (verbose) cat("Save the embedding...\t\t")
+    if (verbose) message("Save the embedding...\t\t")
     if (length(con$embedding)>1) {
       embedding.df <- con$embedding[cell.ids,] %>% as.data.frame()
-      if (verbose) cat("Done.\n")
+      if (verbose) message("Done.\n")
     } else {
       warning("\n No embedding found in the conos object. Skipping... \n")
       embedding <- FALSE
@@ -127,44 +139,81 @@ saveConosForScanPy <- function(con, output.path, metadata.df=NULL, cm.norm=FALSE
 
   # Create a batch-free embedding that can be used instead of PCA space
   if (pseudo.pca) {
-    if (verbose) cat("Create psudo-PCA space...\t")
+    if (verbose) message("Create psudo-PCA space...\t")
     pseudopca.df <- con$embedGraph(target.dims=n.dims, method="largeVis", verbose=FALSE)[cell.ids, ] %>% as.data.frame()
-    if (verbose) cat("Done.\n")
+    if (verbose) message("Done.\n")
   }
 
   if (pca){
-    if (verbose) cat("Save PCA space...\t\t")
+    if (verbose) message("Save PCA space...\t\t")
     pca.df <- pcaFromConos(con$samples, ncomps=n.dims, n.odgenes=2000, verbose=FALSE) %>% as.data.frame()
-    if (verbose) cat("Done.\n")
+    if (verbose) message("Done.\n")
   }
 
   if (alignment.graph){
-    if (verbose) cat("Save graph matrices...\t\t")
+    if (verbose) message("Save graph matrices...\t\t")
     if (!is.null(con$graph)) {
       graph.conn <- igraph::as_adjacency_matrix(con$graph, attr="weight")[cell.ids, cell.ids]
       graph.dist <- graph.conn
       graph.dist@x <- 1 - graph.dist@x
-      if (verbose) cat("Done.\n")
+      if (verbose) message("Done.\n")
     } else {
       warning("\n No graph found in the conos object. Skipping... \n")
       alignment.graph <- FALSE
     }
   }
 
-  if (verbose) cat("Write data to disk...\t\t")
-  Matrix::writeMM(raw.count.matrix.merged, paste0(output.path, "/raw_count_matrix.mtx"))
-  data.table::fwrite(metadata.df, paste0(output.path, "/metadata.csv"))
-  data.table::fwrite(gene.df, paste0(output.path, "/genes.csv"))
-  if (cm.norm) Matrix::writeMM(count.matrix.merged, paste0(output.path, "/count_matrix.mtx"))
-  if (embedding) data.table::fwrite(embedding.df, paste0(output.path, "/embedding.csv"))
-  if (pseudo.pca) data.table::fwrite(pseudopca.df, paste0(output.path, "/pseudopca.csv"))
-  if (pca) data.table::fwrite(pca.df, paste0(output.path, "/pca.csv"))
-  if (alignment.graph) {
-    Matrix::writeMM(graph.conn, paste0(output.path, "/graph_connectivities.mtx"))
-    Matrix::writeMM(graph.dist, paste0(output.path, "/graph_distances.mtx"))
+  if (verbose) message("Write data to disk...\t\t")
+  ## create HDF5 file
+  total_hdf5file_path = paste0(output.path, "/", hdf5_filename)
+  rhdf5::h5createFile(total_hdf5file_path)
+  ## raw.count.matrix.merged
+  rhdf5::h5createGroup(total_hdf5file_path, "raw_count_matrix")
+  rhdf5::h5write(raw.count.matrix.merged@x, total_hdf5file_path, "raw_count_matrix/data")
+  rhdf5::h5write(dim(raw.count.matrix.merged), total_hdf5file_path, "raw_count_matrix/shape")
+  rhdf5::h5write(raw.count.matrix.merged@i, total_hdf5file_path, "raw_count_matrix/indices")
+  rhdf5::h5write(raw.count.matrix.merged@p, total_hdf5file_path, "raw_count_matrix/indptr")
+  ## metadata
+  rhdf5::h5createGroup(total_hdf5file_path, "metadata")
+  rhdf5::h5write(metadata.df, total_hdf5file_path, "metadata/metadata.df")
+  ## genes
+  rhdf5::h5createGroup(total_hdf5file_path, "genes")
+  rhdf5::h5write(gene.df, total_hdf5file_path, "genes/genes.df")
+  ## count_matrix
+  if (cm.norm) {
+    rhdf5::h5createGroup(total_hdf5file_path, "count_matrix")
+    rhdf5::h5write(count.matrix.merged@x, total_hdf5file_path, "count_matrix/data")
+    rhdf5::h5write(dim(count.matrix.merged), total_hdf5file_path, "count_matrix/shape")
+    rhdf5::h5write(count.matrix.merged@i, total_hdf5file_path, "count_matrix/indices")
+    rhdf5::h5write(count.matrix.merged@p, total_hdf5file_path, "count_matrix/indptr")
   }
-  if (verbose) cat("Done.\n")
-  if (verbose) cat("All Done!")
+  if (embedding) {
+    rhdf5::h5createGroup(total_hdf5file_path, "embedding")
+    rhdf5::h5write(embedding.df, total_hdf5file_path, "embedding/embedding.df")
+  }
+  if (pseudo.pca) {
+    rhdf5::h5createGroup(total_hdf5file_path, "pseudopca")
+    rhdf5::h5write(pseudopca.df, total_hdf5file_path, "pseudopca/pseudopca.df")
+  }
+  if (pca) {
+    rhdf5::h5createGroup(total_hdf5file_path, "pca")
+    rhdf5::h5write(pca.df, total_hdf5file_path, "pca/pca.df")
+  }
+  if (alignment.graph) {
+    ## graph_connectivities
+    rhdf5::h5createGroup(total_hdf5file_path, "graph_connectivities")
+    rhdf5::h5write(graph.conn@x, total_hdf5file_path, "graph_connectivities/data")  
+    rhdf5::h5write(dim(graph.conn), total_hdf5file_path, "graph_connectivities/shape") 
+    rhdf5::h5write(graph.conn@i, total_hdf5file_path, "graph_connectivities/indices") 
+    rhdf5::h5write(graph.conn@p, total_hdf5file_path, "graph_connectivities/indptr") 
+    ## graph_distances
+    rhdf5::h5createGroup(total_hdf5file_path, "graph_distances")
+    rhdf5::h5write(graph.dist@x, total_hdf5file_path, "graph_distances/data")  
+    rhdf5::h5write(dim(graph.dist), total_hdf5file_path, "graph_distances/shape") 
+    rhdf5::h5write(graph.dist@i, total_hdf5file_path, "graph_distances/indices") 
+    rhdf5::h5write(graph.dist@p, total_hdf5file_path, "graph_distances/indptr") 
+  }
+  if (verbose) message("All Done!")
 }
 
 #' Create and preprocess a Seurat object
@@ -239,11 +288,11 @@ velocityInfoConos <- function(cms.list, con, clustering=NULL, groups=NULL, n.odg
     stop("No embedding found in the conos object. Run 'con$embedGraph()' before running this function.")
   }
 
-  if (verbose) cat("Merging raw count matrices...\n")
+  if (verbose) message("Merging raw count matrices...\n")
   # Merge samples to get names of relevant cells and genes
   raw.count.matrix.merged <- con$getJointCountMatrix(raw=TRUE)
 
-  if (verbose) cat("Merging velocity files...\n")
+  if (verbose) message("Merging velocity files...\n")
   # Intersect genes and cells between the conos object and all the velocity files
   cms.list <- lapply(cms.list, prepareVelocity, genes=colnames(raw.count.matrix.merged), cells=rownames(raw.count.matrix.merged))
   # Keep only genes present in velocity files from all the samples
@@ -260,7 +309,7 @@ velocityInfoConos <- function(cms.list, con, clustering=NULL, groups=NULL, n.odg
   nmat <- nmat[,order(match(colnames(nmat), rownames(emb)))]
   smat <- smat[,order(match(colnames(smat), rownames(emb)))]
 
-  if (verbose) cat("Calculating cell distances...\n")
+  if (verbose) message("Calculating cell distances...\n")
   # Get PCA results for all the samples from the conos object
   pcs <- pcaFromConos(con$samples, n.odgenes=n.odgenes)
   # Again, keep the order of cells consistent
@@ -268,12 +317,12 @@ velocityInfoConos <- function(cms.list, con, clustering=NULL, groups=NULL, n.odg
   # Calculate the cell distances based on correlation
   cell.dist <- as.dist(1 - velocyto.R::armaCor(t(pcs)))
 
-  if (verbose) cat("Filtering velocity...\n")
+  if (verbose) message("Filtering velocity...\n")
   emat %<>% velocyto.R::filter.genes.by.cluster.expression(groups, min.max.cluster.average=min.max.cluster.average.emat)
   nmat %<>% velocyto.R::filter.genes.by.cluster.expression(groups, min.max.cluster.average=min.max.cluster.average.nmat)
   smat %<>% velocyto.R::filter.genes.by.cluster.expression(groups, min.max.cluster.average=min.max.cluster.average.smat)
 
-  if (verbose) cat("All Done!")
+  if (verbose) message("All Done!")
   return(list(cell.dist=cell.dist, emat=emat, nmat=nmat, smat=smat, cell.colors=cell.colors, emb=emb))
 }
 
@@ -304,10 +353,10 @@ pcaFromConos <- function(p2.list, data.type='counts', k=30, ncomps=100, n.odgene
   od.genes <- commonOverdispersedGenes(p2.list, n.odgenes, verbose = FALSE)
   if(length(od.genes)<5) return(NULL)
 
-  if(verbose) cat('Calculating PCs for',length(p2.list),' datasets...\n')
+  if(verbose) message('Calculating PCs for',length(p2.list),' datasets...\n')
 
   # Get scaled matrices from a list of pagoda2 objects
-  sm <- scaledMatrices(p2.list, data.type=data.type, od.genes=od.genes, var.scale=TRUE, neighborhood.average=FALSE);
+  sm <- scaledMatrices(p2.list, data.type=data.type, od.genes=od.genes, var.scale=TRUE)
   # Transpose the scaled matrices since we want to run PCA on cells and not genes (like in quickPlainPCA)
   sm <- lapply(sm, t)
   # Get the names of all the cells
@@ -316,7 +365,7 @@ pcaFromConos <- function(p2.list, data.type='counts', k=30, ncomps=100, n.odgene
   pcs <- lapply(sm, function(x) {
     cm <- Matrix::colMeans(x);
     ncomps <- min(c(nrow(cm)-1,ncol(cm)-1,ncomps))
-    res <- irlba::irlba(x, nv=ncomps, nu=0, center=cm, right_only=F, reorth=T)
+    res <- irlba::irlba(x, nv=ncomps, nu=0, center=cm, right_only=FALSE, reorth=TRUE)
     res
   })
 
@@ -328,18 +377,18 @@ pcaFromConos <- function(p2.list, data.type='counts', k=30, ncomps=100, n.odgene
 }
 
 #' @export
-convertToPagoda2 <- function(con, n.pcs=100, n.odgenes=2000, verbose=T, ...) {
-  if (!requireNamespace('pagoda2', quietly=T)) {
+convertToPagoda2 <- function(con, n.pcs=100, n.odgenes=2000, verbose=TRUE, ...) {
+  if (!requireNamespace('pagoda2', quietly=TRUE)) {
     stop("'pagoda2' must be installed to convert Conos to Pagoda 2")
   }
 
-  p2 <- con$getJointCountMatrix(raw=T) %>% Matrix::t() %>%
+  p2 <- con$getJointCountMatrix(raw=TRUE) %>% Matrix::t() %>%
     Pagoda2$new(n.cores=con$n.cores, verbose=verbose, ...)
 
   if (n.pcs > 0) {
-    if (verbose) cat("Estimating PCA... ")
+    if (verbose) message("Estimating PCA... ")
     p2$reductions$PCA <- pcaFromConos(con$samples, ncomps=n.pcs, n.odgenes=n.odgenes, verbose=FALSE)
-    if (verbose) cat("Done\n")
+    if (verbose) message("Done\n")
   }
 
   p2$graphs$conos <- con$graph

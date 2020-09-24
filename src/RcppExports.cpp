@@ -118,8 +118,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // getSumWeightMatrix
-Rcpp::NumericMatrix getSumWeightMatrix(const std::vector<double>& weights, const std::vector<int>& row_inds, const std::vector<int>& col_inds, const std::vector<int>& factor_levels);
-RcppExport SEXP _conos_getSumWeightMatrix(SEXP weightsSEXP, SEXP row_indsSEXP, SEXP col_indsSEXP, SEXP factor_levelsSEXP) {
+Rcpp::NumericMatrix getSumWeightMatrix(const std::vector<double>& weights, const std::vector<int>& row_inds, const std::vector<int>& col_inds, const std::vector<int>& factor_levels, bool normalize);
+RcppExport SEXP _conos_getSumWeightMatrix(SEXP weightsSEXP, SEXP row_indsSEXP, SEXP col_indsSEXP, SEXP factor_levelsSEXP, SEXP normalizeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -127,7 +127,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const std::vector<int>& >::type row_inds(row_indsSEXP);
     Rcpp::traits::input_parameter< const std::vector<int>& >::type col_inds(col_indsSEXP);
     Rcpp::traits::input_parameter< const std::vector<int>& >::type factor_levels(factor_levelsSEXP);
-    rcpp_result_gen = Rcpp::wrap(getSumWeightMatrix(weights, row_inds, col_inds, factor_levels));
+    Rcpp::traits::input_parameter< bool >::type normalize(normalizeSEXP);
+    rcpp_result_gen = Rcpp::wrap(getSumWeightMatrix(weights, row_inds, col_inds, factor_levels, normalize));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -366,7 +367,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_conos_scoreTreeConsistency", (DL_FUNC) &_conos_scoreTreeConsistency, 4},
     {"_conos_maxStableClusters", (DL_FUNC) &_conos_maxStableClusters, 4},
     {"_conos_pareDownHubEdges", (DL_FUNC) &_conos_pareDownHubEdges, 4},
-    {"_conos_getSumWeightMatrix", (DL_FUNC) &_conos_getSumWeightMatrix, 4},
+    {"_conos_getSumWeightMatrix", (DL_FUNC) &_conos_getSumWeightMatrix, 5},
     {"_conos_adjustWeightsByCellBalancingC", (DL_FUNC) &_conos_adjustWeightsByCellBalancingC, 5},
     {"_conos_referenceWij", (DL_FUNC) &_conos_referenceWij, 5},
     {"_conos_as_factor", (DL_FUNC) &_conos_as_factor, 1},

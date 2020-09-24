@@ -1,14 +1,17 @@
 #' @importFrom dplyr %>%
+#' @importFrom ComplexHeatmap ht_opt
+#' @importFrom ComplexHeatmap Heatmap
+#' @importFrom ComplexHeatmap HeatmapAnnotation
 NULL
 
 #' @export
 sccore::embeddingPlot
 
-##' Extract specified clustering from list of conos clusterings
-##'
-##' @param clusters list of conos clusterings
-##' @param clustering name of extracted clustering
-##' @return vector of clusters, named with cell names
+#' Extract specified clustering from list of conos clusterings
+#'
+#' @param clusters list of conos clusterings
+#' @param clustering name of extracted clustering
+#' @return vector of clusters, named with cell names
 getClusteringGroups <- function(clusters, clustering) {
   if (length(clusters) < 1) {
     stop("generate a joint clustering first")
@@ -25,17 +28,18 @@ getClusteringGroups <- function(clusters, clustering) {
   return(clusters[[clustering]]$groups)
 }
 
-##' Plot panel of specified embeddings
-##'
-##' @inheritParams sccore::embeddingPlot
-##' @param embeddings list of two-column matrices with (x, y) coordinates of the embeddings. Each mutrix must have cell names in rownames.
-##' @param ncol number of columns in the panel
-##' @param nrow number of rows in the panel
-##' @param panel.size vector with two numbers, which specified (width, height) of the panel in inches. Ignored if raster == FALSE.
-##' @param adjust.func function to adjust plots before combining them to single panel. Can be used, for example, to provide color pallette of guides of the plots.
-##' @param subset a subset of cells to show (vector of cell names)
-##' @return ggplot2 object with the panel of plots
-plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow=NULL, raster=FALSE, panel.size=NULL, adjust.func=NULL, title.size=6,raster.width=NULL, raster.height=NULL, adj.list=NULL, subset=NULL, ...) {
+#' Plot panel of specified embeddings
+#'
+#' @inheritParams sccore::embeddingPlot
+#' @param embeddings list of two-column matrices with (x, y) coordinates of the embeddings. Each mutrix must have cell names in rownames.
+#' @param ncol number of columns in the panel
+#' @param nrow number of rows in the panel
+#' @param panel.size vector with two numbers, which specified (width, height) of the panel in inches. Ignored if raster == FALSE.
+#' @param adjust.func function to adjust plots before combining them to single panel. Can be used, for example, to provide color pallette of guides of the plots.
+#' @param subset a subset of cells to show (vector of cell names)
+#' @param return.plotlist return a list of ggplot objects instead of a combined plot (default=FALSE)
+#' @return ggplot2 object with the panel of plots
+plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow=NULL, raster=FALSE, panel.size=NULL, adjust.func=NULL, title.size=6,raster.width=NULL, raster.height=NULL, adj.list=NULL, subset=NULL, return.plotlist=FALSE, ...) {
   if (is.null(panel.size)) {
     panel.size <- dev.size(units="in")
   } else if (length(panel.size) == 1) {
@@ -68,7 +72,7 @@ plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow
   plot.list <- lapply(names(embeddings), function(n) {
     emb <- embeddings[[n]];
     if(!is.null(subset)) {
-      emb <- emb[rownames(emb) %in% subset,,drop=F]
+      emb <- emb[rownames(emb) %in% subset,,drop=FALSE]
     }
     embeddingPlot(emb, groups=groups, colors=colors, raster=raster,
                   raster.width=raster.width, raster.height=raster.height, ...) +
@@ -84,17 +88,19 @@ plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow
   if (!is.null(adjust.func)) {
     plot.list <- lapply(plot.list, adjust.func)
   }
+  
+  if(return.plotlist) return(plot.list)
 
   return(cowplot::plot_grid(plotlist=plot.list, ncol=ncol, nrow=nrow))
 }
 
-##' Plot panel of specified embeddings, extracting them from pagoda2 objects
-##'
-##' @inheritParams plotEmbeddings
-##' @param samples list of pagoda2 or Seurat objects
-##' @param gene gene name. If this parameter is provided, points are colored by expression of this gene.
-##' @param embedding.type type of embedding. Default: tSNE. If a numeric matrix is passed, interpreted as an actual embedding.
-##' @return ggplot2 object with the panel of plots
+#' Plot panel of specified embeddings, extracting them from pagoda2 objects
+#'
+#' @inheritParams plotEmbeddings
+#' @param samples list of pagoda2 or Seurat objects
+#' @param gene gene name. If this parameter is provided, points are colored by expression of this gene.
+#' @param embedding.type type of embedding. Default: tSNE. If a numeric matrix is passed, interpreted as an actual embedding.
+#' @return ggplot2 object with the panel of plots
 plotSamples <- function(samples, groups=NULL, colors=NULL, gene=NULL, embedding.type=NULL, ...) {
   if (!is.null(groups)) {
     groups <- as.factor(groups)
@@ -108,7 +114,7 @@ plotSamples <- function(samples, groups=NULL, colors=NULL, gene=NULL, embedding.
     }
   }
   if(class(embedding.type)=='matrix') { # actual embedding was passed
-    embeddings <- lapply(samples,function(r) embedding.type[rownames(embedding.type) %in% getCellNames(r),,drop=F])
+    embeddings <- lapply(samples,function(r) embedding.type[rownames(embedding.type) %in% getCellNames(r),,drop=FALSE])
     embeddings <- embeddings[unlist(lapply(embeddings,function(x) nrow(x)>0))]
   } else { # extract embeddings from samples
     embeddings <- lapply(samples, getEmbedding, embedding.type)
@@ -129,6 +135,7 @@ plotSamples <- function(samples, groups=NULL, colors=NULL, gene=NULL, embedding.
 
 #' Plots barplots per sample of composition of each pagoda2 application based on
 #' selected clustering
+#'
 #' @param conos.obj A conos object
 #' @param clustering name of clustering in the current object
 #' @param groups arbitrary grouping of cells (to use instead of the clustering)
@@ -141,17 +148,20 @@ plotSamples <- function(samples, groups=NULL, colors=NULL, gene=NULL, embedding.
 #' @export
 plotClusterBarplots <- function(conos.obj=NULL, clustering=NULL, groups=NULL,sample.factor=NULL,show.entropy=TRUE,show.size=TRUE,show.composition=TRUE,legend.height=0.2) {
   ## param checking
-  if(!is.null(clustering)) {
-    if(is.null(conos.obj)) stop('conos.obj must be passed if clustering name is specified');
-    if(!clustering %in% names(conos.obj$clusters)) stop('specified clustering doesn\'t exist')
-    groups <- conos.obj$clusters[[clustering]]$groups
-  } else if (is.null(groups)) {
-    if(is.null(conos.obj)) stop('either groups factor on the cells or a conos object needs to be specified')
-    if(is.null(conos.obj$clusters[[1]])) stop('conos object lacks any clustering. run $findCommunities() first')
-    groups <- conos.obj$clusters[[1]]$groups
+  if (!is.null(clustering) && is.null(conos.obj)) {
+    stop('conos.obj must be passed if clustering name is specified')
   }
 
-  groups <- as.factor(groups)
+  if (is.null(groups) && is.null(conos.obj)) {
+    stop('Either groups factor on the cells or a conos object needs to be specified, both cannot be NULL')
+  }
+
+  groups <- parseCellGroups(conos.obj, clustering, groups)
+
+  if (!is.null(groups)) {
+    groups <- as.factor(groups)
+  }
+
   if(is.null(sample.factor)) {
     sample.factor <- conos.obj$getDatasetPerCell(); # assignment to samples
   }
@@ -172,8 +182,8 @@ plotClusterBarplots <- function(conos.obj=NULL, clustering=NULL, groups=NULL,sam
   pl <- list(clp + ggplot2::theme(legend.position="none"));
 
   if(show.entropy) {
-    if (!requireNamespace("entropy", quietly=T))
-      stop("You need to install 'entropy' package to use 'show.entropy=T'")
+    if (!requireNamespace("entropy", quietly=TRUE))
+      stop("You need to install 'entropy' package to use 'show.entropy=TRUE'")
 
     n.samples <- nrow(xt);
     ne <- 1-apply(xt, 2, entropy::KL.empirical, y2=rowSums(xt), unit=c('log2')) / log2(n.samples) # relative entropy
@@ -197,10 +207,11 @@ plotClusterBarplots <- function(conos.obj=NULL, clustering=NULL, groups=NULL,sam
 
 
 #' Generate boxplot per cluster of the proportion of cells in each celltype
+#'
 #' @param conos.obj conos object
-#' @param clustering name of the clustering to use
-#' @param apptypes a factor specifying how to group the samples
-#' @param return.details if TRUE return a list with the plot and the summary data.frame
+#' @param clustering name of the clustering to use (default=NULL)
+#' @param apptypes a factor specifying how to group the samples (default=NULL)
+#' @param return.details boolean If TRUE return a list with the plot and the summary data.frame (default=FALSE)
 plotClusterBoxPlotsByAppType <- function(conos.obj, clustering=NULL, apptypes=NULL, return.details=FALSE) {
     type <- 'proportions'
     ## param checking
@@ -247,11 +258,11 @@ plotClusterBoxPlotsByAppType <- function(conos.obj, clustering=NULL, apptypes=NU
 
 #' Get markers for global clusters
 #' @param conos.obj conos object
-#' @param clustering name of the clustering to use
-#' @param min.samples.expressing minimum number of samples that must have the genes upregulated in the respective cluster
-#' @param min.percent.samples.expression minumum percent of samples that must have the gene upregulated
+#' @param clustering character Name of the clustering to use (default='multi level')
+#' @param min.samples.expressing numeric Minimum number of samples that must have the genes upregulated in the respective cluster (default=0)
+#' @param min.percent.samples.expression numeric Minumum percent of samples that must have the gene upregulated (default=0)
 getGlobalClusterMarkers <- function(conos.obj, clustering='multi level',
-                                    min.samples.expressing=0,min.percent.samples.expressing=0){
+                                    min.samples.expressing=0, min.percent.samples.expressing=0){
   .Deprecated("getDifferentialGenes")
     ## get the groups from the clusters
     groups <- as.factor(conos.obj$clusters[[clustering]]$groups)
@@ -283,21 +294,21 @@ getGlobalClusterMarkers <- function(conos.obj, clustering='multi level',
     zp
 }
 
-##' Plot fraction of variance explained by the successive reduced space components (PCA, CPCA)
-##'
-##' Requires buildGraph() or updatePairs() to be ran first with the argument score.component.variance=TRUE.
-##'
-##' @title Plot variance explained by the successive components
-##' @param conos.obj conos object
-##' @param space reduction space to be analyzed (currently, component variance scoring is only supported by PCA and CPCA)
-##' @return ggplot
-##' @export
+#' Plot fraction of variance explained by the successive reduced space components (PCA, CPCA)
+#'
+#' Requires buildGraph() or updatePairs() to be ran first with the argument score.component.variance=TRUE.
+#'
+#' @title Plot variance explained by the successive components
+#' @param conos.obj conos object
+#' @param space character Reduction space to be analyzed (currently, component variance scoring is only supported by PCA and CPCA) (default='PCA')
+#' @return ggplot
+#' @export
 plotComponentVariance <- function(conos.obj, space='PCA',plot.theme=theme_bw()) {
   pairs <- conos.obj$pairs[[space]]
 
   if(!is.null(pairs[[space]])) stop(paste("no pairs for space",space,"found. Please run buildGraph() or updatePairs() first, with score.component.variance=TRUE"))
 
-  nvs <- lapply(pairs,'[[','nv'); nvs <- setNames(unlist(nvs,recursive=F,use.names=F),unlist(lapply(nvs,names)))
+  nvs <- lapply(pairs,'[[','nv'); nvs <- setNames(unlist(nvs,recursive=FALSE,use.names=FALSE),unlist(lapply(nvs,names)))
   if(length(nvs)<1) stop("no variance information found. Please run buildGraph() or updatePairs() with score.component.variance=TRUE")
   if(space=='PCA') { # omit duplicates
     nvs <- nvs[unique(names(nvs))]
@@ -315,38 +326,40 @@ plotComponentVariance <- function(conos.obj, space='PCA',plot.theme=theme_bw()) 
 
 }
 
-##' Plot a heatmap of differential genes
-##'
-##' @param con conos (or p2) object
-##' @param groups groups in which the DE genes were determined (so that the cells can be ordered correctly)
-##' @param de differential expression result (list of data frames)
-##' @param min.auc optional minimum AUC threshold
-##' @param min.specificity optional minimum specificity threshold
-##' @param min.precision optional minimum precision threshold
-##' @param n.genes.per.cluster number of genes to show for each cluster
-##' @param additional.genes optional additional genes to include (the genes will be assigned to the closest cluster)
-##' @param labeled.gene.subset a subset of gene names to show (instead of all genes). Can be a vector of gene names, or a number of top genes (in each cluster) to show the names for.
-##' @param expression.quantile expression quantile to show (0.98 by default)
-##' @param pal palette to use for the main heatmap
-##' @param ordering order by which the top DE genes (to be shown) are determined (default "-AUC")
-##' @param column.metadata additional column metadata, passed either as a data.frame with rows named as cells, or as a list of named cell factors.
-##' @param show.gene.clusters whether to show gene cluster color codes
-##' @param remove.duplicates remove duplicated genes (leaving them in just one of the clusters)
-##' @param column.metadata.colors a list of color specifications for additional column metadata, specified according to the HeatmapMetadata format. Use "clusters" slot to specify cluster colors.
-##' @param show.cluster.legend whether to show the cluster legend
-##' @param show_heatmap_legend whether to show the expression heatmap legend
-##' @param border show borders around the heatmap and annotations
-##' @param return.details if TRUE will return a list containing the heatmap (ha), but also raw matrix (x), expression list (expl) and other info to produce the heatmap on your own.
-##' @param row.label.font.size font size for the row labels
-##' @param order.clusters whether to re-order the clusters according to the similarity of the expression patterns (of the genes being shown)
-##' @param ... extra parameters are passed to pheatmap
-##' @return ComplexHeatmap::Heatmap object (see return.details param for other output)
-##' @export
-plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,min.precision=NULL,n.genes.per.cluster=10,additional.genes=NULL,labeled.gene.subset=NULL, expression.quantile=0.99,
-                          pal=colorRampPalette(c('dodgerblue1','grey95','indianred1'))(1024),ordering='-AUC',column.metadata=NULL,show.gene.clusters=TRUE, remove.duplicates=TRUE, column.metadata.colors=NULL,
-                          show.cluster.legend=TRUE, show_heatmap_legend=FALSE, border=TRUE, return.details=FALSE, row.label.font.size=10, order.clusters=FALSE, split=FALSE, split.gap=0, ...) {
-  if (!requireNamespace("ComplexHeatmap", quietly = TRUE) || (substr(packageVersion("ComplexHeatmap"), 1, 1) <= "1")) {
-    stop("ComplexHeatmap >= 2.0 package needs to be installed to use plotDEheatmap. Please run \"devtools::install_github('jokergoo/ComplexHeatmap')\".")
+#' Plot a heatmap of differential genes
+#'
+#' @param con conos (or p2) object
+#' @param groups groups in which the DE genes were determined (so that the cells can be ordered correctly)
+#' @param de differential expression result (list of data frames)
+#' @param min.auc optional minimum AUC threshold
+#' @param min.specificity optional minimum specificity threshold
+#' @param min.precision optional minimum precision threshold
+#' @param n.genes.per.cluster number of genes to show for each cluster
+#' @param additional.genes optional additional genes to include (the genes will be assigned to the closest cluster)
+#' @param exclude.genes an optional list of genes to exclude from the heatmap
+#' @param labeled.gene.subset a subset of gene names to show (instead of all genes). Can be a vector of gene names, or a number of top genes (in each cluster) to show the names for.
+#' @param expression.quantile expression quantile to show (0.98 by default)
+#' @param pal palette to use for the main heatmap
+#' @param ordering order by which the top DE genes (to be shown) are determined (default "-AUC")
+#' @param column.metadata additional column metadata, passed either as a data.frame with rows named as cells, or as a list of named cell factors.
+#' @param show.gene.clusters whether to show gene cluster color codes
+#' @param remove.duplicates remove duplicated genes (leaving them in just one of the clusters)
+#' @param column.metadata.colors a list of color specifications for additional column metadata, specified according to the HeatmapMetadata format. Use "clusters" slot to specify cluster colors.
+#' @param show.cluster.legend whether to show the cluster legend
+#' @param show_heatmap_legend whether to show the expression heatmap legend
+#' @param border show borders around the heatmap and annotations
+#' @param return.details if TRUE will return a list containing the heatmap (ha), but also raw matrix (x), expression list (expl) and other info to produce the heatmap on your own.
+#' @param row.label.font.size font size for the row labels
+#' @param order.clusters whether to re-order the clusters according to the similarity of the expression patterns (of the genes being shown)
+#' @param cell.order explicitly supply cell order
+#' @param averaging.window optional window averaging between neighboring cells within each group (turned off by default) - useful when very large number of cells shown (requires zoo package)
+#' @param ... extra parameters are passed to pheatmap
+#' @return ComplexHeatmap::Heatmap object (see return.details param for other output)
+#' @export
+plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,min.precision=NULL,n.genes.per.cluster=10,additional.genes=NULL,exclude.genes=NULL, labeled.gene.subset=NULL, expression.quantile=0.99,pal=colorRampPalette(c('dodgerblue1','grey95','indianred1'))(1024),ordering='-AUC',column.metadata=NULL,show.gene.clusters=TRUE, remove.duplicates=TRUE, column.metadata.colors=NULL, show.cluster.legend=TRUE, show_heatmap_legend=FALSE, border=TRUE, return.details=FALSE, row.label.font.size=10, order.clusters=FALSE, split=FALSE, split.gap=0, cell.order=NULL, averaging.window=0, ...) {
+
+  if (!requireNamespace("ComplexHeatmap", quietly = TRUE) || packageVersion("ComplexHeatmap") < "2.4") {
+    stop("ComplexHeatmap >= 2.4 package needs to be installed to use plotDEheatmap. Please run \"devtools::install_github('jokergoo/ComplexHeatmap')\".")
   }
 
   groups <- as.factor(groups)
@@ -408,24 +421,33 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,m
   # place additional genes
   if(!is.null(additional.genes)) {
     genes.to.add <- setdiff(additional.genes,unlist(lapply(expl,rownames)))
-    x <- setdiff(genes.to.add,conos:::getGenes(con)); if(length(x)>0) warning('the following genes are not found in the dataset: ',paste(x,collapse=' '))
-
-    age <- do.call(rbind,lapply(sn(genes.to.add),function(gene) conos:::getGeneExpression(con,gene)))
-
-    # for each gene, measure average correlation with genes of each cluster
-    acc <- do.call(rbind,lapply(expl,function(og) rowMeans(cor(t(age),t(og)),na.rm=T)))
-    acc <- acc[,apply(acc,2,function(x) any(is.finite(x))),drop=F]
-    acc.best <- na.omit(apply(acc,2,which.max))
-
-    for(i in 1:length(acc.best)) {
-      gn <- names(acc.best)[i];
-      expl[[acc.best[i]]] <- rbind(expl[[acc.best[i]]],age[gn,,drop=F])
+    if(length(genes.to.add)>0) {
+      x <- setdiff(genes.to.add,conos:::getGenes(con)); if(length(x)>0) warning('the following genes are not found in the dataset: ',paste(x,collapse=' '))
+      
+      age <- do.call(rbind,lapply(sn(genes.to.add),function(gene) conos:::getGeneExpression(con,gene)))
+      
+      # for each gene, measure average correlation with genes of each cluster
+      acc <- do.call(rbind,lapply(expl,function(og) rowMeans(cor(t(age),t(og)),na.rm=TRUE)))
+      acc <- acc[,apply(acc,2,function(x) any(is.finite(x))),drop=FALSE]
+      acc.best <- na.omit(apply(acc,2,which.max))
+      
+      for(i in 1:length(acc.best)) {
+        gn <- names(acc.best)[i];
+        expl[[acc.best[i]]] <- rbind(expl[[acc.best[i]]],age[gn,,drop=FALSE])
+      }
+      if(additional.genes.only) { # leave only genes that were explictly specified
+        expl <- lapply(expl,function(d) d[rownames(d) %in% additional.genes,,drop=FALSE])
+        expl <- expl[unlist(lapply(expl,nrow))>0]
+        
+      }
     }
-    if(additional.genes.only) { # leave only genes that were explictly specified
-      expl <- lapply(expl,function(d) d[rownames(d) %in% additional.genes,,drop=F])
-      expl <- expl[unlist(lapply(expl,nrow))>0]
-
-    }
+  }
+  
+  # omit genes that should be excluded
+  if(!is.null(exclude.genes)) {
+    expl <- lapply(expl,function(x) {
+      x[!rownames(x) %in% exclude.genes,,drop=FALSE]
+    })
   }
 
 
@@ -435,7 +457,7 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,m
 
   if(order.clusters) {
     # group clusters based on expression similarity (of the genes shown)
-    xc <- do.call(cbind,tapply(1:ncol(exp),groups[colnames(exp)],function(ii) rowMeans(exp[,ii,drop=F])))
+    xc <- do.call(cbind,tapply(1:ncol(exp),groups[colnames(exp)],function(ii) rowMeans(exp[,ii,drop=FALSE])))
     hc <- hclust(as.dist(2-cor(xc)),method='ward.D2')
     groups <- factor(groups,levels=hc$labels[hc$order])
     expl <- expl[levels(groups)]
@@ -443,20 +465,50 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,m
     exp <- do.call(rbind,expl)
     exp <- na.omit(exp[,colnames(exp) %in% names(na.omit(groups))])
   }
+  
+  if(averaging.window>0) {
+    # check if zoo is installed
+    if(requireNamespace("zoo", quietly = TRUE)) {
+      exp <- do.call(cbind,tapply(1:ncol(exp),as.factor(groups[colnames(exp)]),function(ii) {
+        xa <- t(zoo::rollapply(as.matrix(t(exp[,ii,drop=FALSE])),averaging.window,mean,align='left',partial=TRUE))
+        colnames(xa) <- colnames(exp)[ii]
+        xa
+      }))
+    } else {
+      warning("window averaging requires zoo package to be installed. skipping.")
+    }
+  }
 
   # transform expression values
   x <- t(apply(as.matrix(exp), 1, function(xp) {
-    qs <- quantile(xp,c(1-expression.quantile,expression.quantile))
-    xp[xp<qs[1]] <- qs[1]
-    xp[xp>qs[2]] <- qs[2]
-    xp-min(xp);
-    xpr <- diff(range(xp));
-    if(xpr>0) xp <- xp/xpr;
+    if(expression.quantile<1) {
+      qs <- quantile(xp,c(1-expression.quantile,expression.quantile))
+      if(diff(qs)==0) { # too much, set to adjacent values
+        xps <- unique(xp)
+        if(length(xps)<3) { qs <- range(xp) } # only two values, just take the extremes
+        xpm <- median(xp)
+        if(sum(xp<xpm) > sum(xp>xpm)) { # more common to have values below the median
+          qs[1] <- max(xp[xp<xpm])
+        } else { # more common to have values above the median
+          qs[2] <- min(xps[xps>xpm]) # take the next one higher
+        }
+      }
+      xp[xp<qs[1]] <- qs[1]
+      xp[xp>qs[2]] <- qs[2]
+    }
+    xp <- xp-min(xp);
+    if(max(xp)>0) xp <- xp/max(xp);
     xp
   }))
+  
+  
 
 
-  o <- order(groups[colnames(x)])
+  if(!is.null(cell.order)) {
+    o <- cell.order[cell.order %in% colnames(x)]
+  } else { 
+    o <- order(groups[colnames(x)])
+  }
   x=x[,o]
 
   annot <- data.frame(clusters=groups[colnames(x)],row.names = colnames(x))
@@ -507,7 +559,15 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,m
     ra <- ComplexHeatmap::HeatmapAnnotation(df=rannot,which='row',show_annotation_name=FALSE, show_legend=FALSE, border=border,col=column.metadata.colors)
   } else { ra <- NULL }
 
-  #ComplexHeatmap::Heatmap(x, col=pal, cluster_rows=FALSE, cluster_columns=FALSE, show_column_names=FALSE, top_annotation=ha , left_annotation=ra, column_split=groups[colnames(x)], row_split=rannot[,1], row_gap = unit(0, "mm"), column_gap = unit(0, "mm"), border=T,  ...);
+  ## turns off ComplexHeatmap warning:
+  ## `use_raster` is automatically set to TRUE for a matrix with more than
+  ## 2000 columns. You can control `use_raster` argument by explicitly
+  ## setting TRUE/FALSE to it.
+  ## Set `ht_opt$message = FALSE` to turn off this message.
+  ## 
+  ht_opt$message = FALSE
+
+  #ComplexHeatmap::Heatmap(x, col=pal, cluster_rows=FALSE, cluster_columns=FALSE, show_column_names=FALSE, top_annotation=ha , left_annotation=ra, column_split=groups[colnames(x)], row_split=rannot[,1], row_gap = unit(0, "mm"), column_gap = unit(0, "mm"), border=TRUE,  ...);
   if(split) {
     ha <- ComplexHeatmap::Heatmap(x, name='expression', col=pal, cluster_rows=FALSE, cluster_columns=FALSE, show_row_names=is.null(labeled.gene.subset), show_column_names=FALSE, top_annotation=ha , left_annotation=ra, border=border,  show_heatmap_legend=show_heatmap_legend, row_names_gp = grid::gpar(fontsize = row.label.font.size), column_split=groups[colnames(x)], row_split=rannot[,1], row_gap = unit(split.gap, "mm"), column_gap = unit(split.gap, "mm"), ...);
   } else {
@@ -530,3 +590,4 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,m
 
   return(ha)
 }
+
