@@ -51,7 +51,7 @@ Please see the [Conos tutorial walkthrough](vignettes/walkthrough.md) for a deta
 
 Additional tutorials for Conos include: 
 * [Adjustment of Alignment Strength with Conos](vignettes/adjust_alignment_strength.md)
-* [Integrating RNA-seq and ATAC-seq](http://pklab.med.harvard.edu/peterk/conos/atac_rna/example.html).
+* [Integrating RNA-seq and ATAC-seq](http://pklab.med.harvard.edu/peterk/conos/atac_rna/example.html)
 
 Given a list of individual processed samples (`pl`), Conos processing can be as simple as this:
 ```r
