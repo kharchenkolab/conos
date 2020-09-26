@@ -5,7 +5,7 @@ Authors@R: c(person("Peter", "Kharchenko", email = "peter_kharchenko@hms.harvard
 Description: Wires together large collections of single-cell RNA-seq datasets, which allows for both the identification of recurrent cell clusters and the propagation of information between datasets in multi-sample or atlas-scale collections. Conos focuses on the uniform mapping of homologous cell types across heterogeneous sample collections. For instance, users could investigate a collection of dozens of peripheral blood samples from cancer patients combined with dozens of controls, which perhaps includes samples of a related tissue such as lymph nodes.
 Depends: R (>= 3.2.1), Matrix, igraph
 License: GPL3
-Copyright: See the file COPYRIGHTS for various leidenAlg copyright details
+Copyright: See the file COPYRIGHTS for various Conos copyright details
 Encoding: UTF-8
 LazyData: true
 biocViews:
