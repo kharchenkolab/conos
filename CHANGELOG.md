@@ -1,5 +1,8 @@
 ## Upcoming
 
+### Added
+- added travis config
+
 ## [1.3.1] - 2020-24-09
 
 ### Changed
