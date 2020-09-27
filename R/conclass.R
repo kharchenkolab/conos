@@ -701,6 +701,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @param name name to save the correction (default='diffusion')
     #' @param verbose boolean Verbose mode (default=TRUE)
     #' @param count.matrix alternative gene count matrix to correct (rows: genes, columns: cells; has to be dense matrix). Default: joint count matrix for all datasets.
+    #' @param normalize boolean Whether to normalize values (default=TRUE)
     correctGenes=function(genes=NULL, n.od.genes=500, fading=10.0, fading.const=0.5, max.iters=15, tol=5e-3, name='diffusion', verbose=TRUE, count.matrix=NULL, normalize=TRUE) {
       edges <- igraph::as_edgelist(self$graph)
       edge.weights <- igraph::edge.attributes(self$graph)$weight
