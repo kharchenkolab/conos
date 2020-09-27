@@ -69,9 +69,9 @@ initialize Conos class
 \describe{
 \item{\code{x}}{a named list of pagoda2 or Seurat objects (one per sample)}
 
-\item{\code{n.cores}}{number of cores (default=parallel::detectCores(logical=FALSE))}
+\item{\code{n.cores}}{numeric Number of cores (default=parallel::detectCores(logical=FALSE))}
 
-\item{\code{verbose}}{provide verbose output}
+\item{\code{verbose}}{boolean Provide verbose output}
 
 \item{\code{override.conos.plot.theme}}{(default=FALSE)}
 }
@@ -95,9 +95,9 @@ initialize or add a set of samples to the conos panel. Note: this will simply ad
 \describe{
 \item{\code{x}}{a named list of pagoda2 or Seurat objects (one per sample)}
 
-\item{\code{replace}}{whether the existing samples should be purged before adding new ones}
+\item{\code{replace}}{boolean Whether the existing samples should be purged before adding new ones}
 
-\item{\code{verbose}}{provide verbose output}
+\item{\code{verbose}}{boolean Provide verbose output}
 }
 \if{html}{\out{</div>}}
 }
@@ -153,63 +153,63 @@ Build the joint graph that encompasses all the samples, establishing weighted in
 \describe{
 \item{\code{k}}{(default=15)}
 
-\item{\code{k}}{k.self (default=10)}
+\item{\code{k.self}}{(default=10)}
 
-\item{\code{k}}{k.self.weight (default=0.1)}
+\item{\code{k.self.weight}}{(default=0.1)}
 
-\item{\code{k}}{alignment.strength (default=NULL)}
+\item{\code{alignment.strength}}{(default=NULL)}
 
-\item{\code{k}}{space (default='PCA')}
+\item{\code{space}}{(default='PCA')}
 
-\item{\code{k}}{matching.method (default=='mNN')}
+\item{\code{matching.method}}{(default=='mNN')}
 
-\item{\code{k}}{metric (default='angular')}
+\item{\code{metric}}{(default='angular')}
 
-\item{\code{k}}{k1 (default=k)}
+\item{\code{k1}}{(default=k)}
 
-\item{\code{k}}{data.type (default='counts')}
+\item{\code{data.type}}{(default='counts')}
 
-\item{\code{k}}{l2.sigma (default=1e5)}
+\item{\code{l2.sigma}}{(default=1e5)}
 
-\item{\code{k}}{var.scale (default=TRUE)}
+\item{\code{var.scale}}{(default=TRUE)}
 
-\item{\code{k}}{ncomps (default=40)}
+\item{\code{ncomps}}{(default=40)}
 
-\item{\code{k}}{n.odgenes (default=2000)}
+\item{\code{n.odgenes}}{(default=2000)}
 
-\item{\code{k}}{neighborhood.average (default=FALSE)}
+\item{\code{matching.mask}}{(default=NULL)}
 
-\item{\code{k}}{neighborhood.average.k (default=10)}
+\item{\code{exclude.samples}}{(default=NULL)}
 
-\item{\code{k}}{matching.mask (default=NULL)}
+\item{\code{common.centering}}{(default=TRUE)}
 
-\item{\code{k}}{exclude.samples (default=NULL)}
+\item{\code{verbose}}{boolean Provide verbose output}
 
-\item{\code{k}}{common.centering (default=TRUE)}
+\item{\code{base.groups}}{(default=NULL)}
 
-\item{\code{k}}{base.groups (default=NULL)}
+\item{\code{append.global.axes}}{(default=TRUE)}
 
-\item{\code{k}}{append.global.axes (default=TRUE)}
+\item{\code{append.decoys}}{(default=TRUE)}
 
-\item{\code{k}}{append.decoys (default=TRUE)}
+\item{\code{decoy.threshold}}{(default=1)}
 
-\item{\code{k}}{decoy.threshold (default=1)}
+\item{\code{n.decoys}}{(default=k*2)}
 
-\item{\code{k}}{n.decoys (default=k*2)}
+\item{\code{score.component.variance}}{(default=FALSE)}
 
-\item{\code{k}}{score.component.variance (default=FALSE)}
+\item{\code{balance.edge.weights}}{(default=FALSE)}
 
-\item{\code{k}}{balance.edge.weights (default=FALSE)}
+\item{\code{balancing.factor.per.cell}}{(default=NULL)}
 
-\item{\code{k}}{balancing.factor.per.cell (default=NULL)}
+\item{\code{same.factor.downweight}}{(default=1.0)}
 
-\item{\code{k}}{same.factor.downweight (default=1.0)}
+\item{\code{k.same.factor}}{(default=k)}
 
-\item{\code{k}}{k.same.factor (default=k)}
+\item{\code{balancing.factor.per.sample}}{(default=NULL)}
 
-\item{\code{k}}{balancing.factor.per.sample (default=NULL)}
+\item{\code{neighborhood.average}}{(default=FALSE)}
 
-\item{\code{verbose}}{provide verbose output}
+\item{\code{neighborhood.average.k}}{(default=10)}
 }
 \if{html}{\out{</div>}}
 }
@@ -233,7 +233,7 @@ Calculates differential genes. Estimates base mean, z-score, p-values, specifici
   n.genes.to.show = 10,
   inner.clustering = FALSE,
   append.specificity.metrics = TRUE,
-  append.auc = TRUE,
+  append.auc = FALSE,
   n.cores = self$n.cores
 )}\if{html}{\out{</div>}}
 }
@@ -243,13 +243,13 @@ Calculates differential genes. Estimates base mean, z-score, p-values, specifici
 \describe{
 \item{\code{clustering}}{name of the clustering to use}
 
-\item{\code{groups}}{a factor on cells to use for coloring.}
+\item{\code{groups}}{a factor on cells to use for coloring}
 
 \item{\code{z.threshold}}{(default=3.0)}
 
 \item{\code{upregulated.only}}{(default=FALSE)}
 
-\item{\code{verbose}}{provide verbose output}
+\item{\code{verbose}}{boolean Provide verbose output}
 
 \item{\code{n.genes.to.show}}{(default=10)}
 
@@ -259,7 +259,7 @@ Calculates differential genes. Estimates base mean, z-score, p-values, specifici
 
 \item{\code{append.auc}}{(default=FALSE)}
 
-\item{\code{n.cores}}{number of cores (default=parallel::detectCores(logical=FALSE))}
+\item{\code{n.cores}}{numeric Number of cores (default=parallel::detectCores(logical=FALSE))}
 }
 \if{html}{\out{</div>}}
 }
@@ -290,13 +290,13 @@ find joint communities
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{method}}{community detection method (igraph syntax)}
+\item{\code{method}}{community detection method (igraph syntax) (default=leiden.community)}
 
-\item{\code{min.group.size}}{minimal allowed community size}
+\item{\code{min.group.size}}{numeric Minimal allowed community size (default=0)}
 
-\item{\code{name}}{optional name of the clustering result (will default to the algorithm name)}
+\item{\code{name}}{optional name of the clustering result (will default to the algorithm name) (default=NULL)}
 
-\item{\code{verbose}}{provide verbose output}
+\item{\code{verbose}}{boolean Provide verbose output}
 
 \item{\code{...}}{extra parameters are passed to the specified community detection method}
 }
@@ -331,11 +331,11 @@ plot panel of individual embeddings per sample with joint coloring
 \describe{
 \item{\code{clustering}}{name of the clustering to use}
 
-\item{\code{groups}}{a factor on cells to use for coloring.}
+\item{\code{groups}}{a factor on cells to use for coloring}
 
-\item{\code{colors}}{a color factor (named with cell names) use for cell coloring.}
+\item{\code{colors}}{a color factor (named with cell names) use for cell coloring}
 
-\item{\code{gene}}{show expression of a gene.}
+\item{\code{gene}}{show expression of a gene}
 
 \item{\code{use.common.embedding}}{(default=FALSE)}
 
@@ -373,21 +373,31 @@ Generate an embedding of a joint graph.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{method}}{embedding method. Currently 'largeVis' and 'UMAP' are supported}
+\item{\code{method}}{embedding method (default='largeVis'). Currently 'largeVis' and 'UMAP' are supported}
 
-\item{\code{M, }}{gamma, alpha, sgd__batched - largeVis parameters (defaults are 1, 1, 0.01, 1e8 respectively).}
+\item{\code{M}}{numeric The number of negative edges to sample for each positive edge (default=1)}
 
-\item{\code{perplexity}}{perplexity passed to largeVis (defaults to NA).}
+\item{\code{gamma}}{numeric The strength of the force pushing non-neighbor nodes apart (default=1)}
 
-\item{\code{seed}}{random seed for the largeVis algorithm. Default: 1.}
+\item{\code{alpha}}{numeric Hyperparameter used in the default distance function, \eqn{1 / (1 + \alpha \dot ||y_i - y_j||^2)} (default=0.1).  The function relates the distance
+between points in the low-dimensional projection to the likelihood that the two points are nearest neighbors. Increasing \eqn{\alpha} tends
+to push nodes and their neighbors closer together; decreasing \eqn{\alpha} produces a broader distribution. Setting \eqn{\alpha} to zero
+enables the alternative distance function. \eqn{\alpha} below zero is meaningless.}
 
-\item{\code{verbose}}{provide verbose output}
+\item{\code{perplexity}}{perplexity passed to largeVis (default=NA)}
 
-\item{\code{target.dims}}{number of dimensions for the reduction. Default: 2. Higher dimensions can be used to generate embeddings for subsequent reductions by other methods, such as tSNE}
+\item{\code{seed}}{numeric Random seed for the largeVis algorithm (default=1)}
 
-\item{\code{n.cores}}{number of cores (default=parallel::detectCores(logical=FALSE))}
+\item{\code{verbose}}{boolean Provide verbose output}
+
+\item{\code{target.dims}}{numeric Number of dimensions for the reduction (default=2). Higher dimensions can be used to generate embeddings for subsequent reductions by other methods, such as tSNE}
+
+\item{\code{n.cores}}{numeric Number of cores (default=parallel::detectCores(logical=FALSE))}
 
 \item{\code{...}}{additional arguments, passed to UMAP embedding (run ?conos:::embedGraphUmap for more info)}
+
+\item{\code{sgd__batched}}{The number of edges to process during SGD (default=1e8). Defaults to a value set based on the size of the dataset. If the parameter given is
+between \code{0} and \code{1}, the default value will be multiplied by the parameter.}
 }
 \if{html}{\out{</div>}}
 }
@@ -407,7 +417,7 @@ Plot cluster stability statistics.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{clustering}}{name of the clustering result to show}
+\item{\code{clustering}}{name of the clustering result to show (default=NULL)}
 
 \item{\code{what}}{Show a specific plot (ari - adjusted rand index, fjc - flat Jaccard, hjc - hierarchical Jaccard, dend - cluster dendrogram) (default='all')}
 }
@@ -439,13 +449,13 @@ Plot joint graph.
 
 \item{\code{clustering}}{name of the clustering to use}
 
-\item{\code{groups}}{a factor on cells to use for coloring.}
+\item{\code{groups}}{a factor on cells to use for coloring}
 
-\item{\code{colors}}{a color factor (named with cell names) use for cell coloring.}
+\item{\code{colors}}{a color factor (named with cell names) use for cell coloring}
 
-\item{\code{gene}}{show expression of a gene.}
+\item{\code{gene}}{show expression of a gene}
 
-\item{\code{subset}}{a subset of cells to show.}
+\item{\code{subset}}{a subset of cells to show (default=NULL)}
 }
 \if{html}{\out{</div>}}
 }
@@ -477,23 +487,25 @@ Smooth expression of genes, so they better represent structure of the graph.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{genes}}{list of genes for smoothing}
+\item{\code{genes}}{list of genes for smoothing (default=NULL)}
 
-\item{\code{n.od.genes}}{if 'genes' is NULL, top n.od.genes of overdispersed genes are taken across all samples. Default: 500.}
+\item{\code{n.od.genes}}{if 'genes' is NULL, top n.od.genes of overdispersed genes are taken across all samples (default=500)}
 
-\item{\code{fading}}{level of fading of expression change from distance on the graph (parameter 'a' of the equation). Default: 10.}
+\item{\code{fading}}{level of fading of expression change from distance on the graph (parameter 'a' of the equation) (default=10)}
 
-\item{\code{fading.const}}{minimal penalty for each new edge during diffusion (parameter 'b' of the equation). Default: 0.5.}
+\item{\code{fading.const}}{minimal penalty for each new edge during diffusion (parameter 'b' of the equation) (default=0.5)}
 
-\item{\code{max.iters}}{maximal number of diffusion iterations. Default: 15.}
+\item{\code{max.iters}}{maximal number of diffusion iterations (default=15)}
 
-\item{\code{tol}}{tolerance after which the diffusion stops. Default: 5e-3.}
+\item{\code{tol}}{tolerance after which the diffusion stops (default=5e-3)}
 
-\item{\code{name}}{name to save the correction. Default: diffusion.}
+\item{\code{name}}{name to save the correction (default='diffusion')}
 
-\item{\code{verbose}}{provide verbose output}
+\item{\code{verbose}}{boolean Verbose mode (default=TRUE)}
 
 \item{\code{count.matrix}}{alternative gene count matrix to correct (rows: genes, columns: cells; has to be dense matrix). Default: joint count matrix for all datasets.}
+
+\item{\code{normalize}}{boolean Whether to normalize values (default=TRUE)}
 }
 \if{html}{\out{</div>}}
 }
@@ -540,11 +552,11 @@ Estimate per-cluster molecule count matrix by summing up the molecules of each g
 \describe{
 \item{\code{clustering}}{name of the clustering to use}
 
-\item{\code{groups}}{a factor on cells to use for coloring.}
+\item{\code{groups}}{a factor on cells to use for coloring}
 
-\item{\code{common.genes}}{bring individual sample matrices to a common gene list}
+\item{\code{common.genes}}{boolean Whether to bring individual sample matrices to a common gene list (default=TRUE)}
 
-\item{\code{omit.na.cells}}{if set to FALSE, the resulting matrices will include a first column named 'NA' that will report total molecule counts for all of the cells that were not covered by the provided factor.}
+\item{\code{omit.na.cells}}{boolean If set to FALSE, the resulting matrices will include a first column named 'NA' that will report total molecule counts for all of the cells that were not covered by the provided factor. (default=TRUE)}
 }
 \if{html}{\out{</div>}}
 }
@@ -577,7 +589,7 @@ something
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{raw}}{If TRUE, return merged "raw" count matrices. Otherwise, return the merged count matrices.}
+\item{\code{raw}}{boolean If TRUE, return merged "raw" count matrices. Otherwise, return the merged count matrices. (default=FALSE)}
 }
 \if{html}{\out{</div>}}
 }

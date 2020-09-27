@@ -14,8 +14,6 @@ plotEmbeddings(
   panel.size = NULL,
   adjust.func = NULL,
   title.size = 6,
-  raster.width = NULL,
-  raster.height = NULL,
   adj.list = NULL,
   subset = NULL,
   return.plotlist = FALSE,
@@ -27,7 +25,7 @@ plotEmbeddings(
 
 \item{groups}{vector of cluster labels, names contain cell names (default=NULL)}
 
-\item{colors}{vector of numbers, which must be shouwn with point colors, names contain cell names (default=NULL). This argument is ignored if groups are provided.}
+\item{colors}{vector of numbers, which must be shown with point colors, names contain cell names (default=NULL). This argument is ignored if groups are provided.}
 
 \item{ncol}{number of columns in the panel}
 
@@ -39,13 +37,9 @@ plotEmbeddings(
 
 \item{adjust.func}{function to adjust plots before combining them to single panel. Can be used, for example, to provide color pallette of guides of the plots.}
 
-\item{raster.width}{width of the plot in inches. (default=NULL). Ignored if raster == FALSE.}
-
-\item{raster.height}{height of the plot in inches. (default=NULL). Ignored if raster == FALSE.}
-
 \item{subset}{a subset of cells to show (vector of cell names)}
 
-\item{return.plotlist}{return a list of ggplot objects instead of a combined plot (default:FALSE)}
+\item{return.plotlist}{return a list of ggplot objects instead of a combined plot (default=FALSE)}
 
 \item{...}{
   Arguments passed on to \code{\link[ggrepel:geom_text_repel]{ggrepel::geom_label_repel}}
