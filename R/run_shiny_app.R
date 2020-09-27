@@ -633,9 +633,9 @@ conosShinyApp <- function(con, N=30, leaf.labels=NULL, tissue_mapping=NULL, tiss
       struct_similarity <- dataInput()$structure_vectors
       if (is.null(click_value()) & is.null(db_click_value())){
         Rowv <- dataInput()$dend.cut
-        heatmaply(t(struct_similarity),colors = reds_palette(10),Rowv=Rowv, dendrogram = "column" )}
+        d3heatmap::d3heatmap(t(struct_similarity),colors = reds_palette(10),Rowv=Rowv, dendrogram = "column" )}
       else{
-        heatmaply(t(struct_similarity),colors = reds_palette(10), dendrogram = "column" )}
+        d3heatmap::d3heatmap(t(struct_similarity),colors = reds_palette(10), dendrogram = "column" )}
     })
 
     output$treePlot3 <- renderUI({
@@ -647,9 +647,9 @@ conosShinyApp <- function(con, N=30, leaf.labels=NULL, tissue_mapping=NULL, tiss
       dists <- dist(t(struct_similarity))
       if (is.null(click_value()) & is.null(db_click_value())){
         Rowv <- dataInput()$dend.cut
-         heatmaply::heatmaply(dists, colors = rev(reds_palette((max(dists))%/%0.1)), Rowv=Rowv, Colv=Rowv)}
+         d3heatmap::d3heatmap(dists, colors = rev(reds_palette((max(dists))%/%0.1)), Rowv=Rowv, Colv=Rowv)}
       else{
-         heatmaply::heatmaply(dists, colors = rev(reds_palette((max(dists))%/%0.1)), dendrogram = "none")
+         d3heatmap::d3heatmap(dists, colors = rev(reds_palette((max(dists))%/%0.1)), dendrogram = "none")
       }
     })
 
