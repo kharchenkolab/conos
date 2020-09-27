@@ -135,7 +135,7 @@ Then install [pagoda2](https://github.com/kharchenkolab/pagoda2) (or Seurat), th
 devtools::install_github("kharchenkolab/conos")
 ```
 
-If you have problems with `sccore` package, run `devtools::install_github("kharchenkolab/sccore")` before installing `conos`.
+If you have problems with the package `sccore`, run `devtools::install_github("kharchenkolab/sccore")` before installing `conos`.
 
 #### System dependencies
 
