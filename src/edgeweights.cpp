@@ -1,10 +1,13 @@
-// [[Rcpp::plugins(openmp)]]
 // [[Rcpp::plugins(cpp11)]]
 // [[Rcpp::depends(RcppProgress)]]
 // [[Rcpp::depends(RcppEigen)]]
 // [[Rcpp::depends(RcppArmadillo)]]
 #include "largeVis.h"
 #include <vector>
+
+#ifdef _OPENMP
+  #include <omp.h>
+#endif
 
 // copied from https://github.com/elbamos/largeVis
 

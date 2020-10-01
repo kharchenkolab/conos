@@ -4,6 +4,10 @@
 #include <iostream>
 #include <cmath>
 
+#ifdef _OPENMP
+  #include <omp.h>
+#endif
+
 using namespace std;
 using namespace arma;
 using namespace Rcpp;
