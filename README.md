@@ -164,7 +164,7 @@ brew install openssl curl-openssl
 ```
 (You may need to run `brew uninstall curl` in order for `brew install curl-openssl` to be successful.)
 
-For further instructions on installing Conos with Mac OS, please refer to the following wiki page: [Installing Conos for Mac OS](https://github.com/kharchenkolab/conos/wiki/Installing-Conos-for-Mac-OS)
+As of version 1.3.2, Conos should sucessfully install on Mac OS. However, if there are issues, please refer to the following wiki page for further instructions on installing Conos with Mac OS: [Installing Conos for Mac OS](https://github.com/kharchenkolab/conos/wiki/Installing-Conos-for-Mac-OS)
 
 ### Installing Conos as Docker container
 
