@@ -16,7 +16,7 @@ else
  IGRAPH_LIB := $(PKGB_PATH)/x64/igraph.dll
 endif
 
-PKG_LIBS=-L/usr/lib/ -L"." -lpthread -lstdc++ -ln2 -lleidenalg -lm $(shell "${R_HOME}/bin${R_ARCH_BIN}/Rscript.exe" -e "Rcpp:::LdFlags()") $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS) $(SHLIB_OPENMP_CXXFLAGS) $(PKGB_PATH)/igraph.so
+PKG_LIBS=-L/usr/lib/ -L"." -lpthread -ln2 -lleidenalg -lm $(shell "${R_HOME}/bin${R_ARCH_BIN}/Rscript.exe" -e "Rcpp:::LdFlags()") $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS) $(SHLIB_OPENMP_CXXFLAGS) $(IGRAPH_LIB)
 CXX_STD = CXX11
 MkInclude = $(R_HOME)/etc${R_ARCH}/Makeconf
 
