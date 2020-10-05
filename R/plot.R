@@ -294,7 +294,7 @@ getGlobalClusterMarkers <- function(conos.obj, clustering='multi level',
 #' @param space character Reduction space to be analyzed (currently, component variance scoring is only supported by PCA and CPCA) (default='PCA')
 #' @return ggplot
 #' @export
-plotComponentVariance <- function(conos.obj, space='PCA',plot.theme=theme_bw()) {
+plotComponentVariance <- function(conos.obj, space='PCA',plot.theme=ggplot2::theme_bw()) {
   pairs <- conos.obj$pairs[[space]]
 
   if(!is.null(pairs[[space]])) stop(paste("no pairs for space",space,"found. Please run buildGraph() or updatePairs() first, with score.component.variance=TRUE"))
