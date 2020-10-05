@@ -1,10 +1,14 @@
 ---
 title: "Conos Walkthrough"
-output:
-  github_document:
+output: 
+  rmarkdown::html_vignette:
     toc: true
-    toc_depth: 2
+vignette: >
+  %\VignetteIndexEntry{"Raster geoms"}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
+
 
 - [Loading the Data](#loading-the-data)
   * [Pre-processing with Pagoda2](#pre-processing-with-pagoda2)
@@ -445,12 +449,15 @@ plot(dend)
 ## Using Shiny Application
 
 An alternative way to explore this the hierarchical community structure is by
-using an interactive app. The app also allows users to visualize tissue
+using an interactive app, currently found at https://github.com/kharchenkolab/conosViz. The app also allows users to visualize tissue
 composition and sample similarities:
 
+
 ```{r, eval=FALSE}
-conosShinyApp(con, N=30)
+library(conosViz)
+conosViz::conosShinyApp(con, N=30)
 ```
+
 
 # Label Propagation
 
@@ -649,3 +656,27 @@ We can also check the entropy, as described above:
 con$findCommunities()
 plotClusterBarplots(con, legend.height = 0.1)
 ```
+
+# View Conos in Pagoda2 Application
+
+Users may also interactively explore Conos objects in the [Pagoda2](https://github.com/kharchenkolab/pagoda2) application. The process is very similar to the Pagoda2 walkthrough. 
+
+After constructing the `con` object as shown above, users can save to a serialized `*.bin` file and upload into the pagoda application with the `p2app4conos()` function:
+
+```{r}
+library(pagoda2)
+p2app = p2app4conos(conos=con) ## users may also save the *.bin
+## p2app4conos(conos=con, file="conosApp1.bin", save=TRUE)
+show.app(app=p2appconos, name='conos_app')
+```
+
+
+
+
+
+
+
+
+
+
+

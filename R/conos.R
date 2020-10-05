@@ -1056,7 +1056,7 @@ scanKModularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.in
 
   k.sens <- data.frame(k=k.seq,m=as.numeric(unlist(xl)))
   if(plot) {
-    ggplot2::ggplot(k.sens,aes(x=k,y=m))+theme_bw()+ggplot2::geom_point()+ggplot2::geom_smooth()+ggplot2::xlab('modularity')+ggplot2::ylab('k')
+    ggplot2::ggplot(k.sens,aes(x=k,y=m))+ggplot2::theme_bw()+ggplot2::geom_point()+ggplot2::geom_smooth()+ggplot2::xlab('modularity')+ggplot2::ylab('k')
   }
 
   return(k.sens);

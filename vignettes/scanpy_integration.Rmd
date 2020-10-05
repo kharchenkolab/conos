@@ -1,10 +1,13 @@
 ---
 title: "Convert Conos Object to ScanPy"
-output:
-  rmarkdown::github_document:
+output: 
+  rmarkdown::html_vignette:
     toc: true
+vignette: >
+  %\VignetteIndexEntry{"Raster geoms"}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
-
 
 First load the Conos library and the corresponding data:
 
