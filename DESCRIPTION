@@ -48,8 +48,7 @@ Suggests:
     rhdf5,
     rmarkdown,
     Seurat,
-    shinycssloaders,
-    tidyverse
+    shinycssloaders
 VignetteBuilder: knitr
 RoxygenNote: 7.1.1
 LinkingTo: Rcpp, RcppArmadillo, RcppEigen, RcppProgress, igraph

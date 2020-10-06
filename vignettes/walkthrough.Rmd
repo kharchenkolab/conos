@@ -4,7 +4,7 @@ output:
   rmarkdown::html_vignette:
     toc: true
 vignette: >
-  %\VignetteIndexEntry{"Raster geoms"}
+  %\VignetteIndexEntry{"Conos Walkthrough"}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -667,7 +667,7 @@ After constructing the `con` object as shown above, users can save to a serializ
 library(pagoda2)
 p2app = p2app4conos(conos=con) ## users may also save the *.bin
 ## p2app4conos(conos=con, file="conosApp1.bin", save=TRUE)
-show.app(app=p2appconos, name='conos_app')
+show.app(app=p2app, name='conos_app')
 ```
 
 

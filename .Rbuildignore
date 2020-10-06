@@ -3,5 +3,5 @@
 .travis.yml
 CHANGELOG.md
 ^LICENSE\.md$
-conos*.tar.gz
-data-raw
+^doc$
+^Meta$
