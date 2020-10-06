@@ -42,7 +42,6 @@ Suggests:
     entropy,
     ggrastr,
     knitr,
-    pagoda2,
     pbapply,
     PMA,
     pROC,
@@ -55,7 +54,6 @@ RoxygenNote: 7.1.1
 LinkingTo: Rcpp, RcppArmadillo, RcppEigen, RcppProgress, igraph
 NeedsCompilation: yes
 Remotes:
-    kharchenkolab/pagoda2,
     kharchenkolab/sccore,
     jokergoo/ComplexHeatmap,
     cran/clues

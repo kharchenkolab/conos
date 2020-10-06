@@ -185,8 +185,9 @@ con$findCommunities()
 plotClusterBarplots(con, legend.height = 0.1)
 
 ## -----------------------------------------------------------------------------
-library(pagoda2)
-p2app = p2app4conos(conos=con) ## users may also save the *.bin
-## p2app4conos(conos=con, file="conosApp1.bin", save=TRUE)
-show.app(app=p2app, name='conos_app')
+## 
+## library(pagoda2)
+## p2app = p2app4conos(conos=con, file="conosApp1.bin", save=TRUE)
+## show.app(app=p2app, name='conos_app')
+## 
 
