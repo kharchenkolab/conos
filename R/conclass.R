@@ -724,6 +724,11 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         }
         count.matrix <- count.matrix[vn,]
       }
+      
+      ## Wrapper to make is.label.fixed optional
+      smoothMatrixOnGraph <- function(edges, edge.weights, matrix, is.label.fixed=logical(), ...) {
+        smooth_count_matrix(edges, edge.weights, matrix, is_label_fixed=is.label.fixed, ...)
+      }
 
       cm <- smoothMatrixOnGraph(edges, edge.weights, count.matrix, max_n_iters=max.iters, diffusion_fading=fading,
                               diffusion_fading_const=fading.const, verbose=verbose, normalize=normalize)

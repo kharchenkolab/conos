@@ -7,10 +7,6 @@
 #' @importFrom magrittr %$%
 NULL
 
-#' Wrapper to make is.label.fixed optional
-smoothMatrixOnGraph <- function(edges, edge.weights, matrix, is.label.fixed=logical(), ...) {
-  smooth_count_matrix(edges, edge.weights, matrix, is_label_fixed=is.label.fixed, ...)
-}
 
 scaledMatricesP2 <- function(p2.objs, data.type, od.genes, var.scale) {
   ## Common variance scaling

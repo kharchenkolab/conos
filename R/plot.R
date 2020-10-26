@@ -4,6 +4,7 @@
 #' @importFrom ComplexHeatmap HeatmapAnnotation
 NULL
 
+## exporting to inherit parameters below, plotEmbeddings()
 #' @export
 sccore::embeddingPlot
 
