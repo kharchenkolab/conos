@@ -787,8 +787,6 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         if(all(is.na(colors))) stop(paste("Gene", gene,"is not found in any of the samples"))
       }
 
-      cat("GOT TO is.null(groups) & is.null(colors)")
-
       if(is.null(groups) && is.null(colors)) {
         if(color.by == 'cluster') {
           groups <- getClusteringGroups(self$clusters, clustering)
@@ -798,13 +796,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           stop('Supported values of color.by are ("cluster" and "sample")')
         }
       }
-
-      print("HERE ARE GROUPS")
-      print(groups)
-      print("*******************")
-      print("HERE ARE COLORS")
-      print(colors)
-      print("*******************")      
+  
       return(embeddingPlot(emb, groups=groups, colors=colors, plot.theme=private$adjustTheme(plot.theme), ...))
     },
 
