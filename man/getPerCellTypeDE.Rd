@@ -11,10 +11,12 @@ getPerCellTypeDE(
   cooks.cutoff = FALSE,
   ref.level = NULL,
   min.cell.count = 10,
+  remove.na = TRUE,
+  max.cell.count = Inf,
+  test = "LRT",
   independent.filtering = FALSE,
   n.cores = 1,
   cluster.sep.chr = "<!!>",
-  remove.na = TRUE,
   return.details = TRUE
 )
 }
@@ -27,13 +29,21 @@ getPerCellTypeDE(
 
 \item{cooks.cutoff}{cooksCutoff for DESeq2}
 
+\item{ref.level}{the reference level of the sample.groups against which the comparison should be made (default, NULL, will pick the first one)}
+
+\item{min.cell.count}{minimal number of cells per cluster for a sample to be taken into account in a comparison}
+
+\item{remove.na}{boolean If TRUE, remove NAs from DESeq calculations, which often arise as comparisons not possible (default=TRUE)}
+
+\item{max.cell.count}{maximal number of cells per cluster per sample to include in a comparison (useful for comparing the number of DE genes between cell types)}
+
+\item{test}{which DESeq2 test to use (options: "LRT" (default), "Wald")}
+
 \item{independent.filtering}{independentFiltering for DESeq2}
 
 \item{n.cores}{number of cores}
 
 \item{cluster.sep.chr}{character string of length 1 specifying a delimiter to separate cluster and app names}
-
-\item{remove.na}{boolean If TRUE, remove NAs from DESeq calculations, which often arise as comparisons not possible (default=TRUE)}
 
 \item{return.details}{return details}
 }

@@ -1,5 +1,4 @@
 // [[Rcpp::depends(RcppArmadillo)]]
-// [[Rcpp::plugins(openmp)]]
 // [[Rcpp::plugins(cpp11)]]
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::depends(RcppProgress)]]
@@ -7,6 +6,10 @@
 
 using namespace std;
 using namespace Rcpp;
+
+#ifdef _OPENMP
+  #include <omp.h>
+#endif
 
 
 // greedy algorithm for removing edges (sets their @x to 0) from a sparce matrix, starting with higher-conencted nodes

@@ -14,8 +14,6 @@ plotEmbeddings(
   panel.size = NULL,
   adjust.func = NULL,
   title.size = 6,
-  raster.width = NULL,
-  raster.height = NULL,
   adj.list = NULL,
   subset = NULL,
   return.plotlist = FALSE,

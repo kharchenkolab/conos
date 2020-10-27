@@ -1,10 +1,13 @@
 ---
 title: "Convert Conos Object to ScanPy"
-output:
-  rmarkdown::github_document:
+output: 
+  rmarkdown::html_vignette:
     toc: true
+vignette: >
+  %\VignetteIndexEntry{"Convert Conos Object to ScanPy"}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
-
 
 First load the Conos library and the corresponding data:
 
@@ -47,7 +50,7 @@ Save data (set `exchange_dir` to your path):
 
 
 ```{r}
-exchange_dir <- "~/scanpy_demo"
+exchange_dir <- "."
 hdf5file = "example.h5"
 dir.create(exchange_dir)
 saveConosForScanPy(con, output.path=exchange_dir, hdf5_filename=hdf5file, verbose=TRUE)

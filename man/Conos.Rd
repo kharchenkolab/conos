@@ -389,6 +389,7 @@ enables the alternative distance function. \eqn{\alpha} below zero is meaningles
 
 \item{\code{verbose}}{boolean Provide verbose output}
 
+
 \item{\code{target.dims}}{numeric Number of dimensions for the reduction (default=2). Higher dimensions can be used to generate embeddings for subsequent reductions by other methods, such as tSNE}
 
 \item{\code{n.cores}}{numeric Number of cores (default=parallel::detectCores(logical=FALSE))}
@@ -454,11 +455,11 @@ Plot joint graph.
 
 \item{\code{groups}}{a factor on cells to use for coloring.}
 
-\item{\code{colors}}{a color factor (named with cell names) use for cell coloring.}
+\item{\code{colors}}{a color factor (named with cell names) use for cell coloring}
 
-\item{\code{gene}}{show expression of a gene.}
+\item{\code{gene}}{show expression of a gene}
 
-\item{\code{subset}}{a subset of cells to show.}
+\item{\code{subset}}{a subset of cells to show (default=NULL)}
 }
 \if{html}{\out{</div>}}
 }
@@ -504,6 +505,8 @@ Smooth expression of genes, so they better represent structure of the graph.
 \item{\code{verbose}}{boolean Verbose mode (default=TRUE)}
 
 \item{\code{count.matrix}}{alternative gene count matrix to correct (rows: genes, columns: cells; has to be dense matrix). Default: joint count matrix for all datasets.}
+
+\item{\code{normalize}}{boolean Whether to normalize values (default=TRUE)}
 }
 \if{html}{\out{</div>}}
 }

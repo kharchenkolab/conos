@@ -24,9 +24,9 @@ The formula used is the one used by the \code{LargeVis} reference implementation
 # Observe that increasing K has no effect on processing time
 N <- 70000 # MNIST
 K <- 10:250
-plot(K, sgdBatches(rep(N, length(K)), N * K / 2))
+plot(K, conos:::sgdBatches(rep(N, length(K)), N * K / 2))
 
 # Observe that processing time scales linarly with N
 N <- c(seq(from = 1, to = 10000, by = 100), seq(from = 10000, to = 10000000, by = 1000))
-plot(N, sgdBatches(N))
+plot(N, conos:::sgdBatches(N))
 }

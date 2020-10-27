@@ -1,0 +1,16 @@
+language: r
+
+## minimal travis config
+## https://docs.travis-ci.com/user/languages/r/
+## https://towardsdatascience.com/travis-ci-for-r-advanced-guide-719cb2d9e0e5
+
+## no tests, coverage
+## check as CRAN
+
+before_install:
+  - sudo apt-get update
+  - sudo apt-get -y install libharfbuzz-dev libfribidi-dev  ## strange 'textshaping' errors
+
+script:
+  - R CMD build . --no-build-vignettes ## save time by not building vignettes
+  - travis_wait 30 R CMD check *tar.gz ## without CRAN check, --as-cran

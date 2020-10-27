@@ -51,7 +51,7 @@ Please see the [Conos tutorial walkthrough](vignettes/walkthrough.md) for a deta
 
 Additional tutorials for Conos include: 
 * [Adjustment of Alignment Strength with Conos](vignettes/adjust_alignment_strength.md)
-* [Integrating RNA-seq and ATAC-seq](http://pklab.med.harvard.edu/peterk/conos/atac_rna/example.html).
+* [Integrating RNA-seq and ATAC-seq](http://pklab.med.harvard.edu/peterk/conos/atac_rna/example.html)
 
 Given a list of individual processed samples (`pl`), Conos processing can be as simple as this:
 ```r
@@ -164,7 +164,7 @@ brew install openssl curl-openssl
 ```
 (You may need to run `brew uninstall curl` in order for `brew install curl-openssl` to be successful.)
 
-For further instructions on installing Conos with Mac OS, please refer to the following wiki page: [Installing Conos for Mac OS](https://github.com/kharchenkolab/conos/wiki/Installing-Conos-for-Mac-OS)
+As of version 1.3.2, Conos should sucessfully install on Mac OS. However, if there are issues, please refer to the following wiki page for further instructions on installing Conos with Mac OS: [Installing Conos for Mac OS](https://github.com/kharchenkolab/conos/wiki/Installing-Conos-for-Mac-OS)
 
 ### Installing Conos as Docker container
 

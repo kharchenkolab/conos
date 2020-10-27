@@ -318,92 +318,6 @@ quickCCA <- function(r.n,data.type='counts',ncomps=100,n.odgenes=NULL,var.scale=
 }
 
 
-# dendrogram modification functions
-#' Set dendrogram node width by breadth of the provided factor
-#' @param d dendrogram
-#' @param fac across cells
-#' @param leafContent $leafContent output of greedy.modularity.cut() providing information about which cells map to which dendrogram leafs
-#' @param min.width minimum line width
-#' @param max.width maximum line width
-#' @export
-dendSetWidthByBreadth <- function(d,fac,leafContent,min.width=1,max.width=4) {
-  cc2width <- function(cc) {
-    ent <- entropy::entropy(cc[-1],method='MM',unit='log2')/log2(length(levels(fac)))
-    min.width+ent*(max.width-min.width)
-  }
-
-  cbm <- function(d,fac) {
-    if(is.leaf(d)) {
-      lc <- fac[leafContent[[attr(d,'label')]]]
-      cc <- c(sum(is.na(lc)),table(lc));
-      lwd <- cc2width(cc)
-      attr(d,"edgePar") <- c(attr(d,"edgePar"),list(lwd=lwd))
-      attr(d,'cc') <- cc;
-      return(d);
-    } else {
-      oa <- attributes(d);
-      d <- lapply(d,cbm,fac=fac);
-      attributes(d) <- oa;
-      cc <- attr(d[[1]],'cc')+attr(d[[2]],'cc')
-      lwd <- cc2width(cc)
-      attr(d,"edgePar") <- c(attr(d,"edgePar"),list(lwd=lwd))
-      attr(d,'cc') <- cc;
-      return(d);
-    }
-  }
-  cbm(d,fac);
-}
-
-#' Set dendrogram colors according to a 2- or 3-level factor mixture
-#' @param d dendrogram
-#' @param fac across cells
-#' @param leafContent $leafContent output of greedy.modularity.cut() providing information about which cells map to which dendrogram leafs
-#' @export
-dendSetColorByMixture <- function(d,fac,leafContent) {
-  fac <- as.factor(fac);
-  if(length(levels(fac))>3) stop("factor with more than 3 levels are not supported")
-  if(length(levels(fac))<2) stop("factor with less than 2 levels are not supported")
-
-  cc2col <- function(cc,base=0.1) {
-    if(sum(cc)==0) {
-      cc <- rep(1,length(cc))
-    } else {
-      cc <- cc/sum(cc)
-    }
-
-    if(length(cc)==3) { # 2-color
-      cv <- c(cc[2],0,cc[3])+base; cv <- cv/max(cv) * (1-base)
-      #rgb(base+cc[2],base,base+cc[3],1)
-      rgb(cv[1],cv[2],cv[3],1)
-    } else if(length(cc)==4) { # 3-color
-      cv <- c(cc[2],cc[3],cc[4])+base; cv <- cv/max(cv) * (1-base);
-      #rgb(base+cc[2],base+cc[3],base+cc[4],1)
-      rgb(cv[1],cv[2],cv[3],1)
-
-    }
-  }
-
-  cbm <- function(d,fac) {
-    if(is.leaf(d)) {
-      lc <- fac[leafContent[[attr(d,'label')]]]
-      cc <- c(sum(is.na(lc)),table(lc));
-      col <- cc2col(cc)
-      attr(d,"edgePar") <- c(attr(d,"edgePar"),list(col=col))
-      attr(d,'cc') <- cc;
-      return(d);
-    } else {
-      oa <- attributes(d);
-      d <- lapply(d,cbm,fac=fac);
-      attributes(d) <- oa;
-      cc <- attr(d[[1]],'cc')+attr(d[[2]],'cc')
-      col <- cc2col(cc)
-      attr(d,"edgePar") <- c(attr(d,"edgePar"),list(col=col))
-      attr(d,'cc') <- cc;
-      return(d);
-    }
-  }
-  cbm(d,fac);
-}
 
 # other functions
 
@@ -435,30 +349,7 @@ papply <- function(...,n.cores=parallel::detectCores(), mc.preschedule=FALSE) {
 ## Benchmarks
 ##################################
 
-#' Get percent of clusters that are private to one sample
-#' @param p2list list of pagoda2 objects on which the panelClust() was run
-#' @param pjc result of panelClust()
-#' @param priv.cutoff percent of total cells of a cluster that have to come from a single cluster
-#' for it to be called private
-getClusterPrivacy <- function(p2list, pjc, priv.cutoff= 0.99) {
-    ## Get the clustering factor
-    cl <- pjc$cls.mem
-    ## Cell metadata
-    meta <- do.call(rbind, lapply(names(p2list), function(n) {
-        x <- p2list[[n]];
-        data.frame(
-            p2name = c(n),
-            cellid = getCellNames(x)
-        )
-    }))
-    ## get sample / cluster counts
-    meta$cl <- cl[meta$cellid]
-    cl.sample.counts <- reshape2::acast(meta, p2name ~ cl, fun.aggregate=length,value.var='cl')
-    ## Get clusters that are sample private
-    private.clusters <- names(which(apply(sweep(cl.sample.counts, 2, apply(cl.sample.counts,2,sum), FUN='/') > priv.cutoff,2,sum) > 0))
-    ## percent clusters that are private
-    length(private.clusters) / length(unique(cl))
-}
+
 
 sn <- function(x) { names(x) <- x; x }
 
@@ -530,61 +421,6 @@ getPercentGlobalClusters <- function(p2list, pjc, pc.samples.cutoff = 0.9, min.c
 ## helper function for breaking down a factor into a list
 factorBreakdown <- function(f) {tapply(names(f),f, identity) }
 
-#' Post process clusters generated with walktrap to control granularity
-#' @param p2list list of pagoda2 objects
-#' @param pjc joint clustering that was performed with walktrap
-#' @param no.cl number of clusters to get from the walktrap dendrogram
-#' @param size.cutoff cutoff below which to merge the clusters
-#' @param n.cores number of cores to use
-postProcessWalktrapClusters <- function(p2list, pjc, no.cl = 200, size.cutoff = 10, n.cores=4) {
-    ##devel
-    ## pjc <- pjc3
-    ## no.cl <- 200
-    ## size.cutoff <- 10
-    ## n.cores <- 4
-    ## rm(pjc, no.cl,size.cutoff, n.cores)
-    ##
-    global.cluster <- igraph::cut_at(cls, no=no.cl)
-    names(global.cluster) <- names(igraph::membership(cls))
-    ## identify clusters to merge
-    fqs <- as.data.frame(table(global.cluster))
-    cl.to.merge <- fqs[fqs$Freq < size.cutoff,]$global.cluster
-    cl.to.keep <- fqs[fqs$Freq >= size.cutoff,]$global.cluster
-    ## Memberships to keep
-    global.cluster.filtered <- as.factor(global.cluster[global.cluster %in% cl.to.keep])
-    ## Get new assignments for all the cells
-    new.assign <- unlist(unname(papply(p2list, function(p2o) {
-        try({
-            ## get global cluster centroids for cells in this app
-            global.cluster.filtered.bd <- factorBreakdown(global.cluster.filtered)
-
-            # W: counts accessor
-            global.cl.centers <- do.call(rbind, lapply(global.cluster.filtered.bd, function(cells) {
-                cells <- cells[cells %in% getCellNames(p2o)]
-                if (length(cells) > 1) {
-                    Matrix::colSums(p2o$counts[cells,])
-                } else {
-                    NULL
-                }
-            }))
-            ## cells to reassign in this app
-            cells.reassign <- names(global.cluster[global.cluster %in% cl.to.merge])
-            cells.reassign <- cells.reassign[cells.reassign %in% rownames(p2o$counts)]
-
-            # W: counts accessor
-            xcor <- cor(t(as.matrix(p2o$counts[cells.reassign,,drop=FALSE])), t(as.matrix(global.cl.centers)))
-            ## Get new cluster assignments
-            new.cluster.assign <- apply(xcor,1, function(x) {colnames(xcor)[which.max(x)]})
-            new.cluster.assign
-        })
-    },n.cores=n.cores)))
-    ## Merge
-    x <- as.character(global.cluster.filtered)
-    names(x) <- names(global.cluster.filtered)
-    new.clusters <- as.factor(c(x,new.assign))
-    new.clusters
-}
-
 #' Get top overdispersed genes across samples
 #' @param samples list of pagoda2 objects
 #' @param n.genes number of overdispersed genes to extract
@@ -625,7 +461,7 @@ projectSamplesOnGlobalAxes <- function(samples, cms.clust, data.type, verbose, n
     if(verbose) message('.')
     #smat <- as.matrix(conos:::getRawCountMatrix(s,transposed=TRUE)[,gns])
     #smat <- log10(smat/rowSums(smat)*1e3+1)
-    smat <- scale(smat,scale=T,center=T); smat[is.nan(smat)] <- 0;
+    smat <- scale(smat,scale=TRUE,center=TRUE); smat[is.nan(smat)] <- 0;
     sproj <- smat %*% global.pca$rotation
   },n.cores=n.cores)
   if(verbose) message('. done\n');
@@ -1056,7 +892,7 @@ scanKModularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.in
 
   k.sens <- data.frame(k=k.seq,m=as.numeric(unlist(xl)))
   if(plot) {
-    ggplot2::ggplot(k.sens,aes(x=k,y=m))+theme_bw()+ggplot2::geom_point()+ggplot2::geom_smooth()+ggplot2::xlab('modularity')+ggplot2::ylab('k')
+    ggplot2::ggplot(k.sens,aes(x=k,y=m))+ggplot2::theme_bw()+ggplot2::geom_point()+ggplot2::geom_smooth()+ggplot2::xlab('modularity')+ggplot2::ylab('k')
   }
 
   return(k.sens);

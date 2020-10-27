@@ -1,5 +1,9 @@
 ## Upcoming
 
+* vignettes edits, detailing p2app4conos() for rendering Conos to pagoda2 application
+
+## [1.3.1] - 2020-24-09
+
 ### Changed
 
 - allow multiple embeddings in conclass (July 2020)

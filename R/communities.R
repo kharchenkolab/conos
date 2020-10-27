@@ -1,3 +1,18 @@
+#' @import parallel
+#' @importFrom igraph E
+#' @importFrom igraph V
+#' @importFrom igraph membership
+#' @importFrom igraph walktrap.community
+#' @importFrom igraph induced.subgraph
+#' @import sccore
+#' @importFrom graphics par
+#' @importFrom grDevices adjustcolor
+#' @importFrom stats as.dendrogram is.leaf dendrapply as.hclust
+#' @import Matrix.utils
+#' @import Matrix
+NULL
+
+
 # TODO: multitrap method
 #' mutlilevel+walktrap communities
 #'

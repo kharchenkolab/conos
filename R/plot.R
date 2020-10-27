@@ -39,7 +39,7 @@ getClusteringGroups <- function(clusters, clustering) {
 #' @param subset a subset of cells to show (vector of cell names)
 #' @param return.plotlist return a list of ggplot objects instead of a combined plot (default=FALSE)
 #' @return ggplot2 object with the panel of plots
-plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow=NULL, raster=FALSE, panel.size=NULL, adjust.func=NULL, title.size=6,raster.width=NULL, raster.height=NULL, adj.list=NULL, subset=NULL, return.plotlist=FALSE, ...) {
+plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow=NULL, raster=FALSE, panel.size=NULL, adjust.func=NULL, title.size=6, adj.list=NULL, subset=NULL, return.plotlist=FALSE, ...) {
   if (is.null(panel.size)) {
     panel.size <- dev.size(units="in")
   } else if (length(panel.size) == 1) {
@@ -61,21 +61,12 @@ plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow
     names(embeddings) <- paste(1:length(embeddings))
   }
 
-  if (is.null(raster.width)) {
-    raster.width <- panel.size[1] / nrow
-  }
-
-  if (is.null(raster.height)) {
-    raster.height <- panel.size[2] / ncol
-  }
-
   plot.list <- lapply(names(embeddings), function(n) {
     emb <- embeddings[[n]];
     if(!is.null(subset)) {
       emb <- emb[rownames(emb) %in% subset,,drop=FALSE]
     }
-    embeddingPlot(emb, groups=groups, colors=colors, raster=raster,
-                  raster.width=raster.width, raster.height=raster.height, ...) +
+    embeddingPlot(emb, groups=groups, colors=colors, raster=raster, ...) +
       ggplot2::geom_label(data=data.frame(x=-Inf, y=Inf, label=n), mapping=ggplot2::aes(x=x, y=y, label=label),
                           fill=ggplot2::alpha("white", 0.6), hjust=0, vjust=1, size=title.size,
                           label.padding=ggplot2::unit(title.size / 4, "pt"), label.size = NA)
@@ -304,7 +295,7 @@ getGlobalClusterMarkers <- function(conos.obj, clustering='multi level',
 #' @param space character Reduction space to be analyzed (currently, component variance scoring is only supported by PCA and CPCA) (default='PCA')
 #' @return ggplot
 #' @export
-plotComponentVariance <- function(conos.obj, space='PCA',plot.theme=theme_bw()) {
+plotComponentVariance <- function(conos.obj, space='PCA',plot.theme=ggplot2::theme_bw()) {
   pairs <- conos.obj$pairs[[space]]
 
   if(!is.null(pairs[[space]])) stop(paste("no pairs for space",space,"found. Please run buildGraph() or updatePairs() first, with score.component.variance=TRUE"))
