@@ -89,7 +89,7 @@ seuratProcV3 <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, n.pcs
 #' @param alignment.graph logical, include graph of connectivities and distances. Default: TRUE
 #' @param verbose verbose mode. Default: FALSE
 #' @seealso The \pkg{\link{rhdf5}} package documentation \href{https://www.bioconductor.org/packages/release/bioc/html/rhdf5.html}{here}
-#'
+#' @return AnnData object for ScanPy, saved to disk
 #' @export
 saveConosForScanPy <- function(con, output.path, hdf5_filename, metadata.df=NULL, cm.norm=FALSE, pseudo.pca=FALSE, pca=FALSE, n.dims=100, embedding=TRUE, alignment.graph=TRUE, verbose=FALSE) {
   
@@ -219,22 +219,17 @@ saveConosForScanPy <- function(con, output.path, hdf5_filename, metadata.df=NULL
 #' Create and preprocess a Seurat object
 #'
 #' @description Create Seurat object from gene count matrix
-#'
 #' @param count.matrix gene count matrix
-#' @param vars.to.regress variables to regress with Seurat
-#' @param verbose verbose mode
-#' @param do.par use parallel processing for regressing out variables faster, for
-#' Seurat v3, use \code{\link[future]{plan}} instead
-#' @param n.pcs number of principal components
-#' @param cluster do clustering
-#' @param tsne do tSNE embedding
-#' @param umap do UMAP embedding, works only for Seurat v2.3.1 or higher
-#'
+#' @param vars.to.regress variables to regress with Seurat (default=NULL)
+#' @param verbose boolean Verbose mode (default=TRUE)
+#' @param do.par boolean Use parallel processing for regressing out variables faster, for
+#' Seurat v3, use \code{\link[future]{plan}} instead (default=TRUE)
+#' @param n.pcs numeric Number of principal components (default=100)
+#' @param cluster boolean Whether to perform clustering (default=TRUE)
+#' @param tsne boolean Whether to construct tSNE embedding (default=TRUE)
+#' @param umap boolean Whether to construct UMAP embedding, works only for Seurat v2.3.1 or higher (default=FALSE)
 #' @return Seurat object
-#'
-#'
 #' @export
-#'
 basicSeuratProc <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do.par=TRUE, n.pcs=100, cluster=TRUE, tsne=TRUE, umap=FALSE) {
   if (!requireNamespace("Seurat")) {
     stop("You need to install 'Seurat' package to be able to use this function")
@@ -259,21 +254,14 @@ basicSeuratProc <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do
 #' RNA velocity analysis on samples integrated with conos
 #'
 #' @description Create a list of objects to pass into gene.relative.velocity.estimates function from the velocyto.R package
-#'
 #' @param cms.list list of velocity files written out as cell.counts.matrices.rds files by running dropest with -V option
 #' @param con conos object (after creating an embedding and running leiden clustering)
 #' @param clustering name of clustering in the conos object to use. Either 'clustering' or 'groups' must be provided. Default: NULL
 #' @param groups set of clusters to use. Ignored if 'clustering' is not NULL. Default: NULL
 #' @param n.odgenes number of overdispersed genes to use for PCA. Default: 2000
 #' @param verbose verbose mode. Default: TRUE
-#'
-#'
 #' @return List with cell distances, combined spliced expression matrix, combined unspliced expression matrix, combined matrix of spanning reads, cell colors for clusters and embedding (taken from conos)
-#'
-#'
-#'
 #' @export
-#'
 velocityInfoConos <- function(cms.list, con, clustering=NULL, groups=NULL, n.odgenes=2e3, verbose=TRUE, min.max.cluster.average.emat=0.2, min.max.cluster.average.nmat=0.05, min.max.cluster.average.smat=0.01) {
   if (!requireNamespace("velocyto.R")) {
     stop("You need to install 'velocyto.R' package to be able to use this function")
@@ -376,6 +364,14 @@ pcaFromConos <- function(p2.list, data.type='counts', k=30, ncomps=100, n.odgene
   return(res)
 }
 
+#' Convert Conos object to Pagoda2 object
+#'
+#' @param con Conos object
+#' @param n.pcs numeric Number of principal components (default=100)
+#' @param n.odgenes numeric Number of overdispersed genes (default=2000)
+#' @param verbose boolean Whether to give verbose output (default=TRUE).
+#' @param ... parameters passed to Pagoda2$new()
+#' @return pagoda2 object 
 #' @export
 convertToPagoda2 <- function(con, n.pcs=100, n.odgenes=2000, verbose=TRUE, ...) {
   if (!requireNamespace('pagoda2', quietly=TRUE)) {

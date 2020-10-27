@@ -47,6 +47,9 @@ getPerCellTypeDE(
 
 \item{return.details}{return details}
 }
+\value{
+A list of differential expression results for every cell type
+}
 \description{
 Do differential expression for each cell type in a conos object between the specified subsets of apps
 }

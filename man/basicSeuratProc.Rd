@@ -18,20 +18,20 @@ basicSeuratProc(
 \arguments{
 \item{count.matrix}{gene count matrix}
 
-\item{vars.to.regress}{variables to regress with Seurat}
+\item{vars.to.regress}{variables to regress with Seurat (default=NULL)}
 
-\item{verbose}{verbose mode}
+\item{verbose}{boolean Verbose mode (default=TRUE)}
 
-\item{do.par}{use parallel processing for regressing out variables faster, for
-Seurat v3, use \code{\link[future]{plan}} instead}
+\item{do.par}{boolean Use parallel processing for regressing out variables faster, for
+Seurat v3, use \code{\link[future]{plan}} instead (default=TRUE)}
 
-\item{n.pcs}{number of principal components}
+\item{n.pcs}{numeric Number of principal components (default=100)}
 
-\item{cluster}{do clustering}
+\item{cluster}{boolean Whether to perform clustering (default=TRUE)}
 
-\item{tsne}{do tSNE embedding}
+\item{tsne}{boolean Whether to construct tSNE embedding (default=TRUE)}
 
-\item{umap}{do UMAP embedding, works only for Seurat v2.3.1 or higher}
+\item{umap}{boolean Whether to construct UMAP embedding, works only for Seurat v2.3.1 or higher (default=FALSE)}
 }
 \value{
 Seurat object

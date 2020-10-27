@@ -1012,18 +1012,18 @@ adjustWeightsByCellBalancing <- function(adj.mtx, factor.per.cell, balance.weigh
 }
 
 
-##' Scan joint graph modularity for a range of k (or k.self) values
-##'
-##' Builds graph with different values of k (or k.self if scan.k.self=TRUE), evaluating modularity of the resulting multilevel clustering
-##' note: will run evaluations in parallel using con$n.cores (temporarily setting con$n.cores to 1 in the process)
-##' @param con Conos object to test
-##' @param min minimal value of k to test
-##' @param max vlaue of k to test
-##' @param by scan step (defaults to 1)
-##' @param scan.k.self whether to test dependency on scan.k.self
-##' @param ... other parameters will be passed to con$buildGraph()
-##' @return a data frame with $k $m columns giving k and the corresponding modularity
-##' @export
+#' Scan joint graph modularity for a range of k (or k.self) values
+#'
+#' Builds graph with different values of k (or k.self if scan.k.self=TRUE), evaluating modularity of the resulting multilevel clustering
+#' note: will run evaluations in parallel using con$n.cores (temporarily setting con$n.cores to 1 in the process)
+#' @param con Conos object to test
+#' @param min minimal value of k to test
+#' @param max vlaue of k to test
+#' @param by scan step (defaults to 1)
+#' @param scan.k.self whether to test dependency on scan.k.self
+#' @param ... other parameters will be passed to con$buildGraph()
+#' @return a data frame with $k $m columns giving k and the corresponding modularity
+#' @export
 scanKModularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.internal.edges=TRUE, verbose=TRUE, plot=TRUE, ... ) {
   k.seq <- seq(min,max,by=by);
   n.cores <- con$n.cores;
@@ -1081,12 +1081,18 @@ mergeCountMatrices <- function(cms, transposed=F) {
   return(res)
 }
 
+#' Retrieve sample names per cell
+#'
+#' @param samples list of samples
+#' @return list of sample names
+#' @export
 getSampleNamePerCell=function(samples) {
   cl <- lapply(samples, getCellNames)
   return(rep(names(cl), sapply(cl, length)) %>% stats::setNames(unlist(cl)) %>% as.factor())
 }
 
 #' Estimate labeling distribution for each vertex, based on provided labels using Random Walk
+#'
 #' @param labels vector of factor or character labels, named by cell names
 #' @param max.iters: maximal number of iterations. Default: 100.
 #' @param tol: absolute tolerance as a stopping criteria. Default: 0.025
@@ -1149,9 +1155,9 @@ propagateLabelsSolver <- function(graph, labels, solver="mumps") {
 #'
 #' @param con conos object
 #' @param target.clusters clusters for which the resolution should be increased
-#' @param clustering name of clustering in the conos object to use. Either 'clustering' or 'groups' must be provided. Default: NULL
-#' @param groups set of clusters to use. Ignored if 'clustering' is not NULL. Default: NULL
-#' @param method function, used to find communities. Default: leiden.community
+#' @param clustering name of clustering in the conos object to use. Either 'clustering' or 'groups' must be provided (default=NULL).
+#' @param groups set of clusters to use. Ignored if 'clustering' is not NULL (default=NULL).
+#' @param method function, used to find communities (default=leiden.community).
 #' @param ... additional params passed to the community function
 #' @export
 findSubcommunities <- function(con, target.clusters, clustering=NULL, groups=NULL, method=leiden.community, ...) {
@@ -1171,8 +1177,9 @@ findSubcommunities <- function(con, target.clusters, clustering=NULL, groups=NUL
 
   subgroups <- split(names(groups), groups)
   for (n in names(subgroups)) {
-    if (length(subgroups[[n]]) < 2)
+    if (length(subgroups[[n]]) < 2){
       next
+    }
 
     new.clusts <- method(induced_subgraph(con$graph, subgroups[[n]]), ...)
     groups.raw[new.clusts$names] <- paste0(n, "_", new.clusts$membership)
@@ -1186,15 +1193,17 @@ parseCellGroups <- function(con, clustering, groups, parse.clusters=TRUE) {
     return(groups)
 
   if (!is.null(groups)) {
-    if (!any(names(groups) %in% names(con$getDatasetPerCell())))
+    if (!any(names(groups) %in% names(con$getDatasetPerCell()))){
       stop("'groups' aren't defined for any of the cells.")
+    }
 
     return(groups)
   }
 
   if (is.null(clustering)) {
-    if (length(con$clusters) > 0)
+    if (length(con$clusters) > 0){
       return(con$clusters[[1]]$groups)
+    }
 
     stop("Either 'groups' must be provided or the conos object must have some clustering estimated")
   }

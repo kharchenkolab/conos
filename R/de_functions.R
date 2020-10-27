@@ -52,6 +52,11 @@ validateBetweenCellTypeParams <- function(con.obj, groups, sample.groups, refgro
     stop('cluster.sep.chr must not be part of any cluster name')
 }
 
+#'
+#' @param con.object Conos object
+#' @param sample.groups (default=NULL)
+#' @return 
+#' @export 
 rawMatricesWithCommonGenes <- function(con.obj, sample.groups=NULL) {
   samples <- con.obj$samples
   if (!is.null(sample.groups)) {
@@ -64,6 +69,14 @@ rawMatricesWithCommonGenes <- function(con.obj, sample.groups=NULL) {
   return(lapply(raw.mats, function(x) {x[,common.genes]}))
 }
 
+#' Collapse count matrices by cell type, given min/max number of cells 
+#'
+#' @param cm count matrix
+#' @param groups factor specifying cell types
+#' @param min.cell.count numeric Minimum number of cells to include (default=10)
+#' @param max.cell.count numeric Maximum number of cells to include (default=Inf). If Inf, there is no maximum.
+#' @return Subsetted factor of collapsed cells by type, with NA cells omitted
+#' @export 
 collapseCellsByType <- function(cm, groups, min.cell.count=10, max.cell.count=Inf) {
   groups <- as.factor(groups);
   cl <- setNames(factor(groups[match(rownames(cm),names(groups))],levels=levels(groups)),rownames(cm));
@@ -82,6 +95,7 @@ collapseCellsByType <- function(cm, groups, min.cell.count=10, max.cell.count=In
 }
 
 adjustMatrixRownames <- function(name, cm, cluster.sep.chr) {rownames(cm) <- paste0(name, cluster.sep.chr, rownames(cm)); return(cm)}
+
 rbindDEMatrices <- function(mats, cluster.sep.chr) {
   mats <- lapply(names(mats), function(n) {
     rownames(mats[[n]]) <- paste0(n, cluster.sep.chr, rownames(mats[[n]]));
@@ -101,6 +115,7 @@ is.error <- function (x) {
 
 
 #' Do differential expression for each cell type in a conos object between the specified subsets of apps
+#' 
 #' @param con.obj conos object
 #' @param groups factor specifying cell types
 #' @param sample.groups a list of two character vector specifying the app groups to compare
@@ -114,6 +129,7 @@ is.error <- function (x) {
 #' @param n.cores number of cores
 #' @param cluster.sep.chr character string of length 1 specifying a delimiter to separate cluster and app names
 #' @param return.details return details
+#' @return A list of differential expression results for every cell type
 #' @export getPerCellTypeDE
 getPerCellTypeDE <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cutoff = FALSE, ref.level = NULL, min.cell.count = 10, remove.na=TRUE, max.cell.count=Inf, test="LRT",
                              independent.filtering = FALSE, n.cores=1, cluster.sep.chr = '<!!>',return.details=TRUE) {

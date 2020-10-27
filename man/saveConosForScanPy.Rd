@@ -42,6 +42,9 @@ If NULL, only information about cell ids and origin dataset will be saved.}
 
 \item{verbose}{verbose mode. Default: FALSE}
 }
+\value{
+AnnData object for ScanPy, saved to disk
+}
 \description{
 Save Conos object on disk to read it from ScanPy
 }

@@ -18,11 +18,11 @@ findSubcommunities(
 
 \item{target.clusters}{clusters for which the resolution should be increased}
 
-\item{clustering}{name of clustering in the conos object to use. Either 'clustering' or 'groups' must be provided. Default: NULL}
+\item{clustering}{name of clustering in the conos object to use. Either 'clustering' or 'groups' must be provided (default=NULL).}
 
-\item{groups}{set of clusters to use. Ignored if 'clustering' is not NULL. Default: NULL}
+\item{groups}{set of clusters to use. Ignored if 'clustering' is not NULL (default=NULL).}
 
-\item{method}{function, used to find communities. Default: leiden.community}
+\item{method}{function, used to find communities (default=leiden.community).}
 
 \item{...}{additional params passed to the community function}
 }

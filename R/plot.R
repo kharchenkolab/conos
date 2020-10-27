@@ -204,6 +204,8 @@ plotClusterBarplots <- function(conos.obj=NULL, clustering=NULL, groups=NULL,sam
 #' @param clustering name of the clustering to use (default=NULL)
 #' @param apptypes a factor specifying how to group the samples (default=NULL)
 #' @param return.details boolean If TRUE return a list with the plot and the summary data.frame (default=FALSE)
+#' @return Boxplot per cluster of the proportion of cells in each celltype
+#' @export
 plotClusterBoxPlotsByAppType <- function(conos.obj, clustering=NULL, apptypes=NULL, return.details=FALSE) {
     type <- 'proportions'
     ## param checking
@@ -248,11 +250,13 @@ plotClusterBoxPlotsByAppType <- function(conos.obj, clustering=NULL, apptypes=NU
 }
 
 
-#' Get markers for global clusters
+#' Deprecated; Get markers for global clusters
+#'
 #' @param conos.obj conos object
 #' @param clustering character Name of the clustering to use (default='multi level')
 #' @param min.samples.expressing numeric Minimum number of samples that must have the genes upregulated in the respective cluster (default=0)
 #' @param min.percent.samples.expression numeric Minumum percent of samples that must have the gene upregulated (default=0)
+#' @return List of consistent genes per each cluster
 getGlobalClusterMarkers <- function(conos.obj, clustering='multi level',
                                     min.samples.expressing=0, min.percent.samples.expressing=0){
   .Deprecated("getDifferentialGenes")
