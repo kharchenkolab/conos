@@ -6,7 +6,7 @@
 
 ### Added 
 
-* parameters `dpi` and `dev` in `con$plotEmbedding()` to replace `raster.height` and `raster.width`, given these parameters are defunct with rewrite of `ggrastr` (v0.2.0)[https://github.com/VPetukhov/ggrastr/releases/tag/v0.2.0]
+* add parameter `raster.dpi` in `con$plotEmbedding()` to replace `raster.height` and `raster.width`, given these parameters are defunct with rewrite of `ggrastr` (v0.2.0)[https://github.com/VPetukhov/ggrastr/releases/tag/v0.2.0]
 
 ### Removed
 
