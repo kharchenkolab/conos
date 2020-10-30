@@ -71,7 +71,7 @@ initialize Conos class
 
 \item{\code{n.cores}}{numeric Number of cores (default=parallel::detectCores(logical=FALSE))}
 
-\item{\code{verbose}}{boolean Provide verbose output}
+\item{\code{verbose}}{boolean Whether to provide verbose output (default=TRUE)}
 
 \item{\code{override.conos.plot.theme}}{(default=FALSE)}
 }
@@ -95,9 +95,9 @@ initialize or add a set of samples to the conos panel. Note: this will simply ad
 \describe{
 \item{\code{x}}{a named list of pagoda2 or Seurat objects (one per sample)}
 
-\item{\code{replace}}{boolean Whether the existing samples should be purged before adding new ones}
+\item{\code{replace}}{boolean Whether the existing samples should be purged before adding new ones (default=FALSE)}
 
-\item{\code{verbose}}{boolean Provide verbose output}
+\item{\code{verbose}}{boolean Whether to provide verbose output (default=FALSE)}
 }
 \if{html}{\out{</div>}}
 }
@@ -183,7 +183,7 @@ Build the joint graph that encompasses all the samples, establishing weighted in
 
 \item{\code{common.centering}}{(default=TRUE)}
 
-\item{\code{verbose}}{boolean Provide verbose output}
+\item{\code{verbose}}{boolean Whether to provide verbose output (default=TRUE)}
 
 \item{\code{base.groups}}{(default=NULL)}
 
@@ -249,7 +249,7 @@ Calculates differential genes. Estimates base mean, z-score, p-values, specifici
 
 \item{\code{upregulated.only}}{(default=FALSE)}
 
-\item{\code{verbose}}{boolean Provide verbose output}
+\item{\code{verbose}}{boolean Whether to provide verbose output (default=TRUE)}
 
 \item{\code{n.genes.to.show}}{(default=10)}
 
@@ -296,7 +296,7 @@ find joint communities
 
 \item{\code{name}}{optional name of the clustering result (will default to the algorithm name) (default=NULL)}
 
-\item{\code{verbose}}{boolean Provide verbose output}
+\item{\code{verbose}}{boolean Whether to provide verbose output (default=TRUE)}
 
 \item{\code{...}}{extra parameters are passed to the specified community detection method}
 }
@@ -310,7 +310,7 @@ invisible list containing identified communities (groups) and the full community
 \if{html}{\out{<a id="method-plotPanel"></a>}}
 \if{latex}{\out{\hypertarget{method-plotPanel}{}}}
 \subsection{Method \code{plotPanel()}}{
-plot panel of individual embeddings per sample with joint coloring
+Plot panel of individual embeddings per sample with joint coloring
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Conos$plotPanel(
   clustering = NULL,
@@ -353,7 +353,7 @@ ggplot2 object with the panel of plots
 \if{html}{\out{<a id="method-embedGraph"></a>}}
 \if{latex}{\out{\hypertarget{method-embedGraph}{}}}
 \subsection{Method \code{embedGraph()}}{
-Generate an embedding of a joint graph.
+Generate an embedding of a joint graph
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Conos$embedGraph(
   method = "largeVis",
@@ -363,8 +363,8 @@ Generate an embedding of a joint graph.
   perplexity = NA,
   sgd_batches = 1e+08,
   seed = 1,
-  verbose = TRUE,
   target.dims = 2,
+  verbose = TRUE,
   n.cores = self$n.cores,
   ...
 )}\if{html}{\out{</div>}}
@@ -373,7 +373,7 @@ Generate an embedding of a joint graph.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{method}}{embedding method (default='largeVis'). Currently 'largeVis' and 'UMAP' are supported}
+\item{\code{method}}{Embedding method (default='largeVis'). Currently 'largeVis' and 'UMAP' are supported}
 
 \item{\code{M}}{numeric The number of negative edges to sample for each positive edge (default=1)}
 
@@ -384,20 +384,20 @@ between points in the low-dimensional projection to the likelihood that the two 
 to push nodes and their neighbors closer together; decreasing \eqn{\alpha} produces a broader distribution. Setting \eqn{\alpha} to zero
 enables the alternative distance function. \eqn{\alpha} below zero is meaningless.}
 
-\item{\code{perplexity}}{perplexity passed to largeVis (default=NA)}
+\item{\code{perplexity}}{The perplexity passed to largeVis (default=NA)}
+
+\item{\code{sgd_batches}}{The number of edges to process during SGD (default=1e8). Defaults to a value set based on the size of the dataset. If the parameter given is
+between \code{0} and \code{1}, the default value will be multiplied by the parameter.}
 
 \item{\code{seed}}{numeric Random seed for the largeVis algorithm (default=1)}
 
-\item{\code{verbose}}{boolean Provide verbose output}
-
 \item{\code{target.dims}}{numeric Number of dimensions for the reduction (default=2). Higher dimensions can be used to generate embeddings for subsequent reductions by other methods, such as tSNE}
+
+\item{\code{verbose}}{boolean Whether to provide verbose output (default=TRUE)}
 
 \item{\code{n.cores}}{numeric Number of cores (default=parallel::detectCores(logical=FALSE))}
 
 \item{\code{...}}{additional arguments, passed to UMAP embedding (run ?conos:::embedGraphUmap for more info)}
-
-\item{\code{sgd__batched}}{The number of edges to process during SGD (default=1e8). Defaults to a value set based on the size of the dataset. If the parameter given is
-between \code{0} and \code{1}, the default value will be multiplied by the parameter.}
 }
 \if{html}{\out{</div>}}
 }
@@ -417,9 +417,9 @@ Plot cluster stability statistics.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{clustering}}{name of the clustering result to show (default=NULL)}
+\item{\code{clustering}}{string Name of the clustering result to show (default=NULL)}
 
-\item{\code{what}}{Show a specific plot (ari - adjusted rand index, fjc - flat Jaccard, hjc - hierarchical Jaccard, dend - cluster dendrogram) (default='all')}
+\item{\code{what}}{string Show a specific plot (ari - adjusted rand index, fjc - flat Jaccard, hjc - hierarchical Jaccard, dend - cluster dendrogram) (default='all')}
 }
 \if{html}{\out{</div>}}
 }
@@ -487,23 +487,23 @@ Smooth expression of genes, so they better represent structure of the graph.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{genes}}{list of genes for smoothing (default=NULL)}
+\item{\code{genes}}{List of genes for smoothing (default=NULL)}
 
-\item{\code{n.od.genes}}{if 'genes' is NULL, top n.od.genes of overdispersed genes are taken across all samples (default=500)}
+\item{\code{n.od.genes}}{numeric If 'genes' is NULL, top n.od.genes of overdispersed genes are taken across all samples (default=500)}
 
-\item{\code{fading}}{level of fading of expression change from distance on the graph (parameter 'a' of the equation) (default=10)}
+\item{\code{fading}}{numeric Level of fading of expression change from distance on the graph (parameter 'a' of the equation) (default=10)}
 
-\item{\code{fading.const}}{minimal penalty for each new edge during diffusion (parameter 'b' of the equation) (default=0.5)}
+\item{\code{fading.const}}{numeric Minimal penalty for each new edge during diffusion (parameter 'b' of the equation) (default=0.5)}
 
-\item{\code{max.iters}}{maximal number of diffusion iterations (default=15)}
+\item{\code{max.iters}}{numeric Maximal number of diffusion iterations (default=15)}
 
-\item{\code{tol}}{tolerance after which the diffusion stops (default=5e-3)}
+\item{\code{tol}}{numeric Tolerance after which the diffusion stops (default=5e-3)}
 
-\item{\code{name}}{name to save the correction (default='diffusion')}
+\item{\code{name}}{string Name to save the correction (default='diffusion')}
 
 \item{\code{verbose}}{boolean Verbose mode (default=TRUE)}
 
-\item{\code{count.matrix}}{alternative gene count matrix to correct (rows: genes, columns: cells; has to be dense matrix). Default: joint count matrix for all datasets.}
+\item{\code{count.matrix}}{Alternative gene count matrix to correct (rows: genes, columns: cells; has to be dense matrix). Default: joint count matrix for all datasets.}
 
 \item{\code{normalize}}{boolean Whether to normalize values (default=TRUE)}
 }

@@ -3,7 +3,7 @@
 #' @import methods
 #' @param x a named list of pagoda2 or Seurat objects (one per sample)
 #' @param n.cores numeric Number of cores (default=parallel::detectCores(logical=FALSE))
-#' @param verbose boolean Provide verbose output 
+#' @param verbose boolean Whether to provide verbose output (default=TRUE)
 #' @param clustering name of the clustering to use
 #' @param groups a factor on cells to use for coloring
 #' @param colors a color factor (named with cell names) use for cell coloring
@@ -50,43 +50,46 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       if (missing(x))
         return()
 
-      if('Conos' %in% class(x)) { # copy constructor
+      if ('Conos' %in% class(x)) { # copy constructor
         for(n in ls(x)) {
           if (!is.function(get(n, x))) assign(n, get(n, x), self)
         }
       } else {
-        if(!is.list(x)) {
+        if (!is.list(x)) {
           stop("x is not a list of pagoda2 or Seurat objects")
         }
         if (inherits(x = x[[1]], what = c('Pagoda2', 'seurat', 'Seurat'))) {
           self$addSamples(x);
         } else {
-          stop("only Pagoda2 or Seurat result lists are currently supported");
+          stop("Only Pagoda2 or Seurat result lists are currently supported")
         }
       }
     },
 
     #' @description initialize or add a set of samples to the conos panel. Note: this will simply add samples, but will not update graph, clustering, etc.
     #'
-    #' @param replace boolean Whether the existing samples should be purged before adding new ones
+    #' @param replace boolean Whether the existing samples should be purged before adding new ones (default=FALSE)
+    #' @param verbose boolean Whether to provide verbose output (default=FALSE)
     #' @return invisible view of the full sample list
     addSamples=function(x, replace=FALSE, verbose=FALSE) {
       # check names
       if(is.null(names(x))) {
-        stop("the sample list must be named")
+        stop("The sample list must be named")
       }
       if(replace || length(self$samples)==0) {
         if(length(x)<2) {
-          stop("provided list contains less than 2 samples; 2 required, >3 recommended")
+          stop("The provided list contains less than 2 samples; 2 required, >3 recommended")
         }
       }
-      if(any(duplicated(names(self$samples)))) { stop("duplicate names found in the supplied samples") }
+      if(any(duplicated(names(self$samples)))) { 
+        stop("duplicate names found in the supplied samples") 
+      }
       if(any(names(x) %in% names(self$samples))) {
-        stop("some of the names in the provided sample list are identical to already existing samples")
+        stop("Some of the names in the provided sample list are identical to already existing samples")
       }
 
       # TODO: package-independent wrapper
-      self$samples <- c(self$samples, x);
+      self$samples <- c(self$samples, x)
     },
 
     #' @description Build the joint graph that encompasses all the samples, establishing weighted inter-sample cell-to-cell links
@@ -175,13 +178,11 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         }
       }
 
-
       if(snn) {
         local.neighbors <- getLocalNeighbors(self$samples[! names(self$samples) %in% exclude.samples], snn.k, k.self.weight, metric, l2.sigma=l2.sigma, verbose, self$n.cores)
       } else {
         local.neighbors <- NULL
       }
-
 
       # determine inter-sample mapping
       if(verbose) message('inter-sample links using ',matching.method,' ');
@@ -273,7 +274,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=mnn@x, stringsAsFactors=FALSE))
       },n.cores=self$n.cores,mc.preschedule=TRUE)
 
-      if(verbose) message(" done")
+      if (verbose) message(" done")
       ## Merge the results into a edge table
       el <- do.call(rbind,mnnres)
       if (nrow(el)==0) {
@@ -499,7 +500,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
     },
 
-    #' @description plot panel of individual embeddings per sample with joint coloring
+    #' @description Plot panel of individual embeddings per sample with joint coloring
     #'
     #' @param use.common.embedding (default=FALSE)
     #' @param embedding.type (default=NULL)
@@ -530,23 +531,23 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       return(gg)
     },
 
-    #' @description  Generate an embedding of a joint graph.
+    #' @description Generate an embedding of a joint graph
     #' 
-    #' @param method embedding method (default='largeVis'). Currently 'largeVis' and 'UMAP' are supported
+    #' @param method Embedding method (default='largeVis'). Currently 'largeVis' and 'UMAP' are supported
     #' @param M numeric The number of negative edges to sample for each positive edge (default=1) 
     #' @param gamma numeric The strength of the force pushing non-neighbor nodes apart (default=1) 
     #' @param alpha numeric Hyperparameter used in the default distance function, \eqn{1 / (1 + \alpha \dot ||y_i - y_j||^2)} (default=0.1).  The function relates the distance
     #'     between points in the low-dimensional projection to the likelihood that the two points are nearest neighbors. Increasing \eqn{\alpha} tends
     #'     to push nodes and their neighbors closer together; decreasing \eqn{\alpha} produces a broader distribution. Setting \eqn{\alpha} to zero
     #'     enables the alternative distance function. \eqn{\alpha} below zero is meaningless.
-    #' @param sgd__batched The number of edges to process during SGD (default=1e8). Defaults to a value set based on the size of the dataset. If the parameter given is
+    #' @param perplexity The perplexity passed to largeVis (default=NA)
+    #' @param sgd_batches The number of edges to process during SGD (default=1e8). Defaults to a value set based on the size of the dataset. If the parameter given is
     #'     between \code{0} and \code{1}, the default value will be multiplied by the parameter. 
-    #' @param perplexity perplexity passed to largeVis (default=NA)
     #' @param seed numeric Random seed for the largeVis algorithm (default=1)
     #' @param target.dims numeric Number of dimensions for the reduction (default=2). Higher dimensions can be used to generate embeddings for subsequent reductions by other methods, such as tSNE
     #' @param ... additional arguments, passed to UMAP embedding (run ?conos:::embedGraphUmap for more info)
     #' @return joint graph embedding
-    embedGraph=function(method='largeVis', M=1, gamma=1, alpha=0.1, perplexity=NA, sgd_batches=1e8, seed=1, verbose=TRUE, target.dims=2, n.cores=self$n.cores, ...) {
+    embedGraph=function(method='largeVis', M=1, gamma=1, alpha=0.1, perplexity=NA, sgd_batches=1e8, seed=1, target.dims=2,  verbose=TRUE, n.cores=self$n.cores, ...) {
       supported.methods <- c('largeVis', 'UMAP')
       if(!method %in% supported.methods) { stop(paste0("currently, only the following embeddings are supported: ",paste(supported.methods,collapse=' '))) }
 
@@ -570,8 +571,8 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
     #' @description Plot cluster stability statistics.
     #'
-    #' @param clustering name of the clustering result to show (default=NULL)
-    #' @param what Show a specific plot (ari - adjusted rand index, fjc - flat Jaccard, hjc - hierarchical Jaccard, dend - cluster dendrogram) (default='all')
+    #' @param clustering string Name of the clustering result to show (default=NULL)
+    #' @param what string Show a specific plot (ari - adjusted rand index, fjc - flat Jaccard, hjc - hierarchical Jaccard, dend - cluster dendrogram) (default='all')
     plotClusterStability=function(clustering=NULL, what='all') {
       if(is.null(clustering)) clustering <- names(self$clusters)[[1]]
 
@@ -692,15 +693,15 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @description Smooth expression of genes, so they better represent structure of the graph.
     #'   Use diffusion of expression on graph with the equation dv = exp(-a * (v + b))
     #'
-    #' @param genes list of genes for smoothing (default=NULL)
-    #' @param n.od.genes if 'genes' is NULL, top n.od.genes of overdispersed genes are taken across all samples (default=500)
-    #' @param fading level of fading of expression change from distance on the graph (parameter 'a' of the equation) (default=10)
-    #' @param fading.const minimal penalty for each new edge during diffusion (parameter 'b' of the equation) (default=0.5)
-    #' @param max.iters maximal number of diffusion iterations (default=15)
-    #' @param tol tolerance after which the diffusion stops (default=5e-3)
-    #' @param name name to save the correction (default='diffusion')
+    #' @param genes List of genes for smoothing (default=NULL)
+    #' @param n.od.genes numeric If 'genes' is NULL, top n.od.genes of overdispersed genes are taken across all samples (default=500)
+    #' @param fading numeric Level of fading of expression change from distance on the graph (parameter 'a' of the equation) (default=10)
+    #' @param fading.const numeric Minimal penalty for each new edge during diffusion (parameter 'b' of the equation) (default=0.5)
+    #' @param max.iters numeric Maximal number of diffusion iterations (default=15)
+    #' @param tol numeric Tolerance after which the diffusion stops (default=5e-3)
+    #' @param name string Name to save the correction (default='diffusion')
     #' @param verbose boolean Verbose mode (default=TRUE)
-    #' @param count.matrix alternative gene count matrix to correct (rows: genes, columns: cells; has to be dense matrix). Default: joint count matrix for all datasets.
+    #' @param count.matrix Alternative gene count matrix to correct (rows: genes, columns: cells; has to be dense matrix). Default: joint count matrix for all datasets.
     #' @param normalize boolean Whether to normalize values (default=TRUE)
     correctGenes=function(genes=NULL, n.od.genes=500, fading=10.0, fading.const=0.5, max.iters=15, tol=5e-3, name='diffusion', verbose=TRUE, count.matrix=NULL, normalize=TRUE) {
       edges <- igraph::as_edgelist(self$graph)
@@ -846,11 +847,13 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
         if(verbose) message("Use ", ncol(sn.pairs), " pairs, based on the passed exclude.pairs")
       } else {
-        sn.pairs <- combn(sample.names, 2);
+        sn.pairs <- combn(sample.names, 2)
       }
 
       # determine the pairs that need to be calculated
-      if(is.null(self$pairs[[space]])) { self$pairs[[space]] <- list() }
+      if (is.null(self$pairs[[space]])) { 
+        self$pairs[[space]] <- list() 
+      }
       mi <- rep(NA,ncol(sn.pairs));
       nm <- match(apply(sn.pairs,2,paste,collapse='.vs.'),names(self$pairs[[space]]));
       mi[which(!is.na(nm))] <- na.omit(nm);
