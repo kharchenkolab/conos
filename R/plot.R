@@ -39,7 +39,7 @@ getClusteringGroups <- function(clusters, clustering) {
 #' @param subset a subset of cells to show (vector of cell names)
 #' @param return.plotlist return a list of ggplot objects instead of a combined plot (default=FALSE)
 #' @return ggplot2 object with the panel of plots
-plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow=NULL, raster=FALSE, panel.size=NULL, adjust.func=NULL, title.size=6, adj.list=NULL, subset=NULL, return.plotlist=FALSE, ...) {
+plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow=NULL, raster=FALSE, raster.dpi=300, panel.size=NULL, adjust.func=NULL, title.size=6, adj.list=NULL, subset=NULL, return.plotlist=FALSE, ...) {
   if (is.null(panel.size)) {
     panel.size <- dev.size(units="in")
   } else if (length(panel.size) == 1) {
@@ -66,7 +66,7 @@ plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow
     if(!is.null(subset)) {
       emb <- emb[rownames(emb) %in% subset,,drop=FALSE]
     }
-    embeddingPlot(emb, groups=groups, colors=colors, raster=raster, ...) +
+    embeddingPlot(emb, groups=groups, colors=colors, raster=raster, raster.dpi=raster.dpi, ...) +
       ggplot2::geom_label(data=data.frame(x=-Inf, y=Inf, label=n), mapping=ggplot2::aes(x=x, y=y, label=label),
                           fill=ggplot2::alpha("white", 0.6), hjust=0, vjust=1, size=title.size,
                           label.padding=ggplot2::unit(title.size / 4, "pt"), label.size = NA)

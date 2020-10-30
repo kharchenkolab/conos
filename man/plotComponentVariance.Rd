@@ -4,7 +4,11 @@
 \alias{plotComponentVariance}
 \title{Plot variance explained by the successive components}
 \usage{
-plotComponentVariance(conos.obj, space = "PCA", plot.theme = theme_bw())
+plotComponentVariance(
+  conos.obj,
+  space = "PCA",
+  plot.theme = ggplot2::theme_bw()
+)
 }
 \arguments{
 \item{conos.obj}{conos object}

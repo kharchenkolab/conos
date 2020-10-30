@@ -11,6 +11,7 @@ plotEmbeddings(
   ncol = NULL,
   nrow = NULL,
   raster = FALSE,
+  raster.dpi = 300,
   panel.size = NULL,
   adjust.func = NULL,
   title.size = 6,
@@ -32,6 +33,8 @@ plotEmbeddings(
 \item{nrow}{number of rows in the panel}
 
 \item{raster}{boolean whether layer with the points be rasterized (default=FALSE). Setting of this argument to TRUE is useful when you need to export a plot with large number of points}
+
+\item{raster.dpi}{dpi of the rasterized plot. (default=300). Ignored if raster == FALSE.}
 
 \item{panel.size}{vector with two numbers, which specified (width, height) of the panel in inches. Ignored if raster == FALSE.}
 
