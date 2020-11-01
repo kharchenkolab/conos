@@ -2,7 +2,8 @@
 % Please edit documentation in R/communities.R
 \name{rleiden.community}
 \alias{rleiden.community}
-\title{Recursive leiden communities}
+\title{Recursive leiden communities
+Constructs a n-step recursive clustering, using leiden.communities}
 \usage{
 rleiden.community(
   graph,
@@ -35,5 +36,6 @@ rleiden.community(
 a fakeCommunities object that has methods membership() ... does not return a dendrogram ... see cltrap.community() to constructo that
 }
 \description{
-Constructrs a n-step recursive clustering, using leiden.communities
+Recursive leiden communities
+Constructs a n-step recursive clustering, using leiden.communities
 }

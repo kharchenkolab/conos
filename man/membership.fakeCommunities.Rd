@@ -2,7 +2,7 @@
 % Please edit documentation in R/communities.R
 \name{membership.fakeCommunities}
 \alias{membership.fakeCommunities}
-\title{returns pre-calculated membership factor}
+\title{Returns pre-calculated membership factor}
 \usage{
 membership.fakeCommunities(obj)
 }
@@ -13,5 +13,5 @@ membership.fakeCommunities(obj)
 membership factor
 }
 \description{
-returns pre-calculated membership factor
+Returns pre-calculated membership factor
 }

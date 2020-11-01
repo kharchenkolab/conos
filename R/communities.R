@@ -13,11 +13,11 @@
 NULL
 
 
-# TODO: multitrap method
-#' mutlilevel+walktrap communities
-#'
-#' Constructrs a two-step clustering, first running multilevel.communities, and then walktrap.communities within each
+## TODO: multitrap method
+## mutlilevel+walktrap communities
+#' Constructs a two-step clustering, first running multilevel.communities, and then walktrap.communities within each
 #' These are combined into an overall hierarchy
+#'
 #' @param graph graph
 #' @param n.cores numeric Number of cores to use (default=parallel::detectCores(logical=FALSE))
 #' @param hclust.link character Link function to use when clustering multilevel communities (based on collapsed graph connectivity) (default='single')
@@ -47,8 +47,6 @@ multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=FAL
   chwt <- walktrap.community(cgraph,steps=8)
   d <- as.dendrogram(chwt);
 
-
-
   wtl <- conos:::papply(sn(unique(mem)), function(cluster) {
     cn <- names(mem)[which(mem==cluster)]
     sg <- induced.subgraph(graph,cn)
@@ -67,7 +65,6 @@ multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=FAL
   })
 
   if(verbose) message("found ",sum(unlist(lapply(mbl,function(x) length(unique(x)))))," communities\nmerging dendrograms ... ")
-
 
   wtld <- lapply(wtl,as.dendrogram)
   max.height <- max(unlist(lapply(wtld,attr,'height')))
@@ -119,10 +116,10 @@ multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=FAL
 }
 
 
-#' mutlilevel+multilevel communities
-#'
+### mutlilevel+multilevel communities
 #' Constructrs a two-step clustering, first running multilevel.communities, and then walktrap.communities within each
 #' These are combined into an overall hierarchy
+#'
 #' @param graph graph
 #' @param n.cores numeric Number of cores to use (default=parallel::detectCores(logical=FALSE))
 #' @param hclust.link character Link function to use when clustering multilevel communities (based on collapsed graph connectivity) (default='single')
@@ -186,8 +183,8 @@ multimulti.community <- function(graph, n.cores=parallel::detectCores(logical=FA
 }
 
 #' Leiden algorithm community detection
-#'
 #' Detect communities using Leiden algorithm (implementation copied from https://github.com/vtraag/leidenalg)
+#' 
 #' @param graph graph on which communities should be detected
 #' @param resolution numeric Resolution parameter (default=1.0) - higher numbers lead to more communities
 #' @param n.iterations numeric Number of iterations that the algorithm should be run for (default =2)
@@ -196,7 +193,6 @@ multimulti.community <- function(graph, n.cores=parallel::detectCores(logical=FA
 leiden.community <- function(graph, resolution=1.0, n.iterations=2) {
 
   x <- leiden_community(graph,E(graph)$weight,resolution,n.iterations);
-
   # enclose in a masquerading class
   fv <- as.factor(setNames(x,V(graph)$name))
   res <- list(membership=fv, dendrogram=NULL, algorithm='leiden', resolution=resolution,
@@ -206,8 +202,8 @@ leiden.community <- function(graph, resolution=1.0, n.iterations=2) {
 }
 
 #' Recursive leiden communities
+#' Constructs a n-step recursive clustering, using leiden.communities
 #'
-#' Constructrs a n-step recursive clustering, using leiden.communities
 #' @param graph graph
 #' @param n.cores numeric Number of cores to use (default=parallel::detectCores(logical=FALSE))
 #' @param max.depth numeric Recursive depth (default=2)
@@ -333,20 +329,21 @@ rleiden.community <- function(graph, max.depth=2, n.cores=parallel::detectCores(
 }
 
 
-##' returns pre-calculated dendrogram
-##'
-##' @param obj fakeCommunities object
-##' @param ... dropped
-##' @return dendrogram
-##' @export
+#' Returns pre-calculated dendrogram
+#'
+#' @param obj fakeCommunities object
+#' @param ... dropped
+#' @return dendrogram
+#' @export
 as.dendrogram.fakeCommunities <- function(obj, ...) {
   return(obj$dendrogram)
 }
-##' returns pre-calculated membership factor
-##'
-##' @param obj fakeCommunities object
-##' @return membership factor
-##' @export
+
+#' Returns pre-calculated membership factor
+#'
+#' @param obj fakeCommunities object
+#' @return membership factor
+#' @export
 membership.fakeCommunities <- function(obj) {
   return(obj$membership)
 }

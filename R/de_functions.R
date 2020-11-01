@@ -52,10 +52,11 @@ validateBetweenCellTypeParams <- function(con.obj, groups, sample.groups, refgro
     stop('cluster.sep.chr must not be part of any cluster name')
 }
 
-#'
+#' Get raw matrices with common genes
+#' 
 #' @param con.object Conos object
 #' @param sample.groups (default=NULL)
-#' @return 
+#' @return raw matrices subset with common genes
 #' @export 
 rawMatricesWithCommonGenes <- function(con.obj, sample.groups=NULL) {
   samples <- con.obj$samples
