@@ -2,7 +2,9 @@
 % Please edit documentation in R/conos.R
 \name{scanKModularity}
 \alias{scanKModularity}
-\title{Scan joint graph modularity for a range of k (or k.self) values}
+\title{Scan joint graph modularity for a range of k (or k.self) values
+Builds graph with different values of k (or k.self if scan.k.self=TRUE), evaluating modularity of the resulting multilevel clustering
+NOTE: will run evaluations in parallel using con$n.cores (temporarily setting con$n.cores to 1 in the process)}
 \usage{
 scanKModularity(
   con,
@@ -19,13 +21,13 @@ scanKModularity(
 \arguments{
 \item{con}{Conos object to test}
 
-\item{min}{minimal value of k to test}
+\item{min}{numeric Minimal value of k to test (default=3)}
 
-\item{max}{vlaue of k to test}
+\item{max}{numeric Value of k to test (default=50)}
 
-\item{by}{scan step (defaults to 1)}
+\item{by}{numeric Scan step (default=1)}
 
-\item{scan.k.self}{whether to test dependency on scan.k.self}
+\item{scan.k.self}{boolean Whether to test dependency on scan.k.self (default=FALSE)}
 
 \item{...}{other parameters will be passed to con$buildGraph()}
 }
@@ -33,6 +35,7 @@ scanKModularity(
 a data frame with $k $m columns giving k and the corresponding modularity
 }
 \description{
+Scan joint graph modularity for a range of k (or k.self) values
 Builds graph with different values of k (or k.self if scan.k.self=TRUE), evaluating modularity of the resulting multilevel clustering
-note: will run evaluations in parallel using con$n.cores (temporarily setting con$n.cores to 1 in the process)
+NOTE: will run evaluations in parallel using con$n.cores (temporarily setting con$n.cores to 1 in the process)
 }

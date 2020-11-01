@@ -55,7 +55,7 @@ validateBetweenCellTypeParams <- function(con.obj, groups, sample.groups, refgro
 #' Get raw matrices with common genes
 #' 
 #' @param con.object Conos object
-#' @param sample.groups (default=NULL)
+#' @param sample.groups list of samples to select from Conos object, con.obj$samples (default=NULL)
 #' @return raw matrices subset with common genes
 #' @export 
 rawMatricesWithCommonGenes <- function(con.obj, sample.groups=NULL) {
@@ -235,10 +235,12 @@ saveDEasCSV <- function(de.results=NULL,saveprefix=NULL,gene.metadata=NULL) {
 }
 
 #' Save differential expression results as JSON
-#' @param de.results differential expression results
-#' @param saveprefix prefix for the differential expression output
-#' @param gene.metadata data.frame with gene metadata
-#' @param cluster.sep.chr character string of length 1 specifying a delimiter to separate cluster and app names
+#'
+#' @param de.results differential expression results (default=NULL)
+#' @param saveprefix prefix for the differential expression output (default=NULL)
+#' @param gene.metadata data.frame with gene metadata (default=NULL)
+#' @param cluster.sep.chr character string of length 1 specifying a delimiter to separate cluster and app names (default='<!!>')
+#' @return JSON with DE results
 #' @export saveDEasJSON
 saveDEasJSON <- function(de.results = NULL, saveprefix = NULL, gene.metadata = NULL, cluster.sep.chr='<!!>') {
     ## ### DEVEL
@@ -330,20 +332,23 @@ saveDEasJSON <- function(de.results = NULL, saveprefix = NULL, gene.metadata = N
 }
 
 #' Compare two cell types across the entire panel
+#'
 #' @param con.obj conos object
-#' @param groups factor describing cell grouping
-#' @param sample.groups a named list of two character vectors specifying the app groups to compare
-#' @param cooks.cutoff cooksCutoff parameter for DESeq2
-#' @param refgroup cell type to compare to be used as reference
-#' @param altgroup cell type to compare to
-#' @param min.cell.count minimum number of cells per celltype/sample combination to keep
-#' @param independent.filtering independentFiltering parameter for DESeq2
-#' @param cluster.sep.chr character string of length 1 specifying a delimiter to separate cluster and app names
-#' @param return.details logical, return detailed results
-#' @param only.paired only keep samples that that both cell types above the min.cell.count threshold
+#' @param groups factor describing cell grouping  (default=NULL)
+#' @param sample.groups a named list of two character vectors specifying the app groups to compare (default=NULL)
+#' @param cooks.cutoff boolean cooksCutoff parameter for DESeq2 (default=FALSE)
+#' @param refgroup cell type to compare to be used as reference (default=NULL)
+#' @param altgroup cell type to compare to be used as ALT against refgroup (default=NULL)
+#' @param min.cell.count numeric Minimum number of cells per celltype/sample combination to keep (default=10)
+#' @param independent.filtering boolean Whether to use independentFiltering parameter for DESeq2 (default=FALSE)
+#' @param cluster.sep.chr character string of length 1 specifying a delimiter to separate cluster and app names (default='<!!>')
+#' @param return.details boolean Return detailed results (default=TRUE)
+#' @param only.paired boolean Only keep samples that that both cell types above the min.cell.count threshold (default=TRUE)
 #' @param remove.na boolean If TRUE, remove NAs from DESeq calculations (default=TRUE)
+#' @return Returns either a DESeq2::results() object, or if return.details=TRUE, 
+#'    returns a list of the DESeq2::results(), the samples from the panel to use in this comparison, refgroups, altgroup, and samplegroups
 #' @export getBetweenCellTypeDE
-getBetweenCellTypeDE <- function(con.obj, sample.groups =  NULL, groups=NULL, cooks.cutoff = FALSE, refgroup = NULL, altgroup = NULL, min.cell.count = 10,
+getBetweenCellTypeDE <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cutoff = FALSE, refgroup = NULL, altgroup = NULL, min.cell.count = 10,
                                  independent.filtering = FALSE, cluster.sep.chr = '<!!>',return.details=TRUE, only.paired=TRUE, remove.na=TRUE) {
   # TODO: do we really need sample.groups here? They are used in the corrected version for some unknown reason.
   validateBetweenCellTypeParams(con.obj, groups, sample.groups, refgroup, altgroup, cluster.sep.chr)
@@ -393,6 +398,7 @@ generateDEMatrixMetadata <- function(mtx, refgroup, altgroup, cluster.sep.chr) {
 }
 
 #' Compare two cell types across the entire panel
+#'
 #' @param con.obj conos object
 #' @param sample.groups a named list of two character vectors specifying the app groups to compare
 #' @param groups factor describing cell grouping
@@ -406,6 +412,8 @@ generateDEMatrixMetadata <- function(mtx, refgroup, altgroup, cluster.sep.chr) {
 #' @param only.paired only keep samples that that both cell types above the min.cell.count threshold
 #' @param correction fold change corrections per genes
 #' @param ref.level reference level on the basis of which the correction was calculated
+#' @return Returns either a DESeq2::results() object, or if return.details=TRUE, 
+#'    returns a list of the DESeq2::results(), the samples from the panel to use in this comparison, refgroups, altgroup, and samplegroups
 #' @export getBetweenCellTypeCorrectedDE
 getBetweenCellTypeCorrectedDE <- function(con.obj, sample.groups =  NULL, groups=NULL, cooks.cutoff = FALSE, refgroup = NULL, altgroup = NULL, min.cell.count = 10,
                                           independent.filtering = FALSE, cluster.sep.chr = '<!!>',return.details=TRUE, only.paired=TRUE, correction = NULL, ref.level=NULL) {
@@ -471,8 +479,8 @@ getBetweenCellTypeCorrectedDE <- function(con.obj, sample.groups =  NULL, groups
 
 ## Marker genes
 
-#' Takes data.frames with info about DE genes for single cell type and many samples and
-#' returns data.frame with aggregated info for this cell type
+## Takes data.frames with info about DE genes for single cell type and many samples and
+## returns data.frame with aggregated info for this cell type
 aggregateDEMarkersAcrossDatasets <- function(marker.dfs, z.threshold, upregulated.only) {
   if (length(marker.dfs) == 0){
     return(data.frame())

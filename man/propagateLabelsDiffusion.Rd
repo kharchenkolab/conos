@@ -16,15 +16,17 @@ propagateLabelsDiffusion(
 )
 }
 \arguments{
+\item{graph}{input graph}
+
 \item{labels}{vector of factor or character labels, named by cell names}
 
-\item{max.iters:}{maximal number of iterations. Default: 100.}
+\item{max.iters}{maximal number of iterations (default=100)}
 
-\item{tol:}{absolute tolerance as a stopping criteria. Default: 0.025}
+\item{tol}{numeric Absolute tolerance as a stopping criteria (default=0.025)}
 
-\item{verbose:}{verbose mode. Default: TRUE.}
+\item{verbose}{boolean Verbose mode (default=TRUE)}
 
-\item{fixed.initial.labels:}{prohibit changes of initial labels during diffusion. Default: TRUE.}
+\item{fixed.initial.labels}{boolean Prohibit changes of initial labels during diffusion (default=TRUE)}
 }
 \description{
 Estimate labeling distribution for each vertex, based on provided labels using Random Walk

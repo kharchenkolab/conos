@@ -23,13 +23,17 @@ getNeighborMatrix(
 
 \item{k}{neighborhood radius}
 
-\item{matching}{mNN (default) or NN}
+\item{k1}{neighborhood radius}
 
-\item{metric}{distance type (default: "angular", can also be 'L2')}
+\item{matching}{string mNN (default) or NN}
 
-\item{l2.sigma}{L2 distances get transformed as exp(-d/sigma) using this value (default=1e5)}
+\item{metric}{string Distance type (default: "angular", can also be 'L2')}
+
+\item{l2.sigma}{numeric L2 distances get transformed as exp(-d/sigma) using this value (default=1e5)}
 
 \item{min.similarity}{minimal similarity between two cells, required to have an edge}
+
+\item{core.base}{numeric (default=1)}
 }
 \value{
 matrix with the similarity (!) values corresponding to weight (1-d for angular, and exp(-d/l2.sigma) for L2)

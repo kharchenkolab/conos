@@ -2,7 +2,7 @@
 % Please edit documentation in R/conos.R
 \name{getClusterPrivacy}
 \alias{getClusterPrivacy}
-\title{Get percent of clusters that are private to one sample}
+\title{Get percentage of clusters that are private to one sample}
 \usage{
 getClusterPrivacy(p2list, pjc, priv.cutoff = 0.99)
 }
@@ -11,9 +11,11 @@ getClusterPrivacy(p2list, pjc, priv.cutoff = 0.99)
 
 \item{pjc}{result of panelClust()}
 
-\item{priv.cutoff}{percent of total cells of a cluster that have to come from a single cluster
-for it to be called private}
+\item{priv.cutoff}{numeric Percent of total cells of a cluster that have to come from a single cluster for it to be called private (default=0.99)}
+}
+\value{
+percentage of clusters that are private to one sample
 }
 \description{
-Get percent of clusters that are private to one sample
+Get percentage of clusters that are private to one sample
 }

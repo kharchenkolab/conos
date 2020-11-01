@@ -10,7 +10,7 @@ leiden.community(graph, resolution = 1, n.iterations = 2)
 \arguments{
 \item{graph}{graph on which communities should be detected}
 
-\item{resolution}{numeric Resolution parameter (default=1.0) - higher numbers lead to more communities}
+\item{resolution}{numeric Resolution parameter (default=1.0). Higher numbers lead to more communities}
 
 \item{n.iterations}{numeric Number of iterations that the algorithm should be run for (default =2)}
 }

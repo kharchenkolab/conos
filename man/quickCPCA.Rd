@@ -17,15 +17,18 @@ quickCPCA(
 \arguments{
 \item{r.n}{list of p2 objects}
 
-\item{ncomps}{number of components to calculate (default=100)}
+\item{ncomps}{numeric Number of components to calculate (default=100)}
 
-\item{n.odgenes}{number of overdispersed genes to take from each dataset}
+\item{n.odgenes}{numeric Number of overdispersed genes to take from each dataset (default=NULL)}
 
-\item{var.scale}{whether to scale variance (default=TRUE)}
+\item{var.scale}{boolean Whether to scale variance (default=TRUE)}
 
-\item{verbose}{whether to be verbose}
+\item{verbose}{boolean Whether to be verbose (default=TRUE)}
 
-\item{n.cores}{number of cores to use}
+\item{score.component.variance}{boolean Whether to score component variance (default=FALSE)}
+}
+\value{
+cpca projection on two samples
 }
 \description{
 Perform cpca on two samples

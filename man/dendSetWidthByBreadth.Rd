@@ -9,13 +9,13 @@ dendSetWidthByBreadth(d, fac, leafContent, min.width = 1, max.width = 4)
 \arguments{
 \item{d}{dendrogram}
 
-\item{fac}{across cells}
+\item{fac}{factor across cells}
 
 \item{leafContent}{$leafContent output of greedy.modularity.cut() providing information about which cells map to which dendrogram leafs}
 
-\item{min.width}{minimum line width}
+\item{min.width}{numeric Minimum line width (default=1)}
 
-\item{max.width}{maximum line width}
+\item{max.width}{numeric Maximum line width (default=4)}
 }
 \description{
 Set dendrogram node width by breadth of the provided factor

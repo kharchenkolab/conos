@@ -79,15 +79,15 @@ seuratProcV3 <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, n.pcs
 #' @param con conos object
 #' @param output.path path to a folder, where intermediate files will be saved
 #' @param hdf5_filename name of HDF5 written with ScanPy files. Note: the \pkg{\link{rhdf5}} package is required
-#' @param metadata.df data.frame with additional metadata with rownames corresponding to cell ids, which should be passed to ScanPy.
-#' If NULL, only information about cell ids and origin dataset will be saved.
-#' @param cm.norm logical, include the matrix of normalised counts. Default: FALSE
-#' @param embedding logical, include the current conos embedding. Default: TRUE
-#' @param pseudo.pca logical, produce an emulated PCA by embedding the graph to a space with `n.dims` dimensions and save it as a pseudoPCA. Default: FALSE
-#' @param pca logical, include PCA of all the samples (not batch corrected). Default: FALSE
-#' @param n.dims number of dimensions for calculating PCA and/or pseudoPCA
-#' @param alignment.graph logical, include graph of connectivities and distances. Default: TRUE
-#' @param verbose verbose mode. Default: FALSE
+#' @param metadata.df data.frame with additional metadata with rownames corresponding to cell ids, which should be passed to ScanPy (default=NULL)
+#'     If NULL, only information about cell ids and origin dataset will be saved.
+#' @param cm.norm boolean Whether to include the matrix of normalised counts (default=FALSE).
+#' @param embedding boolean Whether to include the current conos embedding (default=TRUE).
+#' @param pseudo.pca boolean Whether to produce an emulated PCA by embedding the graph to a space with `n.dims` dimensions and save it as a pseudoPCA (default=FALSE).
+#' @param pca boolean Whether to include PCA of all the samples (not batch corrected) (default=FALSE).
+#' @param n.dims numeric Number of dimensions for calculating PCA and/or pseudoPCA (default=100).
+#' @param alignment.graph boolean Whether to include graph of connectivities and distances (default=TRUE).
+#' @param verbose boolean Whether to use verbose mode (default=FALSE)
 #' @seealso The \pkg{\link{rhdf5}} package documentation \href{https://www.bioconductor.org/packages/release/bioc/html/rhdf5.html}{here}
 #' @return AnnData object for ScanPy, saved to disk
 #' @export
@@ -218,12 +218,11 @@ saveConosForScanPy <- function(con, output.path, hdf5_filename, metadata.df=NULL
 
 #' Create and preprocess a Seurat object
 #'
-#' @description Create Seurat object from gene count matrix
 #' @param count.matrix gene count matrix
 #' @param vars.to.regress variables to regress with Seurat (default=NULL)
 #' @param verbose boolean Verbose mode (default=TRUE)
 #' @param do.par boolean Use parallel processing for regressing out variables faster, for
-#' Seurat v3, use \code{\link[future]{plan}} instead (default=TRUE)
+#'     Seurat v3, use \code{\link[future]{plan}} instead (default=TRUE)
 #' @param n.pcs numeric Number of principal components (default=100)
 #' @param cluster boolean Whether to perform clustering (default=TRUE)
 #' @param tsne boolean Whether to construct tSNE embedding (default=TRUE)
@@ -252,14 +251,14 @@ basicSeuratProc <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do
 }
 
 #' RNA velocity analysis on samples integrated with conos
+#' Create a list of objects to pass into gene.relative.velocity.estimates function from the velocyto.R package
 #'
-#' @description Create a list of objects to pass into gene.relative.velocity.estimates function from the velocyto.R package
 #' @param cms.list list of velocity files written out as cell.counts.matrices.rds files by running dropest with -V option
 #' @param con conos object (after creating an embedding and running leiden clustering)
-#' @param clustering name of clustering in the conos object to use. Either 'clustering' or 'groups' must be provided. Default: NULL
-#' @param groups set of clusters to use. Ignored if 'clustering' is not NULL. Default: NULL
-#' @param n.odgenes number of overdispersed genes to use for PCA. Default: 2000
-#' @param verbose verbose mode. Default: TRUE
+#' @param clustering name of clustering in the conos object to use (default=NULL). Either 'clustering' or 'groups' must be provided. 
+#' @param groups set of clusters to use (default=NULL). Ignored if 'clustering' is not NULL. 
+#' @param n.odgenes numeric Number of overdispersed genes to use for PCA (default=2000).
+#' @param verbose boolean Whether to use verbose mode (default=TRUE)
 #' @return List with cell distances, combined spliced expression matrix, combined unspliced expression matrix, combined matrix of spanning reads, cell colors for clusters and embedding (taken from conos)
 #' @export
 velocityInfoConos <- function(cms.list, con, clustering=NULL, groups=NULL, n.odgenes=2e3, verbose=TRUE, min.max.cluster.average.emat=0.2, min.max.cluster.average.nmat=0.05, min.max.cluster.average.smat=0.01) {
@@ -369,7 +368,7 @@ pcaFromConos <- function(p2.list, data.type='counts', k=30, ncomps=100, n.odgene
 #' @param con Conos object
 #' @param n.pcs numeric Number of principal components (default=100)
 #' @param n.odgenes numeric Number of overdispersed genes (default=2000)
-#' @param verbose boolean Whether to give verbose output (default=TRUE).
+#' @param verbose boolean Whether to give verbose output (default=TRUE)
 #' @param ... parameters passed to Pagoda2$new()
 #' @return pagoda2 object 
 #' @export

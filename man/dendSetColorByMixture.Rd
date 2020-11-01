@@ -9,7 +9,7 @@ dendSetColorByMixture(d, fac, leafContent)
 \arguments{
 \item{d}{dendrogram}
 
-\item{fac}{across cells}
+\item{fac}{factor across cells}
 
 \item{leafContent}{$leafContent output of greedy.modularity.cut() providing information about which cells map to which dendrogram leafs}
 }

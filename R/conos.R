@@ -117,7 +117,7 @@ quickNULL <- function(p2.objs, data.type='counts', n.odgenes = NULL, var.scale =
   return(list(genespace1=cproj[[1]], genespace2=cproj[[2]]))
 }
 
-#' Perform pairwise JNMF
+## Perform pairwise JNMF
 quickJNMF <- function(p2.objs, data.type='counts', n.comps = 30, n.odgenes=NULL, var.scale=TRUE, verbose =TRUE, max.iter=1000) {
   ## Stop if more than 2 samples
   if (length(p2.objs) != 2) stop('quickJNMF only supports pairwise alignment');
@@ -159,12 +159,14 @@ cpcaFast <- function(covl,ncells,ncomp=10,maxit=1000,tol=1e-6,use.irlba=TRUE,ver
 }
 
 #' Perform cpca on two samples
+#' 
 #' @param r.n list of p2 objects
-#' @param ncomps number of components to calculate (default=100)
-#' @param n.odgenes number of overdispersed genes to take from each dataset
-#' @param var.scale whether to scale variance (default=TRUE)
-#' @param verbose whether to be verbose
-#' @param n.cores number of cores to use
+#' @param ncomps numeric Number of components to calculate (default=100)
+#' @param n.odgenes numeric Number of overdispersed genes to take from each dataset (default=NULL)
+#' @param var.scale boolean Whether to scale variance (default=TRUE)
+#' @param verbose boolean Whether to be verbose (default=TRUE)
+#' @param score.component.variance boolean Whether to score component variance (default=FALSE)
+#' @return cpca projection on two samples
 quickCPCA <- function(r.n, data.type='counts', ncomps=100, n.odgenes=NULL, var.scale=TRUE, verbose=TRUE, score.component.variance=FALSE) {
   od.genes <- commonOverdispersedGenes(r.n, n.odgenes, verbose=verbose)
   if(length(od.genes)<5) return(NULL);
@@ -201,7 +203,7 @@ quickCPCA <- function(r.n, data.type='counts', ncomps=100, n.odgenes=NULL, var.s
   #system.time(res <- cpca:::cpca_stepwise_base(covl,ncells,k=ncomps))
   #res <- cpc(abind(covl,along=3),k=ncomps)
   rownames(res$CPC) <- od.genes;
-  if(score.component.variance) {
+  if (score.component.variance) {
     v0 <- lapply(sm,function(x) sum(apply(x,2,var)))
     v1 <- lapply(1:length(sm),function(i) {
       x <- sm[[i]];
@@ -213,18 +215,22 @@ quickCPCA <- function(r.n, data.type='counts', ncomps=100, n.odgenes=NULL, var.s
     res$nv <- v1;
   }
   if(verbose) message(' done\n')
-  return(res);
+  return(res)
 }
 
+
 #' Use space of combined sample-specific PCAs as a space
+#'
 #' @param r.n list of p2 objects
-#' @param ncomps number of components to calculate (default=30)
-#' @param n.odgenes number of overdispersed genes to take from each dataset
-#' @param var.scale whether to scale variance (default=TRUE)
-#' @param verbose whether to be verbose
-#' @param cgsf an optional set of common genes to align on
-#' @param n.cores number of cores to use
-quickPlainPCA <- function(r.n,data.type='counts',ncomps=30,n.odgenes=NULL,var.scale=TRUE,verbose=TRUE, score.component.variance=FALSE, n.cores=30) {
+#' @param data.type 
+#' @param ncomps numeric Number of components to calculate (default=30)
+#' @param n.odgenes numeric Number of overdispersed genes to take from each dataset (default=NULL)
+#' @param var.scale boolean Whether to scale variance (default=TRUE)
+#' @param verbose boolean Whether to be verbose (default=TRUE)
+#' @param score.component.variance boolean Whether to score component variance (default=FALSE)
+#' @param n.cores numeric Number of cores to use (default=30)
+#' @return PCA projection, using space of combined sample-specific PCAs
+quickPlainPCA <- function(r.n, data.type='counts', ncomps=30, n.odgenes=NULL, var.scale=TRUE, verbose=TRUE, score.component.variance=FALSE, n.cores=30) {
   od.genes <- commonOverdispersedGenes(r.n, n.odgenes, verbose=verbose)
   if(length(od.genes)<5) return(NULL);
 
@@ -314,15 +320,16 @@ quickCCA <- function(r.n,data.type='counts',ncomps=100,n.odgenes=NULL,var.scale=
 }
 
 
-# dendrogram modification functions
+## dendrogram modification functions
 #' Set dendrogram node width by breadth of the provided factor
+#'
 #' @param d dendrogram
-#' @param fac across cells
+#' @param fac factor across cells
 #' @param leafContent $leafContent output of greedy.modularity.cut() providing information about which cells map to which dendrogram leafs
-#' @param min.width minimum line width
-#' @param max.width maximum line width
+#' @param min.width numeric Minimum line width (default=1)
+#' @param max.width numeric Maximum line width (default=4)
 #' @export
-dendSetWidthByBreadth <- function(d,fac,leafContent,min.width=1,max.width=4) {
+dendSetWidthByBreadth <- function(d, fac, leafContent, min.width=1, max.width=4) {
   cc2width <- function(cc) {
     ent <- entropy::entropy(cc[-1],method='MM',unit='log2')/log2(length(levels(fac)))
     min.width+ent*(max.width-min.width)
@@ -351,8 +358,9 @@ dendSetWidthByBreadth <- function(d,fac,leafContent,min.width=1,max.width=4) {
 }
 
 #' Set dendrogram colors according to a 2- or 3-level factor mixture
+#' 
 #' @param d dendrogram
-#' @param fac across cells
+#' @param fac factor across cells
 #' @param leafContent $leafContent output of greedy.modularity.cut() providing information about which cells map to which dendrogram leafs
 #' @export
 dendSetColorByMixture <- function(d,fac,leafContent) {
@@ -431,11 +439,12 @@ papply <- function(...,n.cores=parallel::detectCores(), mc.preschedule=FALSE) {
 ## Benchmarks
 ##################################
 
-#' Get percent of clusters that are private to one sample
+#' Get percentage of clusters that are private to one sample
+#' 
 #' @param p2list list of pagoda2 objects on which the panelClust() was run
 #' @param pjc result of panelClust()
-#' @param priv.cutoff percent of total cells of a cluster that have to come from a single cluster
-#' for it to be called private
+#' @param priv.cutoff numeric Percent of total cells of a cluster that have to come from a single cluster for it to be called private (default=0.99)
+#' @return percentage of clusters that are private to one sample
 getClusterPrivacy <- function(p2list, pjc, priv.cutoff= 0.99) {
     ## Get the clustering factor
     cl <- pjc$cls.mem
@@ -460,11 +469,12 @@ sn <- function(x) { names(x) <- x; x }
 
 
 #' Evaluate consistency of cluster relationships
-#' @description Using the clustering we are generating per-sample dendrograms
+#' Using the clustering we are generating per-sample dendrograms
 #' and we are examining their similarity between different samples
 #' More information about similarity measures
-#' https://www.rdocumentation.org/packages/dendextend/versions/1.8.0/topics/cor_cophenetic
-#' https://www.rdocumentation.org/packages/dendextend/versions/1.8.0/topics/cor_bakers_gamma
+#' <https://www.rdocumentation.org/packages/dendextend/versions/1.8.0/topics/cor_cophenetic>
+#' <https://www.rdocumentation.org/packages/dendextend/versions/1.8.0/topics/cor_bakers_gamma>
+#'
 #' @param p2list list of pagoda2 object
 #' @param pjc a clustering factor
 #' @return list of cophenetic and bakers_gama similarities of the dendrograms from each sample
@@ -497,6 +507,7 @@ getClusterRelationshipConsistency <- function(p2list, pjc) {
 }
 
 #' Evaluate how many clusters are global
+#'
 #' @param p2list list of pagoda2 object on which clustering was generated
 #' @param pjc the result of joint clustering
 #' @param pc.samples.cutoff the percent of the number of the total samples that a cluster has to span to be considered global
@@ -527,6 +538,7 @@ getPercentGlobalClusters <- function(p2list, pjc, pc.samples.cutoff = 0.9, min.c
 factorBreakdown <- function(f) {tapply(names(f),f, identity) }
 
 #' Post process clusters generated with walktrap to control granularity
+#'
 #' @param p2list list of pagoda2 objects
 #' @param pjc joint clustering that was performed with walktrap
 #' @param no.cl number of clusters to get from the walktrap dendrogram
@@ -582,6 +594,7 @@ postProcessWalktrapClusters <- function(p2list, pjc, no.cl = 200, size.cutoff = 
 }
 
 #' Get top overdispersed genes across samples
+#'
 #' @param samples list of pagoda2 objects
 #' @param n.genes number of overdispersed genes to extract
 getOdGenesUniformly <- function(samples, n.genes) {
@@ -695,15 +708,16 @@ getLocalEdges <- function(local.neighbors) {
 
 
 
-##' Find threshold of cluster detectability
-##'
-##' For a given clustering, walks the walktrap result tree to find
-##' a subtree with max(min(sens,spec)) for each cluster, where sens is sensitivity, spec is specificity
-##' @param res walktrap result object (igraph)
-##' @param clusters cluster factor
-##' @return a list of $thresholds - per cluster optimal detectability values, and $node - internal node id (merge row) where the optimum was found
-##' @export
-bestClusterThresholds <- function(res,clusters,clmerges=NULL) {
+#' Find threshold of cluster detectability
+#'
+#' For a given clustering, walks the walktrap result tree to find
+#' a subtree with max(min(sens,spec)) for each cluster, where sens is sensitivity, spec is specificity
+#'
+#' @param res walktrap result object (igraph)
+#' @param clusters cluster factor
+#' @return a list of $thresholds - per cluster optimal detectability values, and $node - internal node id (merge row) where the optimum was found
+#' @export
+bestClusterThresholds <- function(res, clusters, clmerges=NULL) {
   clusters <- as.factor(clusters);
   # prepare cluster vectors
   cl <- as.integer(clusters[res$names]);
@@ -720,16 +734,18 @@ bestClusterThresholds <- function(res,clusters,clmerges=NULL) {
   x
 }
 
-##' Find threshold of cluster detectability in trees of clusters
-##'
-##' For a given clustering, walks the walktrap (of clusters) result tree to find
-##' a subtree with max(min(sens,spec)) for each cluster, where sens is sensitivity, spec is specificity
-##' @param res walktrap result object (igraph) where the nodes were clusters
-##' @param leaf.factor a named factor describing cell assignments to the leaf nodes (in the same order as res$names)
-##' @param clusters cluster factor
-##' @return a list of $thresholds - per cluster optimal detectability values, and $node - internal node id (merge row) where the optimum was found
-##' @export
-bestClusterTreeThresholds <- function(res,leaf.factor,clusters,clmerges=NULL) {
+#' Find threshold of cluster detectability in trees of clusters
+#'
+#' For a given clustering, walks the walktrap (of clusters) result tree to find
+#' a subtree with max(min(sens,spec)) for each cluster, where sens is sensitivity, spec is specificity
+#'
+#' @param res walktrap result object (igraph) where the nodes were clusters
+#' @param leaf.factor a named factor describing cell assignments to the leaf nodes (in the same order as res$names)
+#' @param clusters cluster factor
+#' @param clmerges (default=NULL)
+#' @return a list of $thresholds - per cluster optimal detectability values, and $node - internal node id (merge row) where the optimum was found
+#' @export
+bestClusterTreeThresholds <- function(res, leaf.factor, clusters, clmerges=NULL) {
   clusters <- as.factor(clusters);
   # prepare cluster vectors
   cl <- as.integer(clusters[names(leaf.factor)]);
@@ -746,21 +762,21 @@ bestClusterTreeThresholds <- function(res,leaf.factor,clusters,clmerges=NULL) {
     x <- conos:::treeJaccard(res$merges-1L,as.matrix(mt),clT,clmerges-1L)
   }
 
-  x
+  invisible(x)
 }
 
 
-##' performs a greedy top-down selective cut to optmize modularity
-##'
-##' @param wt walktrap rsult
-##' @param N number of top greedy splits to take
-##' @param leaf.labels leaf sample label factor, for breadth calculations - must be a named factor containing all wt$names, or if wt$names is null, a factor listing cells in the same order as wt leafs
-##' @param minsize minimum size of the branch (in number of leafs)
-##' @param minbreadth minimum allowed breadth of a branch (measured as normalized entropy)
-##' @param flat.cut whether to simply take a flat cut (i.e. follow provided tree; default=TRUE). Does no observe minsize/minbreadth restrictions
-##' @return list(hclust - hclust structure of the derived tree, leafContent - binary matrix with rows corresponding to old leaves, columns to new ones, deltaM - modularity increments)
-##' @export
-greedyModularityCut <- function(wt,N,leaf.labels=NULL,minsize=0,minbreadth=0,flat.cut=TRUE) {
+#' Performs a greedy top-down selective cut to optmize modularity
+#'
+#' @param wt walktrap result
+#' @param N number of top greedy splits to take
+#' @param leaf.labels leaf sample label factor, for breadth calculations - must be a named factor containing all wt$names, or if wt$names is null, a factor listing cells in the same order as wt leafs
+#' @param minsize minimum size of the branch (in number of leafs)
+#' @param minbreadth minimum allowed breadth of a branch (measured as normalized entropy)
+#' @param flat.cut whether to simply take a flat cut (i.e. follow provided tree; default=TRUE). Does no observe minsize/minbreadth restrictions
+#' @return list(hclust - hclust structure of the derived tree, leafContent - binary matrix with rows corresponding to old leaves, columns to new ones, deltaM - modularity increments)
+#' @export
+greedyModularityCut <- function(wt, N, leaf.labels=NULL, minsize=0, minbreadth=0, flat.cut=TRUE) {
   # prepare labels
   nleafs <- nrow(wt$merges)+1;
   if(is.null(leaf.labels)) {
@@ -790,16 +806,17 @@ greedyModularityCut <- function(wt,N,leaf.labels=NULL,minsize=0,minbreadth=0,fla
   return(list(hc=hc,groups=clfac,leafContentArray=x$leafContent,leafContent=leafContentCollapsed,deltaM=x$deltaM,breadth=as.vector(x$breadth),splits=x$splitsequence))
 }
 
-##' determine number of detectable clusters given a reference walktrap and a bunch of permuted walktraps
-##'
-##' @param refwt reference walktrap rsult
-##' @param tests a list of permuted walktrap results
-##' @param min.threshold min detectability threshold
-##' @param min.size minimum cluster size (number of leafs)
-##' @param average.thresholds report a single number of detectable clusters for averaged detected thresholds (a list of detected clusters for each element of the tests list is returned by default)
-##' @return number of detectable stable clusters
-##' @export
-stableTreeClusters <- function(refwt,tests,min.threshold=0.8,min.size=10,n.cores=30,average.thresholds=FALSE) {
+#' Determine number of detectable clusters given a reference walktrap and a bunch of permuted walktraps
+#'
+#' @param refwt reference walktrap result
+#' @param tests a list of permuted walktrap results
+#' @param min.threshold numeric Min detectability threshold (default=0.8)
+#' @param min.size numeric Minimum cluster size (number of leafs) (default=10)
+#' @param n.cores numeric Number of cores (default=30)
+#' @param average.thresholds boolean Report a single number of detectable clusters for averaged detected thresholds (default=FALSE) (a list of detected clusters for each element of the tests list is returned by default)
+#' @return number of detectable stable clusters
+#' @export
+stableTreeClusters <- function(refwt, tests, min.threshold=0.8, min.size=10, n.cores=30, average.thresholds=FALSE) {
   # calculate detectability thresholds for each node against entire list of tests
   #i<- 0;
   refwt$merges <- igraph:::complete.dend(refwt,FALSE)
@@ -892,17 +909,19 @@ getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, k1=k, data.
   return(mnn)
 }
 
-##' Establish rough neighbor matching between samples given their projections in a common space
-##'
-##' @param p1 projection of sample 1
-##' @param p2 projection of sample 2
-##' @param k neighborhood radius
-##' @param matching mNN (default) or NN
-##' @param metric distance type (default: "angular", can also be 'L2')
-##' @param l2.sigma L2 distances get transformed as exp(-d/sigma) using this value (default=1e5)
-##' @param min.similarity minimal similarity between two cells, required to have an edge
-##' @return matrix with the similarity (!) values corresponding to weight (1-d for angular, and exp(-d/l2.sigma) for L2)
-getNeighborMatrix <- function(p1,p2,k,k1=k,matching='mNN',metric='angular',l2.sigma=1e5, cor.base=1, min.similarity=1e-5) {
+#' Establish rough neighbor matching between samples given their projections in a common space
+#'
+#' @param p1 projection of sample 1
+#' @param p2 projection of sample 2
+#' @param k neighborhood radius
+#' @param k1 neighborhood radius
+#' @param matching string mNN (default) or NN
+#' @param metric string Distance type (default: "angular", can also be 'L2')
+#' @param l2.sigma numeric L2 distances get transformed as exp(-d/sigma) using this value (default=1e5)
+#' @param core.base numeric (default=1)
+#' @param min.similarity minimal similarity between two cells, required to have an edge
+#' @return matrix with the similarity (!) values corresponding to weight (1-d for angular, and exp(-d/l2.sigma) for L2)
+getNeighborMatrix <- function(p1, p2, k, k1=k, matching='mNN', metric='angular', l2.sigma=1e5, cor.base=1, min.similarity=1e-5) {
   quiet.knn <- (k1 > k)
   if (is.null(p2)) {
     n12 <- n2CrossKnn(p1, p1,k1,1, FALSE, metric, quiet=quiet.knn)
@@ -1013,14 +1032,14 @@ adjustWeightsByCellBalancing <- function(adj.mtx, factor.per.cell, balance.weigh
 
 
 #' Scan joint graph modularity for a range of k (or k.self) values
-#'
 #' Builds graph with different values of k (or k.self if scan.k.self=TRUE), evaluating modularity of the resulting multilevel clustering
-#' note: will run evaluations in parallel using con$n.cores (temporarily setting con$n.cores to 1 in the process)
+#' NOTE: will run evaluations in parallel using con$n.cores (temporarily setting con$n.cores to 1 in the process)
+#'
 #' @param con Conos object to test
-#' @param min minimal value of k to test
-#' @param max vlaue of k to test
-#' @param by scan step (defaults to 1)
-#' @param scan.k.self whether to test dependency on scan.k.self
+#' @param min numeric Minimal value of k to test (default=3)
+#' @param max numeric Value of k to test (default=50)
+#' @param by numeric Scan step (default=1)
+#' @param scan.k.self boolean Whether to test dependency on scan.k.self (default=FALSE)
 #' @param ... other parameters will be passed to con$buildGraph()
 #' @return a data frame with $k $m columns giving k and the corresponding modularity
 #' @export
@@ -1058,7 +1077,7 @@ scanKModularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.in
   return(k.sens);
 }
 
-##' Merge into a common matrix, entering 0s for the missing ones
+## Merge into a common matrix, entering 0s for the missing ones
 mergeCountMatrices <- function(cms, transposed=F) {
   extendMatrix <- function(mtx, col.names) {
     new.names <- setdiff(col.names, colnames(mtx))
@@ -1093,11 +1112,12 @@ getSampleNamePerCell=function(samples) {
 
 #' Estimate labeling distribution for each vertex, based on provided labels using Random Walk
 #'
+#' @param graph input graph
 #' @param labels vector of factor or character labels, named by cell names
-#' @param max.iters: maximal number of iterations. Default: 100.
-#' @param tol: absolute tolerance as a stopping criteria. Default: 0.025
-#' @param verbose: verbose mode. Default: TRUE.
-#' @param fixed.initial.labels: prohibit changes of initial labels during diffusion. Default: TRUE.
+#' @param max.iters maximal number of iterations (default=100)
+#' @param tol numeric Absolute tolerance as a stopping criteria (default=0.025)
+#' @param verbose boolean Verbose mode (default=TRUE)
+#' @param fixed.initial.labels boolean Prohibit changes of initial labels during diffusion (default=TRUE)
 propagateLabelsDiffusion <- function(graph, labels, max.iters=100, diffusion.fading=10.0, diffusion.fading.const=0.1, tol=0.025, verbose=TRUE, fixed.initial.labels=TRUE) {
   if (is.factor(labels)) {
     labels <- as.character(labels) %>% setNames(names(labels))
@@ -1112,9 +1132,9 @@ propagateLabelsDiffusion <- function(graph, labels, max.iters=100, diffusion.fad
   return(label.distribution)
 }
 
-#' Propagate labels using Zhu, Ghahramani, Lafferty (2003) algorithm
-#' http://mlg.eng.cam.ac.uk/zoubin/papers/zgl.pdf
-#' TODO: change solver here for something designed for Laplacians. Need to look Daniel Spielman's research
+## Propagate labels using Zhu, Ghahramani, Lafferty (2003) algorithm
+## http://mlg.eng.cam.ac.uk/zoubin/papers/zgl.pdf
+## TODO: change solver here for something designed for Laplacians. Need to look Daniel Spielman's research
 propagateLabelsSolver <- function(graph, labels, solver="mumps") {
   if (!solver %in% c("mumps", "Matrix"))
     stop("Unknown solver: ", solver, ". Only 'mumps' and 'Matrix' are currently supported")

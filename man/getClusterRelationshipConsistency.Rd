@@ -2,7 +2,12 @@
 % Please edit documentation in R/conos.R
 \name{getClusterRelationshipConsistency}
 \alias{getClusterRelationshipConsistency}
-\title{Evaluate consistency of cluster relationships}
+\title{Evaluate consistency of cluster relationships
+Using the clustering we are generating per-sample dendrograms
+and we are examining their similarity between different samples
+More information about similarity measures
+<https://www.rdocumentation.org/packages/dendextend/versions/1.8.0/topics/cor_cophenetic>
+<https://www.rdocumentation.org/packages/dendextend/versions/1.8.0/topics/cor_bakers_gamma>}
 \usage{
 getClusterRelationshipConsistency(p2list, pjc)
 }
@@ -15,9 +20,10 @@ getClusterRelationshipConsistency(p2list, pjc)
 list of cophenetic and bakers_gama similarities of the dendrograms from each sample
 }
 \description{
+Evaluate consistency of cluster relationships
 Using the clustering we are generating per-sample dendrograms
 and we are examining their similarity between different samples
 More information about similarity measures
-https://www.rdocumentation.org/packages/dendextend/versions/1.8.0/topics/cor_cophenetic
-https://www.rdocumentation.org/packages/dendextend/versions/1.8.0/topics/cor_bakers_gamma
+<https://www.rdocumentation.org/packages/dendextend/versions/1.8.0/topics/cor_cophenetic>
+<https://www.rdocumentation.org/packages/dendextend/versions/1.8.0/topics/cor_bakers_gamma>
 }

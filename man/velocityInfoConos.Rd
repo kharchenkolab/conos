@@ -2,7 +2,8 @@
 % Please edit documentation in R/integrations.R
 \name{velocityInfoConos}
 \alias{velocityInfoConos}
-\title{RNA velocity analysis on samples integrated with conos}
+\title{RNA velocity analysis on samples integrated with conos
+Create a list of objects to pass into gene.relative.velocity.estimates function from the velocyto.R package}
 \usage{
 velocityInfoConos(
   cms.list,
@@ -21,17 +22,18 @@ velocityInfoConos(
 
 \item{con}{conos object (after creating an embedding and running leiden clustering)}
 
-\item{clustering}{name of clustering in the conos object to use. Either 'clustering' or 'groups' must be provided. Default: NULL}
+\item{clustering}{name of clustering in the conos object to use (default=NULL). Either 'clustering' or 'groups' must be provided.}
 
-\item{groups}{set of clusters to use. Ignored if 'clustering' is not NULL. Default: NULL}
+\item{groups}{set of clusters to use (default=NULL). Ignored if 'clustering' is not NULL.}
 
-\item{n.odgenes}{number of overdispersed genes to use for PCA. Default: 2000}
+\item{n.odgenes}{numeric Number of overdispersed genes to use for PCA (default=2000).}
 
-\item{verbose}{verbose mode. Default: TRUE}
+\item{verbose}{boolean Whether to use verbose mode (default=TRUE)}
 }
 \value{
 List with cell distances, combined spliced expression matrix, combined unspliced expression matrix, combined matrix of spanning reads, cell colors for clusters and embedding (taken from conos)
 }
 \description{
+RNA velocity analysis on samples integrated with conos
 Create a list of objects to pass into gene.relative.velocity.estimates function from the velocyto.R package
 }

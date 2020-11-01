@@ -15,6 +15,7 @@ NULL
 
 ## TODO: multitrap method
 ## mutlilevel+walktrap communities
+
 #' Constructs a two-step clustering, first running multilevel.communities, and then walktrap.communities within each
 #' These are combined into an overall hierarchy
 #'
@@ -117,6 +118,7 @@ multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=FAL
 
 
 ### mutlilevel+multilevel communities
+
 #' Constructrs a two-step clustering, first running multilevel.communities, and then walktrap.communities within each
 #' These are combined into an overall hierarchy
 #'
@@ -186,7 +188,7 @@ multimulti.community <- function(graph, n.cores=parallel::detectCores(logical=FA
 #' Detect communities using Leiden algorithm (implementation copied from https://github.com/vtraag/leidenalg)
 #' 
 #' @param graph graph on which communities should be detected
-#' @param resolution numeric Resolution parameter (default=1.0) - higher numbers lead to more communities
+#' @param resolution numeric Resolution parameter (default=1.0). Higher numbers lead to more communities
 #' @param n.iterations numeric Number of iterations that the algorithm should be run for (default =2)
 #' @return community object
 #' @export

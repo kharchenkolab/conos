@@ -37,5 +37,5 @@ Seurat v3, use \code{\link[future]{plan}} instead (default=TRUE)}
 Seurat object
 }
 \description{
-Create Seurat object from gene count matrix
+Create and preprocess a Seurat object
 }

@@ -13,7 +13,7 @@ convertToPagoda2(con, n.pcs = 100, n.odgenes = 2000, verbose = TRUE, ...)
 
 \item{n.odgenes}{numeric Number of overdispersed genes (default=2000)}
 
-\item{verbose}{boolean Whether to give verbose output (default=TRUE).}
+\item{verbose}{boolean Whether to give verbose output (default=TRUE)}
 
 \item{...}{parameters passed to Pagoda2$new()}
 }

@@ -18,17 +18,22 @@ quickPlainPCA(
 \arguments{
 \item{r.n}{list of p2 objects}
 
-\item{ncomps}{number of components to calculate (default=30)}
+\item{data.type}{}
 
-\item{n.odgenes}{number of overdispersed genes to take from each dataset}
+\item{ncomps}{numeric Number of components to calculate (default=30)}
 
-\item{var.scale}{whether to scale variance (default=TRUE)}
+\item{n.odgenes}{numeric Number of overdispersed genes to take from each dataset (default=NULL)}
 
-\item{verbose}{whether to be verbose}
+\item{var.scale}{boolean Whether to scale variance (default=TRUE)}
 
-\item{n.cores}{number of cores to use}
+\item{verbose}{boolean Whether to be verbose (default=TRUE)}
 
-\item{cgsf}{an optional set of common genes to align on}
+\item{score.component.variance}{boolean Whether to score component variance (default=FALSE)}
+
+\item{n.cores}{numeric Number of cores to use (default=30)}
+}
+\value{
+PCA projection, using space of combined sample-specific PCAs
 }
 \description{
 Use space of combined sample-specific PCAs as a space

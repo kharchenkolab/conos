@@ -2,7 +2,7 @@
 % Please edit documentation in R/conos.R
 \name{greedyModularityCut}
 \alias{greedyModularityCut}
-\title{performs a greedy top-down selective cut to optmize modularity}
+\title{Performs a greedy top-down selective cut to optmize modularity}
 \usage{
 greedyModularityCut(
   wt,
@@ -14,7 +14,7 @@ greedyModularityCut(
 )
 }
 \arguments{
-\item{wt}{walktrap rsult}
+\item{wt}{walktrap result}
 
 \item{N}{number of top greedy splits to take}
 
@@ -30,5 +30,5 @@ greedyModularityCut(
 list(hclust - hclust structure of the derived tree, leafContent - binary matrix with rows corresponding to old leaves, columns to new ones, deltaM - modularity increments)
 }
 \description{
-performs a greedy top-down selective cut to optmize modularity
+Performs a greedy top-down selective cut to optmize modularity
 }

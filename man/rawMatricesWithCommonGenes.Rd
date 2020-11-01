@@ -7,7 +7,7 @@
 rawMatricesWithCommonGenes(con.obj, sample.groups = NULL)
 }
 \arguments{
-\item{sample.groups}{(default=NULL)}
+\item{sample.groups}{list of samples to select from Conos object, con.obj$samples (default=NULL)}
 
 \item{con.object}{Conos object}
 }
