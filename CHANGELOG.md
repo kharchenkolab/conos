@@ -1,6 +1,15 @@
 ## Upcoming
 
-* vignettes edits, detailing p2app4conos() for rendering Conos to pagoda2 application
+### Changed
+
+* vignettes edits, detailing `p2app4conos()` for rendering Conos to pagoda2 application
+
+### Added 
+
+* add parameter `raster.dpi` in `con$plotEmbedding()` to replace `raster.height` and `raster.width`, given these parameters are defunct with rewrite of `ggrastr` (v0.2.0)[https://github.com/VPetukhov/ggrastr/releases/tag/v0.2.0]
+
+### Removed
+
 
 ## [1.3.1] - 2020-24-09
 
@@ -13,6 +22,7 @@
 - Improve R6 documentation
 - Changed `std::cout` to `Rcpp::Rcout` (July 2020)
 - Revised README, vignettes (July 2020)
+
 
 ### Added
 
@@ -27,6 +37,7 @@
 
 - Removed `getCorrectionVector()` and `getPerCellTypeDECorrected` (2 July 2020)
 - Removed all neighborhood averaging via `neighborhood.average` (4 July 2020)
+- Removed `raster.height` and `raster.width` from `con$plotEmbedding()`, given these parameters are defunct with rewrite of `ggrastr` (v0.2.0)[https://github.com/VPetukhov/ggrastr/releases/tag/v0.2.0]
 
 
 ## [1.3.0] - 2020-19-3
