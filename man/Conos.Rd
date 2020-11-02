@@ -19,7 +19,7 @@ The class encompasses sample collections, providing methods for calculating and 
 
 \item{\code{expression.adj}}{adjusted expression values}
 
-\item{\code{embedding}}{joint embedding}
+\item{\code{embeddings}}{list of joint embeddings}
 
 \item{\code{n.cores}}{number of cores}
 
@@ -294,7 +294,7 @@ find joint communities
 
 \item{\code{min.group.size}}{numeric Minimal allowed community size (default=0)}
 
-\item{\code{name}}{optional name of the clustering result (will default to the algorithm name) (default=NULL)}
+\item{\code{name}}{character Optional name of the clustering result (will default to the algorithm name) (default=NULL)}
 
 \item{\code{verbose}}{boolean Provide verbose output}
 
@@ -320,6 +320,7 @@ plot panel of individual embeddings per sample with joint coloring
   use.local.clusters = FALSE,
   plot.theme = NULL,
   use.common.embedding = FALSE,
+  embedding.name = NULL,
   embedding.type = NULL,
   adj.list = NULL,
   ...
@@ -337,16 +338,11 @@ plot panel of individual embeddings per sample with joint coloring
 
 \item{\code{gene}}{show expression of a gene}
 
-\item{\code{use.common.embedding}}{(default=FALSE)}
+\item{\code{embedding.name}}{character Optional name of the name of the embedding set by user to store multiple embeddings (default=NULL). If NULL, uses 'embedding.type'}
 
-\item{\code{embedding.type}}{(default=NULL)}
-
-\item{\code{adj.list}}{(default=NULL)}
+\item{\code{embedding.type}}{character Name of the type of embedding created by embedGraph(), either 'largeVis' or 'UMAP' (default=NULL). If NULL, uses last embedding created.}
 }
 \if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-ggplot2 object with the panel of plots
 }
 }
 \if{html}{\out{<hr>}}
@@ -357,6 +353,7 @@ Generate an embedding of a joint graph.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Conos$embedGraph(
   method = "largeVis",
+  embedding.name = NULL,
   M = 1,
   gamma = 1,
   alpha = 0.1,
@@ -375,6 +372,8 @@ Generate an embedding of a joint graph.
 \describe{
 \item{\code{method}}{embedding method (default='largeVis'). Currently 'largeVis' and 'UMAP' are supported}
 
+\item{\code{embedding.name}}{character Optional name of the name of the embedding set by user to store multiple embeddings (default=NULL). If NULL, uses name of 'method'}
+
 \item{\code{M}}{numeric The number of negative edges to sample for each positive edge (default=1)}
 
 \item{\code{gamma}}{numeric The strength of the force pushing non-neighbor nodes apart (default=1)}
@@ -389,6 +388,7 @@ enables the alternative distance function. \eqn{\alpha} below zero is meaningles
 \item{\code{seed}}{numeric Random seed for the largeVis algorithm (default=1)}
 
 \item{\code{verbose}}{boolean Provide verbose output}
+
 
 \item{\code{target.dims}}{numeric Number of dimensions for the reduction (default=2). Higher dimensions can be used to generate embeddings for subsequent reductions by other methods, such as tSNE}
 
@@ -433,6 +433,8 @@ Plot joint graph.
 \if{html}{\out{<div class="r">}}\preformatted{Conos$plotGraph(
   color.by = "cluster",
   clustering = NULL,
+  embedding.name = NULL,
+  embedding.type = NULL,
   groups = NULL,
   colors = NULL,
   gene = NULL,
@@ -445,11 +447,13 @@ Plot joint graph.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{color.by}}{(default='cluster')}
-
 \item{\code{clustering}}{name of the clustering to use}
 
-\item{\code{groups}}{a factor on cells to use for coloring}
+\item{\code{embedding.name}}{character Optional name of the name of the embedding set by user to store multiple embeddings (default=NULL). If NULL, uses 'embedding.type'}
+
+\item{\code{embedding.type}}{character Name of the type of embedding created by embedGraph(), either 'largeVis' or 'UMAP' (default=NULL). If NULL, uses last embedding created.}
+
+\item{\code{groups}}{a factor on cells to use for coloring.}
 
 \item{\code{colors}}{a color factor (named with cell names) use for cell coloring}
 
@@ -458,9 +462,6 @@ Plot joint graph.
 \item{\code{subset}}{a subset of cells to show (default=NULL)}
 }
 \if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-ggplot2 plot of joint graph
 }
 }
 \if{html}{\out{<hr>}}
