@@ -737,11 +737,18 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     },
 
     #' @description Estimate labeling distribution for each vertex, based on provided labels.
-    #'
+    #' There are two methods used for the propagation to calculate the distribution of labels: "solver" and "diffusion". 
+    #' * "diffusion" (default) will estimate the labeling distribution for each vertex, based on provided labels using a random walk.
+    #' * "solver" will propagate labels using the algorithm described by Zhu, Ghahramani, Lafferty (2003) <http://mlg.eng.cam.ac.uk/zoubin/papers/zgl.pdf>
+    #' Confidence values are then calculated by taking the maximum value from this distribution of labels, for each cell.
+    #' 
     #' @param method type of propagation. Either 'diffusion' or 'solver'. 'solver' gives better result
     #'  but has bad asymptotics, so is inappropriate for datasets > 20k cells. (default='diffusion')
     #' @param ... additional arguments for conos:::propagateLabels* functions
-    #' @return matrix with distribution of label probabilities for each vertex by rows.
+    #' @return list with three fields: 
+    #' * labels = matrix with distribution of label probabilities for each vertex by rows.
+    #' * uncertainty = 1 - confidence values 
+    #' * label.distribution = the distribution of labels calculated using either the methods "diffusion" or "solver" 
     propagateLabels=function(labels, method="diffusion", ...) {
       if (method == "solver") {
         label.dist <- propagateLabelsSolver(self$graph, labels, ...)

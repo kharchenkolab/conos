@@ -515,6 +515,10 @@ Smooth expression of genes, so they better represent structure of the graph.
 \if{latex}{\out{\hypertarget{method-propagateLabels}{}}}
 \subsection{Method \code{propagateLabels()}}{
 Estimate labeling distribution for each vertex, based on provided labels.
+There are two methods used for the propagation to calculate the distribution of labels: "solver" and "diffusion". 
+* "diffusion" (default) will estimate the labeling distribution for each vertex, based on provided labels using a random walk.
+* "solver" will propagate labels using the algorithm described by Zhu, Ghahramani, Lafferty (2003) <http://mlg.eng.cam.ac.uk/zoubin/papers/zgl.pdf>
+Confidence values are then calculated by taking the maximum value from this distribution of labels, for each cell.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Conos$propagateLabels(labels, method = "diffusion", ...)}\if{html}{\out{</div>}}
 }
@@ -530,7 +534,10 @@ but has bad asymptotics, so is inappropriate for datasets > 20k cells. (default=
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-matrix with distribution of label probabilities for each vertex by rows.
+list with three fields: 
+* labels = matrix with distribution of label probabilities for each vertex by rows.
+* uncertainty = 1 - confidence values 
+* label.distribution = the distribution of labels calculated using either the methods "diffusion" or "solver"
 }
 }
 \if{html}{\out{<hr>}}
