@@ -26,3 +26,4 @@ List of consistent genes per each cluster
 \description{
 Deprecated; Get markers for global clusters
 }
+\keyword{internal}

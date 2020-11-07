@@ -1,4 +1,4 @@
-
+#' @keywords internal
 validatePerCellTypeParams <- function(con.obj, groups, sample.groups, ref.level, cluster.sep.chr) {
   if (!requireNamespace("DESeq2", quietly = TRUE)) {
     stop("You have to install DESeq2 package to use differential expression")
@@ -25,6 +25,7 @@ validatePerCellTypeParams <- function(con.obj, groups, sample.groups, ref.level,
     stop('cluster.sep.chr must not be part of any cluster name')
 }
 
+#' @keywords internal
 validateBetweenCellTypeParams <- function(con.obj, groups, sample.groups, refgroup, altgroup, cluster.sep.chr) {
   if (!requireNamespace("DESeq2", quietly = TRUE)) {
     stop("You have to install DESeq2 package to use differential expression")
@@ -95,8 +96,10 @@ collapseCellsByType <- function(cm, groups, min.cell.count=10, max.cell.count=In
   tc[table(cl)>=min.cell.count,,drop=FALSE]
 }
 
+#' @keywords internal
 adjustMatrixRownames <- function(name, cm, cluster.sep.chr) {rownames(cm) <- paste0(name, cluster.sep.chr, rownames(cm)); return(cm)}
 
+#' @keywords internal
 rbindDEMatrices <- function(mats, cluster.sep.chr) {
   mats <- lapply(names(mats), function(n) {
     rownames(mats[[n]]) <- paste0(n, cluster.sep.chr, rownames(mats[[n]]));
@@ -106,10 +109,12 @@ rbindDEMatrices <- function(mats, cluster.sep.chr) {
   return(t(do.call(rbind, mats)))
 }
 
+#' @keywords internal
 strpart <- function (x, split, n, fixed = FALSE) {
   sapply(strsplit(as.character(x), split, fixed = fixed), "[", n)
 }
 
+#' @keywords internal
 is.error <- function (x) {
   inherits(x, c("try-error", "error"))
 }
@@ -189,10 +194,11 @@ getPerCellTypeDE <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cut
 
 
 #' Save differential expression as CSV table
-#' @param de.results output of differential expression results, corrected or uncorrected
-#' @param saveprefix prefix for output file
-#' @param data.frame for gene metadata
-#' @export saveDEasCSV
+#'
+#' @param de.results output of differential expression results, corrected or uncorrected (default=NULL)
+#' @param saveprefix prefix for output file (default=NULL)
+#' @param data.frame for gene metadata (default=NULL)
+#' @export
 saveDEasCSV <- function(de.results=NULL,saveprefix=NULL,gene.metadata=NULL) {
     if(is.null(de.results)) stop('de.results has not been specified')
     if(is.null(saveprefix)) stop('saveprefix has not bee specified')
@@ -241,7 +247,7 @@ saveDEasCSV <- function(de.results=NULL,saveprefix=NULL,gene.metadata=NULL) {
 #' @param gene.metadata data.frame with gene metadata (default=NULL)
 #' @param cluster.sep.chr character string of length 1 specifying a delimiter to separate cluster and app names (default='<!!>')
 #' @return JSON with DE results
-#' @export saveDEasJSON
+#' @export 
 saveDEasJSON <- function(de.results = NULL, saveprefix = NULL, gene.metadata = NULL, cluster.sep.chr='<!!>') {
     ## ### DEVEL
     ## de.results <- all.percl.TvsW
@@ -347,7 +353,7 @@ saveDEasJSON <- function(de.results = NULL, saveprefix = NULL, gene.metadata = N
 #' @param remove.na boolean If TRUE, remove NAs from DESeq calculations (default=TRUE)
 #' @return Returns either a DESeq2::results() object, or if return.details=TRUE, 
 #'    returns a list of the DESeq2::results(), the samples from the panel to use in this comparison, refgroups, altgroup, and samplegroups
-#' @export getBetweenCellTypeDE
+#' @export 
 getBetweenCellTypeDE <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cutoff = FALSE, refgroup = NULL, altgroup = NULL, min.cell.count = 10,
                                  independent.filtering = FALSE, cluster.sep.chr = '<!!>',return.details=TRUE, only.paired=TRUE, remove.na=TRUE) {
   # TODO: do we really need sample.groups here? They are used in the corrected version for some unknown reason.
@@ -386,6 +392,7 @@ getBetweenCellTypeDE <- function(con.obj, groups=NULL, sample.groups=NULL, cooks
   }
 }
 
+#' @keywords internal
 generateDEMatrixMetadata <- function(mtx, refgroup, altgroup, cluster.sep.chr) {
   meta <- data.frame(
     row.names = colnames(mtx),
@@ -414,7 +421,7 @@ generateDEMatrixMetadata <- function(mtx, refgroup, altgroup, cluster.sep.chr) {
 #' @param ref.level reference level on the basis of which the correction was calculated
 #' @return Returns either a DESeq2::results() object, or if return.details=TRUE, 
 #'    returns a list of the DESeq2::results(), the samples from the panel to use in this comparison, refgroups, altgroup, and samplegroups
-#' @export getBetweenCellTypeCorrectedDE
+#' @export
 getBetweenCellTypeCorrectedDE <- function(con.obj, sample.groups =  NULL, groups=NULL, cooks.cutoff = FALSE, refgroup = NULL, altgroup = NULL, min.cell.count = 10,
                                           independent.filtering = FALSE, cluster.sep.chr = '<!!>',return.details=TRUE, only.paired=TRUE, correction = NULL, ref.level=NULL) {
   validateBetweenCellTypeParams(con.obj, groups, sample.groups, refgroup, altgroup, cluster.sep.chr)
@@ -481,6 +488,7 @@ getBetweenCellTypeCorrectedDE <- function(con.obj, sample.groups =  NULL, groups
 
 ## Takes data.frames with info about DE genes for single cell type and many samples and
 ## returns data.frame with aggregated info for this cell type
+#' @keywords internal
 aggregateDEMarkersAcrossDatasets <- function(marker.dfs, z.threshold, upregulated.only) {
   if (length(marker.dfs) == 0){
     return(data.frame())
@@ -499,7 +507,7 @@ aggregateDEMarkersAcrossDatasets <- function(marker.dfs, z.threshold, upregulate
   return(res[z.filter > z.threshold,])
 }
 
-
+#' @keywords internal
 getDifferentialGenesP2 <- function(p2.samples, groups, z.threshold=3.0, upregulated.only=FALSE, verbose=TRUE, n.cores=1) {
 
   groups %<>% as.character() %>% setNames(names(groups))

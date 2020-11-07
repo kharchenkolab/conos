@@ -98,3 +98,4 @@ ggplot2 object with the panel of plots
 \description{
 Plot panel of specified embeddings, extracting them from pagoda2 objects
 }
+\keyword{internal}

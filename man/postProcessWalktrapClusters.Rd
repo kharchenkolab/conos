@@ -17,12 +17,13 @@ postProcessWalktrapClusters(
 
 \item{pjc}{joint clustering that was performed with walktrap}
 
-\item{no.cl}{number of clusters to get from the walktrap dendrogram}
+\item{no.cl}{numeric Nmber of clusters to get from the walktrap dendrogram (default=200)}
 
-\item{size.cutoff}{cutoff below which to merge the clusters}
+\item{size.cutoff}{numeric Cutoff below which to merge the clusters (default=10)}
 
-\item{n.cores}{number of cores to use}
+\item{n.cores}{numeric Number of cores to use (default=4)}
 }
 \description{
 Post process clusters generated with walktrap to control granularity
 }
+\keyword{internal}

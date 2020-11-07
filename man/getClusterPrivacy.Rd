@@ -19,3 +19,4 @@ percentage of clusters that are private to one sample
 \description{
 Get percentage of clusters that are private to one sample
 }
+\keyword{internal}

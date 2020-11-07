@@ -13,6 +13,7 @@ sccore::embeddingPlot
 #' @param clusters list of conos clusterings
 #' @param clustering name of extracted clustering
 #' @return vector of clusters, named with cell names
+#' @keywords internal
 getClusteringGroups <- function(clusters, clustering) {
   if (length(clusters) < 1) {
     stop("generate a joint clustering first")
@@ -40,6 +41,7 @@ getClusteringGroups <- function(clusters, clustering) {
 #' @param subset a subset of cells to show (vector of cell names)
 #' @param return.plotlist return a list of ggplot objects instead of a combined plot (default=FALSE)
 #' @return ggplot2 object with the panel of plots
+#' @keywords internal
 plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow=NULL, raster=FALSE, panel.size=NULL, adjust.func=NULL, title.size=6, adj.list=NULL, subset=NULL, return.plotlist=FALSE, ...) {
   if (is.null(panel.size)) {
     panel.size <- dev.size(units="in")
@@ -93,6 +95,7 @@ plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow
 #' @param gene gene name. If this parameter is provided, points are colored by expression of this gene.
 #' @param embedding.type type of embedding. Default: tSNE. If a numeric matrix is passed, interpreted as an actual embedding.
 #' @return ggplot2 object with the panel of plots
+#' @keywords internal
 plotSamples <- function(samples, groups=NULL, colors=NULL, gene=NULL, embedding.type=NULL, ...) {
   if (!is.null(groups)) {
     groups <- as.factor(groups)
@@ -257,6 +260,7 @@ plotClusterBoxPlotsByAppType <- function(conos.obj, clustering=NULL, apptypes=NU
 #' @param min.samples.expressing numeric Minimum number of samples that must have the genes upregulated in the respective cluster (default=0)
 #' @param min.percent.samples.expression numeric Minumum percent of samples that must have the gene upregulated (default=0)
 #' @return List of consistent genes per each cluster
+#' @keywords internal
 getGlobalClusterMarkers <- function(conos.obj, clustering='multi level',
                                     min.samples.expressing=0, min.percent.samples.expressing=0){
   .Deprecated("getDifferentialGenes")

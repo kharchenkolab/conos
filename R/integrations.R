@@ -1,3 +1,4 @@
+#' @keywords internal
 extendMatrix <- function(mtx, col.names) {
   new.names <- setdiff(col.names, colnames(mtx))
   ext.mtx <- matrix(0, nrow=nrow(mtx), ncol=length(new.names))
@@ -5,6 +6,7 @@ extendMatrix <- function(mtx, col.names) {
   return(cbind(mtx, ext.mtx)[,col.names])
 }
 
+#' @keywords internal
 mergeCountMatrices <- function(cms, transposed=FALSE) {
   if (!transposed) {
     cms %<>% lapply(Matrix::t)
@@ -19,12 +21,14 @@ mergeCountMatrices <- function(cms, transposed=FALSE) {
   return(res)
 }
 
+#' @keywords internal
 checkSeuratV3 <- function() {
   if (!requireNamespace('Seurat', quietly = TRUE) || packageVersion('Seurat') < package_version(x = '3.0.0')) {
     stop("Use of Seurat v3-backed Conos objects requires Seurat v3.X installed")
   }
 }
 
+#' @keywords internal
 seuratProcV2 <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do.par=TRUE, n.pcs=100, cluster=TRUE, tsne=TRUE, umap=FALSE) {
   if (verbose) {
     message("Running Seurat v2 workflow")
@@ -52,6 +56,7 @@ seuratProcV2 <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do.pa
   return(so)
 }
 
+#' @keywords internal
 seuratProcV3 <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, n.pcs=100, cluster=TRUE, tsne=TRUE, umap=FALSE, ...) {
   if (verbose) {
     message("Running Seurat v3 workflow")
@@ -314,6 +319,7 @@ velocityInfoConos <- function(cms.list, con, clustering=NULL, groups=NULL, n.odg
 }
 
 # Intersect genes and cells between all the velocity files and the conos object
+#' @keywords internal
 prepareVelocity <- function(cms.file, genes, cells) {
   exon.genes <- rownames(cms.file$exon)
   intron.genes <- rownames(cms.file$intron)
@@ -335,6 +341,7 @@ prepareVelocity <- function(cms.file, genes, cells) {
 
 # Get PCA results for all the samples from the conos object
 # This is a modification of the quickPlainPCA function
+#' @keywords internal
 pcaFromConos <- function(p2.list, data.type='counts', k=30, ncomps=100, n.odgenes=NULL, verbose=TRUE) {
 
   od.genes <- commonOverdispersedGenes(p2.list, n.odgenes, verbose = FALSE)

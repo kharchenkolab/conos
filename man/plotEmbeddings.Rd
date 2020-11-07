@@ -115,3 +115,4 @@ ggplot2 object with the panel of plots
 \description{
 Plot panel of specified embeddings
 }
+\keyword{internal}

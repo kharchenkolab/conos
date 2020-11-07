@@ -37,3 +37,4 @@ a fakeCommunities object that has methods membership() and as.dendrogram() to mi
 Constructs a two-step clustering, first running multilevel.communities, and then walktrap.communities within each
 These are combined into an overall hierarchy
 }
+\keyword{internal}

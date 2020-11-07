@@ -33,3 +33,4 @@ cpca projection on two samples
 \description{
 Perform cpca on two samples
 }
+\keyword{internal}

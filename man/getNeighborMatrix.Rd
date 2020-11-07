@@ -41,3 +41,4 @@ matrix with the similarity (!) values corresponding to weight (1-d for angular, 
 \description{
 Establish rough neighbor matching between samples given their projections in a common space
 }
+\keyword{internal}

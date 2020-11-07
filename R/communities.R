@@ -27,6 +27,7 @@ NULL
 #' @param level numeric What level of multitrap clustering to use in the starting step. By default, uses the top level. An integer can be specified for a lower level (i.e. 1) (default=NULL)
 #' @param ... passed to walktrap
 #' @return a fakeCommunities object that has methods membership() and as.dendrogram() to mimic regular igraph returns
+#' @keywords internal
 multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=FALSE), hclust.link='single', min.community.size=10, verbose=FALSE, level=NULL, ...) {
   .Deprecated()
 
@@ -130,6 +131,7 @@ multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=FAL
 #' @param level numeric What level of multitrap clustering to use in the starting step. By default, uses the top level. An integer can be specified for a lower level (i.e. 1) (default=NULL)
 #' @param ... arguments passed to walktrap
 #' @return a fakeCommunities object that has methods membership() and as.dendrogram() to mimic regular igraph returns
+#' @keywords internal
 multimulti.community <- function(graph, n.cores=parallel::detectCores(logical=FALSE), hclust.link='single', min.community.size=10, verbose=FALSE, level=NULL, ...) {
   .Deprecated()
 

@@ -7,7 +7,7 @@
 #' @importFrom magrittr %$%
 NULL
 
-
+#' @keywords internal
 scaledMatricesP2 <- function(p2.objs, data.type, od.genes, var.scale) {
   ## Common variance scaling
   if (var.scale) {
@@ -38,6 +38,7 @@ scaledMatricesP2 <- function(p2.objs, data.type, od.genes, var.scale) {
   return(cproj)
 }
 
+#' @keywords internal
 scaledMatricesSeurat <- function(so.objs, data.type, od.genes, var.scale) {
   if (var.scale) {
     warning("Seurat doesn't support variance scaling")
@@ -55,6 +56,7 @@ scaledMatricesSeurat <- function(so.objs, data.type, od.genes, var.scale) {
   }
 }
 
+#' @keywords internal
 scaledMatricesSeuratV3 <- function(so.objs, data.type, od.genes, var.scale, neighborhood.average) {
   checkSeuratV3()
   if (var.scale) {
@@ -77,6 +79,7 @@ scaledMatricesSeuratV3 <- function(so.objs, data.type, od.genes, var.scale, neig
   return(res)
 }
 
+#' @keywords internal
 scaledMatrices <- function(samples, data.type, od.genes, var.scale) {
   if (class(samples[[1]]) == "Pagoda2") {
     return(scaledMatricesP2(samples, data.type = data.type, od.genes, var.scale))
@@ -93,6 +96,7 @@ scaledMatrices <- function(samples, data.type, od.genes, var.scale) {
   stop("Unknown class of sample: ", class(samples[[1]]))
 }
 
+#' @keywords internal
 commonOverdispersedGenes <- function(samples, n.odgenes, verbose) {
   od.genes <- sort(table(unlist(lapply(samples, getOverdispersedGenes, n.odgenes))),decreasing=TRUE)
   common.genes <- Reduce(intersect, lapply(samples, getGenes));
@@ -105,6 +109,7 @@ commonOverdispersedGenes <- function(samples, n.odgenes, verbose) {
   return(names(od.genes)[1:min(length(od.genes),n.odgenes)])
 }
 
+#' @keywords internal
 quickNULL <- function(p2.objs, data.type='counts', n.odgenes = NULL, var.scale = T,
                       verbose = TRUE) {
   if(length(p2.objs) != 2) stop('quickNULL only supports pairwise alignment');
@@ -118,6 +123,7 @@ quickNULL <- function(p2.objs, data.type='counts', n.odgenes = NULL, var.scale =
 }
 
 ## Perform pairwise JNMF
+#' @keywords internal
 quickJNMF <- function(p2.objs, data.type='counts', n.comps = 30, n.odgenes=NULL, var.scale=TRUE, verbose =TRUE, max.iter=1000) {
   ## Stop if more than 2 samples
   if (length(p2.objs) != 2) stop('quickJNMF only supports pairwise alignment');
@@ -140,6 +146,7 @@ quickJNMF <- function(p2.objs, data.type='counts', n.comps = 30, n.odgenes=NULL,
   return(res)
 }
 
+#' @keywords internal
 cpcaFast <- function(covl,ncells,ncomp=10,maxit=1000,tol=1e-6,use.irlba=TRUE,verbose=F) {
   ncomp <- min(c(nrow(covl)-1,ncol(covl)-1,ncomp));
   if(use.irlba) {
@@ -167,6 +174,7 @@ cpcaFast <- function(covl,ncells,ncomp=10,maxit=1000,tol=1e-6,use.irlba=TRUE,ver
 #' @param verbose boolean Whether to be verbose (default=TRUE)
 #' @param score.component.variance boolean Whether to score component variance (default=FALSE)
 #' @return cpca projection on two samples
+#' @keywords internal
 quickCPCA <- function(r.n, data.type='counts', ncomps=100, n.odgenes=NULL, var.scale=TRUE, verbose=TRUE, score.component.variance=FALSE) {
   od.genes <- commonOverdispersedGenes(r.n, n.odgenes, verbose=verbose)
   if(length(od.genes)<5) return(NULL);
@@ -230,6 +238,7 @@ quickCPCA <- function(r.n, data.type='counts', ncomps=100, n.odgenes=NULL, var.s
 #' @param score.component.variance boolean Whether to score component variance (default=FALSE)
 #' @param n.cores numeric Number of cores to use (default=30)
 #' @return PCA projection, using space of combined sample-specific PCAs
+#' @keywords internal
 quickPlainPCA <- function(r.n, data.type='counts', ncomps=30, n.odgenes=NULL, var.scale=TRUE, verbose=TRUE, score.component.variance=FALSE, n.cores=30) {
   od.genes <- commonOverdispersedGenes(r.n, n.odgenes, verbose=verbose)
   if(length(od.genes)<5) return(NULL);
@@ -277,6 +286,7 @@ quickPlainPCA <- function(r.n, data.type='counts', ncomps=30, n.odgenes=NULL, va
 #' @param var.scale whether to scale variance (default=TRUE)
 #' @param verbose whether to be verbose
 #' @param n.cores number of cores to use
+#' @keywords internal
 quickCCA <- function(r.n,data.type='counts',ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=TRUE, PMA=FALSE, score.component.variance=FALSE) {
 
   od.genes <- commonOverdispersedGenes(r.n, n.odgenes, verbose=verbose)
@@ -413,6 +423,7 @@ dendSetColorByMixture <- function(d,fac,leafContent) {
 
 # use mclapply if available, fall back on BiocParallel, but use regular
 # lapply() when only one core is specified
+#' @keywords internal
 papply <- function(...,n.cores=parallel::detectCores(), mc.preschedule=FALSE) {
   if(n.cores>1) {
     if(requireNamespace("parallel", quietly = TRUE)) {
@@ -445,6 +456,7 @@ papply <- function(...,n.cores=parallel::detectCores(), mc.preschedule=FALSE) {
 #' @param pjc result of panelClust()
 #' @param priv.cutoff numeric Percent of total cells of a cluster that have to come from a single cluster for it to be called private (default=0.99)
 #' @return percentage of clusters that are private to one sample
+#' @keywords internal
 getClusterPrivacy <- function(p2list, pjc, priv.cutoff= 0.99) {
     ## Get the clustering factor
     cl <- pjc$cls.mem
@@ -465,6 +477,7 @@ getClusterPrivacy <- function(p2list, pjc, priv.cutoff= 0.99) {
     length(private.clusters) / length(unique(cl))
 }
 
+#' @keywords internal
 sn <- function(x) { names(x) <- x; x }
 
 
@@ -478,6 +491,7 @@ sn <- function(x) { names(x) <- x; x }
 #' @param p2list list of pagoda2 object
 #' @param pjc a clustering factor
 #' @return list of cophenetic and bakers_gama similarities of the dendrograms from each sample
+#' @keywords internal
 getClusterRelationshipConsistency <- function(p2list, pjc) {
     hcs <- lapply(sn(names(p2list)), function(n) {
         x <- p2list[[n]]
@@ -513,6 +527,7 @@ getClusterRelationshipConsistency <- function(p2list, pjc) {
 #' @param pc.samples.cutoff the percent of the number of the total samples that a cluster has to span to be considered global
 #' @param min.cell.count.per.samples minimum number of cells of cluster in sample to be considered as represented in that sample
 #' @return percent of clusters that are global given the above criteria
+#' @keywords internal
 getPercentGlobalClusters <- function(p2list, pjc, pc.samples.cutoff = 0.9, min.cell.count.per.sample = 10) {
     ## get the cluster factor
     cl <- pjc$cls.mem
@@ -535,15 +550,17 @@ getPercentGlobalClusters <- function(p2list, pjc, pc.samples.cutoff = 0.9, min.c
 
 
 ## helper function for breaking down a factor into a list
+#' @keywords internal
 factorBreakdown <- function(f) {tapply(names(f),f, identity) }
 
 #' Post process clusters generated with walktrap to control granularity
 #'
 #' @param p2list list of pagoda2 objects
 #' @param pjc joint clustering that was performed with walktrap
-#' @param no.cl number of clusters to get from the walktrap dendrogram
-#' @param size.cutoff cutoff below which to merge the clusters
-#' @param n.cores number of cores to use
+#' @param no.cl numeric Nmber of clusters to get from the walktrap dendrogram (default=200)
+#' @param size.cutoff numeric Cutoff below which to merge the clusters (default=10)
+#' @param n.cores numeric Number of cores to use (default=4)
+#' @keywords internal
 postProcessWalktrapClusters <- function(p2list, pjc, no.cl = 200, size.cutoff = 10, n.cores=4) {
     ##devel
     ## pjc <- pjc3
@@ -597,6 +614,7 @@ postProcessWalktrapClusters <- function(p2list, pjc, no.cl = 200, size.cutoff = 
 #'
 #' @param samples list of pagoda2 objects
 #' @param n.genes number of overdispersed genes to extract
+#' @keywords internal
 getOdGenesUniformly <- function(samples, n.genes) {
   if (!("Pagoda2" %in% class(samples[[1]])))
     stop("This function is currently supported only for Pagoda2 objects")
@@ -611,7 +629,7 @@ getOdGenesUniformly <- function(samples, n.genes) {
   return(genes[1:min(n.genes, length(genes))])
 }
 
-
+#' @keywords internal
 projectSamplesOnGlobalAxes <- function(samples, cms.clust, data.type, verbose, n.cores) {
   if(verbose) message('calculating global projections ');
 
@@ -642,6 +660,7 @@ projectSamplesOnGlobalAxes <- function(samples, cms.clust, data.type, verbose, n
   return(global.proj)
 }
 
+#' @keywords internal
 getDecoyProjections <- function(samples, samf, data.type, var.scale, cproj, base.groups, decoy.threshold, n.decoys) {
   cproj.decoys <- lapply(cproj, function(d) {
     tg <- tabulate(as.integer(base.groups[rownames(d)]),nbins=length(levels(base.groups)))
@@ -680,6 +699,7 @@ getDecoyProjections <- function(samples, samf, data.type, var.scale, cproj, base
   return(cproj.decoys)
 }
 
+#' @keywords internal
 getLocalNeighbors <- function(samples, k.self, k.self.weight, metric, l2.sigma, verbose, n.cores) {
   if(verbose) message('local pairs ')
   x <- papply(samples, function(x) {
@@ -700,6 +720,7 @@ getLocalNeighbors <- function(samples, k.self, k.self.weight, metric, l2.sigma, 
   x
 }
 
+#' @keywords internal
 getLocalEdges <- function(local.neighbors) {
   do.call(rbind,lapply(local.neighbors,function(xk) {
     data.frame(mA.lab=rownames(xk)[xk@i+1], mB.lab=colnames(xk)[xk@j+1],w=xk@x, type=0, stringsAsFactors=F)
@@ -843,6 +864,7 @@ stableTreeClusters <- function(refwt, tests, min.threshold=0.8, min.size=10, n.c
   }
 }
 
+#' @keywords internal
 convertDistanceToSimilarity <- function(distances, metric, l2.sigma=1e5, cor.base=1) {
   if(metric=='angular') {
     return(pmax(0, cor.base - distances))
@@ -851,6 +873,7 @@ convertDistanceToSimilarity <- function(distances, metric, l2.sigma=1e5, cor.bas
   return(exp(-distances / l2.sigma))
 }
 
+#' @keywords internal
 getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, k1=k, data.type='counts', var.scale=T, common.centering=T,
                                       matching.method='mNN', metric='angular', l2.sigma=1e5, cor.base=1, subset.cells=NULL,
                                       base.groups=NULL, append.decoys=F, samples=NULL, samf=NULL, decoy.threshold=1, n.decoys=k*2, append.global.axes=T, global.proj=NULL) {
@@ -921,6 +944,7 @@ getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, k1=k, data.
 #' @param core.base numeric (default=1)
 #' @param min.similarity minimal similarity between two cells, required to have an edge
 #' @return matrix with the similarity (!) values corresponding to weight (1-d for angular, and exp(-d/l2.sigma) for L2)
+#' @keywords internal
 getNeighborMatrix <- function(p1, p2, k, k1=k, matching='mNN', metric='angular', l2.sigma=1e5, cor.base=1, min.similarity=1e-5) {
   quiet.knn <- (k1 > k)
   if (is.null(p2)) {
@@ -957,6 +981,7 @@ getNeighborMatrix <- function(p1, p2, k, k1=k, matching='mNN', metric='angular',
 }
 
 # 1-step edge reduction
+#' @keywords internal
 reduceEdgesInGraph <- function(adj.mtx,k,klow=k,preserve.order=TRUE) {
   if(preserve.order) { co <- colnames(adj.mtx); ro <- rownames(adj.mtx); }
   adj.mtx <- adj.mtx[,order(diff(adj.mtx@p),decreasing=T)]
@@ -972,6 +997,7 @@ reduceEdgesInGraph <- function(adj.mtx,k,klow=k,preserve.order=TRUE) {
 
 # a simple multi-step strategy to smooth out remaining hubs
 # max.kdiff gives approximate difference in the degree of the resulting nodes that is tolerable
+#' @keywords internal
 reduceEdgesInGraphIteratively <- function(adj.mtx,k,preserve.order=TRUE,max.kdiff=5,n.steps=3) {
   cc <- diff(adj.mtx@p); rc <- tabulate(adj.mtx@i+1);
   maxd <- max(max(cc),max(rc));
@@ -997,6 +1023,7 @@ reduceEdgesInGraphIteratively <- function(adj.mtx,k,preserve.order=TRUE,max.kdif
   return(adj.mtx)
 }
 
+#' @keywords internal
 adjustWeightsByCellBalancing <- function(adj.mtx, factor.per.cell, balance.weights, same.factor.downweight=1.0, n.iters=50, verbose=F) {
   adj.mtx %<>% .[colnames(.), colnames(.)] %>% as("dgTMatrix")
   factor.per.cell %<>% .[colnames(adj.mtx)] %>% as.factor() %>% droplevels()
@@ -1026,6 +1053,7 @@ adjustWeightsByCellBalancing <- function(adj.mtx, factor.per.cell, balance.weigh
 }
 
 ## Correct unloading of the library
+#' @keywords internal
 .onUnload <- function (libpath) {
   library.dynam.unload("conos", libpath)
 }
@@ -1078,10 +1106,11 @@ scanKModularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.in
 }
 
 ## Merge into a common matrix, entering 0s for the missing ones
-mergeCountMatrices <- function(cms, transposed=F) {
+#' @keywords internal
+mergeCountMatrices <- function(cms, transposed=FALSE) {
   extendMatrix <- function(mtx, col.names) {
     new.names <- setdiff(col.names, colnames(mtx))
-    ext.mtx <- Matrix::Matrix(0, nrow=nrow(mtx), ncol=length(new.names), sparse=T) %>%
+    ext.mtx <- Matrix::Matrix(0, nrow=nrow(mtx), ncol=length(new.names), sparse=TRUE) %>%
       as(class(mtx)) %>% `colnames<-`(new.names)
     return(cbind(mtx, ext.mtx)[,col.names])
   }
@@ -1118,6 +1147,7 @@ getSampleNamePerCell=function(samples) {
 #' @param tol numeric Absolute tolerance as a stopping criteria (default=0.025)
 #' @param verbose boolean Verbose mode (default=TRUE)
 #' @param fixed.initial.labels boolean Prohibit changes of initial labels during diffusion (default=TRUE)
+#' @keywords internal
 propagateLabelsDiffusion <- function(graph, labels, max.iters=100, diffusion.fading=10.0, diffusion.fading.const=0.1, tol=0.025, verbose=TRUE, fixed.initial.labels=TRUE) {
   if (is.factor(labels)) {
     labels <- as.character(labels) %>% setNames(names(labels))
@@ -1135,6 +1165,7 @@ propagateLabelsDiffusion <- function(graph, labels, max.iters=100, diffusion.fad
 ## Propagate labels using Zhu, Ghahramani, Lafferty (2003) algorithm
 ## http://mlg.eng.cam.ac.uk/zoubin/papers/zgl.pdf
 ## TODO: change solver here for something designed for Laplacians. Need to look Daniel Spielman's research
+#' @keywords internal
 propagateLabelsSolver <- function(graph, labels, solver="mumps") {
   if (!solver %in% c("mumps", "Matrix"))
     stop("Unknown solver: ", solver, ". Only 'mumps' and 'Matrix' are currently supported")
@@ -1208,6 +1239,7 @@ findSubcommunities <- function(con, target.clusters, clustering=NULL, groups=NUL
   return(groups.raw)
 }
 
+#' @keywords internal
 parseCellGroups <- function(con, clustering, groups, parse.clusters=TRUE) {
   if (!parse.clusters)
     return(groups)

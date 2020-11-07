@@ -31,3 +31,4 @@ propagateLabelsDiffusion(
 \description{
 Estimate labeling distribution for each vertex, based on provided labels using Random Walk
 }
+\keyword{internal}

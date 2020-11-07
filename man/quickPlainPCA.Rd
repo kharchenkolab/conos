@@ -38,3 +38,4 @@ PCA projection, using space of combined sample-specific PCAs
 \description{
 Use space of combined sample-specific PCAs as a space
 }
+\keyword{internal}

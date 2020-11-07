@@ -1,3 +1,4 @@
+#' @keywords internal
 splitVectorByNodes <- function(vec, nodes, n.nodes) {
   res <- lapply(1:n.nodes, function(x) list())
   splitted <- split(vec, nodes)
@@ -5,6 +6,7 @@ splitVectorByNodes <- function(vec, nodes, n.nodes) {
   return(res)
 }
 
+#' @keywords internal
 graphToAdjList <- function(graph) {
   edge.list.fact <- igraph::as_edgelist(graph) %>% as_factor()
   edge.list <- matrix(edge.list.fact$values, ncol=2)
@@ -24,6 +26,7 @@ graphToAdjList <- function(graph) {
   return(list(idx=adj.list, probabilities=probs, names=edge.list.fact$levels))
 }
 
+#' @keywords internal
 embedKnnGraph <- function(commute.times, n.neighbors, names=NULL, verbose=TRUE, target.dims=2, ...) {
   min.n.neighbors <- sapply(commute.times$idx, length) %>% min()
   if (min.n.neighbors < n.neighbors) {
@@ -43,6 +46,7 @@ embedKnnGraph <- function(commute.times, n.neighbors, names=NULL, verbose=TRUE, 
   return(umap)
 }
 
+#' @keywords internal
 embedGraphUmap <- function(graph, verbose=TRUE, min.prob=1e-3, min.visited.verts=1000, n.cores=1,
                            max.hitting.nn.num=0, max.commute.nn.num=0, min.prob.lower=1e-7,
                            n.neighbors=40, n.epochs=1000, spread=15, min.dist=0.001, return.all=FALSE,

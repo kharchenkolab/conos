@@ -7,11 +7,11 @@
 saveDEasCSV(de.results = NULL, saveprefix = NULL, gene.metadata = NULL)
 }
 \arguments{
-\item{de.results}{output of differential expression results, corrected or uncorrected}
+\item{de.results}{output of differential expression results, corrected or uncorrected (default=NULL)}
 
-\item{saveprefix}{prefix for output file}
+\item{saveprefix}{prefix for output file (default=NULL)}
 
-\item{data.frame}{for gene metadata}
+\item{data.frame}{for gene metadata (default=NULL)}
 }
 \description{
 Save differential expression as CSV table

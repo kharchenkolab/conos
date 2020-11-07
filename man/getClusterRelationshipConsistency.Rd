@@ -27,3 +27,4 @@ More information about similarity measures
 <https://www.rdocumentation.org/packages/dendextend/versions/1.8.0/topics/cor_cophenetic>
 <https://www.rdocumentation.org/packages/dendextend/versions/1.8.0/topics/cor_bakers_gamma>
 }
+\keyword{internal}

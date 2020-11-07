@@ -14,3 +14,4 @@ getOdGenesUniformly(samples, n.genes)
 \description{
 Get top overdispersed genes across samples
 }
+\keyword{internal}

@@ -31,3 +31,4 @@ quickCCA(
 \description{
 Perform CCA (using PMA package or otherwise) on two samples
 }
+\keyword{internal}

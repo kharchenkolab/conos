@@ -26,3 +26,4 @@ percent of clusters that are global given the above criteria
 \description{
 Evaluate how many clusters are global
 }
+\keyword{internal}
