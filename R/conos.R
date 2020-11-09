@@ -24,7 +24,7 @@ scaledMatricesP2 <- function(p2.objs, data.type, od.genes, var.scale) {
       }
       x <- r$reductions[[data.type]][,od.genes];
     } else {
-      stop("No reduction named '", data.type, "' in pagoda")
+      stop("No reduction named '", data.type, "' in pagoda2")
     }
 
     if(var.scale) {
@@ -167,7 +167,8 @@ cpcaFast <- function(covl,ncells,ncomp=10,maxit=1000,tol=1e-6,use.irlba=TRUE,ver
 
 #' Perform cpca on two samples
 #' 
-#' @param r.n list of p2 objects
+#' @param r.n list of pagoda2 objects
+#' @param data.type character Type of data type in the input pagoda2 objects within r.n (default='counts')
 #' @param ncomps numeric Number of components to calculate (default=100)
 #' @param n.odgenes numeric Number of overdispersed genes to take from each dataset (default=NULL)
 #' @param var.scale boolean Whether to scale variance (default=TRUE)
@@ -229,8 +230,8 @@ quickCPCA <- function(r.n, data.type='counts', ncomps=100, n.odgenes=NULL, var.s
 
 #' Use space of combined sample-specific PCAs as a space
 #'
-#' @param r.n list of p2 objects
-#' @param data.type 
+#' @param r.n list of pagoda2 objects
+#' @param data.type character Type of data type in the input pagoda2 objects within r.n (default='counts')
 #' @param ncomps numeric Number of components to calculate (default=30)
 #' @param n.odgenes numeric Number of overdispersed genes to take from each dataset (default=NULL)
 #' @param var.scale boolean Whether to scale variance (default=TRUE)
@@ -280,14 +281,14 @@ quickPlainPCA <- function(r.n, data.type='counts', ncomps=30, n.odgenes=NULL, va
 
 
 #' Perform CCA (using PMA package or otherwise) on two samples
-#' @param r.n list of p2 objects
-#' @param ncomps number of components to calculate (default=100)
-#' @param n.odgenes number of overdispersed genes to take from each dataset
+#' @param r.n list of pagoda2 objects
+#' @param ncomps numeric Number of components to calculate (default=100)
+#' @param n.odgenes numeric Number of overdispersed genes to take from each dataset
 #' @param var.scale whether to scale variance (default=TRUE)
 #' @param verbose whether to be verbose
 #' @param n.cores number of cores to use
 #' @keywords internal
-quickCCA <- function(r.n,data.type='counts',ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=TRUE, PMA=FALSE, score.component.variance=FALSE) {
+quickCCA <- function(r.n, data.type='counts', ncomps=100, n.odgenes=NULL, var.scale=TRUE, verbose=TRUE, PMA=FALSE, score.component.variance=FALSE) {
 
   od.genes <- commonOverdispersedGenes(r.n, n.odgenes, verbose=verbose)
   if(length(od.genes)<5) return(NULL);
@@ -338,6 +339,7 @@ quickCCA <- function(r.n,data.type='counts',ncomps=100,n.odgenes=NULL,var.scale=
 #' @param leafContent $leafContent output of greedy.modularity.cut() providing information about which cells map to which dendrogram leafs
 #' @param min.width numeric Minimum line width (default=1)
 #' @param max.width numeric Maximum line width (default=4)
+#' @return modified dendrogram 
 #' @export
 dendSetWidthByBreadth <- function(d, fac, leafContent, min.width=1, max.width=4) {
   cc2width <- function(cc) {
@@ -373,10 +375,14 @@ dendSetWidthByBreadth <- function(d, fac, leafContent, min.width=1, max.width=4)
 #' @param fac factor across cells
 #' @param leafContent $leafContent output of greedy.modularity.cut() providing information about which cells map to which dendrogram leafs
 #' @export
-dendSetColorByMixture <- function(d,fac,leafContent) {
-  fac <- as.factor(fac);
-  if(length(levels(fac))>3) stop("factor with more than 3 levels are not supported")
-  if(length(levels(fac))<2) stop("factor with less than 2 levels are not supported")
+dendSetColorByMixture <- function(d, fac, leafContent) {
+  fac <- as.factor(fac)
+  if(length(levels(fac))>3){
+    stop("factor with more than 3 levels are not supported")
+  }
+  if(length(levels(fac))<2){
+    stop("factor with less than 2 levels are not supported")
+  }
 
   cc2col <- function(cc,base=0.1) {
     if(sum(cc)==0) {
@@ -524,8 +530,8 @@ getClusterRelationshipConsistency <- function(p2list, pjc) {
 #'
 #' @param p2list list of pagoda2 object on which clustering was generated
 #' @param pjc the result of joint clustering
-#' @param pc.samples.cutoff the percent of the number of the total samples that a cluster has to span to be considered global
-#' @param min.cell.count.per.samples minimum number of cells of cluster in sample to be considered as represented in that sample
+#' @param pc.samples.cutoff numeric The percent of the number of the total samples that a cluster has to span to be considered global (default=0.9)
+#' @param min.cell.count.per.samples numeric The minimum number of cells of cluster in sample to be considered as represented in that sample (default=10)
 #' @return percent of clusters that are global given the above criteria
 #' @keywords internal
 getPercentGlobalClusters <- function(p2list, pjc, pc.samples.cutoff = 0.9, min.cell.count.per.sample = 10) {
@@ -557,7 +563,7 @@ factorBreakdown <- function(f) {tapply(names(f),f, identity) }
 #'
 #' @param p2list list of pagoda2 objects
 #' @param pjc joint clustering that was performed with walktrap
-#' @param no.cl numeric Nmber of clusters to get from the walktrap dendrogram (default=200)
+#' @param no.cl numeric Number of clusters to get from the walktrap dendrogram (default=200)
 #' @param size.cutoff numeric Cutoff below which to merge the clusters (default=10)
 #' @param n.cores numeric Number of cores to use (default=4)
 #' @keywords internal
@@ -616,8 +622,9 @@ postProcessWalktrapClusters <- function(p2list, pjc, no.cl = 200, size.cutoff = 
 #' @param n.genes number of overdispersed genes to extract
 #' @keywords internal
 getOdGenesUniformly <- function(samples, n.genes) {
-  if (!("Pagoda2" %in% class(samples[[1]])))
+  if (!("Pagoda2" %in% class(samples[[1]]))){
     stop("This function is currently supported only for Pagoda2 objects")
+  }
 
   gene.info <- lapply(samples, function(s)
     tibble::rownames_to_column(s$misc[['varinfo']], "gene") %>%
@@ -655,7 +662,7 @@ projectSamplesOnGlobalAxes <- function(samples, cms.clust, data.type, verbose, n
     smat <- scale(smat,scale=T,center=T); smat[is.nan(smat)] <- 0;
     sproj <- smat %*% global.pca$rotation
   },n.cores=n.cores)
-  if(verbose) message('. done\n');
+  if(verbose) message('. done\n')
 
   return(global.proj)
 }
@@ -693,8 +700,6 @@ getDecoyProjections <- function(samples, samf, data.type, var.scale, cproj, base
       }
     }
   })
-
-  #if(verbose) cat(paste0("+",sum(unlist(lapply(cproj.decoys,nrow)))))
 
   return(cproj.decoys)
 }
@@ -791,10 +796,10 @@ bestClusterTreeThresholds <- function(res, leaf.factor, clusters, clmerges=NULL)
 #'
 #' @param wt walktrap result
 #' @param N number of top greedy splits to take
-#' @param leaf.labels leaf sample label factor, for breadth calculations - must be a named factor containing all wt$names, or if wt$names is null, a factor listing cells in the same order as wt leafs
-#' @param minsize minimum size of the branch (in number of leafs)
-#' @param minbreadth minimum allowed breadth of a branch (measured as normalized entropy)
-#' @param flat.cut whether to simply take a flat cut (i.e. follow provided tree; default=TRUE). Does no observe minsize/minbreadth restrictions
+#' @param leaf.labels leaf sample label factor, for breadth calculations - must be a named factor containing all wt$names, or if wt$names is null, a factor listing cells in the same order as wt leafs (default=NULL)
+#' @param minsize numeric Minimum size of the branch (in number of leafs) (default=0)
+#' @param minbreadth numeric Minimum allowed breadth of a branch (measured as normalized entropy) (default=0)
+#' @param flat.cut boolean Whether to simply take a flat cut (i.e. follow provided tree; default=TRUE). Does no observe minsize/minbreadth restrictions
 #' @return list(hclust - hclust structure of the derived tree, leafContent - binary matrix with rows corresponding to old leaves, columns to new ones, deltaM - modularity increments)
 #' @export
 greedyModularityCut <- function(wt, N, leaf.labels=NULL, minsize=0, minbreadth=0, flat.cut=TRUE) {
@@ -980,7 +985,7 @@ getNeighborMatrix <- function(p1, p2, k, k1=k, matching='mNN', metric='angular',
   return(as(drop0(adj.mtx),'dgTMatrix'))
 }
 
-# 1-step edge reduction
+## 1-step edge reduction
 #' @keywords internal
 reduceEdgesInGraph <- function(adj.mtx,k,klow=k,preserve.order=TRUE) {
   if(preserve.order) { co <- colnames(adj.mtx); ro <- rownames(adj.mtx); }
@@ -995,8 +1000,8 @@ reduceEdgesInGraph <- function(adj.mtx,k,klow=k,preserve.order=TRUE) {
   return(adj.mtx)
 }
 
-# a simple multi-step strategy to smooth out remaining hubs
-# max.kdiff gives approximate difference in the degree of the resulting nodes that is tolerable
+## a simple multi-step strategy to smooth out remaining hubs
+## max.kdiff gives approximate difference in the degree of the resulting nodes that is tolerable
 #' @keywords internal
 reduceEdgesInGraphIteratively <- function(adj.mtx,k,preserve.order=TRUE,max.kdiff=5,n.steps=3) {
   cc <- diff(adj.mtx@p); rc <- tabulate(adj.mtx@i+1);
@@ -1165,6 +1170,7 @@ propagateLabelsDiffusion <- function(graph, labels, max.iters=100, diffusion.fad
 ## Propagate labels using Zhu, Ghahramani, Lafferty (2003) algorithm
 ## http://mlg.eng.cam.ac.uk/zoubin/papers/zgl.pdf
 ## TODO: change solver here for something designed for Laplacians. Need to look Daniel Spielman's research
+
 #' @keywords internal
 propagateLabelsSolver <- function(graph, labels, solver="mumps") {
   if (!solver %in% c("mumps", "Matrix"))
@@ -1210,6 +1216,7 @@ propagateLabelsSolver <- function(graph, labels, solver="mumps") {
 #' @param groups set of clusters to use. Ignored if 'clustering' is not NULL (default=NULL).
 #' @param method function, used to find communities (default=leiden.community).
 #' @param ... additional params passed to the community function
+#' @return set of clusters with increased resolution
 #' @export
 findSubcommunities <- function(con, target.clusters, clustering=NULL, groups=NULL, method=leiden.community, ...) {
   groups <- parseCellGroups(con, clustering, groups)
@@ -1217,16 +1224,18 @@ findSubcommunities <- function(con, target.clusters, clustering=NULL, groups=NUL
   groups.raw <- as.character(groups) %>% setNames(names(groups))
   groups <- groups[intersect(names(groups), V(con$graph)$name)]
 
-  if(length(groups) == 0) {
+  if (length(groups) == 0) {
     stop("'groups' not defined for graph object.")
   }
 
   groups <- droplevels(as.factor(groups)[groups %in% target.clusters])
-  if(length(groups) == 0) {
+
+  if (length(groups) == 0) {
     stop("None of 'target.clusters' can be found in 'groups'.")
   }
 
   subgroups <- split(names(groups), groups)
+
   for (n in names(subgroups)) {
     if (length(subgroups[[n]]) < 2){
       next
@@ -1270,6 +1279,7 @@ parseCellGroups <- function(con, clustering, groups, parse.clusters=TRUE) {
 #'
 #' @param con conos object
 #' @param factor.per.cell some factor, which group cells, such as sample or a specific condition
+#' @return entropy of edge weights per cell
 #' @export
 estimteWeightEntropyPerCell <- function(con, factor.per.cell) {
   adj.mat <- igraph::as_adjacency_matrix(con$graph, attr="weight") %>% as("dgTMatrix")

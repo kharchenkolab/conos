@@ -26,6 +26,9 @@ findSubcommunities(
 
 \item{...}{additional params passed to the community function}
 }
+\value{
+set of clusters with increased resolution
+}
 \description{
 Increase resolution for a specific set of clusters
 }

@@ -17,7 +17,7 @@ postProcessWalktrapClusters(
 
 \item{pjc}{joint clustering that was performed with walktrap}
 
-\item{no.cl}{numeric Nmber of clusters to get from the walktrap dendrogram (default=200)}
+\item{no.cl}{numeric Number of clusters to get from the walktrap dendrogram (default=200)}
 
 \item{size.cutoff}{numeric Cutoff below which to merge the clusters (default=10)}
 

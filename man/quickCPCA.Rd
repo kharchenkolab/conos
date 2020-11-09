@@ -15,7 +15,9 @@ quickCPCA(
 )
 }
 \arguments{
-\item{r.n}{list of p2 objects}
+\item{r.n}{list of pagoda2 objects}
+
+\item{data.type}{character Type of data type in the input pagoda2 objects within r.n (default='counts')}
 
 \item{ncomps}{numeric Number of components to calculate (default=100)}
 

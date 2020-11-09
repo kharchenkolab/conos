@@ -16,9 +16,9 @@ getPercentGlobalClusters(
 
 \item{pjc}{the result of joint clustering}
 
-\item{pc.samples.cutoff}{the percent of the number of the total samples that a cluster has to span to be considered global}
+\item{pc.samples.cutoff}{numeric The percent of the number of the total samples that a cluster has to span to be considered global (default=0.9)}
 
-\item{min.cell.count.per.samples}{minimum number of cells of cluster in sample to be considered as represented in that sample}
+\item{min.cell.count.per.samples}{numeric The minimum number of cells of cluster in sample to be considered as represented in that sample (default=10)}
 }
 \value{
 percent of clusters that are global given the above criteria

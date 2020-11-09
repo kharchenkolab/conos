@@ -17,6 +17,9 @@ dendSetWidthByBreadth(d, fac, leafContent, min.width = 1, max.width = 4)
 
 \item{max.width}{numeric Maximum line width (default=4)}
 }
+\value{
+modified dendrogram
+}
 \description{
 Set dendrogram node width by breadth of the provided factor
 }
