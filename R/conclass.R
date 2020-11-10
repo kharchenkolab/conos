@@ -178,7 +178,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         }
       }
 
-      if(snn) {
+      if (snn){
         local.neighbors <- getLocalNeighbors(self$samples[! names(self$samples) %in% exclude.samples], snn.k, k.self.weight, metric, l2.sigma=l2.sigma, verbose, self$n.cores)
       } else {
         local.neighbors <- NULL
@@ -335,8 +335,8 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @param upregulated.only (default=FALSE)
     #' @param n.genes.to.show (default=10)
     #' @param inner.clustering (default=FALSE)
-    #' @param append.specificity.metrics (default=TRUE)
-    #' @param append.auc (default=FALSE)
+    #' @param append.specificity.metrics boolean Whether to appeadn specificity metrics (default=TRUE)
+    #' @param append.auc boolean Whether to append AUC scores (default=FALSE)
     #' @return list of DE results
     getDifferentialGenes=function(clustering=NULL, groups=NULL, z.threshold=3.0, upregulated.only=FALSE, verbose=TRUE, plot=FALSE, n.genes.to.show=10, inner.clustering=FALSE,
                                   append.specificity.metrics=TRUE, append.auc=FALSE, n.cores=self$n.cores) {
@@ -344,13 +344,15 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       groups <- parseCellGroups(self, clustering, groups)
 
       groups %<>% as.factor() %>% droplevels()
-      if (class(self$samples[[1]]) != 'Pagoda2') # TODO: add Seurat
+      # TODO: add Seurat
+      if (class(self$samples[[1]]) != 'Pagoda2'){
         stop("Only Pagoda2 objects are supported for marker genes")
+      }
 
       de.genes <- getDifferentialGenesP2(self$samples, groups=groups, z.threshold=z.threshold, upregulated.only=upregulated.only, verbose=verbose, n.cores=n.cores)
       de.genes <- de.genes[levels(groups)]
 
-      if(plot) {
+      if (plot){
         plotDEGenes(de.genes, self$samples, groups=groups, n.genes.to.show=n.genes.to.show, inner.clustering=inner.clustering)
       }
 
@@ -370,7 +372,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       return(de.genes)
     },
 
-    #' @description find joint communities
+    #' @description Find joint communities
     #'
     #' @param method community detection method (igraph syntax) (default=leiden.community)
     #' @param min.group.size numeric Minimal allowed community size (default=0)

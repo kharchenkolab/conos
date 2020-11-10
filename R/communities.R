@@ -190,7 +190,7 @@ multimulti.community <- function(graph, n.cores=parallel::detectCores(logical=FA
 #' Detect communities using Leiden algorithm (implementation copied from https://github.com/vtraag/leidenalg)
 #' 
 #' @param graph graph on which communities should be detected
-#' @param resolution numeric Resolution parameter (default=1.0). Higher numbers lead to more communities
+#' @param resolution numeric Resolution parameter (default=1.0). Higher numbers lead to more communities.
 #' @param n.iterations numeric Number of iterations that the algorithm should be run for (default =2)
 #' @return community object
 #' @export

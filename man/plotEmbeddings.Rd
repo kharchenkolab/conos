@@ -27,19 +27,19 @@ plotEmbeddings(
 
 \item{colors}{vector of numbers, which must be shown with point colors, names contain cell names (default=NULL). This argument is ignored if groups are provided.}
 
-\item{ncol}{number of columns in the panel}
+\item{ncol}{number of columns in the panel (default=NULL)}
 
-\item{nrow}{number of rows in the panel}
+\item{nrow}{number of rows in the panel (default=NULL)}
 
 \item{raster}{boolean whether layer with the points be rasterized (default=FALSE). Setting of this argument to TRUE is useful when you need to export a plot with large number of points}
 
-\item{panel.size}{vector with two numbers, which specified (width, height) of the panel in inches. Ignored if raster == FALSE.}
+\item{panel.size}{vector with two numbers, which specified (width, height) of the panel in inches (default=NULL). Ignored if raster is FALSE.}
 
-\item{adjust.func}{function to adjust plots before combining them to single panel. Can be used, for example, to provide color pallette of guides of the plots.}
+\item{adjust.func}{function to adjust plots before combining them to single panel (default=NULL). Can be used, for example, to provide color pallette of guides of the plots.}
 
-\item{subset}{a subset of cells to show (vector of cell names)}
+\item{subset}{a subset of cells to show (vector of cell names) (default=NULL)}
 
-\item{return.plotlist}{return a list of ggplot objects instead of a combined plot (default=FALSE)}
+\item{return.plotlist}{boolean Whether to return a list of ggplot objects instead of a combined plot (default=FALSE)}
 
 \item{...}{
   Arguments passed on to \code{\link[ggrepel:geom_text_repel]{ggrepel::geom_label_repel}}

@@ -255,9 +255,9 @@ Calculates differential genes. Estimates base mean, z-score, p-values, specifici
 
 \item{\code{inner.clustering}}{(default=FALSE)}
 
-\item{\code{append.specificity.metrics}}{(default=TRUE)}
+\item{\code{append.specificity.metrics}}{boolean Whether to appeadn specificity metrics (default=TRUE)}
 
-\item{\code{append.auc}}{(default=FALSE)}
+\item{\code{append.auc}}{boolean Whether to append AUC scores (default=FALSE)}
 
 \item{\code{n.cores}}{numeric Number of cores (default=parallel::detectCores(logical=FALSE))}
 }
@@ -271,7 +271,7 @@ list of DE results
 \if{html}{\out{<a id="method-findCommunities"></a>}}
 \if{latex}{\out{\hypertarget{method-findCommunities}{}}}
 \subsection{Method \code{findCommunities()}}{
-find joint communities
+Find joint communities
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Conos$findCommunities(
   method = leiden.community,

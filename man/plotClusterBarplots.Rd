@@ -17,21 +17,21 @@ plotClusterBarplots(
 )
 }
 \arguments{
-\item{conos.obj}{A conos object}
+\item{conos.obj}{A conos object (default=NULL)}
 
-\item{clustering}{name of clustering in the current object}
+\item{clustering}{name of clustering in the current object (default=NULL)}
 
-\item{groups}{arbitrary grouping of cells (to use instead of the clustering)}
+\item{groups}{arbitrary grouping of cells (to use instead of the clustering) (default=NULL)}
 
-\item{sample.factor}{a factor describing cell membership in the samples (or some other category); will default to samples if not provided}
+\item{sample.factor}{a factor describing cell membership in the samples (or some other category) (default=NULL). This will default to samples if not provided.}
 
-\item{show.entropy}{whether to include entropy barplot}
+\item{show.entropy}{boolean Whether to include entropy barplot (default=TRUE)}
 
-\item{show.size}{whether to include size barplot}
+\item{show.size}{boolean Whether to include size barplot (default=TRUE)}
 
-\item{show.composition}{whether to include composition barplot}
+\item{show.composition}{boolean Whether to include composition barplot (default=TRUE)}
 
-\item{legend.height}{relative hight of the legend panel}
+\item{legend.height}{numeric Relative hight of the legend panel (default=0.2)}
 }
 \value{
 a ggplot object

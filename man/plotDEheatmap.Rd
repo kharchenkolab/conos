@@ -40,29 +40,29 @@ plotDEheatmap(
 
 \item{groups}{groups in which the DE genes were determined (so that the cells can be ordered correctly)}
 
-\item{de}{differential expression result (list of data frames)}
+\item{de}{differential expression result (list of data frames) (default=NULL)}
 
-\item{min.auc}{optional minimum AUC threshold}
+\item{min.auc}{optional minimum AUC threshold (default=NULL)}
 
-\item{min.specificity}{optional minimum specificity threshold}
+\item{min.specificity}{optional minimum specificity threshold (default=NULL)}
 
-\item{min.precision}{optional minimum precision threshold}
+\item{min.precision}{optional minimum precision threshold (default=NULL)}
 
-\item{n.genes.per.cluster}{number of genes to show for each cluster}
+\item{n.genes.per.cluster}{numeric Number of genes to show for each cluster (default=10)}
 
-\item{additional.genes}{optional additional genes to include (the genes will be assigned to the closest cluster)}
+\item{additional.genes}{optional additional genes to include (the genes will be assigned to the closest cluster) (default=NULL)}
 
-\item{exclude.genes}{an optional list of genes to exclude from the heatmap}
+\item{exclude.genes}{an optional list of genes to exclude from the heatmap (default=NULL)}
 
-\item{labeled.gene.subset}{a subset of gene names to show (instead of all genes). Can be a vector of gene names, or a number of top genes (in each cluster) to show the names for.}
+\item{labeled.gene.subset}{a subset of gene names to show (instead of all genes) (default=NULL). Can be a vector of gene names, or a number of top genes (in each cluster) to show the names for.}
 
-\item{expression.quantile}{expression quantile to show (0.98 by default)}
+\item{expression.quantile}{numeric Expression quantile to show (default=0.99)}
 
-\item{pal}{palette to use for the main heatmap}
+\item{pal}{palette to use for the main heatmap (default=colorRampPalette(c('dodgerblue1','grey95','indianred1'))(1024))}
 
 \item{ordering}{order by which the top DE genes (to be shown) are determined (default "-AUC")}
 
-\item{column.metadata}{additional column metadata, passed either as a data.frame with rows named as cells, or as a list of named cell factors.}
+\item{column.metadata}{additional column metadata, passed either as a data.frame with rows named as cells, or as a list of named cell factors (default=NULL).}
 
 \item{show.gene.clusters}{whether to show gene cluster color codes}
 
@@ -70,21 +70,25 @@ plotDEheatmap(
 
 \item{column.metadata.colors}{a list of color specifications for additional column metadata, specified according to the HeatmapMetadata format. Use "clusters" slot to specify cluster colors.}
 
-\item{show.cluster.legend}{whether to show the cluster legend}
+\item{show.cluster.legend}{boolean Whether to show the cluster legend (default=TRUE)}
 
-\item{show_heatmap_legend}{whether to show the expression heatmap legend}
+\item{show_heatmap_legend}{boolean Whether to show the expression heatmap legend (default=FALSE)}
 
-\item{border}{show borders around the heatmap and annotations}
+\item{border}{boolean Whether to show borders around the heatmap and annotations (default=TRUE)}
 
-\item{return.details}{if TRUE will return a list containing the heatmap (ha), but also raw matrix (x), expression list (expl) and other info to produce the heatmap on your own.}
+\item{return.details}{boolean If TRUE will return a list containing the heatmap (ha), but also raw matrix (x), expression list (expl) and other info to produce the heatmap on your own (default=FALSE).}
 
-\item{row.label.font.size}{font size for the row labels}
+\item{row.label.font.size}{numeric Font size for the row labels (default=10)}
 
-\item{order.clusters}{whether to re-order the clusters according to the similarity of the expression patterns (of the genes being shown)}
+\item{order.clusters}{boolean Whether to re-order the clusters according to the similarity of the expression patterns (of the genes being shown) (default=FALSE)}
 
-\item{cell.order}{explicitly supply cell order}
+\item{split}{boolean Whether to use arguments "row_split" and "column_split" in ComplexHeatmap::Heatmap() (default=FALSE). These arguments are categorical vectors used to split the rows/columns in the heatmap.}
 
-\item{averaging.window}{optional window averaging between neighboring cells within each group (turned off by default) - useful when very large number of cells shown (requires zoo package)}
+\item{split.gap}{numeric Value of millimeters "mm" to use for 'row_gap' and 'column_gap' (default=0). If split is FALSE, this argument is ignored.}
+
+\item{cell.order}{explicitly supply cell order (default=NULL)}
+
+\item{averaging.window}{numeric Optional window averaging between neighboring cells within each group (turned off by default) - useful when very large number of cells shown (requires zoo package) (default=0)}
 
 \item{...}{extra parameters are passed to pheatmap}
 }

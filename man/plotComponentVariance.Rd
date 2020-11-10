@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot.R
 \name{plotComponentVariance}
 \alias{plotComponentVariance}
-\title{Plot variance explained by the successive components}
+\title{Plot fraction of variance explained by the successive reduced space components (PCA, CPCA)}
 \usage{
 plotComponentVariance(
   conos.obj,
@@ -14,13 +14,12 @@ plotComponentVariance(
 \item{conos.obj}{conos object}
 
 \item{space}{character Reduction space to be analyzed (currently, component variance scoring is only supported by PCA and CPCA) (default='PCA')}
+
+\item{plot.theme}{ggplot theme (default=ggplot2::theme_bw()). Refer to <https://ggplot2.tidyverse.org/reference/ggtheme.html> for more details.}
 }
 \value{
 ggplot
 }
 \description{
-Plot fraction of variance explained by the successive reduced space components (PCA, CPCA)
-}
-\details{
 Requires buildGraph() or updatePairs() to be ran first with the argument score.component.variance=TRUE.
 }
