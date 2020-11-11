@@ -1,23 +1,25 @@
-# Set the path to your non metric space library here
-PKG_CXXFLAGS= -I"../inst/include" -I"./n2/include" -I"./leidenalg/igraph-R" -I"./leidenalg/include" -I"./include" $(SHLIB_OPENMP_CXXFLAGS) 
+
+PKG_CXXFLAGS= -I"../inst/include"  -I"./leidenalg/igraph-R" -I"./leidenalg/include" $(SHLIB_OPENMP_CXXFLAGS) 
 
 PKGB_PATH=`echo 'library(igraph); cat(system.file("libs", package="igraph"))' \
       | ${R_HOME}/bin/R --vanilla --slave`
 
-PKG_LIBS=-L/usr/lib/ -L"." -lpthread -lstdc++ -ln2 -lleidenalg -lm `$(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()"` $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS) $(SHLIB_OPENMP_CXXFLAGS) $(PKGB_PATH)/igraph.so
+
+PKG_LIBS=-L/usr/lib/ -L"." -lpthread -lstdc++ -lleidenalg -lm `$(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()"` $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS) $(SHLIB_OPENMP_CXXFLAGS) $(PKGB_PATH)/igraph.so
 CXX_STD = CXX11
 MkInclude = $(R_HOME)/etc${R_ARCH}/Makeconf
 
 #.PHONY: all sublibs
 
 #OBJECTS = $(.cpp=.o)
-SUBDIRS = n2 leidenalg
-SUBLIBS = libn2.a leidenalg.a
+SUBDIRS = leidenalg
+SUBLIBS = leidenalg.a
 
 IGRAPH_LIB = $(PKGB_PATH)/igraph.so
 
 all: $(SHLIB) 
 	if [ "$(OS)" != "Windows_NT" ] && [ `uname -s` = 'Darwin' ]; then install_name_tool -id '@rpath/igraph.so' $(IGRAPH_LIB); fi 
+
 $(SHLIB): $(OBJECTS) sublibs
 sublibs: sublibraries
 

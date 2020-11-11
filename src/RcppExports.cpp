@@ -232,45 +232,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// n2Knn
-Eigen::SparseMatrix<double> n2Knn(const NumericMatrix& m, int k, int nThreads, bool verbose, std::string indexType, int M, int MaxM0, float ef_search_multiplier, bool quiet);
-RcppExport SEXP _conos_n2Knn(SEXP mSEXP, SEXP kSEXP, SEXP nThreadsSEXP, SEXP verboseSEXP, SEXP indexTypeSEXP, SEXP MSEXP, SEXP MaxM0SEXP, SEXP ef_search_multiplierSEXP, SEXP quietSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const NumericMatrix& >::type m(mSEXP);
-    Rcpp::traits::input_parameter< int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< int >::type nThreads(nThreadsSEXP);
-    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
-    Rcpp::traits::input_parameter< std::string >::type indexType(indexTypeSEXP);
-    Rcpp::traits::input_parameter< int >::type M(MSEXP);
-    Rcpp::traits::input_parameter< int >::type MaxM0(MaxM0SEXP);
-    Rcpp::traits::input_parameter< float >::type ef_search_multiplier(ef_search_multiplierSEXP);
-    Rcpp::traits::input_parameter< bool >::type quiet(quietSEXP);
-    rcpp_result_gen = Rcpp::wrap(n2Knn(m, k, nThreads, verbose, indexType, M, MaxM0, ef_search_multiplier, quiet));
-    return rcpp_result_gen;
-END_RCPP
-}
-// n2CrossKnn
-Eigen::SparseMatrix<double> n2CrossKnn(const NumericMatrix& mA, const NumericMatrix& mB, int k, int nThreads, bool verbose, std::string indexType, int M, int MaxM0, float ef_search_multiplier, bool quiet);
-RcppExport SEXP _conos_n2CrossKnn(SEXP mASEXP, SEXP mBSEXP, SEXP kSEXP, SEXP nThreadsSEXP, SEXP verboseSEXP, SEXP indexTypeSEXP, SEXP MSEXP, SEXP MaxM0SEXP, SEXP ef_search_multiplierSEXP, SEXP quietSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const NumericMatrix& >::type mA(mASEXP);
-    Rcpp::traits::input_parameter< const NumericMatrix& >::type mB(mBSEXP);
-    Rcpp::traits::input_parameter< int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< int >::type nThreads(nThreadsSEXP);
-    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
-    Rcpp::traits::input_parameter< std::string >::type indexType(indexTypeSEXP);
-    Rcpp::traits::input_parameter< int >::type M(MSEXP);
-    Rcpp::traits::input_parameter< int >::type MaxM0(MaxM0SEXP);
-    Rcpp::traits::input_parameter< float >::type ef_search_multiplier(ef_search_multiplierSEXP);
-    Rcpp::traits::input_parameter< bool >::type quiet(quietSEXP);
-    rcpp_result_gen = Rcpp::wrap(n2CrossKnn(mA, mB, k, nThreads, verbose, indexType, M, MaxM0, ef_search_multiplier, quiet));
-    return rcpp_result_gen;
-END_RCPP
-}
 // propagate_labels
 Rcpp::NumericMatrix propagate_labels(const Rcpp::StringMatrix& edge_verts, const std::vector<double>& edge_weights, const Rcpp::StringVector& vert_labels, int max_n_iters, bool verbose, double diffusion_fading, double diffusion_fading_const, double tol, bool fixed_initial_labels);
 RcppExport SEXP _conos_propagate_labels(SEXP edge_vertsSEXP, SEXP edge_weightsSEXP, SEXP vert_labelsSEXP, SEXP max_n_itersSEXP, SEXP verboseSEXP, SEXP diffusion_fadingSEXP, SEXP diffusion_fading_constSEXP, SEXP tolSEXP, SEXP fixed_initial_labelsSEXP) {
@@ -374,8 +335,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_conos_get_nearest_neighbors", (DL_FUNC) &_conos_get_nearest_neighbors, 10},
     {"_conos_sgd", (DL_FUNC) &_conos_sgd, 15},
     {"_conos_leiden_community", (DL_FUNC) &_conos_leiden_community, 4},
-    {"_conos_n2Knn", (DL_FUNC) &_conos_n2Knn, 9},
-    {"_conos_n2CrossKnn", (DL_FUNC) &_conos_n2CrossKnn, 10},
     {"_conos_propagate_labels", (DL_FUNC) &_conos_propagate_labels, 9},
     {"_conos_smooth_count_matrix", (DL_FUNC) &_conos_smooth_count_matrix, 10},
     {"_conos_adjacent_vertices", (DL_FUNC) &_conos_adjacent_vertices, 1},
