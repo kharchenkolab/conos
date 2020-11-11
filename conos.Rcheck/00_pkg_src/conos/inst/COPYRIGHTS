@@ -1,7 +1,0 @@
-Files: src/n2/*.cc src/n2/include/n2
-Copyright: Copyright 2017 Kakao Corp. <http://www.kakaocorp.com>
-License: Apache
-
-Files: src/leidenalg/include src/leidenalg/*.cpp
-Copyright: 2015-2020 V.A. Traag
-License: GPL-3 
