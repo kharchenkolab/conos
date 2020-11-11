@@ -37,7 +37,6 @@ Imports:
     viridis,
     sccore (>= 0.1)
 Suggests:
-    clues,
     DESeq2,
     entropy,
     ggrastr,
@@ -57,7 +56,6 @@ NeedsCompilation: yes
 Remotes:
     kharchenkolab/pagoda2,
     kharchenkolab/sccore,
-    jokergoo/ComplexHeatmap,
-    cran/clues
+    jokergoo/ComplexHeatmap
 Author: Peter Kharchenko [aut], Nikolas Barkas [aut], Viktor Petukhov [aut], Evan Biederstedt [aut, cre]
 Maintainer: Evan Biederstedt <evan.biederstedt@gmail.com>
