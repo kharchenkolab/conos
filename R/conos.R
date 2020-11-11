@@ -515,7 +515,7 @@ getLocalNeighbors <- function(samples, k.self, k.self.weight, metric, l2.sigma, 
       stop("PCA must be estimated for all samples")
     }
     
-    xk <- N2R::n2Knn(pca, k.self + 1, 1, verbose=FALSE, indexType=metric) # +1 accounts for self-edges that will be removed in the next line
+    xk <- N2R::Knn(pca, k.self + 1, 1, verbose=FALSE, indexType=metric) # +1 accounts for self-edges that will be removed in the next line
     diag(xk) <- 0; # no self-edges
     xk <- as(drop0(xk),'dgTMatrix')
     xk@x <- convertDistanceToSimilarity(xk@x, metric=metric, l2.sigma=l2.sigma) * k.self.weight
@@ -745,11 +745,11 @@ getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, k1=k, data.
 getNeighborMatrix <- function(p1,p2,k,k1=k,matching='mNN',metric='angular',l2.sigma=1e5, cor.base=1, min.similarity=1e-5) {
   quiet.knn <- (k1 > k)
   if (is.null(p2)) {
-    n12 <- N2R::n2CrossKnn(p1, p1,k1,1, FALSE, metric, quiet=quiet.knn)
+    n12 <- N2R::crossKnn(p1, p1,k1,1, FALSE, metric, quiet=quiet.knn)
     n21 <- n12
   } else {
-    n12 <- N2R::n2CrossKnn(p1, p2, k1, 1, FALSE, metric, quiet=quiet.knn)
-    n21 <- N2R::n2CrossKnn(p2, p1, k1, 1, FALSE, metric, quiet=quiet.knn)
+    n12 <- N2R::crossKnn(p1, p2, k1, 1, FALSE, metric, quiet=quiet.knn)
+    n21 <- N2R::crossKnn(p2, p1, k1, 1, FALSE, metric, quiet=quiet.knn)
   }
 
 
