@@ -35,7 +35,7 @@ Imports:
     tools,
     utils,
     viridis,
-    sccore (>= 0.1)
+    sccore (>= 0.1.1)
 Suggests:
     DESeq2,
     entropy,
@@ -55,7 +55,6 @@ LinkingTo: Rcpp, RcppArmadillo, RcppEigen, RcppProgress, igraph
 NeedsCompilation: yes
 Remotes:
     kharchenkolab/pagoda2,
-    kharchenkolab/sccore,
     jokergoo/ComplexHeatmap
 Author: Peter Kharchenko [aut], Nikolas Barkas [aut], Viktor Petukhov [aut], Evan Biederstedt [aut, cre]
 Maintainer: Evan Biederstedt <evan.biederstedt@gmail.com>
