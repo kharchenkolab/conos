@@ -35,7 +35,7 @@ Imports:
     tools,
     utils,
     viridis,
-    sccore (>= 0.1)
+    sccore (>= 0.1.1)
 Suggests:
     DESeq2,
     entropy,
