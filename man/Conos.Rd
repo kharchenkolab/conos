@@ -151,65 +151,65 @@ Build the joint graph that encompasses all the samples, establishing weighted in
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{k}}{(default=15)}
+\item{\code{k}}{integer (default=15)}
 
-\item{\code{k.self}}{(default=10)}
+\item{\code{k.self}}{integer (default=10)}
 
-\item{\code{k.self.weight}}{(default=0.1)}
+\item{\code{k.self.weight}}{numeric (default=0.1)}
 
 \item{\code{alignment.strength}}{(default=NULL)}
 
-\item{\code{space}}{(default='PCA')}
+\item{\code{space}}{character (default='PCA')}
 
-\item{\code{matching.method}}{(default=='mNN')}
+\item{\code{matching.method}}{character (default='mNN')}
 
-\item{\code{metric}}{(default='angular')}
+\item{\code{metric}}{character (default='angular')}
 
-\item{\code{k1}}{(default=k)}
+\item{\code{k1}}{numeric (default=k)}
 
-\item{\code{data.type}}{(default='counts')}
+\item{\code{data.type}}{character (default='counts')}
 
-\item{\code{l2.sigma}}{(default=1e5)}
+\item{\code{l2.sigma}}{numeric (default=1e5)}
 
-\item{\code{var.scale}}{(default=TRUE)}
+\item{\code{var.scale}}{boolean (default=TRUE)}
 
-\item{\code{ncomps}}{(default=40)}
+\item{\code{ncomps}}{integer (default=40)}
 
-\item{\code{n.odgenes}}{(default=2000)}
+\item{\code{n.odgenes}}{integer (default=2000)}
 
 \item{\code{matching.mask}}{(default=NULL)}
 
 \item{\code{exclude.samples}}{(default=NULL)}
 
-\item{\code{common.centering}}{(default=TRUE)}
+\item{\code{common.centering}}{boolean (default=TRUE)}
 
 \item{\code{verbose}}{boolean Whether to provide verbose output (default=TRUE)}
 
 \item{\code{base.groups}}{(default=NULL)}
 
-\item{\code{append.global.axes}}{(default=TRUE)}
+\item{\code{append.global.axes}}{boolean (default=TRUE)}
 
-\item{\code{append.decoys}}{(default=TRUE)}
+\item{\code{append.decoys}}{boolean (default=TRUE)}
 
-\item{\code{decoy.threshold}}{(default=1)}
+\item{\code{decoy.threshold}}{integer (default=1)}
 
-\item{\code{n.decoys}}{(default=k*2)}
+\item{\code{n.decoys}}{integer (default=k*2)}
 
-\item{\code{score.component.variance}}{(default=FALSE)}
+\item{\code{score.component.variance}}{boolean (default=FALSE)}
 
-\item{\code{balance.edge.weights}}{(default=FALSE)}
+\item{\code{balance.edge.weights}}{boolean (default=FALSE)}
 
 \item{\code{balancing.factor.per.cell}}{(default=NULL)}
 
-\item{\code{same.factor.downweight}}{(default=1.0)}
+\item{\code{same.factor.downweight}}{numeric (default=1.0)}
 
-\item{\code{k.same.factor}}{(default=k)}
+\item{\code{k.same.factor}}{integer (default=k)}
 
 \item{\code{balancing.factor.per.sample}}{(default=NULL)}
 
-\item{\code{neighborhood.average}}{(default=FALSE)}
+\item{\code{neighborhood.average}}{boolean (default=FALSE)}
 
-\item{\code{neighborhood.average.k}}{(default=10)}
+\item{\code{neighborhood.average.k}}{integer (default=10)}
 }
 \if{html}{\out{</div>}}
 }
@@ -245,13 +245,13 @@ Calculates differential genes. Estimates base mean, z-score, p-values, specifici
 
 \item{\code{groups}}{a factor on cells to use for coloring}
 
-\item{\code{z.threshold}}{(default=3.0)}
+\item{\code{z.threshold}}{numeric Threshold for filtering z-scores (default=3.0). Above this value, z-scores are output.}
 
-\item{\code{upregulated.only}}{(default=FALSE)}
+\item{\code{upregulated.only}}{boolean If FALSE, return the absolute value of z-scores (default=FALSE). Otherwise, return all z-scores.}
 
 \item{\code{verbose}}{boolean Whether to provide verbose output (default=TRUE)}
 
-\item{\code{n.genes.to.show}}{(default=10)}
+\item{\code{n.genes.to.show}}{numeric (default=10)}
 
 \item{\code{inner.clustering}}{(default=FALSE)}
 
@@ -337,11 +337,11 @@ Plot panel of individual embeddings per sample with joint coloring
 
 \item{\code{gene}}{show expression of a gene}
 
-\item{\code{use.common.embedding}}{(default=FALSE)}
+\item{\code{use.common.embedding}}{boolean Whether to use the same embedding for each panel (default=FALSE)}
 
-\item{\code{embedding.type}}{(default=NULL)}
+\item{\code{embedding.type}}{Embedding type, the parameter fed to plotSamples(embedding.type=embedding.type) (default=NULL). If use.common.embedding is TRUE, this parameter use the embedding in the conos object. (default=NULL)}
 
-\item{\code{adj.list}}{(default=NULL)}
+\item{\code{adj.list}}{adjacency list (default=NULL)}
 }
 \if{html}{\out{</div>}}
 }
@@ -423,6 +423,9 @@ Plot cluster stability statistics.
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Returns}{
+cluster stability statistics
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-plotGraph"></a>}}
@@ -445,7 +448,7 @@ Plot joint graph.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{color.by}}{(default='cluster')}
+\item{\code{color.by}}{character Users can either cluster by 'cluster' or by 'sample (default='cluster'). If any other string is input, an error is thrown.}
 
 \item{\code{clustering}}{name of the clustering to use}
 
@@ -508,6 +511,9 @@ Smooth expression of genes, so they better represent structure of the graph.
 \item{\code{normalize}}{boolean Whether to normalize values (default=TRUE)}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+smoothed expression of the input genes
 }
 }
 \if{html}{\out{<hr>}}

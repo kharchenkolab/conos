@@ -1077,9 +1077,9 @@ adjustWeightsByCellBalancing <- function(adj.mtx, factor.per.cell, balance.weigh
 #' @return a data frame with $k $m columns giving k and the corresponding modularity
 #' @export
 scanKModularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.internal.edges=TRUE, verbose=TRUE, plot=TRUE, ... ) {
-  k.seq <- seq(min,max,by=by);
-  n.cores <- con$n.cores;
-  con$n.cores <- 1;
+  k.seq <- seq(min,max, by=by)
+  n.cores <- con$n.cores
+  con$n.cores <- 1
   if(verbose) message(paste0(ifelse(scan.k.self,'k.self=(','k=('),min,', ',max,') ['))
   xl <- conos:::papply(k.seq,function(kv) {
     if(scan.k.self) {
@@ -1107,7 +1107,7 @@ scanKModularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.in
     ggplot2::ggplot(k.sens,aes(x=k,y=m))+ggplot2::theme_bw()+ggplot2::geom_point()+ggplot2::geom_smooth()+ggplot2::xlab('modularity')+ggplot2::ylab('k')
   }
 
-  return(k.sens);
+  return(k.sens)
 }
 
 ## Merge into a common matrix, entering 0s for the missing ones
@@ -1173,10 +1173,11 @@ propagateLabelsDiffusion <- function(graph, labels, max.iters=100, diffusion.fad
 
 #' @keywords internal
 propagateLabelsSolver <- function(graph, labels, solver="mumps") {
-  if (!solver %in% c("mumps", "Matrix"))
+  if (!solver %in% c("mumps", "Matrix")){
     stop("Unknown solver: ", solver, ". Only 'mumps' and 'Matrix' are currently supported")
+  }
 
-  if (!requireNamespace("rmumps", quietly=T)) {
+  if (!requireNamespace("rmumps", quietly=TRUE)) {
     warning("Package 'rmumps' is required to use 'mumps' solver. Fall back to 'Matrix'")
     solver <- "Matrix"
   }
@@ -1268,8 +1269,9 @@ parseCellGroups <- function(con, clustering, groups, parse.clusters=TRUE) {
 
     stop("Either 'groups' must be provided or the conos object must have some clustering estimated")
   }
-  if(is.null(clusters[[clustering]]))
-    stop(paste("clustering",clustering,"doesn't exist, run findCommunity() first"))
+  if (is.null(clusters[[clustering]])){
+    stop(paste("Clustering",clustering,"doesn't exist, run findCommunity() first"))
+  }
 
   return(con$clusters[[clustering]]$groups)
 }

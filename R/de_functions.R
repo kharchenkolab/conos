@@ -340,7 +340,7 @@ saveDEasJSON <- function(de.results = NULL, saveprefix = NULL, gene.metadata = N
 #' Compare two cell types across the entire panel
 #'
 #' @param con.obj conos object
-#' @param groups factor describing cell grouping  (default=NULL)
+#' @param groups factor describing cell grouping (default=NULL)
 #' @param sample.groups a named list of two character vectors specifying the app groups to compare (default=NULL)
 #' @param cooks.cutoff boolean cooksCutoff parameter for DESeq2 (default=FALSE)
 #' @param refgroup cell type to compare to be used as reference (default=NULL)

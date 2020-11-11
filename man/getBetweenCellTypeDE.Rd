@@ -22,7 +22,7 @@ getBetweenCellTypeDE(
 \arguments{
 \item{con.obj}{conos object}
 
-\item{groups}{factor describing cell grouping  (default=NULL)}
+\item{groups}{factor describing cell grouping (default=NULL)}
 
 \item{sample.groups}{a named list of two character vectors specifying the app groups to compare (default=NULL)}
 

@@ -94,34 +94,34 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
     #' @description Build the joint graph that encompasses all the samples, establishing weighted inter-sample cell-to-cell links
     #'
-    #' @param k (default=15)
-    #' @param k.self (default=10)
-    #' @param k.self.weight (default=0.1)
+    #' @param k integer (default=15)
+    #' @param k.self integer (default=10)
+    #' @param k.self.weight numeric (default=0.1)
     #' @param alignment.strength (default=NULL)
-    #' @param space (default='PCA')
-    #' @param matching.method (default=='mNN')
-    #' @param metric (default='angular')
-    #' @param k1 (default=k)
-    #' @param data.type (default='counts')
-    #' @param l2.sigma (default=1e5)
-    #' @param var.scale (default=TRUE)
-    #' @param ncomps (default=40)
-    #' @param n.odgenes (default=2000)
-    #' @param neighborhood.average (default=FALSE)
-    #' @param neighborhood.average.k (default=10)
+    #' @param space character (default='PCA')
+    #' @param matching.method character (default='mNN')
+    #' @param metric character (default='angular')
+    #' @param k1 numeric (default=k)
+    #' @param data.type character (default='counts')
+    #' @param l2.sigma numeric (default=1e5)
+    #' @param var.scale boolean (default=TRUE)
+    #' @param ncomps integer (default=40)
+    #' @param n.odgenes integer (default=2000)
+    #' @param neighborhood.average boolean (default=FALSE)
+    #' @param neighborhood.average.k integer (default=10)
     #' @param matching.mask (default=NULL)
     #' @param exclude.samples (default=NULL)
-    #' @param common.centering (default=TRUE)
+    #' @param common.centering boolean (default=TRUE)
     #' @param base.groups (default=NULL)
-    #' @param append.global.axes (default=TRUE)
-    #' @param append.decoys (default=TRUE)
-    #' @param decoy.threshold (default=1)
-    #' @param n.decoys (default=k*2)
-    #' @param score.component.variance (default=FALSE)
-    #' @param balance.edge.weights (default=FALSE)
+    #' @param append.global.axes boolean (default=TRUE)
+    #' @param append.decoys boolean (default=TRUE)
+    #' @param decoy.threshold integer (default=1)
+    #' @param n.decoys integer (default=k*2)
+    #' @param score.component.variance boolean (default=FALSE)
+    #' @param balance.edge.weights boolean (default=FALSE)
     #' @param balancing.factor.per.cell (default=NULL)
-    #' @param same.factor.downweight (default=1.0) 
-    #' @param k.same.factor (default=k)
+    #' @param same.factor.downweight numeric (default=1.0) 
+    #' @param k.same.factor integer (default=k)
     #' @param balancing.factor.per.sample (default=NULL)
     #' @return joint graph to be used for downstream analysis
     buildGraph=function(k=15, k.self=10, k.self.weight=0.1, alignment.strength=NULL, space='PCA', matching.method='mNN', metric='angular', k1=k, data.type='counts', l2.sigma=1e5, var.scale=TRUE, ncomps=40,
@@ -272,7 +272,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         
         if(verbose) cat(".")
         return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=mnn@x, stringsAsFactors=FALSE))
-      },n.cores=self$n.cores,mc.preschedule=TRUE)
+      }, n.cores=self$n.cores,mc.preschedule=TRUE)
 
       if (verbose) message(" done")
       ## Merge the results into a edge table
@@ -331,9 +331,9 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
     #' @description Calculates differential genes. Estimates base mean, z-score, p-values, specificity, precision, expressionFraction, AUC (if append.auc=TRUE)
     #'
-    #' @param z.threshold (default=3.0)
-    #' @param upregulated.only (default=FALSE)
-    #' @param n.genes.to.show (default=10)
+    #' @param z.threshold numeric Threshold for filtering z-scores (default=3.0). Above this value, z-scores are output.
+    #' @param upregulated.only boolean If FALSE, return the absolute value of z-scores (default=FALSE). Otherwise, return all z-scores.
+    #' @param n.genes.to.show numeric (default=10)
     #' @param inner.clustering (default=FALSE)
     #' @param append.specificity.metrics boolean Whether to appeadn specificity metrics (default=TRUE)
     #' @param append.auc boolean Whether to append AUC scores (default=FALSE)
@@ -504,9 +504,9 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
     #' @description Plot panel of individual embeddings per sample with joint coloring
     #'
-    #' @param use.common.embedding (default=FALSE)
-    #' @param embedding.type (default=NULL)
-    #' @param adj.list (default=NULL)
+    #' @param use.common.embedding boolean Whether to use the same embedding for each panel (default=FALSE)
+    #' @param embedding.type Embedding type, the parameter fed to plotSamples(embedding.type=embedding.type) (default=NULL). If use.common.embedding is TRUE, this parameter use the embedding in the conos object. (default=NULL)
+    #' @param adj.list adjacency list (default=NULL)
     #' @return ggplot2 object with the panel of plots
     plotPanel=function(clustering=NULL, groups=NULL, colors=NULL, gene=NULL, use.local.clusters=FALSE, plot.theme=NULL, use.common.embedding=FALSE, embedding.type=NULL, adj.list=NULL, ...) {
       if (use.local.clusters) {
@@ -523,7 +523,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       } else if (is.null(groups) && is.null(colors) && is.null(gene)) {
         groups <- getClusteringGroups(self$clusters, clustering)
       }
-      if(use.common.embedding) {
+      if (use.common.embedding) {
         embedding.type <- self$embedding
         adj.list <- c(ggplot2::lims(x=range(self$embedding[,1]), y=range(self$embedding[,2])), adj.list)
       }
@@ -575,6 +575,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #'
     #' @param clustering string Name of the clustering result to show (default=NULL)
     #' @param what string Show a specific plot (ari - adjusted rand index, fjc - flat Jaccard, hjc - hierarchical Jaccard, dend - cluster dendrogram) (default='all')
+    #' @return cluster stability statistics
     plotClusterStability=function(clustering=NULL, what='all') {
       if(is.null(clustering)) clustering <- names(self$clusters)[[1]]
 
@@ -661,7 +662,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
     #' @description Plot joint graph.
     #'
-    #' @param color.by (default='cluster')
+    #' @param color.by character Users can either cluster by 'cluster' or by 'sample (default='cluster'). If any other string is input, an error is thrown.
     #' @param subset a subset of cells to show (default=NULL)
     #' @return ggplot2 plot of joint graph
     plotGraph=function(color.by='cluster', clustering=NULL, groups=NULL, colors=NULL, gene=NULL, plot.theme=NULL, subset=NULL, ...) {
@@ -685,7 +686,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         } else if(color.by == 'sample') {
           groups <- self$getDatasetPerCell()
         } else {
-          stop('supported values of color.by are ("cluster" and "sample")')
+          stop('Supported values of color.by are ("cluster" and "sample")')
         }
       }
 
@@ -705,6 +706,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @param verbose boolean Verbose mode (default=TRUE)
     #' @param count.matrix Alternative gene count matrix to correct (rows: genes, columns: cells; has to be dense matrix). Default: joint count matrix for all datasets.
     #' @param normalize boolean Whether to normalize values (default=TRUE)
+    #' @return smoothed expression of the input genes
     correctGenes=function(genes=NULL, n.od.genes=500, fading=10.0, fading.const=0.5, max.iters=15, tol=5e-3, name='diffusion', verbose=TRUE, count.matrix=NULL, normalize=TRUE) {
       edges <- igraph::as_edgelist(self$graph)
       edge.weights <- igraph::edge.attributes(self$graph)$weight
