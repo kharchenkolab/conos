@@ -23,6 +23,7 @@ Imports:
     magrittr,
     Matrix.utils,
     methods,
+    N2R,
     parallel,
     reshape2,
     Rcpp,

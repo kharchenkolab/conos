@@ -1,5 +1,5 @@
 
-PKG_CXXFLAGS= -I"../inst/include"  -I"./leidenalg/igraph-R" -I"./leidenalg/include" $(SHLIB_OPENMP_CXXFLAGS) 
+PKG_CXXFLAGS= -I"../inst/include"  -I"./leidenalg/igraph-R" -I"./leidenalg/include"  -I"./include" $(SHLIB_OPENMP_CXXFLAGS) 
 
 PKGB_PATH=`echo 'library(igraph); cat(system.file("libs", package="igraph"))' \
       | ${R_HOME}/bin/R --vanilla --slave`

@@ -12,7 +12,7 @@ else
  IGRAPH_LIB := $(PKGB_PATH)/x64/igraph.dll
 endif
 
-PKG_CXXFLAGS=-I"../inst/include"  -I"./leidenalg/igraph-R" -I"./leidenalg/include" $(SHLIB_OPENMP_CXXFLAGS) 
+PKG_CXXFLAGS=-I"../inst/include"  -I"./leidenalg/igraph-R" -I"./leidenalg/include"  -I"./include" $(SHLIB_OPENMP_CXXFLAGS) 
 
 PKG_LIBS=-L/usr/lib/ -L"." -lpthread -lstdc++ -lleidenalg -lm $(shell "${R_HOME}/bin${R_ARCH_BIN}/Rscript.exe" -e "Rcpp:::LdFlags()") $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS) $(SHLIB_OPENMP_CXXFLAGS) $(IGRAPH_LIB)
 CXX_STD = CXX11
