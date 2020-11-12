@@ -35,7 +35,6 @@ Imports:
     sccore (>= 0.1.1)
 Suggests:
     DESeq2,
-    entropy,
     ggrastr,
     knitr,
     pagoda2,
@@ -48,7 +47,7 @@ Suggests:
     shinycssloaders
 VignetteBuilder: knitr
 RoxygenNote: 7.1.1
-LinkingTo: Rcpp, RcppArmadillo, RcppEigen, RcppProgress, igraph
+LinkingTo: Rcpp, RcppArmadillo, RcppEigen, RcppProgress
 NeedsCompilation: yes
 Remotes:
     kharchenkolab/pagoda2,
