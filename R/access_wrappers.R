@@ -1,10 +1,11 @@
 
-#' @import Pagoda2
 setOldClass("Pagoda2")
 
-#' @import Conos
 setOldClass("Conos")
 
+setOldClass("seurat")
+
+setOldClass("Seurat")
 
 #' @param sample sample from which to access PCA
 #' @rdname getPca
