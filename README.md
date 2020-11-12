@@ -16,7 +16,7 @@
   * [Installing Conos as a Docker container](#installing-conos-as-docker-container)
     + [Ready-to-run Docker image](#ready-to-run-docker-image)
     + [Building Docker image from the Dockerfile](#building-docker-image-from-the-dockerfile)
-- [Reference](#reference)
+- [Citation](#citation)
   
 ## Conos: Clustering On Network Of Samples
 
@@ -202,7 +202,7 @@ docker run -d -p 8787:8787 -e PASSWORD=pass --name conos -it conos
 ```
 
 
-## Reference
+## Citation
 
 If you find this software useful for your research, please cite the corresponding paper:
 
