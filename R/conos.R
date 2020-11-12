@@ -136,7 +136,7 @@ quickJNMF <- function(p2.objs, data.type='counts', n.comps = 30, n.odgenes=NULL,
 
   rjnmf.seed <- 12345
   ## Do JNMF
-  z <- Rjnmf::Rjnmf(Xs=t(cproj[[1]]), Xu=t(cproj[[2]]), k=n.comps, alpha=0.5, lambda = 0.5, epsilon = 0.001, maxiter= max.iter, verbose=F, seed=rjnmf.seed)
+  z <- Rjnmf::Rjnmf(Xs=t(cproj[[1]]), Xu=t(cproj[[2]]), k=n.comps, alpha=0.5, lambda = 0.5, epsilon = 0.001, maxiter= max.iter, verbose=FALSE, seed=rjnmf.seed)
   rot1 <- cproj[[1]] %*% z$W
   rot2 <- cproj[[2]] %*% z$W
 
@@ -147,7 +147,7 @@ quickJNMF <- function(p2.objs, data.type='counts', n.comps = 30, n.odgenes=NULL,
 }
 
 #' @keywords internal
-cpcaFast <- function(covl,ncells,ncomp=10,maxit=1000,tol=1e-6,use.irlba=TRUE,verbose=F) {
+cpcaFast <- function(covl,ncells,ncomp=10,maxit=1000,tol=1e-6,use.irlba=TRUE,verbose=FALSE) {
   ncomp <- min(c(nrow(covl)-1,ncol(covl)-1,ncomp));
   if(use.irlba) {
     # irlba initialization
@@ -879,9 +879,9 @@ convertDistanceToSimilarity <- function(distances, metric, l2.sigma=1e5, cor.bas
 }
 
 #' @keywords internal
-getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, k1=k, data.type='counts', var.scale=T, common.centering=T,
+getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, k1=k, data.type='counts', var.scale=TRUE, common.centering=TRUE,
                                       matching.method='mNN', metric='angular', l2.sigma=1e5, cor.base=1, subset.cells=NULL,
-                                      base.groups=NULL, append.decoys=F, samples=NULL, samf=NULL, decoy.threshold=1, n.decoys=k*2, append.global.axes=T, global.proj=NULL) {
+                                      base.groups=NULL, append.decoys=F, samples=NULL, samf=NULL, decoy.threshold=1, n.decoys=k*2, append.global.axes=TRUE, global.proj=NULL) {
   # create matrices, adjust variance
   cproj <- scaledMatrices(sample.pair, data.type=data.type, od.genes=od.genes, var.scale=var.scale)
 
@@ -913,7 +913,7 @@ getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, k1=k, data.
         decoy.cells <- rownames(cproj.decoys[[n]])
         if (length(decoy.cells)>0) {
           gm <- rbind(gm, do.call(rbind, lapply(global.proj[unique(samf[decoy.cells])],
-                                                function(m) m[rownames(m) %in% decoy.cells,,drop=F])))
+                                                function(m) m[rownames(m) %in% decoy.cells,,drop=FALSE])))
         }
       }
       # append global axes
@@ -930,8 +930,8 @@ getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, k1=k, data.
   if (!is.null(base.groups) && append.decoys) {
     # discard edges connecting to decoys
     decoy.cells <- unlist(lapply(cproj.decoys,rownames))
-    mnn <- mnn[, !colnames(mnn) %in% decoy.cells, drop=F]
-    mnn <- mnn[!rownames(mnn) %in% decoy.cells, , drop=F]
+    mnn <- mnn[, !colnames(mnn) %in% decoy.cells, drop=FALSE]
+    mnn <- mnn[!rownames(mnn) %in% decoy.cells, , drop=FALSE]
   }
 
   return(mnn)
@@ -989,10 +989,10 @@ getNeighborMatrix <- function(p1, p2, k, k1=k, matching='mNN', metric='angular',
 #' @keywords internal
 reduceEdgesInGraph <- function(adj.mtx,k,klow=k,preserve.order=TRUE) {
   if(preserve.order) { co <- colnames(adj.mtx); ro <- rownames(adj.mtx); }
-  adj.mtx <- adj.mtx[,order(diff(adj.mtx@p),decreasing=T)]
+  adj.mtx <- adj.mtx[,order(diff(adj.mtx@p),decreasing=TRUE)]
   adj.mtx@x <- pareDownHubEdges(adj.mtx,tabulate(adj.mtx@i+1),k,klow)
   adj.mtx <- t(drop0(adj.mtx))
-  adj.mtx <- adj.mtx[,order(diff(adj.mtx@p),decreasing=T)]
+  adj.mtx <- adj.mtx[,order(diff(adj.mtx@p),decreasing=TRUE)]
   adj.mtx@x <- pareDownHubEdges(adj.mtx,tabulate(adj.mtx@i+1),k,klow)
   adj.mtx <- t(drop0(adj.mtx));
   if(preserve.order) { adj.mtx <- adj.mtx[match(ro,rownames(adj.mtx)),match(co,colnames(adj.mtx))]; }
@@ -1029,7 +1029,7 @@ reduceEdgesInGraphIteratively <- function(adj.mtx,k,preserve.order=TRUE,max.kdif
 }
 
 #' @keywords internal
-adjustWeightsByCellBalancing <- function(adj.mtx, factor.per.cell, balance.weights, same.factor.downweight=1.0, n.iters=50, verbose=F) {
+adjustWeightsByCellBalancing <- function(adj.mtx, factor.per.cell, balance.weights, same.factor.downweight=1.0, n.iters=50, verbose=FALSE) {
   adj.mtx %<>% .[colnames(.), colnames(.)] %>% as("dgTMatrix")
   factor.per.cell %<>% .[colnames(adj.mtx)] %>% as.factor() %>% droplevels()
 
@@ -1201,7 +1201,7 @@ propagateLabelsSolver <- function(graph, labels, solver="mumps") {
   if (solver == "Matrix") {
     res <- Matrix::solve(laplasian.uu, right.side)
   } else {
-    res <- rmumps::Rmumps$new(laplasian.uu, copy=F)$solve(right.side)
+    res <- rmumps::Rmumps$new(laplasian.uu, copy=FALSE)$solve(right.side)
   }
 
   colnames(res) <- levels(labels)

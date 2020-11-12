@@ -1,9 +1,4 @@
 
-setOldClass("Pagoda2")
-setOldClass("Conos")
-setOldClass("seurat")
-setOldClass("Seurat")
-
 #' @param sample sample from which to access PCA
 #' @rdname getPca
 #' @export 

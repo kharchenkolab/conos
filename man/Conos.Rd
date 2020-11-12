@@ -171,7 +171,7 @@ Build the joint graph that encompasses all the samples, establishing weighted in
 
 \item{\code{l2.sigma}}{numeric (default=1e5)}
 
-\item{\code{var.scale}}{boolean (default=TRUE)}
+\item{\code{var.scale}}{boolean Whether to (default=TRUE)}
 
 \item{\code{ncomps}}{integer (default=40)}
 
@@ -181,23 +181,23 @@ Build the joint graph that encompasses all the samples, establishing weighted in
 
 \item{\code{exclude.samples}}{(default=NULL)}
 
-\item{\code{common.centering}}{boolean (default=TRUE)}
+\item{\code{common.centering}}{boolean Whether to  (default=TRUE)}
 
 \item{\code{verbose}}{boolean Whether to provide verbose output (default=TRUE)}
 
 \item{\code{base.groups}}{(default=NULL)}
 
-\item{\code{append.global.axes}}{boolean (default=TRUE)}
+\item{\code{append.global.axes}}{boolean Whether to  (default=TRUE)}
 
-\item{\code{append.decoys}}{boolean (default=TRUE)}
+\item{\code{append.decoys}}{boolean Whether to  (default=TRUE)}
 
 \item{\code{decoy.threshold}}{integer (default=1)}
 
 \item{\code{n.decoys}}{integer (default=k*2)}
 
-\item{\code{score.component.variance}}{boolean (default=FALSE)}
+\item{\code{score.component.variance}}{boolean Whether to  (default=FALSE)}
 
-\item{\code{balance.edge.weights}}{boolean (default=FALSE)}
+\item{\code{balance.edge.weights}}{boolean Whether to (default=FALSE)}
 
 \item{\code{balancing.factor.per.cell}}{(default=NULL)}
 
@@ -207,7 +207,7 @@ Build the joint graph that encompasses all the samples, establishing weighted in
 
 \item{\code{balancing.factor.per.sample}}{(default=NULL)}
 
-\item{\code{neighborhood.average}}{boolean (default=FALSE)}
+\item{\code{neighborhood.average}}{boolean Whether to  (default=FALSE)}
 
 \item{\code{neighborhood.average.k}}{integer (default=10)}
 }
