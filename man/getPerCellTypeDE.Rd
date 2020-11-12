@@ -23,29 +23,29 @@ getPerCellTypeDE(
 \arguments{
 \item{con.obj}{conos object}
 
-\item{groups}{factor specifying cell types}
+\item{groups}{factor specifying cell types (default=NULL)}
 
-\item{sample.groups}{a list of two character vector specifying the app groups to compare}
+\item{sample.groups}{a list of two character vector specifying the app groups to compare (default=NULL)}
 
-\item{cooks.cutoff}{cooksCutoff for DESeq2}
+\item{cooks.cutoff}{boolean cooksCutoff for DESeq2 (default=FALSE)}
 
-\item{ref.level}{the reference level of the sample.groups against which the comparison should be made (default, NULL, will pick the first one)}
+\item{ref.level}{the reference level of the sample.groups against which the comparison should be made (default=NULL). If NULL, will pick the first one.}
 
-\item{min.cell.count}{minimal number of cells per cluster for a sample to be taken into account in a comparison}
+\item{min.cell.count}{integer Minimal number of cells per cluster for a sample to be taken into account in a comparison (default=10)}
 
 \item{remove.na}{boolean If TRUE, remove NAs from DESeq calculations, which often arise as comparisons not possible (default=TRUE)}
 
-\item{max.cell.count}{maximal number of cells per cluster per sample to include in a comparison (useful for comparing the number of DE genes between cell types)}
+\item{max.cell.count}{maximal number of cells per cluster per sample to include in a comparison (useful for comparing the number of DE genes between cell types) (default=Inf)}
 
-\item{test}{which DESeq2 test to use (options: "LRT" (default), "Wald")}
+\item{test}{which DESeq2 test to use (options: "LRT" or "Wald") (default="LRT")}
 
-\item{independent.filtering}{independentFiltering for DESeq2}
+\item{independent.filtering}{boolean independentFiltering for DESeq2 (default=FALSE)}
 
-\item{n.cores}{number of cores}
+\item{n.cores}{numeric Number of cores (default=1)}
 
-\item{cluster.sep.chr}{character string of length 1 specifying a delimiter to separate cluster and app names}
+\item{cluster.sep.chr}{character string of length 1 specifying a delimiter to separate cluster and app names (default='<!!>')}
 
-\item{return.details}{return details}
+\item{return.details}{boolean Whether to return verbose details (default=TRUE)}
 }
 \value{
 A list of differential expression results for every cell type

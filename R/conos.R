@@ -871,7 +871,7 @@ stableTreeClusters <- function(refwt, tests, min.threshold=0.8, min.size=10, n.c
 
 #' @keywords internal
 convertDistanceToSimilarity <- function(distances, metric, l2.sigma=1e5, cor.base=1) {
-  if(metric=='angular') {
+  if (metric=='angular') {
     return(pmax(0, cor.base - distances))
   }
 
@@ -881,7 +881,8 @@ convertDistanceToSimilarity <- function(distances, metric, l2.sigma=1e5, cor.bas
 #' @keywords internal
 getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, k1=k, data.type='counts', var.scale=TRUE, common.centering=TRUE,
                                       matching.method='mNN', metric='angular', l2.sigma=1e5, cor.base=1, subset.cells=NULL,
-                                      base.groups=NULL, append.decoys=F, samples=NULL, samf=NULL, decoy.threshold=1, n.decoys=k*2, append.global.axes=TRUE, global.proj=NULL) {
+                                      base.groups=NULL, append.decoys=FALSE, samples=NULL, samf=NULL, decoy.threshold=1, n.decoys=k*2, 
+                                      append.global.axes=TRUE, global.proj=NULL) {
   # create matrices, adjust variance
   cproj <- scaledMatrices(sample.pair, data.type=data.type, od.genes=od.genes, var.scale=var.scale)
 
@@ -946,7 +947,7 @@ getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, k1=k, data.
 #' @param matching string mNN (default) or NN
 #' @param metric string Distance type (default: "angular", can also be 'L2')
 #' @param l2.sigma numeric L2 distances get transformed as exp(-d/sigma) using this value (default=1e5)
-#' @param core.base numeric (default=1)
+#' @param cor.base numeric (default=1)
 #' @param min.similarity minimal similarity between two cells, required to have an edge
 #' @return matrix with the similarity (!) values corresponding to weight (1-d for angular, and exp(-d/l2.sigma) for L2)
 #' @keywords internal

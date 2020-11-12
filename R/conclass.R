@@ -94,35 +94,40 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
     #' @description Build the joint graph that encompasses all the samples, establishing weighted inter-sample cell-to-cell links
     #'
-    #' @param k integer (default=15)
-    #' @param k.self integer (default=10)
-    #' @param k.self.weight numeric (default=0.1)
-    #' @param alignment.strength (default=NULL)
-    #' @param space character (default='PCA')
-    #' @param matching.method character (default='mNN')
-    #' @param metric character (default='angular')
-    #' @param k1 numeric (default=k)
-    #' @param data.type character (default='counts')
-    #' @param l2.sigma numeric (default=1e5)
-    #' @param var.scale boolean Whether to (default=TRUE)
-    #' @param ncomps integer (default=40)
-    #' @param n.odgenes integer (default=2000)
-    #' @param neighborhood.average boolean Whether to  (default=FALSE)
-    #' @param neighborhood.average.k integer (default=10)
-    #' @param matching.mask (default=NULL)
-    #' @param exclude.samples (default=NULL)
-    #' @param common.centering boolean Whether to  (default=TRUE)
-    #' @param base.groups (default=NULL)
-    #' @param append.global.axes boolean Whether to  (default=TRUE)
-    #' @param append.decoys boolean Whether to  (default=TRUE)
-    #' @param decoy.threshold integer (default=1)
-    #' @param n.decoys integer (default=k*2)
-    #' @param score.component.variance boolean Whether to  (default=FALSE)
-    #' @param balance.edge.weights boolean Whether to (default=FALSE)
-    #' @param balancing.factor.per.cell (default=NULL)
-    #' @param same.factor.downweight numeric (default=1.0) 
-    #' @param k.same.factor integer (default=k)
-    #' @param balancing.factor.per.sample (default=NULL)
+    #' @param k integer Number of components 'k' to compute (default=15)
+    #' @param k.self integer Number of components for computing local neighbors (default=10). Refer to function getLocalNeighbors().
+    #' @param k.self.weight numeric Multiplicative constant for the similarity strength (default=0.1)
+    #' @param alignment.strength numeric Alignment strength (default=NULL)
+    #' @param space character Projection space used to perform clustering (default='PCA'). Currently supported spaces are: 
+    #'     --- "CPCA" Common principal component analysis
+    #'     --- "JNMF" Pairwise Joint NMF
+    #'     --- "genes" Overdispered gene space
+    #'     --- "PCA" Principal component analysis
+    #'     --- "CCA" Canonical correlation analysis
+    #'     --- "PMA" (Penalized Multivariate Analysis <https://cran.r-project.org/web/packages/PMA/index.html>)
+    #'     Refer to getNeighborMatrix() for more details.
+    #' @param matching.method character Matching method (default='mNN'). Currently supported methods are "NN" (nearest neighbors) or "mNN" (mututal nearest neighbors).
+    #' @param metric character Distance metric to measure similarity (default='angular'). Currenlty supported metrics are "angular" or "L2".
+    #' @param k1 numeric Neighborhood radius for calculating neighbor matching (default=k). Note that k1 must be greater than or equal to k, i.e. k1>=k.
+    #' @param data.type character Type of data type in the input pagoda2 objects within r.n (default='counts').
+    #' @param l2.sigma numeric L2 distances get transformed as exp(-d/sigma) using this value (default=1e5)
+    #' @param var.scale boolean Whether to use common variance scaling (default=TRUE). If TRUE, use geometric means for variance, as we're trying to focus on the common variance components. See scaledMatricesP2().
+    #' @param ncomps integer Number of components (default=40)
+    #' @param n.odgenes integer Number of overdispersed genes (default=2000)
+    #' @param matching.mask Pairs that should not be compared directly (default=NULL). Note: 'matching.mask' should have the same row- and column-names as provided samples.
+    #' @param exclude.samples Samples to exclude from getLocalNeighbors() calculations (default=NULL)
+    #' @param common.centering boolean Whether to use common centering from the means (default=TRUE)
+    #' @param base.groups factor on groups (default=NULL)
+    #' @param append.global.axes boolean Whether to project samples on global axis (default=TRUE)
+    #' @param append.decoys boolean Whether to append decoy cells (default=TRUE)
+    #' @param decoy.threshold integer Below this threshold, decoy cells are taken within the decoy projections (default=1)
+    #' @param n.decoys integer Number of decoy dimensions to use (default=k*2)
+    #' @param score.component.variance boolean Whether to score component variance (default=FALSE)
+    #' @param balance.edge.weights boolean Whether to balance edge weights (default=FALSE)
+    #' @param balancing.factor.per.cell numeric Balancing constant per cell (default=NULL)
+    #' @param same.factor.downweight numeric Constant used to adjust weights per cell balancing (default=1.0) 
+    #' @param k.same.factor integer When calculating intersample mapping, the current k used during iterations is computed via min(k.same.factor, k1) (default=k)
+    #' @param balancing.factor.per.sample Balancing factor per sample (default=NULL)
     #' @return joint graph to be used for downstream analysis
     buildGraph=function(k=15, k.self=10, k.self.weight=0.1, alignment.strength=NULL, space='PCA', matching.method='mNN', metric='angular', k1=k, data.type='counts', l2.sigma=1e5, var.scale=TRUE, ncomps=40,
                         n.odgenes=2000, matching.mask=NULL, exclude.samples=NULL, common.centering=TRUE, verbose=TRUE,
@@ -169,11 +174,11 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       if(!is.null(base.groups)) {
         samf <- lapply(self$samples,getCellNames)
         base.groups <- as.factor(base.groups[names(base.groups) %in% unlist(samf)]) # clean up the group factor
-        if(length(base.groups) < 2) stop("provided base.gropus doesn't cover enough cells")
+        if(length(base.groups) < 2) stop("provided base.groups doesn't cover enough cells")
         # make a sample factor
         samf <- setNames(rep(names(samf),unlist(lapply(samf,length))),unlist(samf))
-        if(append.global.axes) {
-          cms.clust <- self$getClusterCountMatrices(groups=base.groups,common.genes=FALSE)
+        if (append.global.axes) {
+          cms.clust <- self$getClusterCountMatrices(groups=base.groups, common.genes=FALSE)
           global.proj <- projectSamplesOnGlobalAxes(self$samples, cms.clust, data.type, verbose, self$n.cores)
         }
       }
@@ -187,7 +192,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       # determine inter-sample mapping
       if(verbose) message('inter-sample links using ',matching.method,' ');
       cached.pairs <- self$pairs[[space]]
-      cor.base <- 1 + min(1, alignment.strength * 10)
+      cor.base <- 1 + min(1, alignment.strength * 10)  ## see convertDistanceToSimilarity()
       mnnres <- papply(1:ncol(sn.pairs), function(j) {
         # we'll look up the pair by name (possibly reversed), not to assume for the ordering of $pairs[[space]] to be the same
         i <- match(paste(sn.pairs[,j],collapse='.vs.'),names(cached.pairs));

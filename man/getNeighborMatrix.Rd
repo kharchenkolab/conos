@@ -31,9 +31,9 @@ getNeighborMatrix(
 
 \item{l2.sigma}{numeric L2 distances get transformed as exp(-d/sigma) using this value (default=1e5)}
 
-\item{min.similarity}{minimal similarity between two cells, required to have an edge}
+\item{cor.base}{numeric (default=1)}
 
-\item{core.base}{numeric (default=1)}
+\item{min.similarity}{minimal similarity between two cells, required to have an edge}
 }
 \value{
 matrix with the similarity (!) values corresponding to weight (1-d for angular, and exp(-d/l2.sigma) for L2)

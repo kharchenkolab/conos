@@ -123,22 +123,22 @@ is.error <- function (x) {
 #' Do differential expression for each cell type in a conos object between the specified subsets of apps
 #' 
 #' @param con.obj conos object
-#' @param groups factor specifying cell types
-#' @param sample.groups a list of two character vector specifying the app groups to compare
-#' @param cooks.cutoff cooksCutoff for DESeq2
-#' @param ref.level the reference level of the sample.groups against which the comparison should be made (default, NULL, will pick the first one)
-#' @param min.cell.count minimal number of cells per cluster for a sample to be taken into account in a comparison
+#' @param groups factor specifying cell types (default=NULL)
+#' @param sample.groups a list of two character vector specifying the app groups to compare (default=NULL)
+#' @param cooks.cutoff boolean cooksCutoff for DESeq2 (default=FALSE)
+#' @param ref.level the reference level of the sample.groups against which the comparison should be made (default=NULL). If NULL, will pick the first one.
+#' @param min.cell.count integer Minimal number of cells per cluster for a sample to be taken into account in a comparison (default=10)
 #' @param remove.na boolean If TRUE, remove NAs from DESeq calculations, which often arise as comparisons not possible (default=TRUE)
-#' @param max.cell.count maximal number of cells per cluster per sample to include in a comparison (useful for comparing the number of DE genes between cell types)
-#' @param test which DESeq2 test to use (options: "LRT" (default), "Wald")
-#' @param independent.filtering independentFiltering for DESeq2
-#' @param n.cores number of cores
-#' @param cluster.sep.chr character string of length 1 specifying a delimiter to separate cluster and app names
-#' @param return.details return details
+#' @param max.cell.count maximal number of cells per cluster per sample to include in a comparison (useful for comparing the number of DE genes between cell types) (default=Inf)
+#' @param test which DESeq2 test to use (options: "LRT" or "Wald") (default="LRT")
+#' @param independent.filtering boolean independentFiltering for DESeq2 (default=FALSE)
+#' @param n.cores numeric Number of cores (default=1)
+#' @param cluster.sep.chr character string of length 1 specifying a delimiter to separate cluster and app names (default='<!!>')
+#' @param return.details boolean Whether to return verbose details (default=TRUE)
 #' @return A list of differential expression results for every cell type
 #' @export getPerCellTypeDE
-getPerCellTypeDE <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cutoff = FALSE, ref.level = NULL, min.cell.count = 10, remove.na=TRUE, max.cell.count=Inf, test="LRT",
-                             independent.filtering = FALSE, n.cores=1, cluster.sep.chr = '<!!>',return.details=TRUE) {
+getPerCellTypeDE <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cutoff=FALSE, ref.level=NULL, min.cell.count=10, 
+  remove.na=TRUE, max.cell.count=Inf, test="LRT", independent.filtering=FALSE, n.cores=1, cluster.sep.chr = '<!!>', return.details=TRUE) {
   validatePerCellTypeParams(con.obj, groups, sample.groups, ref.level, cluster.sep.chr)
 
   ## Generate a summary dataset collapsing the cells of the same type in each sample

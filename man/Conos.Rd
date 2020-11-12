@@ -151,65 +151,68 @@ Build the joint graph that encompasses all the samples, establishing weighted in
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{k}}{integer (default=15)}
+\item{\code{k}}{integer Number of components 'k' to compute (default=15)}
 
-\item{\code{k.self}}{integer (default=10)}
+\item{\code{k.self}}{integer Number of components for computing local neighbors (default=10). Refer to function getLocalNeighbors().}
 
-\item{\code{k.self.weight}}{numeric (default=0.1)}
+\item{\code{k.self.weight}}{numeric Multiplicative constant for the similarity strength (default=0.1)}
 
-\item{\code{alignment.strength}}{(default=NULL)}
+\item{\code{alignment.strength}}{numeric Alignment strength (default=NULL)}
 
-\item{\code{space}}{character (default='PCA')}
+\item{\code{space}}{character Projection space used to perform clustering (default='PCA'). Currently supported spaces are: 
+--- "CPCA" Common principal component analysis
+--- "JNMF" Pairwise Joint NMF
+--- "genes" Overdispered gene space
+--- "PCA" Principal component analysis
+--- "CCA" Canonical correlation analysis
+--- "PMA" (Penalized Multivariate Analysis <https://cran.r-project.org/web/packages/PMA/index.html>)
+Refer to getNeighborMatrix() for more details.}
 
-\item{\code{matching.method}}{character (default='mNN')}
+\item{\code{matching.method}}{character Matching method (default='mNN'). Currently supported methods are "NN" (nearest neighbors) or "mNN" (mututal nearest neighbors).}
 
-\item{\code{metric}}{character (default='angular')}
+\item{\code{metric}}{character Distance metric to measure similarity (default='angular'). Currenlty supported metrics are "angular" or "L2".}
 
-\item{\code{k1}}{numeric (default=k)}
+\item{\code{k1}}{numeric Neighborhood radius for calculating neighbor matching (default=k). Note that k1 must be greater than or equal to k, i.e. k1>=k.}
 
-\item{\code{data.type}}{character (default='counts')}
+\item{\code{data.type}}{character Type of data type in the input pagoda2 objects within r.n (default='counts').}
 
-\item{\code{l2.sigma}}{numeric (default=1e5)}
+\item{\code{l2.sigma}}{numeric L2 distances get transformed as exp(-d/sigma) using this value (default=1e5)}
 
-\item{\code{var.scale}}{boolean Whether to (default=TRUE)}
+\item{\code{var.scale}}{boolean Whether to use common variance scaling (default=TRUE). If TRUE, use geometric means for variance, as we're trying to focus on the common variance components. See scaledMatricesP2().}
 
-\item{\code{ncomps}}{integer (default=40)}
+\item{\code{ncomps}}{integer Number of components (default=40)}
 
-\item{\code{n.odgenes}}{integer (default=2000)}
+\item{\code{n.odgenes}}{integer Number of overdispersed genes (default=2000)}
 
-\item{\code{matching.mask}}{(default=NULL)}
+\item{\code{matching.mask}}{Pairs that should not be compared directly (default=NULL). Note: 'matching.mask' should have the same row- and column-names as provided samples.}
 
-\item{\code{exclude.samples}}{(default=NULL)}
+\item{\code{exclude.samples}}{Samples to exclude from getLocalNeighbors() calculations (default=NULL)}
 
-\item{\code{common.centering}}{boolean Whether to  (default=TRUE)}
+\item{\code{common.centering}}{boolean Whether to use common centering from the means (default=TRUE)}
 
 \item{\code{verbose}}{boolean Whether to provide verbose output (default=TRUE)}
 
-\item{\code{base.groups}}{(default=NULL)}
+\item{\code{base.groups}}{factor on groups (default=NULL)}
 
-\item{\code{append.global.axes}}{boolean Whether to  (default=TRUE)}
+\item{\code{append.global.axes}}{boolean Whether to project samples on global axis (default=TRUE)}
 
-\item{\code{append.decoys}}{boolean Whether to  (default=TRUE)}
+\item{\code{append.decoys}}{boolean Whether to append decoy cells (default=TRUE)}
 
-\item{\code{decoy.threshold}}{integer (default=1)}
+\item{\code{decoy.threshold}}{integer Below this threshold, decoy cells are taken within the decoy projections (default=1)}
 
-\item{\code{n.decoys}}{integer (default=k*2)}
+\item{\code{n.decoys}}{integer Number of decoy dimensions to use (default=k*2)}
 
-\item{\code{score.component.variance}}{boolean Whether to  (default=FALSE)}
+\item{\code{score.component.variance}}{boolean Whether to score component variance (default=FALSE)}
 
-\item{\code{balance.edge.weights}}{boolean Whether to (default=FALSE)}
+\item{\code{balance.edge.weights}}{boolean Whether to balance edge weights (default=FALSE)}
 
-\item{\code{balancing.factor.per.cell}}{(default=NULL)}
+\item{\code{balancing.factor.per.cell}}{numeric Balancing constant per cell (default=NULL)}
 
-\item{\code{same.factor.downweight}}{numeric (default=1.0)}
+\item{\code{same.factor.downweight}}{numeric Constant used to adjust weights per cell balancing (default=1.0)}
 
-\item{\code{k.same.factor}}{integer (default=k)}
+\item{\code{k.same.factor}}{integer When calculating intersample mapping, the current k used during iterations is computed via min(k.same.factor, k1) (default=k)}
 
-\item{\code{balancing.factor.per.sample}}{(default=NULL)}
-
-\item{\code{neighborhood.average}}{boolean Whether to  (default=FALSE)}
-
-\item{\code{neighborhood.average.k}}{integer (default=10)}
+\item{\code{balancing.factor.per.sample}}{Balancing factor per sample (default=NULL)}
 }
 \if{html}{\out{</div>}}
 }
