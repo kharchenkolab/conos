@@ -8,7 +8,6 @@
 #' @param groups a factor on cells to use for coloring
 #' @param colors a color factor (named with cell names) use for cell coloring
 #' @param gene show expression of a gene
-#' @param plot.theme
 #' @export Conos
 Conos <- R6::R6Class("Conos", lock_objects=FALSE,
   public = list(
@@ -42,13 +41,15 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @description initialize Conos class
     #'
     #' @param override.conos.plot.theme (default=FALSE)
+    #' @param ... additional parameters upon initializing Conos
     #' @return a new 'Conos' object
     initialize=function(x, ..., n.cores=parallel::detectCores(logical=FALSE), verbose=TRUE, override.conos.plot.theme=FALSE) {
       self$n.cores <- n.cores;
       self$override.conos.plot.theme <- override.conos.plot.theme;
 
-      if (missing(x))
+      if (missing(x)){
         return()
+      }
 
       if ('Conos' %in% class(x)) { # copy constructor
         for(n in ls(x)) {
@@ -123,6 +124,11 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @param decoy.threshold integer Below this threshold, decoy cells are taken within the decoy projections (default=1)
     #' @param n.decoys integer Number of decoy dimensions to use (default=k*2)
     #' @param score.component.variance boolean Whether to score component variance (default=FALSE)
+    #' @param snn boolean Whether to compute shared nearest neighbors with getLocalNeighbors() (default=FALSE)
+    #' @param snn.quantile numeric Shared nearest neighbor quantiles (default=0.9). Must be wihin the range [0,1] (default=0.9)
+    #' @param min.snn.jaccard numeric Shared nearest neighbors scaled by Jaccard coefficient (default=0)
+    #' @param min.snn.weight numeric If greater than 0, this multiplicative constant will be applied to the shared nearest neighbor results before dropping 0s (default=0).
+    #' @param snn.k integer Component k used to compute shared nearest neighbors (default=k.self)
     #' @param balance.edge.weights boolean Whether to balance edge weights (default=FALSE)
     #' @param balancing.factor.per.cell numeric Balancing constant per cell (default=NULL)
     #' @param same.factor.downweight numeric Constant used to adjust weights per cell balancing (default=1.0) 
@@ -132,7 +138,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     buildGraph=function(k=15, k.self=10, k.self.weight=0.1, alignment.strength=NULL, space='PCA', matching.method='mNN', metric='angular', k1=k, data.type='counts', l2.sigma=1e5, var.scale=TRUE, ncomps=40,
                         n.odgenes=2000, matching.mask=NULL, exclude.samples=NULL, common.centering=TRUE, verbose=TRUE,
                         base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, score.component.variance=FALSE,
-                        snn=FALSE, snn.quantile=0.9,min.snn.jaccard=0,min.snn.weight=0, snn.k=k.self,
+                        snn=FALSE, snn.quantile=0.9, min.snn.jaccard=0, min.snn.weight=0, snn.k=k.self,
                         balance.edge.weights=FALSE, balancing.factor.per.cell=NULL, same.factor.downweight=1.0, k.same.factor=k, balancing.factor.per.sample=NULL) {
       supported.spaces <- c("CPCA","JNMF","genes","PCA","PMA","CCA")
       if(!space %in% supported.spaces) {
@@ -151,7 +157,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         if(length(snn.quantile)==1)  {
           snn.quantile <- c(1-snn.quantile,snn.quantile)
         } 
-        snn.quantile <- sort(snn.quantile,decreasing=F)
+        snn.quantile <- sort(snn.quantile,decreasing=FALSE)
         if(snn.quantile[1]<0 | snn.quantile[2]>1) {
           stop("snn.quantile must be one or two numbers in the [0,1] range")
         }
@@ -266,7 +272,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           }
           
           x <- drop0(x)
-          if(min.snn.weight>0) {
+          if (min.snn.weight>0) {
             mnn <- as(drop0(mnn*min.snn.weight + mnn*x),'dgTMatrix')
           } else {
             mnn <- as(drop0(mnn*x),'dgTMatrix')
@@ -338,6 +344,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #'
     #' @param z.threshold numeric Threshold for filtering z-scores (default=3.0). Above this value, z-scores are output.
     #' @param upregulated.only boolean If FALSE, return the absolute value of z-scores (default=FALSE). Otherwise, return all z-scores.
+    #' @param plot boolean Whether to plot the output (default=FALSE)    
     #' @param n.genes.to.show numeric (default=10)
     #' @param inner.clustering (default=FALSE)
     #' @param append.specificity.metrics boolean Whether to appeadn specificity metrics (default=TRUE)
@@ -382,14 +389,19 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @param method community detection method (igraph syntax) (default=leiden.community)
     #' @param min.group.size numeric Minimal allowed community size (default=0)
     #' @param name optional name of the clustering result (will default to the algorithm name) (default=NULL)
+    #' @param test.stability boolean Whether to test stability of community detection (default=FALSE)
+    #' @param stability.subsampling.fraction numeric Fraction of clusters to subset (default=0.95). Must be within range [0, 1].
+    #' @param stability.subsamples integer Number of subsampling iterations (default=100)    
+    #' @param cls communities (default=NULL). If default, use self$graph.
+    #' @param sr clusters (default=NULL). If NULL, based on the total stability.subsamples.
     #' @param ... extra parameters are passed to the specified community detection method
     #' @return invisible list containing identified communities (groups) and the full community detection result (result)
     findCommunities=function(method=leiden.community, min.group.size=0, name=NULL, test.stability=FALSE, stability.subsampling.fraction=0.95, stability.subsamples=100, verbose=TRUE, cls=NULL, sr=NULL, ...) {
 
-      if(is.null(cls)) {
+      if (is.null(cls)) {
         cls <- method(self$graph, ...)
       }
-      if(is.null(name)) {
+      if (is.null(name)) {
         name <- cls$algorithm;
         if(is.null(name)) {
           name <- "community";
@@ -408,8 +420,6 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
       # test stability
       if(test.stability) {
-        if (!requireNamespace("clues", quietly=TRUE))
-          stop("You need to install package 'clues' to be able to use 'test.stability'.")
 
         subset.clustering <- function(g,f=stability.subsampling.fraction,seed=NULL, ...) {
           if(!is.null(seed)) { set.seed(seed) }
@@ -418,14 +428,14 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           method(sg,...)
         }
         if(verbose) { message("running ",stability.subsamples," subsampling iterations ... ")}
-        if(is.null(sr)) {
+        if (is.null(sr)) {
           sr <- papply(1:stability.subsamples,function(i) subset.clustering(self$graph,f=stability.subsampling.fraction,seed=i),n.cores=self$n.cores)
         }
 
         if(verbose) { message("done")}
 
         if(verbose) message("calculating flat stability stats ... ")
-        # Jaccard coefficient for each cluster against all, plus random expecctation
+        # Jaccard coefficient for each cluster against all, plus random expectation
         jc.stats <- do.call(rbind,conos:::papply(sr,function(o) {
           p1 <- membership(o);
           p2 <- cls.groups[names(p1)]; p1 <- as.character(p1)
@@ -571,9 +581,12 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
     #' @description Plot panel of individual embeddings per sample with joint coloring
     #'
+    #' @param use.local.clusters boolean Whether to use clusters within Conos object (default=FALSE).
+    #' @param plot.theme Theme for the plot, passed to plotSamples() (default=NULL)
     #' @param use.common.embedding boolean Whether to use the same embedding for each panel (default=FALSE)
     #' @param embedding.type Embedding type, the parameter fed to plotSamples(embedding.type=embedding.type) (default=NULL). If use.common.embedding is TRUE, this parameter use the embedding in the conos object. (default=NULL)
     #' @param adj.list adjacency list (default=NULL)
+    #' @param ... Additional parameters passed to plotSamples().
     #' @return ggplot2 object with the panel of plots
     plotPanel=function(clustering=NULL, groups=NULL, colors=NULL, gene=NULL, use.local.clusters=FALSE, plot.theme=NULL, use.common.embedding=FALSE, embedding.type=NULL, adj.list=NULL, ...) {
       if (use.local.clusters) {
@@ -727,10 +740,12 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       cowplot::plot_grid(plotlist=list(p.fai,p.fjc,p.hjc),nrow=1,rel_widths=c(4,nclusters,nclusters))
     },
 
-    #' @description Plot joint graph.
+    #' @description Plot joint graph
     #'
     #' @param color.by character Users can either cluster by 'cluster' or by 'sample (default='cluster'). If any other string is input, an error is thrown.
-    #' @param subset a subset of cells to show (default=NULL)
+    #' @param subset A subset of cells to show (default=NULL)
+    #' @param plot.theme Theme for the plot, passed to sccore::embeddingPlot() (default=NULL)
+    #' @param ... Additional parameters passed to sccore::embeddingPlot()
     #' @return ggplot2 plot of joint graph
     plotGraph=function(color.by='cluster', clustering=NULL, groups=NULL, colors=NULL, gene=NULL, plot.theme=NULL, subset=NULL, ...) {
       if(is.null(self$embedding)) {
@@ -813,6 +828,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' * "solver" will propagate labels using the algorithm described by Zhu, Ghahramani, Lafferty (2003) <http://mlg.eng.cam.ac.uk/zoubin/papers/zgl.pdf>
     #' Confidence values are then calculated by taking the maximum value from this distribution of labels, for each cell.
     #' 
+    #' @param labels Input labels
     #' @param method type of propagation. Either 'diffusion' or 'solver'. 'solver' gives better result
     #'  but has bad asymptotics, so is inappropriate for datasets > 20k cells. (default='diffusion')
     #' @param ... additional arguments for conos:::propagateLabels* functions

@@ -69,6 +69,8 @@ initialize Conos class
 \describe{
 \item{\code{x}}{a named list of pagoda2 or Seurat objects (one per sample)}
 
+\item{\code{...}}{additional parameters upon initializing Conos}
+
 \item{\code{n.cores}}{numeric Number of cores (default=parallel::detectCores(logical=FALSE))}
 
 \item{\code{verbose}}{boolean Whether to provide verbose output (default=TRUE)}
@@ -204,6 +206,16 @@ Refer to getNeighborMatrix() for more details.}
 
 \item{\code{score.component.variance}}{boolean Whether to score component variance (default=FALSE)}
 
+\item{\code{snn}}{boolean Whether to compute shared nearest neighbors with getLocalNeighbors() (default=FALSE)}
+
+\item{\code{snn.quantile}}{numeric Shared nearest neighbor quantiles (default=0.9). Must be wihin the range [0,1] (default=0.9)}
+
+\item{\code{min.snn.jaccard}}{numeric Shared nearest neighbors scaled by Jaccard coefficient (default=0)}
+
+\item{\code{min.snn.weight}}{numeric If greater than 0, this multiplicative constant will be applied to the shared nearest neighbor results before dropping 0s (default=0).}
+
+\item{\code{snn.k}}{integer Component k used to compute shared nearest neighbors (default=k.self)}
+
 \item{\code{balance.edge.weights}}{boolean Whether to balance edge weights (default=FALSE)}
 
 \item{\code{balancing.factor.per.cell}}{numeric Balancing constant per cell (default=NULL)}
@@ -254,6 +266,8 @@ Calculates differential genes. Estimates base mean, z-score, p-values, specifici
 
 \item{\code{verbose}}{boolean Whether to provide verbose output (default=TRUE)}
 
+\item{\code{plot}}{boolean Whether to plot the output (default=FALSE)}
+
 \item{\code{n.genes.to.show}}{numeric (default=10)}
 
 \item{\code{inner.clustering}}{(default=FALSE)}
@@ -299,7 +313,17 @@ Find joint communities
 
 \item{\code{name}}{optional name of the clustering result (will default to the algorithm name) (default=NULL)}
 
+\item{\code{test.stability}}{boolean Whether to test stability of community detection (default=FALSE)}
+
+\item{\code{stability.subsampling.fraction}}{numeric Fraction of clusters to subset (default=0.95). Must be within range [0, 1].}
+
+\item{\code{stability.subsamples}}{integer Number of subsampling iterations (default=100)}
+
 \item{\code{verbose}}{boolean Whether to provide verbose output (default=TRUE)}
+
+\item{\code{cls}}{communities (default=NULL). If default, use self$graph.}
+
+\item{\code{sr}}{clusters (default=NULL). If NULL, based on the total stability.subsamples.}
 
 \item{\code{...}}{extra parameters are passed to the specified community detection method}
 }
@@ -340,11 +364,17 @@ Plot panel of individual embeddings per sample with joint coloring
 
 \item{\code{gene}}{show expression of a gene}
 
+\item{\code{use.local.clusters}}{boolean Whether to use clusters within Conos object (default=FALSE).}
+
+\item{\code{plot.theme}}{Theme for the plot, passed to plotSamples() (default=NULL)}
+
 \item{\code{use.common.embedding}}{boolean Whether to use the same embedding for each panel (default=FALSE)}
 
 \item{\code{embedding.type}}{Embedding type, the parameter fed to plotSamples(embedding.type=embedding.type) (default=NULL). If use.common.embedding is TRUE, this parameter use the embedding in the conos object. (default=NULL)}
 
 \item{\code{adj.list}}{adjacency list (default=NULL)}
+
+\item{\code{...}}{Additional parameters passed to plotSamples().}
 }
 \if{html}{\out{</div>}}
 }
@@ -434,7 +464,7 @@ cluster stability statistics
 \if{html}{\out{<a id="method-plotGraph"></a>}}
 \if{latex}{\out{\hypertarget{method-plotGraph}{}}}
 \subsection{Method \code{plotGraph()}}{
-Plot joint graph.
+Plot joint graph
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Conos$plotGraph(
   color.by = "cluster",
@@ -461,7 +491,11 @@ Plot joint graph.
 
 \item{\code{gene}}{show expression of a gene}
 
-\item{\code{subset}}{a subset of cells to show (default=NULL)}
+\item{\code{plot.theme}}{Theme for the plot, passed to sccore::embeddingPlot() (default=NULL)}
+
+\item{\code{subset}}{A subset of cells to show (default=NULL)}
+
+\item{\code{...}}{Additional parameters passed to sccore::embeddingPlot()}
 }
 \if{html}{\out{</div>}}
 }
@@ -535,6 +569,8 @@ Confidence values are then calculated by taking the maximum value from this dist
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
+\item{\code{labels}}{Input labels}
+
 \item{\code{method}}{type of propagation. Either 'diffusion' or 'solver'. 'solver' gives better result
 but has bad asymptotics, so is inappropriate for datasets > 20k cells. (default='diffusion')}
 

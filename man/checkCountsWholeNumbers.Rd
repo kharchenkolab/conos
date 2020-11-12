@@ -15,3 +15,4 @@ if non-integer counts are found, an error is returned
 \description{
 Check that the count data contain only integer counts
 }
+\keyword{internal}
