@@ -362,36 +362,6 @@ papply <- function(...,n.cores=parallel::detectCores(), mc.preschedule=FALSE) {
 ## Benchmarks
 ##################################
 
-<<<<<<< HEAD
-
-=======
-#' Get percentage of clusters that are private to one sample
-#' 
-#' @param p2list list of pagoda2 objects on which the panelClust() was run
-#' @param pjc result of panelClust()
-#' @param priv.cutoff numeric Percent of total cells of a cluster that have to come from a single cluster for it to be called private (default=0.99)
-#' @return percentage of clusters that are private to one sample
-#' @keywords internal
-getClusterPrivacy <- function(p2list, pjc, priv.cutoff= 0.99) {
-    ## Get the clustering factor
-    cl <- pjc$cls.mem
-    ## Cell metadata
-    meta <- do.call(rbind, lapply(names(p2list), function(n) {
-        x <- p2list[[n]];
-        data.frame(
-            p2name = c(n),
-            cellid = getCellNames(x)
-        )
-    }))
-    ## get sample / cluster counts
-    meta$cl <- cl[meta$cellid]
-    cl.sample.counts <- reshape2::acast(meta, p2name ~ cl, fun.aggregate=length,value.var='cl')
-    ## Get clusters that are sample private
-    private.clusters <- names(which(apply(sweep(cl.sample.counts, 2, apply(cl.sample.counts,2,sum), FUN='/') > priv.cutoff,2,sum) > 0))
-    ## percent clusters that are private
-    length(private.clusters) / length(unique(cl))
-}
-
 
 #' @keywords internal
 sn <- function(x) { names(x) <- x; x }
@@ -468,64 +438,6 @@ getPercentGlobalClusters <- function(p2list, pjc, pc.samples.cutoff = 0.9, min.c
 ## helper function for breaking down a factor into a list
 #' @keywords internal
 factorBreakdown <- function(f) {tapply(names(f),f, identity) }
-
-
-#' Post process clusters generated with walktrap to control granularity
-#'
-#' @param p2list list of pagoda2 objects
-#' @param pjc joint clustering that was performed with walktrap
-#' @param no.cl numeric Number of clusters to get from the walktrap dendrogram (default=200)
-#' @param size.cutoff numeric Cutoff below which to merge the clusters (default=10)
-#' @param n.cores numeric Number of cores to use (default=4)
-#' @keywords internal
-postProcessWalktrapClusters <- function(p2list, pjc, no.cl = 200, size.cutoff = 10, n.cores=4) {
-    ##devel
-    ## pjc <- pjc3
-    ## no.cl <- 200
-    ## size.cutoff <- 10
-    ## n.cores <- 4
-    ## rm(pjc, no.cl,size.cutoff, n.cores)
-    ##
-    global.cluster <- igraph::cut_at(cls, no=no.cl)
-    names(global.cluster) <- names(igraph::membership(cls))
-    ## identify clusters to merge
-    fqs <- as.data.frame(table(global.cluster))
-    cl.to.merge <- fqs[fqs$Freq < size.cutoff,]$global.cluster
-    cl.to.keep <- fqs[fqs$Freq >= size.cutoff,]$global.cluster
-    ## Memberships to keep
-    global.cluster.filtered <- as.factor(global.cluster[global.cluster %in% cl.to.keep])
-    ## Get new assignments for all the cells
-    new.assign <- unlist(unname(papply(p2list, function(p2o) {
-        try({
-            ## get global cluster centroids for cells in this app
-            global.cluster.filtered.bd <- factorBreakdown(global.cluster.filtered)
-
-            # W: counts accessor
-            global.cl.centers <- do.call(rbind, lapply(global.cluster.filtered.bd, function(cells) {
-                cells <- cells[cells %in% getCellNames(p2o)]
-                if (length(cells) > 1) {
-                    Matrix::colSums(p2o$counts[cells,])
-                } else {
-                    NULL
-                }
-            }))
-            ## cells to reassign in this app
-            cells.reassign <- names(global.cluster[global.cluster %in% cl.to.merge])
-            cells.reassign <- cells.reassign[cells.reassign %in% rownames(p2o$counts)]
-
-            # W: counts accessor
-            xcor <- cor(t(as.matrix(p2o$counts[cells.reassign,,drop=FALSE])), t(as.matrix(global.cl.centers)))
-            ## Get new cluster assignments
-            new.cluster.assign <- apply(xcor,1, function(x) {colnames(xcor)[which.max(x)]})
-            new.cluster.assign
-        })
-    },n.cores=n.cores)))
-    ## Merge
-    x <- as.character(global.cluster.filtered)
-    names(x) <- names(global.cluster.filtered)
-    new.clusters <- as.factor(c(x,new.assign))
-    new.clusters
-}
 
 
 #' Get top overdispersed genes across samples

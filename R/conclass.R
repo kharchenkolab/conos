@@ -29,7 +29,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @field embeddings list of joint embeddings
     embeddings = list(),
 
-    ## embedding joint embedding
+    #' @field embedding joint embedding
     embedding = NULL,
 
     #' @field n.cores number of cores
@@ -392,7 +392,6 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @param method community detection method (igraph syntax) (default=leiden.community)
     #' @param min.group.size numeric Minimal allowed community size (default=0)
     #' @param name character Optional name of the clustering result (will default to the algorithm name) (default=NULL)
-    #' @param name optional name of the clustering result (will default to the algorithm name) (default=NULL)
     #' @param test.stability boolean Whether to test stability of community detection (default=FALSE)
     #' @param stability.subsampling.fraction numeric Fraction of clusters to subset (default=0.95). Must be within range [0, 1].
     #' @param stability.subsamples integer Number of subsampling iterations (default=100)    
@@ -827,50 +826,14 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
     #' @description Plot joint graph
     #'
+    #' @param color.by character Users can either cluster by 'cluster' or by 'sample (default='cluster'). If any other string is input, an error is thrown.
     #' @param embedding.name character Optional name of the name of the embedding set by user to store multiple embeddings (default=NULL). If NULL, uses 'embedding.type'                                       
     #' @param embedding.type character Name of the type of embedding created by embedGraph(), either 'largeVis' or 'UMAP' (default=NULL). If NULL, uses last embedding created.
-    #' @param groups a factor on cells to use for coloring.
-    #' @param colors a color factor (named with cell names) use for cell coloring.
-    #' @param gene show expression of a gene.
-    #' @param subset a subset of cells to show.
-    plotGraph=function(color.by='cluster', clustering=NULL, embedding.name=NULL, embedding.type=NULL, groups=NULL, colors=NULL, gene=NULL, plot.theme=NULL, subset=NULL, ...) {
-      if (length(self$embeddings) == 0) {
-        self$embedGraph() ## default method='largeVis'
-      }
-  
-      if (!is.null(embedding.name)){
-        ## check if embedding.name exists in list
-        if (embedding.name %in% names(self$embeddings)){
-          emb <- self$embeddings[[embedding.name]]
-        } else {
-          ## embedding.name not in list of self$embeddings, so user is confused
-          ## throw error
-          stop(paste0("No embedding named '", embedding.name, "' found. Please generate this with embedGraph()."))
-        }
-      } else{
-        ## embedding.name is NULL
-        ## but user is trying to specify an embedding.type
-        if (!is.null(embedding.type)){
-          ## embedding.type can only be 'largeVis', 'UMAP'
-          if (!embedding.type %in%  c('largeVis', 'UMAP')){ 
-            stop(paste0("Currently, only the following embeddings are supported: ", paste(c('largeVis', 'UMAP'), collapse=' '))) 
-          }
-          ## check embedding exists in list
-          if (embedding.type %in% names(self$embeddings)){
-            emb <- self$embeddings[[embedding.type]]
-          } else {
-            ## embedding.type not in list of self$embeddings, so generate it
-            self$embedGraph(method=embedding.type)
-            emb <- self$embeddings[[embedding.type]]
-          }
-        } else{
-          ## embedding.type=NULL, so grab last element in embeddings list
-          emb <- self$embeddings[length(self$embeddings)]
-        }
-
-    #' @param color.by character Users can either cluster by 'cluster' or by 'sample (default='cluster'). If any other string is input, an error is thrown.
-    #' @param subset A subset of cells to show (default=NULL)
+    #' @param groups factor on cells to use for coloring (default=NULL)
+    #' @param colors a color factor (named with cell names) use for cell coloring (default=NULL)
+    #' @param gene Show expression of a gene (default=NULL)
     #' @param plot.theme Theme for the plot, passed to sccore::embeddingPlot() (default=NULL)
+    #' @param subset A subset of cells to show (default=NULL)
     #' @param ... Additional parameters passed to sccore::embeddingPlot()
     #' @return ggplot2 plot of joint graph
     plotGraph=function(color.by='cluster', clustering=NULL, embedding.name=NULL, embedding.type=NULL, groups=NULL, colors=NULL, gene=NULL, plot.theme=NULL, subset=NULL, ...) {
