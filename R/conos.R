@@ -7,11 +7,7 @@
 #' @importFrom magrittr %$%
 NULL
 
-#' Wrapper to make is.label.fixed optional
-smoothMatrixOnGraph <- function(edges, edge.weights, matrix, is.label.fixed=logical(), ...) {
-  smooth_count_matrix(edges, edge.weights, matrix, is_label_fixed=is.label.fixed, ...)
-}
-
+#' @keywords internal
 scaledMatricesP2 <- function(p2.objs, data.type, od.genes, var.scale) {
   ## Common variance scaling
   if (var.scale) {
@@ -28,7 +24,7 @@ scaledMatricesP2 <- function(p2.objs, data.type, od.genes, var.scale) {
       }
       x <- r$reductions[[data.type]][,od.genes];
     } else {
-      stop("No reduction named '", data.type, "' in pagoda")
+      stop("No reduction named '", data.type, "' in pagoda2")
     }
 
     if(var.scale) {
@@ -42,6 +38,7 @@ scaledMatricesP2 <- function(p2.objs, data.type, od.genes, var.scale) {
   return(cproj)
 }
 
+#' @keywords internal
 scaledMatricesSeurat <- function(so.objs, data.type, od.genes, var.scale) {
   if (var.scale) {
     warning("Seurat doesn't support variance scaling")
@@ -59,6 +56,7 @@ scaledMatricesSeurat <- function(so.objs, data.type, od.genes, var.scale) {
   }
 }
 
+#' @keywords internal
 scaledMatricesSeuratV3 <- function(so.objs, data.type, od.genes, var.scale, neighborhood.average) {
   checkSeuratV3()
   if (var.scale) {
@@ -81,6 +79,7 @@ scaledMatricesSeuratV3 <- function(so.objs, data.type, od.genes, var.scale, neig
   return(res)
 }
 
+#' @keywords internal
 scaledMatrices <- function(samples, data.type, od.genes, var.scale) {
   if (class(samples[[1]]) == "Pagoda2") {
     return(scaledMatricesP2(samples, data.type = data.type, od.genes, var.scale))
@@ -97,6 +96,7 @@ scaledMatrices <- function(samples, data.type, od.genes, var.scale) {
   stop("Unknown class of sample: ", class(samples[[1]]))
 }
 
+#' @keywords internal
 commonOverdispersedGenes <- function(samples, n.odgenes, verbose) {
   od.genes <- sort(table(unlist(lapply(samples, getOverdispersedGenes, n.odgenes))),decreasing=TRUE)
   common.genes <- Reduce(intersect, lapply(samples, getGenes));
@@ -109,6 +109,7 @@ commonOverdispersedGenes <- function(samples, n.odgenes, verbose) {
   return(names(od.genes)[1:min(length(od.genes),n.odgenes)])
 }
 
+#' @keywords internal
 quickNULL <- function(p2.objs, data.type='counts', n.odgenes = NULL, var.scale = T,
                       verbose = TRUE) {
   if(length(p2.objs) != 2) stop('quickNULL only supports pairwise alignment');
@@ -121,7 +122,8 @@ quickNULL <- function(p2.objs, data.type='counts', n.odgenes = NULL, var.scale =
   return(list(genespace1=cproj[[1]], genespace2=cproj[[2]]))
 }
 
-#' Perform pairwise JNMF
+## Perform pairwise JNMF
+#' @keywords internal
 quickJNMF <- function(p2.objs, data.type='counts', n.comps = 30, n.odgenes=NULL, var.scale=TRUE, verbose =TRUE, max.iter=1000) {
   ## Stop if more than 2 samples
   if (length(p2.objs) != 2) stop('quickJNMF only supports pairwise alignment');
@@ -134,7 +136,7 @@ quickJNMF <- function(p2.objs, data.type='counts', n.comps = 30, n.odgenes=NULL,
 
   rjnmf.seed <- 12345
   ## Do JNMF
-  z <- Rjnmf::Rjnmf(Xs=t(cproj[[1]]), Xu=t(cproj[[2]]), k=n.comps, alpha=0.5, lambda = 0.5, epsilon = 0.001, maxiter= max.iter, verbose=F, seed=rjnmf.seed)
+  z <- Rjnmf::Rjnmf(Xs=t(cproj[[1]]), Xu=t(cproj[[2]]), k=n.comps, alpha=0.5, lambda = 0.5, epsilon = 0.001, maxiter= max.iter, verbose=FALSE, seed=rjnmf.seed)
   rot1 <- cproj[[1]] %*% z$W
   rot2 <- cproj[[2]] %*% z$W
 
@@ -144,7 +146,8 @@ quickJNMF <- function(p2.objs, data.type='counts', n.comps = 30, n.odgenes=NULL,
   return(res)
 }
 
-cpcaFast <- function(covl,ncells,ncomp=10,maxit=1000,tol=1e-6,use.irlba=TRUE,verbose=F) {
+#' @keywords internal
+cpcaFast <- function(covl,ncells,ncomp=10,maxit=1000,tol=1e-6,use.irlba=TRUE,verbose=FALSE) {
   ncomp <- min(c(nrow(covl)-1,ncol(covl)-1,ncomp));
   if(use.irlba) {
     # irlba initialization
@@ -163,12 +166,16 @@ cpcaFast <- function(covl,ncells,ncomp=10,maxit=1000,tol=1e-6,use.irlba=TRUE,ver
 }
 
 #' Perform cpca on two samples
-#' @param r.n list of p2 objects
-#' @param ncomps number of components to calculate (default=100)
-#' @param n.odgenes number of overdispersed genes to take from each dataset
-#' @param var.scale whether to scale variance (default=TRUE)
-#' @param verbose whether to be verbose
-#' @param n.cores number of cores to use
+#' 
+#' @param r.n list of pagoda2 objects
+#' @param data.type character Type of data type in the input pagoda2 objects within r.n (default='counts')
+#' @param ncomps numeric Number of components to calculate (default=100)
+#' @param n.odgenes numeric Number of overdispersed genes to take from each dataset (default=NULL)
+#' @param var.scale boolean Whether to scale variance (default=TRUE)
+#' @param verbose boolean Whether to be verbose (default=TRUE)
+#' @param score.component.variance boolean Whether to score component variance (default=FALSE)
+#' @return cpca projection on two samples
+#' @keywords internal
 quickCPCA <- function(r.n, data.type='counts', ncomps=100, n.odgenes=NULL, var.scale=TRUE, verbose=TRUE, score.component.variance=FALSE) {
   od.genes <- commonOverdispersedGenes(r.n, n.odgenes, verbose=verbose)
   if(length(od.genes)<5) return(NULL);
@@ -205,7 +212,7 @@ quickCPCA <- function(r.n, data.type='counts', ncomps=100, n.odgenes=NULL, var.s
   #system.time(res <- cpca:::cpca_stepwise_base(covl,ncells,k=ncomps))
   #res <- cpc(abind(covl,along=3),k=ncomps)
   rownames(res$CPC) <- od.genes;
-  if(score.component.variance) {
+  if (score.component.variance) {
     v0 <- lapply(sm,function(x) sum(apply(x,2,var)))
     v1 <- lapply(1:length(sm),function(i) {
       x <- sm[[i]];
@@ -217,18 +224,23 @@ quickCPCA <- function(r.n, data.type='counts', ncomps=100, n.odgenes=NULL, var.s
     res$nv <- v1;
   }
   if(verbose) message(' done\n')
-  return(res);
+  return(res)
 }
 
+
 #' Use space of combined sample-specific PCAs as a space
-#' @param r.n list of p2 objects
-#' @param ncomps number of components to calculate (default=30)
-#' @param n.odgenes number of overdispersed genes to take from each dataset
-#' @param var.scale whether to scale variance (default=TRUE)
-#' @param verbose whether to be verbose
-#' @param cgsf an optional set of common genes to align on
-#' @param n.cores number of cores to use
-quickPlainPCA <- function(r.n,data.type='counts',ncomps=30,n.odgenes=NULL,var.scale=TRUE,verbose=TRUE, score.component.variance=FALSE, n.cores=30) {
+#'
+#' @param r.n list of pagoda2 objects
+#' @param data.type character Type of data type in the input pagoda2 objects within r.n (default='counts')
+#' @param ncomps numeric Number of components to calculate (default=30)
+#' @param n.odgenes numeric Number of overdispersed genes to take from each dataset (default=NULL)
+#' @param var.scale boolean Whether to scale variance (default=TRUE)
+#' @param verbose boolean Whether to be verbose (default=TRUE)
+#' @param score.component.variance boolean Whether to score component variance (default=FALSE)
+#' @param n.cores numeric Number of cores to use (default=30)
+#' @return PCA projection, using space of combined sample-specific PCAs
+#' @keywords internal
+quickPlainPCA <- function(r.n, data.type='counts', ncomps=30, n.odgenes=NULL, var.scale=TRUE, verbose=TRUE, score.component.variance=FALSE, n.cores=30) {
   od.genes <- commonOverdispersedGenes(r.n, n.odgenes, verbose=verbose)
   if(length(od.genes)<5) return(NULL);
 
@@ -269,13 +281,14 @@ quickPlainPCA <- function(r.n,data.type='counts',ncomps=30,n.odgenes=NULL,var.sc
 
 
 #' Perform CCA (using PMA package or otherwise) on two samples
-#' @param r.n list of p2 objects
-#' @param ncomps number of components to calculate (default=100)
-#' @param n.odgenes number of overdispersed genes to take from each dataset
+#' @param r.n list of pagoda2 objects
+#' @param ncomps numeric Number of components to calculate (default=100)
+#' @param n.odgenes numeric Number of overdispersed genes to take from each dataset
 #' @param var.scale whether to scale variance (default=TRUE)
 #' @param verbose whether to be verbose
 #' @param n.cores number of cores to use
-quickCCA <- function(r.n,data.type='counts',ncomps=100,n.odgenes=NULL,var.scale=TRUE,verbose=TRUE, PMA=FALSE, score.component.variance=FALSE) {
+#' @keywords internal
+quickCCA <- function(r.n, data.type='counts', ncomps=100, n.odgenes=NULL, var.scale=TRUE, verbose=TRUE, PMA=FALSE, score.component.variance=FALSE) {
 
   od.genes <- commonOverdispersedGenes(r.n, n.odgenes, verbose=verbose)
   if(length(od.genes)<5) return(NULL);
@@ -318,11 +331,11 @@ quickCCA <- function(r.n,data.type='counts',ncomps=100,n.odgenes=NULL,var.scale=
 }
 
 
-
 # other functions
 
 # use mclapply if available, fall back on BiocParallel, but use regular
 # lapply() when only one core is specified
+#' @keywords internal
 papply <- function(...,n.cores=parallel::detectCores(), mc.preschedule=FALSE) {
   if(n.cores>1) {
     if(requireNamespace("parallel", quietly = TRUE)) {
@@ -349,20 +362,52 @@ papply <- function(...,n.cores=parallel::detectCores(), mc.preschedule=FALSE) {
 ## Benchmarks
 ##################################
 
+<<<<<<< HEAD
+
+=======
+#' Get percentage of clusters that are private to one sample
+#' 
+#' @param p2list list of pagoda2 objects on which the panelClust() was run
+#' @param pjc result of panelClust()
+#' @param priv.cutoff numeric Percent of total cells of a cluster that have to come from a single cluster for it to be called private (default=0.99)
+#' @return percentage of clusters that are private to one sample
+#' @keywords internal
+getClusterPrivacy <- function(p2list, pjc, priv.cutoff= 0.99) {
+    ## Get the clustering factor
+    cl <- pjc$cls.mem
+    ## Cell metadata
+    meta <- do.call(rbind, lapply(names(p2list), function(n) {
+        x <- p2list[[n]];
+        data.frame(
+            p2name = c(n),
+            cellid = getCellNames(x)
+        )
+    }))
+    ## get sample / cluster counts
+    meta$cl <- cl[meta$cellid]
+    cl.sample.counts <- reshape2::acast(meta, p2name ~ cl, fun.aggregate=length,value.var='cl')
+    ## Get clusters that are sample private
+    private.clusters <- names(which(apply(sweep(cl.sample.counts, 2, apply(cl.sample.counts,2,sum), FUN='/') > priv.cutoff,2,sum) > 0))
+    ## percent clusters that are private
+    length(private.clusters) / length(unique(cl))
+}
 
 
+#' @keywords internal
 sn <- function(x) { names(x) <- x; x }
 
 
 #' Evaluate consistency of cluster relationships
-#' @description Using the clustering we are generating per-sample dendrograms
+#' Using the clustering we are generating per-sample dendrograms
 #' and we are examining their similarity between different samples
 #' More information about similarity measures
-#' https://www.rdocumentation.org/packages/dendextend/versions/1.8.0/topics/cor_cophenetic
-#' https://www.rdocumentation.org/packages/dendextend/versions/1.8.0/topics/cor_bakers_gamma
+#' <https://www.rdocumentation.org/packages/dendextend/versions/1.8.0/topics/cor_cophenetic>
+#' <https://www.rdocumentation.org/packages/dendextend/versions/1.8.0/topics/cor_bakers_gamma>
+#'
 #' @param p2list list of pagoda2 object
 #' @param pjc a clustering factor
 #' @return list of cophenetic and bakers_gama similarities of the dendrograms from each sample
+#' @keywords internal
 getClusterRelationshipConsistency <- function(p2list, pjc) {
     hcs <- lapply(sn(names(p2list)), function(n) {
         x <- p2list[[n]]
@@ -392,11 +437,13 @@ getClusterRelationshipConsistency <- function(p2list, pjc) {
 }
 
 #' Evaluate how many clusters are global
+#'
 #' @param p2list list of pagoda2 object on which clustering was generated
 #' @param pjc the result of joint clustering
-#' @param pc.samples.cutoff the percent of the number of the total samples that a cluster has to span to be considered global
-#' @param min.cell.count.per.samples minimum number of cells of cluster in sample to be considered as represented in that sample
+#' @param pc.samples.cutoff numeric The percent of the number of the total samples that a cluster has to span to be considered global (default=0.9)
+#' @param min.cell.count.per.samples numeric The minimum number of cells of cluster in sample to be considered as represented in that sample (default=10)
 #' @return percent of clusters that are global given the above criteria
+#' @keywords internal
 getPercentGlobalClusters <- function(p2list, pjc, pc.samples.cutoff = 0.9, min.cell.count.per.sample = 10) {
     ## get the cluster factor
     cl <- pjc$cls.mem
@@ -419,14 +466,77 @@ getPercentGlobalClusters <- function(p2list, pjc, pc.samples.cutoff = 0.9, min.c
 
 
 ## helper function for breaking down a factor into a list
+#' @keywords internal
 factorBreakdown <- function(f) {tapply(names(f),f, identity) }
 
+
+#' Post process clusters generated with walktrap to control granularity
+#'
+#' @param p2list list of pagoda2 objects
+#' @param pjc joint clustering that was performed with walktrap
+#' @param no.cl numeric Number of clusters to get from the walktrap dendrogram (default=200)
+#' @param size.cutoff numeric Cutoff below which to merge the clusters (default=10)
+#' @param n.cores numeric Number of cores to use (default=4)
+#' @keywords internal
+postProcessWalktrapClusters <- function(p2list, pjc, no.cl = 200, size.cutoff = 10, n.cores=4) {
+    ##devel
+    ## pjc <- pjc3
+    ## no.cl <- 200
+    ## size.cutoff <- 10
+    ## n.cores <- 4
+    ## rm(pjc, no.cl,size.cutoff, n.cores)
+    ##
+    global.cluster <- igraph::cut_at(cls, no=no.cl)
+    names(global.cluster) <- names(igraph::membership(cls))
+    ## identify clusters to merge
+    fqs <- as.data.frame(table(global.cluster))
+    cl.to.merge <- fqs[fqs$Freq < size.cutoff,]$global.cluster
+    cl.to.keep <- fqs[fqs$Freq >= size.cutoff,]$global.cluster
+    ## Memberships to keep
+    global.cluster.filtered <- as.factor(global.cluster[global.cluster %in% cl.to.keep])
+    ## Get new assignments for all the cells
+    new.assign <- unlist(unname(papply(p2list, function(p2o) {
+        try({
+            ## get global cluster centroids for cells in this app
+            global.cluster.filtered.bd <- factorBreakdown(global.cluster.filtered)
+
+            # W: counts accessor
+            global.cl.centers <- do.call(rbind, lapply(global.cluster.filtered.bd, function(cells) {
+                cells <- cells[cells %in% getCellNames(p2o)]
+                if (length(cells) > 1) {
+                    Matrix::colSums(p2o$counts[cells,])
+                } else {
+                    NULL
+                }
+            }))
+            ## cells to reassign in this app
+            cells.reassign <- names(global.cluster[global.cluster %in% cl.to.merge])
+            cells.reassign <- cells.reassign[cells.reassign %in% rownames(p2o$counts)]
+
+            # W: counts accessor
+            xcor <- cor(t(as.matrix(p2o$counts[cells.reassign,,drop=FALSE])), t(as.matrix(global.cl.centers)))
+            ## Get new cluster assignments
+            new.cluster.assign <- apply(xcor,1, function(x) {colnames(xcor)[which.max(x)]})
+            new.cluster.assign
+        })
+    },n.cores=n.cores)))
+    ## Merge
+    x <- as.character(global.cluster.filtered)
+    names(x) <- names(global.cluster.filtered)
+    new.clusters <- as.factor(c(x,new.assign))
+    new.clusters
+}
+
+
 #' Get top overdispersed genes across samples
+#'
 #' @param samples list of pagoda2 objects
 #' @param n.genes number of overdispersed genes to extract
+#' @keywords internal
 getOdGenesUniformly <- function(samples, n.genes) {
-  if (!("Pagoda2" %in% class(samples[[1]])))
+  if (!("Pagoda2" %in% class(samples[[1]]))){
     stop("This function is currently supported only for Pagoda2 objects")
+  }
 
   gene.info <- lapply(samples, function(s)
     tibble::rownames_to_column(s$misc[['varinfo']], "gene") %>%
@@ -438,7 +548,7 @@ getOdGenesUniformly <- function(samples, n.genes) {
   return(genes[1:min(n.genes, length(genes))])
 }
 
-
+#' @keywords internal
 projectSamplesOnGlobalAxes <- function(samples, cms.clust, data.type, verbose, n.cores) {
   if(verbose) message('calculating global projections ');
 
@@ -464,11 +574,12 @@ projectSamplesOnGlobalAxes <- function(samples, cms.clust, data.type, verbose, n
     smat <- scale(smat,scale=TRUE,center=TRUE); smat[is.nan(smat)] <- 0;
     sproj <- smat %*% global.pca$rotation
   },n.cores=n.cores)
-  if(verbose) message('. done\n');
+  if(verbose) message('. done\n')
 
   return(global.proj)
 }
 
+#' @keywords internal
 getDecoyProjections <- function(samples, samf, data.type, var.scale, cproj, base.groups, decoy.threshold, n.decoys) {
   cproj.decoys <- lapply(cproj, function(d) {
     tg <- tabulate(as.integer(base.groups[rownames(d)]),nbins=length(levels(base.groups)))
@@ -502,11 +613,10 @@ getDecoyProjections <- function(samples, samf, data.type, var.scale, cproj, base
     }
   })
 
-  #if(verbose) cat(paste0("+",sum(unlist(lapply(cproj.decoys,nrow)))))
-
   return(cproj.decoys)
 }
 
+#' @keywords internal
 getLocalNeighbors <- function(samples, k.self, k.self.weight, metric, l2.sigma, verbose, n.cores) {
   if(verbose) message('local pairs ')
   x <- papply(samples, function(x) {
@@ -527,6 +637,7 @@ getLocalNeighbors <- function(samples, k.self, k.self.weight, metric, l2.sigma, 
   x
 }
 
+#' @keywords internal
 getLocalEdges <- function(local.neighbors) {
   do.call(rbind,lapply(local.neighbors,function(xk) {
     data.frame(mA.lab=rownames(xk)[xk@i+1], mB.lab=colnames(xk)[xk@j+1],w=xk@x, type=0, stringsAsFactors=F)
@@ -535,15 +646,16 @@ getLocalEdges <- function(local.neighbors) {
 
 
 
-##' Find threshold of cluster detectability
-##'
-##' For a given clustering, walks the walktrap result tree to find
-##' a subtree with max(min(sens,spec)) for each cluster, where sens is sensitivity, spec is specificity
-##' @param res walktrap result object (igraph)
-##' @param clusters cluster factor
-##' @return a list of $thresholds - per cluster optimal detectability values, and $node - internal node id (merge row) where the optimum was found
-##' @export
-bestClusterThresholds <- function(res,clusters,clmerges=NULL) {
+#' Find threshold of cluster detectability
+#'
+#' For a given clustering, walks the walktrap result tree to find
+#' a subtree with max(min(sens,spec)) for each cluster, where sens is sensitivity, spec is specificity
+#'
+#' @param res walktrap result object (igraph)
+#' @param clusters cluster factor
+#' @return a list of $thresholds - per cluster optimal detectability values, and $node - internal node id (merge row) where the optimum was found
+#' @export
+bestClusterThresholds <- function(res, clusters, clmerges=NULL) {
   clusters <- as.factor(clusters);
   # prepare cluster vectors
   cl <- as.integer(clusters[res$names]);
@@ -560,16 +672,18 @@ bestClusterThresholds <- function(res,clusters,clmerges=NULL) {
   x
 }
 
-##' Find threshold of cluster detectability in trees of clusters
-##'
-##' For a given clustering, walks the walktrap (of clusters) result tree to find
-##' a subtree with max(min(sens,spec)) for each cluster, where sens is sensitivity, spec is specificity
-##' @param res walktrap result object (igraph) where the nodes were clusters
-##' @param leaf.factor a named factor describing cell assignments to the leaf nodes (in the same order as res$names)
-##' @param clusters cluster factor
-##' @return a list of $thresholds - per cluster optimal detectability values, and $node - internal node id (merge row) where the optimum was found
-##' @export
-bestClusterTreeThresholds <- function(res,leaf.factor,clusters,clmerges=NULL) {
+#' Find threshold of cluster detectability in trees of clusters
+#'
+#' For a given clustering, walks the walktrap (of clusters) result tree to find
+#' a subtree with max(min(sens,spec)) for each cluster, where sens is sensitivity, spec is specificity
+#'
+#' @param res walktrap result object (igraph) where the nodes were clusters
+#' @param leaf.factor a named factor describing cell assignments to the leaf nodes (in the same order as res$names)
+#' @param clusters cluster factor
+#' @param clmerges (default=NULL)
+#' @return a list of $thresholds - per cluster optimal detectability values, and $node - internal node id (merge row) where the optimum was found
+#' @export
+bestClusterTreeThresholds <- function(res, leaf.factor, clusters, clmerges=NULL) {
   clusters <- as.factor(clusters);
   # prepare cluster vectors
   cl <- as.integer(clusters[names(leaf.factor)]);
@@ -586,21 +700,21 @@ bestClusterTreeThresholds <- function(res,leaf.factor,clusters,clmerges=NULL) {
     x <- conos:::treeJaccard(res$merges-1L,as.matrix(mt),clT,clmerges-1L)
   }
 
-  x
+  invisible(x)
 }
 
 
-##' performs a greedy top-down selective cut to optmize modularity
-##'
-##' @param wt walktrap rsult
-##' @param N number of top greedy splits to take
-##' @param leaf.labels leaf sample label factor, for breadth calculations - must be a named factor containing all wt$names, or if wt$names is null, a factor listing cells in the same order as wt leafs
-##' @param minsize minimum size of the branch (in number of leafs)
-##' @param minbreadth minimum allowed breadth of a branch (measured as normalized entropy)
-##' @param flat.cut whether to simply take a flat cut (i.e. follow provided tree; default=TRUE). Does no observe minsize/minbreadth restrictions
-##' @return list(hclust - hclust structure of the derived tree, leafContent - binary matrix with rows corresponding to old leaves, columns to new ones, deltaM - modularity increments)
-##' @export
-greedyModularityCut <- function(wt,N,leaf.labels=NULL,minsize=0,minbreadth=0,flat.cut=TRUE) {
+#' Performs a greedy top-down selective cut to optmize modularity
+#'
+#' @param wt walktrap result
+#' @param N number of top greedy splits to take
+#' @param leaf.labels leaf sample label factor, for breadth calculations - must be a named factor containing all wt$names, or if wt$names is null, a factor listing cells in the same order as wt leafs (default=NULL)
+#' @param minsize numeric Minimum size of the branch (in number of leafs) (default=0)
+#' @param minbreadth numeric Minimum allowed breadth of a branch (measured as normalized entropy) (default=0)
+#' @param flat.cut boolean Whether to simply take a flat cut (i.e. follow provided tree; default=TRUE). Does no observe minsize/minbreadth restrictions
+#' @return list(hclust - hclust structure of the derived tree, leafContent - binary matrix with rows corresponding to old leaves, columns to new ones, deltaM - modularity increments)
+#' @export
+greedyModularityCut <- function(wt, N, leaf.labels=NULL, minsize=0, minbreadth=0, flat.cut=TRUE) {
   # prepare labels
   nleafs <- nrow(wt$merges)+1;
   if(is.null(leaf.labels)) {
@@ -630,16 +744,17 @@ greedyModularityCut <- function(wt,N,leaf.labels=NULL,minsize=0,minbreadth=0,fla
   return(list(hc=hc,groups=clfac,leafContentArray=x$leafContent,leafContent=leafContentCollapsed,deltaM=x$deltaM,breadth=as.vector(x$breadth),splits=x$splitsequence))
 }
 
-##' determine number of detectable clusters given a reference walktrap and a bunch of permuted walktraps
-##'
-##' @param refwt reference walktrap rsult
-##' @param tests a list of permuted walktrap results
-##' @param min.threshold min detectability threshold
-##' @param min.size minimum cluster size (number of leafs)
-##' @param average.thresholds report a single number of detectable clusters for averaged detected thresholds (a list of detected clusters for each element of the tests list is returned by default)
-##' @return number of detectable stable clusters
-##' @export
-stableTreeClusters <- function(refwt,tests,min.threshold=0.8,min.size=10,n.cores=30,average.thresholds=FALSE) {
+#' Determine number of detectable clusters given a reference walktrap and a bunch of permuted walktraps
+#'
+#' @param refwt reference walktrap result
+#' @param tests a list of permuted walktrap results
+#' @param min.threshold numeric Min detectability threshold (default=0.8)
+#' @param min.size numeric Minimum cluster size (number of leafs) (default=10)
+#' @param n.cores numeric Number of cores (default=30)
+#' @param average.thresholds boolean Report a single number of detectable clusters for averaged detected thresholds (default=FALSE) (a list of detected clusters for each element of the tests list is returned by default)
+#' @return number of detectable stable clusters
+#' @export
+stableTreeClusters <- function(refwt, tests, min.threshold=0.8, min.size=10, n.cores=30, average.thresholds=FALSE) {
   # calculate detectability thresholds for each node against entire list of tests
   #i<- 0;
   refwt$merges <- igraph:::complete.dend(refwt,FALSE)
@@ -666,17 +781,20 @@ stableTreeClusters <- function(refwt,tests,min.threshold=0.8,min.size=10,n.cores
   }
 }
 
+#' @keywords internal
 convertDistanceToSimilarity <- function(distances, metric, l2.sigma=1e5, cor.base=1) {
-  if(metric=='angular') {
+  if (metric=='angular') {
     return(pmax(0, cor.base - distances))
   }
 
   return(exp(-distances / l2.sigma))
 }
 
-getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, k1=k, data.type='counts', var.scale=T, common.centering=T,
+#' @keywords internal
+getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, k1=k, data.type='counts', var.scale=TRUE, common.centering=TRUE,
                                       matching.method='mNN', metric='angular', l2.sigma=1e5, cor.base=1, subset.cells=NULL,
-                                      base.groups=NULL, append.decoys=F, samples=NULL, samf=NULL, decoy.threshold=1, n.decoys=k*2, append.global.axes=T, global.proj=NULL) {
+                                      base.groups=NULL, append.decoys=FALSE, samples=NULL, samf=NULL, decoy.threshold=1, n.decoys=k*2, 
+                                      append.global.axes=TRUE, global.proj=NULL) {
   # create matrices, adjust variance
   cproj <- scaledMatrices(sample.pair, data.type=data.type, od.genes=od.genes, var.scale=var.scale)
 
@@ -708,7 +826,7 @@ getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, k1=k, data.
         decoy.cells <- rownames(cproj.decoys[[n]])
         if (length(decoy.cells)>0) {
           gm <- rbind(gm, do.call(rbind, lapply(global.proj[unique(samf[decoy.cells])],
-                                                function(m) m[rownames(m) %in% decoy.cells,,drop=F])))
+                                                function(m) m[rownames(m) %in% decoy.cells,,drop=FALSE])))
         }
       }
       # append global axes
@@ -725,24 +843,27 @@ getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, k1=k, data.
   if (!is.null(base.groups) && append.decoys) {
     # discard edges connecting to decoys
     decoy.cells <- unlist(lapply(cproj.decoys,rownames))
-    mnn <- mnn[, !colnames(mnn) %in% decoy.cells, drop=F]
-    mnn <- mnn[!rownames(mnn) %in% decoy.cells, , drop=F]
+    mnn <- mnn[, !colnames(mnn) %in% decoy.cells, drop=FALSE]
+    mnn <- mnn[!rownames(mnn) %in% decoy.cells, , drop=FALSE]
   }
 
   return(mnn)
 }
 
-##' Establish rough neighbor matching between samples given their projections in a common space
-##'
-##' @param p1 projection of sample 1
-##' @param p2 projection of sample 2
-##' @param k neighborhood radius
-##' @param matching mNN (default) or NN
-##' @param metric distance type (default: "angular", can also be 'L2')
-##' @param l2.sigma L2 distances get transformed as exp(-d/sigma) using this value (default=1e5)
-##' @param min.similarity minimal similarity between two cells, required to have an edge
-##' @return matrix with the similarity (!) values corresponding to weight (1-d for angular, and exp(-d/l2.sigma) for L2)
-getNeighborMatrix <- function(p1,p2,k,k1=k,matching='mNN',metric='angular',l2.sigma=1e5, cor.base=1, min.similarity=1e-5) {
+#' Establish rough neighbor matching between samples given their projections in a common space
+#'
+#' @param p1 projection of sample 1
+#' @param p2 projection of sample 2
+#' @param k neighborhood radius
+#' @param k1 neighborhood radius
+#' @param matching string mNN (default) or NN
+#' @param metric string Distance type (default: "angular", can also be 'L2')
+#' @param l2.sigma numeric L2 distances get transformed as exp(-d/sigma) using this value (default=1e5)
+#' @param cor.base numeric (default=1)
+#' @param min.similarity minimal similarity between two cells, required to have an edge
+#' @return matrix with the similarity (!) values corresponding to weight (1-d for angular, and exp(-d/l2.sigma) for L2)
+#' @keywords internal
+getNeighborMatrix <- function(p1, p2, k, k1=k, matching='mNN', metric='angular', l2.sigma=1e5, cor.base=1, min.similarity=1e-5) {
   quiet.knn <- (k1 > k)
   if (is.null(p2)) {
     n12 <- N2R::crossKnn(p1, p1,k1,1, FALSE, metric, quiet=quiet.knn)
@@ -777,13 +898,14 @@ getNeighborMatrix <- function(p1,p2,k,k1=k,matching='mNN',metric='angular',l2.si
   return(as(drop0(adj.mtx),'dgTMatrix'))
 }
 
-# 1-step edge reduction
+## 1-step edge reduction
+#' @keywords internal
 reduceEdgesInGraph <- function(adj.mtx,k,klow=k,preserve.order=TRUE) {
   if(preserve.order) { co <- colnames(adj.mtx); ro <- rownames(adj.mtx); }
-  adj.mtx <- adj.mtx[,order(diff(adj.mtx@p),decreasing=T)]
+  adj.mtx <- adj.mtx[,order(diff(adj.mtx@p),decreasing=TRUE)]
   adj.mtx@x <- pareDownHubEdges(adj.mtx,tabulate(adj.mtx@i+1),k,klow)
   adj.mtx <- t(drop0(adj.mtx))
-  adj.mtx <- adj.mtx[,order(diff(adj.mtx@p),decreasing=T)]
+  adj.mtx <- adj.mtx[,order(diff(adj.mtx@p),decreasing=TRUE)]
   adj.mtx@x <- pareDownHubEdges(adj.mtx,tabulate(adj.mtx@i+1),k,klow)
   adj.mtx <- t(drop0(adj.mtx));
   if(preserve.order) { adj.mtx <- adj.mtx[match(ro,rownames(adj.mtx)),match(co,colnames(adj.mtx))]; }
@@ -791,8 +913,9 @@ reduceEdgesInGraph <- function(adj.mtx,k,klow=k,preserve.order=TRUE) {
   return(adj.mtx)
 }
 
-# a simple multi-step strategy to smooth out remaining hubs
-# max.kdiff gives approximate difference in the degree of the resulting nodes that is tolerable
+## a simple multi-step strategy to smooth out remaining hubs
+## max.kdiff gives approximate difference in the degree of the resulting nodes that is tolerable
+#' @keywords internal
 reduceEdgesInGraphIteratively <- function(adj.mtx,k,preserve.order=TRUE,max.kdiff=5,n.steps=3) {
   cc <- diff(adj.mtx@p); rc <- tabulate(adj.mtx@i+1);
   maxd <- max(max(cc),max(rc));
@@ -818,7 +941,8 @@ reduceEdgesInGraphIteratively <- function(adj.mtx,k,preserve.order=TRUE,max.kdif
   return(adj.mtx)
 }
 
-adjustWeightsByCellBalancing <- function(adj.mtx, factor.per.cell, balance.weights, same.factor.downweight=1.0, n.iters=50, verbose=F) {
+#' @keywords internal
+adjustWeightsByCellBalancing <- function(adj.mtx, factor.per.cell, balance.weights, same.factor.downweight=1.0, n.iters=50, verbose=FALSE) {
   adj.mtx %<>% .[colnames(.), colnames(.)] %>% as("dgTMatrix")
   factor.per.cell %<>% .[colnames(adj.mtx)] %>% as.factor() %>% droplevels()
 
@@ -847,27 +971,28 @@ adjustWeightsByCellBalancing <- function(adj.mtx, factor.per.cell, balance.weigh
 }
 
 ## Correct unloading of the library
+#' @keywords internal
 .onUnload <- function (libpath) {
   library.dynam.unload("conos", libpath)
 }
 
 
-##' Scan joint graph modularity for a range of k (or k.self) values
-##'
-##' Builds graph with different values of k (or k.self if scan.k.self=TRUE), evaluating modularity of the resulting multilevel clustering
-##' note: will run evaluations in parallel using con$n.cores (temporarily setting con$n.cores to 1 in the process)
-##' @param con Conos object to test
-##' @param min minimal value of k to test
-##' @param max vlaue of k to test
-##' @param by scan step (defaults to 1)
-##' @param scan.k.self whether to test dependency on scan.k.self
-##' @param ... other parameters will be passed to con$buildGraph()
-##' @return a data frame with $k $m columns giving k and the corresponding modularity
-##' @export
+#' Scan joint graph modularity for a range of k (or k.self) values
+#' Builds graph with different values of k (or k.self if scan.k.self=TRUE), evaluating modularity of the resulting multilevel clustering
+#' NOTE: will run evaluations in parallel using con$n.cores (temporarily setting con$n.cores to 1 in the process)
+#'
+#' @param con Conos object to test
+#' @param min numeric Minimal value of k to test (default=3)
+#' @param max numeric Value of k to test (default=50)
+#' @param by numeric Scan step (default=1)
+#' @param scan.k.self boolean Whether to test dependency on scan.k.self (default=FALSE)
+#' @param ... other parameters will be passed to con$buildGraph()
+#' @return a data frame with $k $m columns giving k and the corresponding modularity
+#' @export
 scanKModularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.internal.edges=TRUE, verbose=TRUE, plot=TRUE, ... ) {
-  k.seq <- seq(min,max,by=by);
-  n.cores <- con$n.cores;
-  con$n.cores <- 1;
+  k.seq <- seq(min,max, by=by)
+  n.cores <- con$n.cores
+  con$n.cores <- 1
   if(verbose) message(paste0(ifelse(scan.k.self,'k.self=(','k=('),min,', ',max,') ['))
   xl <- conos:::papply(k.seq,function(kv) {
     if(scan.k.self) {
@@ -895,14 +1020,15 @@ scanKModularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.in
     ggplot2::ggplot(k.sens,aes(x=k,y=m))+ggplot2::theme_bw()+ggplot2::geom_point()+ggplot2::geom_smooth()+ggplot2::xlab('modularity')+ggplot2::ylab('k')
   }
 
-  return(k.sens);
+  return(k.sens)
 }
 
-##' Merge into a common matrix, entering 0s for the missing ones
-mergeCountMatrices <- function(cms, transposed=F) {
+## Merge into a common matrix, entering 0s for the missing ones
+#' @keywords internal
+mergeCountMatrices <- function(cms, transposed=FALSE) {
   extendMatrix <- function(mtx, col.names) {
     new.names <- setdiff(col.names, colnames(mtx))
-    ext.mtx <- Matrix::Matrix(0, nrow=nrow(mtx), ncol=length(new.names), sparse=T) %>%
+    ext.mtx <- Matrix::Matrix(0, nrow=nrow(mtx), ncol=length(new.names), sparse=TRUE) %>%
       as(class(mtx)) %>% `colnames<-`(new.names)
     return(cbind(mtx, ext.mtx)[,col.names])
   }
@@ -921,17 +1047,25 @@ mergeCountMatrices <- function(cms, transposed=F) {
   return(res)
 }
 
+#' Retrieve sample names per cell
+#'
+#' @param samples list of samples
+#' @return list of sample names
+#' @export
 getSampleNamePerCell=function(samples) {
   cl <- lapply(samples, getCellNames)
   return(rep(names(cl), sapply(cl, length)) %>% stats::setNames(unlist(cl)) %>% as.factor())
 }
 
 #' Estimate labeling distribution for each vertex, based on provided labels using Random Walk
+#'
+#' @param graph input graph
 #' @param labels vector of factor or character labels, named by cell names
-#' @param max.iters: maximal number of iterations. Default: 100.
-#' @param tol: absolute tolerance as a stopping criteria. Default: 0.025
-#' @param verbose: verbose mode. Default: TRUE.
-#' @param fixed.initial.labels: prohibit changes of initial labels during diffusion. Default: TRUE.
+#' @param max.iters maximal number of iterations (default=100)
+#' @param tol numeric Absolute tolerance as a stopping criteria (default=0.025)
+#' @param verbose boolean Verbose mode (default=TRUE)
+#' @param fixed.initial.labels boolean Prohibit changes of initial labels during diffusion (default=TRUE)
+#' @keywords internal
 propagateLabelsDiffusion <- function(graph, labels, max.iters=100, diffusion.fading=10.0, diffusion.fading.const=0.1, tol=0.025, verbose=TRUE, fixed.initial.labels=TRUE) {
   if (is.factor(labels)) {
     labels <- as.character(labels) %>% setNames(names(labels))
@@ -946,14 +1080,17 @@ propagateLabelsDiffusion <- function(graph, labels, max.iters=100, diffusion.fad
   return(label.distribution)
 }
 
-#' Propagate labels using Zhu, Ghahramani, Lafferty (2003) algorithm
-#' http://mlg.eng.cam.ac.uk/zoubin/papers/zgl.pdf
-#' TODO: change solver here for something designed for Laplacians. Need to look Daniel Spielman's research
-propagateLabelsSolver <- function(graph, labels, solver="mumps") {
-  if (!solver %in% c("mumps", "Matrix"))
-    stop("Unknown solver: ", solver, ". Only 'mumps' and 'Matrix' are currently supported")
+## Propagate labels using Zhu, Ghahramani, Lafferty (2003) algorithm
+## http://mlg.eng.cam.ac.uk/zoubin/papers/zgl.pdf
+## TODO: change solver here for something designed for Laplacians. Need to look Daniel Spielman's research
 
-  if (!requireNamespace("rmumps", quietly=T)) {
+#' @keywords internal
+propagateLabelsSolver <- function(graph, labels, solver="mumps") {
+  if (!solver %in% c("mumps", "Matrix")){
+    stop("Unknown solver: ", solver, ". Only 'mumps' and 'Matrix' are currently supported")
+  }
+
+  if (!requireNamespace("rmumps", quietly=TRUE)) {
     warning("Package 'rmumps' is required to use 'mumps' solver. Fall back to 'Matrix'")
     solver <- "Matrix"
   }
@@ -977,7 +1114,7 @@ propagateLabelsSolver <- function(graph, labels, solver="mumps") {
   if (solver == "Matrix") {
     res <- Matrix::solve(laplasian.uu, right.side)
   } else {
-    res <- rmumps::Rmumps$new(laplasian.uu, copy=F)$solve(right.side)
+    res <- rmumps::Rmumps$new(laplasian.uu, copy=FALSE)$solve(right.side)
   }
 
   colnames(res) <- levels(labels)
@@ -989,10 +1126,11 @@ propagateLabelsSolver <- function(graph, labels, solver="mumps") {
 #'
 #' @param con conos object
 #' @param target.clusters clusters for which the resolution should be increased
-#' @param clustering name of clustering in the conos object to use. Either 'clustering' or 'groups' must be provided. Default: NULL
-#' @param groups set of clusters to use. Ignored if 'clustering' is not NULL. Default: NULL
-#' @param method function, used to find communities. Default: leiden.community
+#' @param clustering name of clustering in the conos object to use. Either 'clustering' or 'groups' must be provided (default=NULL).
+#' @param groups set of clusters to use. Ignored if 'clustering' is not NULL (default=NULL).
+#' @param method function, used to find communities (default=leiden.community).
 #' @param ... additional params passed to the community function
+#' @return set of clusters with increased resolution
 #' @export
 findSubcommunities <- function(con, target.clusters, clustering=NULL, groups=NULL, method=leiden.community, ...) {
   groups <- parseCellGroups(con, clustering, groups)
@@ -1000,19 +1138,22 @@ findSubcommunities <- function(con, target.clusters, clustering=NULL, groups=NUL
   groups.raw <- as.character(groups) %>% setNames(names(groups))
   groups <- groups[intersect(names(groups), V(con$graph)$name)]
 
-  if(length(groups) == 0) {
+  if (length(groups) == 0) {
     stop("'groups' not defined for graph object.")
   }
 
   groups <- droplevels(as.factor(groups)[groups %in% target.clusters])
-  if(length(groups) == 0) {
+
+  if (length(groups) == 0) {
     stop("None of 'target.clusters' can be found in 'groups'.")
   }
 
   subgroups <- split(names(groups), groups)
+
   for (n in names(subgroups)) {
-    if (length(subgroups[[n]]) < 2)
+    if (length(subgroups[[n]]) < 2){
       next
+    }
 
     new.clusts <- method(induced_subgraph(con$graph, subgroups[[n]]), ...)
     groups.raw[new.clusts$names] <- paste0(n, "_", new.clusts$membership)
@@ -1021,25 +1162,29 @@ findSubcommunities <- function(con, target.clusters, clustering=NULL, groups=NUL
   return(groups.raw)
 }
 
+#' @keywords internal
 parseCellGroups <- function(con, clustering, groups, parse.clusters=TRUE) {
   if (!parse.clusters)
     return(groups)
 
   if (!is.null(groups)) {
-    if (!any(names(groups) %in% names(con$getDatasetPerCell())))
+    if (!any(names(groups) %in% names(con$getDatasetPerCell()))){
       stop("'groups' aren't defined for any of the cells.")
+    }
 
     return(groups)
   }
 
   if (is.null(clustering)) {
-    if (length(con$clusters) > 0)
+    if (length(con$clusters) > 0){
       return(con$clusters[[1]]$groups)
+    }
 
     stop("Either 'groups' must be provided or the conos object must have some clustering estimated")
   }
-  if(is.null(clusters[[clustering]]))
-    stop(paste("clustering",clustering,"doesn't exist, run findCommunity() first"))
+  if (is.null(clusters[[clustering]])){
+    stop(paste("Clustering",clustering,"doesn't exist, run findCommunity() first"))
+  }
 
   return(con$clusters[[clustering]]$groups)
 }
@@ -1049,6 +1194,7 @@ parseCellGroups <- function(con, clustering, groups, parse.clusters=TRUE) {
 #'
 #' @param con conos object
 #' @param factor.per.cell some factor, which group cells, such as sample or a specific condition
+#' @return entropy of edge weights per cell
 #' @export
 estimteWeightEntropyPerCell <- function(con, factor.per.cell) {
   adj.mat <- igraph::as_adjacency_matrix(con$graph, attr="weight") %>% as("dgTMatrix")

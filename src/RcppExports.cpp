@@ -319,6 +319,8 @@ BEGIN_RCPP
 END_RCPP
 }
 
+RcppExport void adjustedRand(void *, void *, void *, void *, void *, void *, void *, void *, void *);
+
 static const R_CallMethodDef CallEntries[] = {
     {"_conos_checkBits", (DL_FUNC) &_conos_checkBits, 0},
     {"_conos_checkOpenMP", (DL_FUNC) &_conos_checkOpenMP, 0},
@@ -341,6 +343,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_conos_adjacent_vertex_weights", (DL_FUNC) &_conos_adjacent_vertex_weights, 2},
     {"_conos_colSumByFactor", (DL_FUNC) &_conos_colSumByFactor, 2},
     {"_conos_spcov", (DL_FUNC) &_conos_spcov, 2},
+    {"adjustedRand", (DL_FUNC) &adjustedRand, 9},
     {NULL, NULL, 0}
 };
 

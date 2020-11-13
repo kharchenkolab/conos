@@ -1,12 +1,6 @@
-Files: src/n2/*.cc src/n2/include/n2
-Copyright: Copyright 2017 Kakao Corp. <http://www.kakaocorp.com>
-License: Apache
-
-Files: src/leidenalg/include src/leidenalg/*.cpp
-Copyright: 2015-2020 V.A. Traag
-License: GPL-3 
-
-Files: src/leidenalg/include src/leidenalg/*.cpp
+Files: 
+	/src/leidenalg/include 
+	/src/leidenalg/*.cpp
 Copyright: 2015-2020 V.A. Traag
 License: GPL-3 
 
@@ -128,3 +122,8 @@ Copyright:
 	2011-2012 Gabor Csardi <csardi.gabor@gmail.com>
 	334 Harvard st, Cambridge, MA 02139, USA
 License: https://igraph.org/c/doc/igraph-Licenses.html
+
+
+Files: /src/adjustedRand.c
+Copyright: Weiliang Qiu <weiliang.qiu@gmail.com>
+License: License: GPL (>= 2)
