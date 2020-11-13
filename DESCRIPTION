@@ -48,7 +48,7 @@ Suggests:
     shinycssloaders
 VignetteBuilder: knitr
 RoxygenNote: 7.1.1
-LinkingTo: Rcpp, RcppArmadillo, RcppEigen, RcppProgress
+LinkingTo: Rcpp, RcppArmadillo, RcppEigen, RcppProgress, igraph
 NeedsCompilation: yes
 Remotes:
     kharchenkolab/pagoda2,

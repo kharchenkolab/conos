@@ -612,10 +612,14 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       if (use.common.embedding) {
         ## if use.common.embedding, pass the Conos embedding to plotSamples
         ## else pass the 'embedding.type' to plotSamples
+        print("USING THE COMMON EMBEDDING")
         if (!is.null(embedding.name)){
           ## check if embedding.name exists in list
           if (embedding.name %in% names(self$embeddings)){
-            embedding.type <- self$embeddings[[embedding.name]]
+            ## embedding to plot
+            embedding <- self$embeddings[[embedding.name]]
+            ## type of embedding, either 'largeVis' or 'UMAP'
+            embeddingType <- names(embedding)
           } else {
             ## embedding.name not in list of self$embeddings, so the user is confused
             ## throw error
@@ -632,19 +636,29 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
             }
             ## check embedding exists in list
             if (embedding.type %in% names(self$embeddings)){
-              embedding.type <- self$embeddings[[embedding.type]]
+              embedding <- self$embeddings[[embedding.type]]
+              ## type of embedding, either 'largeVis' or 'UMAP'
+              embeddingType <- names(embedding)
             } else {
               ## embedding.type not in list of self$embeddings, so generate it
               self$embedGraph(method=embedding.type)
-              embedding.type <- self$embeddings[[embedding.type]]
+              embedding <- self$embeddings[[embedding.type]]
+              ## type of embedding, either 'largeVis' or 'UMAP'
+              embeddingType <- names(embedding)
             }
           } else{
             ## embedding.type=NULL, so grab last element in embeddings list
-            embedding.type <- self$embeddings[length(self$embeddings)]
-          }
+            embedding <- self$embeddings[length(self$embeddings)]
+            ## type of embedding, either 'largeVis' or 'UMAP'
+            embeddingType <- names(embedding)
+          }      
         }
-        ## here, 'embedding.type' is now the Conos embedding passed along to plotSamples
-        adj.list <- c(ggplot2::lims(x=range(embedding.type[,1]), y=range(embedding.type[,2])), adj.list)
+        print("HERE IS THE EMBEDDING")
+        saveRDS(embedding, "/Users/evanbiederstedt/downloads/embedding.rds")
+        ## Note: code now uses 'embedding$embeddingType' in order to access either 'UMAP' or 'largeVis' from the embedding
+        adj.list <- c(ggplot2::lims(x=range(embedding$embeddingType[,1]), y=range(embedding$embeddingType[,2])), adj.list)
+        ## here, 'embedding.type' is now the Conos embedding passed along to plotSamples()
+        embedding.type <- embedding
       }
 
       if (!is.null(embedding.name) && !use.common.embedding){
@@ -660,6 +674,12 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         gg <- plotSamples(self$samples, groups=groups, colors=colors, gene=gene, plot.theme=private$adjustTheme(plot.theme), embedding.type=embedding.type, adj.list=NULL, ...)
 
       } else{
+        print("HIT ELSE for plotSamples(), SAVING PARAMETERS")
+        saveRDS(self$samples, "/Users/evanbiederstedt/downloads/samples.rds")
+        saveRDS(groups, "/Users/evanbiederstedt/downloads/groups.rds")
+        saveRDS(gene, "/Users/evanbiederstedt/downloads/gene.rds")
+        saveRDS(embedding.type, "/Users/evanbiederstedt/downloads/embedding.type.rds")
+        saveRDS(adj.list, "/Users/evanbiederstedt/downloads/adj.list.rds")
         ## In plotSamples, "embedding.type" can either be a name for embeddings of individual samples, but it also can be a matrix with embedding
         gg <- plotSamples(self$samples, groups=groups, colors=colors, gene=gene, plot.theme=private$adjustTheme(plot.theme), embedding.type=embedding.type, adj.list=adj.list, ...)
       }
