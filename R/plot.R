@@ -344,10 +344,11 @@ plotComponentVariance <- function(conos.obj, space='PCA',plot.theme=ggplot2::the
 #' @param order.clusters whether to re-order the clusters according to the similarity of the expression patterns (of the genes being shown)
 #' @param cell.order explicitly supply cell order
 #' @param averaging.window optional window averaging between neighboring cells within each group (turned off by default) - useful when very large number of cells shown (requires zoo package)
-#' @param ... extra parameters are passed to pheatmap
+#' @param max cells to include in any given group (default: Inf)
+#' @param ... extra parameters are passed to ComplexHeatmap::Heatmap() call
 #' @return ComplexHeatmap::Heatmap object (see return.details param for other output)
 #' @export
-plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,min.precision=NULL,n.genes.per.cluster=10,additional.genes=NULL,exclude.genes=NULL, labeled.gene.subset=NULL, expression.quantile=0.99,pal=colorRampPalette(c('dodgerblue1','grey95','indianred1'))(1024),ordering='-AUC',column.metadata=NULL,show.gene.clusters=TRUE, remove.duplicates=TRUE, column.metadata.colors=NULL, show.cluster.legend=TRUE, show_heatmap_legend=FALSE, border=TRUE, return.details=FALSE, row.label.font.size=10, order.clusters=FALSE, split=FALSE, split.gap=0, cell.order=NULL, averaging.window=0, ...) {
+plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,min.precision=NULL,n.genes.per.cluster=10,additional.genes=NULL,exclude.genes=NULL, labeled.gene.subset=NULL, expression.quantile=0.99,pal=colorRampPalette(c('dodgerblue1','grey95','indianred1'))(1024),ordering='-AUC',column.metadata=NULL,show.gene.clusters=TRUE, remove.duplicates=TRUE, column.metadata.colors=NULL, show.cluster.legend=TRUE, show_heatmap_legend=FALSE, border=TRUE, return.details=FALSE, row.label.font.size=10, order.clusters=FALSE, split=FALSE, split.gap=0, cell.order=NULL, averaging.window=0, max.cells=Inf, ...) {
 
   if (!requireNamespace("ComplexHeatmap", quietly = TRUE) || packageVersion("ComplexHeatmap") < "2.4") {
     stop("ComplexHeatmap >= 2.4 package needs to be installed to use plotDEheatmap. Please run \"devtools::install_github('jokergoo/ComplexHeatmap')\".")
@@ -455,6 +456,13 @@ plotDEheatmap <- function(con,groups,de=NULL,min.auc=NULL,min.specificity=NULL,m
     # re-create exp (could just reorder it)
     exp <- do.call(rbind,expl)
     exp <- na.omit(exp[,colnames(exp) %in% names(na.omit(groups))])
+  }
+
+  if(is.finite(max.cells)) {
+    exp <- do.call(cbind,tapply(1:ncol(exp),as.factor(groups[colnames(exp)]),function(ii) {
+      if(length(ii)>max.cells) { ii <- sample(ii,max.cells) }
+      exp[,ii,drop=F]
+    }))
   }
   
   if(averaging.window>0) {
