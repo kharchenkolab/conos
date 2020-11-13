@@ -2,7 +2,7 @@
 % Please edit documentation in R/communities.R
 \name{as.dendrogram.fakeCommunities}
 \alias{as.dendrogram.fakeCommunities}
-\title{returns pre-calculated dendrogram}
+\title{Returns pre-calculated dendrogram}
 \usage{
 \method{as.dendrogram}{fakeCommunities}(obj, ...)
 }
@@ -15,5 +15,5 @@
 dendrogram
 }
 \description{
-returns pre-calculated dendrogram
+Returns pre-calculated dendrogram
 }

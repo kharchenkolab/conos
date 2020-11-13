@@ -2,7 +2,7 @@
 % Please edit documentation in R/conos.R
 \name{stableTreeClusters}
 \alias{stableTreeClusters}
-\title{determine number of detectable clusters given a reference walktrap and a bunch of permuted walktraps}
+\title{Determine number of detectable clusters given a reference walktrap and a bunch of permuted walktraps}
 \usage{
 stableTreeClusters(
   refwt,
@@ -14,19 +14,21 @@ stableTreeClusters(
 )
 }
 \arguments{
-\item{refwt}{reference walktrap rsult}
+\item{refwt}{reference walktrap result}
 
 \item{tests}{a list of permuted walktrap results}
 
-\item{min.threshold}{min detectability threshold}
+\item{min.threshold}{numeric Min detectability threshold (default=0.8)}
 
-\item{min.size}{minimum cluster size (number of leafs)}
+\item{min.size}{numeric Minimum cluster size (number of leafs) (default=10)}
 
-\item{average.thresholds}{report a single number of detectable clusters for averaged detected thresholds (a list of detected clusters for each element of the tests list is returned by default)}
+\item{n.cores}{numeric Number of cores (default=30)}
+
+\item{average.thresholds}{boolean Report a single number of detectable clusters for averaged detected thresholds (default=FALSE) (a list of detected clusters for each element of the tests list is returned by default)}
 }
 \value{
 number of detectable stable clusters
 }
 \description{
-determine number of detectable clusters given a reference walktrap and a bunch of permuted walktraps
+Determine number of detectable clusters given a reference walktrap and a bunch of permuted walktraps
 }

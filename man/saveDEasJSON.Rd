@@ -12,13 +12,16 @@ saveDEasJSON(
 )
 }
 \arguments{
-\item{de.results}{differential expression results}
+\item{de.results}{differential expression results (default=NULL)}
 
-\item{saveprefix}{prefix for the differential expression output}
+\item{saveprefix}{prefix for the differential expression output (default=NULL)}
 
-\item{gene.metadata}{data.frame with gene metadata}
+\item{gene.metadata}{data.frame with gene metadata (default=NULL)}
 
-\item{cluster.sep.chr}{character string of length 1 specifying a delimiter to separate cluster and app names}
+\item{cluster.sep.chr}{character string of length 1 specifying a delimiter to separate cluster and app names (default='<!!>')}
+}
+\value{
+JSON with DE results
 }
 \description{
 Save differential expression results as JSON

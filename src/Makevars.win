@@ -1,12 +1,8 @@
-# detect R_arch for Windows
+# detect R_arch 
 rarch := $(shell echo 'Sys.getenv("R_ARCH")' | ${R_HOME}/bin/R --vanilla --slave) 
 
+PKGB_PATH := $(shell echo 'library(igraph); cat(system.file("libs", package="igraph"))' | ${R_HOME}/bin/R --vanilla --slave)
 
-# Set the path to your non metric space library here
-PKG_CXXFLAGS= -I"../inst/include" -I"./n2/include" -I"./leidenalg/igraph-R" -I"./leidenalg/include" -I"./include" $(SHLIB_OPENMP_CXXFLAGS) 
-
-PKGB_PATH=`echo 'library(igraph); cat(system.file("libs", package="igraph"))' \
-      | ${R_HOME}/bin/R --vanilla --slave`
 
 ## note: the space in '[1] "/i386" ' is important...
 ## else, '[1] "/x64" '
@@ -16,19 +12,19 @@ else
  IGRAPH_LIB := $(PKGB_PATH)/x64/igraph.dll
 endif
 
-PKG_LIBS=-L/usr/lib/ -L"." -lpthread -ln2 -lleidenalg -lm $(shell "${R_HOME}/bin${R_ARCH_BIN}/Rscript.exe" -e "Rcpp:::LdFlags()") $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS) $(SHLIB_OPENMP_CXXFLAGS) $(IGRAPH_LIB)
+PKG_CXXFLAGS=-I"../inst/include"  -I"./leidenalg/igraph-R" -I"./leidenalg/include"  -I"./include" $(SHLIB_OPENMP_CXXFLAGS) 
+
+PKG_LIBS=-L/usr/lib/ -L"." -lpthread -lstdc++ -lleidenalg -lm $(shell "${R_HOME}/bin${R_ARCH_BIN}/Rscript.exe" -e "Rcpp:::LdFlags()") $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS) $(SHLIB_OPENMP_CXXFLAGS) $(IGRAPH_LIB)
 CXX_STD = CXX11
 MkInclude = $(R_HOME)/etc${R_ARCH}/Makeconf
 
 #.PHONY: all sublibs
 
 #OBJECTS = $(.cpp=.o)
-SUBDIRS = n2 leidenalg
-SUBLIBS = libn2.a leidenalg.a
-
+SUBDIRS = leidenalg
+SUBLIBS = leidenalg.a
 
 all: $(SHLIB) 
-	if [ "$(OS)" != "Windows_NT" ] && [ `uname -s` = 'Darwin' ]; then install_name_tool -id '@rpath/igraph.so' $(IGRAPH_LIB); fi 
 $(SHLIB): $(OBJECTS) sublibs
 sublibs: sublibraries
 

@@ -6,8 +6,8 @@
 \usage{
 getBetweenCellTypeDE(
   con.obj,
-  sample.groups = NULL,
   groups = NULL,
+  sample.groups = NULL,
   cooks.cutoff = FALSE,
   refgroup = NULL,
   altgroup = NULL,
@@ -22,27 +22,31 @@ getBetweenCellTypeDE(
 \arguments{
 \item{con.obj}{conos object}
 
-\item{sample.groups}{a named list of two character vectors specifying the app groups to compare}
+\item{groups}{factor describing cell grouping (default=NULL)}
 
-\item{groups}{factor describing cell grouping}
+\item{sample.groups}{a named list of two character vectors specifying the app groups to compare (default=NULL)}
 
-\item{cooks.cutoff}{cooksCutoff parameter for DESeq2}
+\item{cooks.cutoff}{boolean cooksCutoff parameter for DESeq2 (default=FALSE)}
 
-\item{refgroup}{cell type to compare to be used as reference}
+\item{refgroup}{cell type to compare to be used as reference (default=NULL)}
 
-\item{altgroup}{cell type to compare to}
+\item{altgroup}{cell type to compare to be used as ALT against refgroup (default=NULL)}
 
-\item{min.cell.count}{minimum number of cells per celltype/sample combination to keep}
+\item{min.cell.count}{numeric Minimum number of cells per celltype/sample combination to keep (default=10)}
 
-\item{independent.filtering}{independentFiltering parameter for DESeq2}
+\item{independent.filtering}{boolean Whether to use independentFiltering parameter for DESeq2 (default=FALSE)}
 
-\item{cluster.sep.chr}{character string of length 1 specifying a delimiter to separate cluster and app names}
+\item{cluster.sep.chr}{character string of length 1 specifying a delimiter to separate cluster and app names (default='<!!>')}
 
-\item{return.details}{logical, return detailed results}
+\item{return.details}{boolean Return detailed results (default=TRUE)}
 
-\item{only.paired}{only keep samples that that both cell types above the min.cell.count threshold}
+\item{only.paired}{boolean Only keep samples that that both cell types above the min.cell.count threshold (default=TRUE)}
 
 \item{remove.na}{boolean If TRUE, remove NAs from DESeq calculations (default=TRUE)}
+}
+\value{
+Returns either a DESeq2::results() object, or if return.details=TRUE, 
+   returns a list of the DESeq2::results(), the samples from the panel to use in this comparison, refgroups, altgroup, and samplegroups
 }
 \description{
 Compare two cell types across the entire panel

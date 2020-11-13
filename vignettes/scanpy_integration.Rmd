@@ -20,14 +20,14 @@ Run Pagoda2:
 
 ```{r}
 library(pagoda2)
-panel.preprocessed <- lapply(panel, basicP2proc, n.cores=4, min.cells.per.gene=0, n.odgenes=2e3, 
+panel.preprocessed <- lapply(panel, basicP2proc, n.cores=2, min.cells.per.gene=0, n.odgenes=2e3, 
                              get.largevis=FALSE, make.geneknn=FALSE)
 ```
 
 Align the datasets:
 
 ```{r}
-con <- Conos$new(panel.preprocessed, n.cores=4)
+con <- Conos$new(panel.preprocessed, n.cores=2)
 con$buildGraph(k=15, k.self=5, space='PCA', ncomps=30)
 ```
 

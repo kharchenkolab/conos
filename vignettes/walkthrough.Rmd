@@ -105,7 +105,7 @@ below.)
 
 ```{r}
 library(pagoda2)
-panel.preprocessed <- lapply(panel, basicP2proc, n.cores=4, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+panel.preprocessed <- lapply(panel, basicP2proc, n.cores=2, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
 ```
 
 Let’s look at the output of our processing: we now have a named list of
@@ -146,7 +146,7 @@ parallel processing, feel free to use as many physical cores as you have availab
 here.
 
 ```{r}
-con <- Conos$new(panel.preprocessed, n.cores=4)
+con <- Conos$new(panel.preprocessed, n.cores=2)
 ```
 
 Our original pagoda2 (or Seurat) objects are now saved in the Conos
@@ -360,7 +360,7 @@ and accuracy:
 
 > - **min.prob.lower:** minimal probability of hitting a neighbor, after which the random walk stops. Default: 1e-7.
 ```{r, message=FALSE, warning=FALSE}
-con$embedGraph(method="UMAP", min.dist=0.01, spread=15, n.cores=4, min.prob.lower=1e-3)
+con$embedGraph(method="UMAP", min.dist=0.01, spread=15, n.cores=2, min.prob.lower=1e-3)
 ```
 
 
@@ -514,7 +514,7 @@ at the cluster cell markers:
 
 ```{r}
 new.annot <- new.label.info$labels
-de.info <- con$getDifferentialGenes(groups=new.annot, n.cores=4, append.auc=TRUE)
+de.info <- con$getDifferentialGenes(groups=new.annot, n.cores=2, append.auc=TRUE)
 head(de.info$`B cells`)
 ```
 
@@ -607,7 +607,7 @@ We can then run differential expression between cells in these sample
 groups:
 
 ```{r}
-de.info <- getPerCellTypeDE(con, groups=as.factor(new.annot), sample.groups = samplegroups, ref.level='bm', n.cores=4)
+de.info <- getPerCellTypeDE(con, groups=as.factor(new.annot), sample.groups = samplegroups, ref.level='bm', n.cores=2)
 ```
 
 …and examine the output:

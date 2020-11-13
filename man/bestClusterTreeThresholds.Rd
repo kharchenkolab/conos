@@ -12,6 +12,8 @@ bestClusterTreeThresholds(res, leaf.factor, clusters, clmerges = NULL)
 \item{leaf.factor}{a named factor describing cell assignments to the leaf nodes (in the same order as res$names)}
 
 \item{clusters}{cluster factor}
+
+\item{clmerges}{(default=NULL)}
 }
 \value{
 a list of $thresholds - per cluster optimal detectability values, and $node - internal node id (merge row) where the optimum was found

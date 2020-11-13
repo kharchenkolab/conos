@@ -16,11 +16,11 @@ quickCCA(
 )
 }
 \arguments{
-\item{r.n}{list of p2 objects}
+\item{r.n}{list of pagoda2 objects}
 
-\item{ncomps}{number of components to calculate (default=100)}
+\item{ncomps}{numeric Number of components to calculate (default=100)}
 
-\item{n.odgenes}{number of overdispersed genes to take from each dataset}
+\item{n.odgenes}{numeric Number of overdispersed genes to take from each dataset}
 
 \item{var.scale}{whether to scale variance (default=TRUE)}
 
@@ -31,3 +31,4 @@ quickCCA(
 \description{
 Perform CCA (using PMA package or otherwise) on two samples
 }
+\keyword{internal}

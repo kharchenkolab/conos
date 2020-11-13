@@ -23,11 +23,9 @@ Imports:
     magrittr,
     Matrix.utils,
     methods,
+    N2R,
     parallel,
     reshape2,
-    Rcpp,
-    RcppArmadillo,
-    RcppProgress,
     rlang,
     Rtsne,
     shiny,
@@ -35,11 +33,9 @@ Imports:
     tools,
     utils,
     viridis,
-    sccore (>= 0.1)
+    sccore (>= 0.1.1)
 Suggests:
-    clues,
     DESeq2,
-    entropy,
     ggrastr,
     knitr,
     pagoda2,
@@ -52,12 +48,10 @@ Suggests:
     shinycssloaders
 VignetteBuilder: knitr
 RoxygenNote: 7.1.1
-LinkingTo: Rcpp, RcppArmadillo, RcppEigen, RcppProgress, igraph
+LinkingTo: Rcpp, RcppArmadillo, RcppEigen, RcppProgress
 NeedsCompilation: yes
 Remotes:
     kharchenkolab/pagoda2,
-    kharchenkolab/sccore,
-    jokergoo/ComplexHeatmap,
-    cran/clues
+    jokergoo/ComplexHeatmap
 Author: Peter Kharchenko [aut], Nikolas Barkas [aut], Viktor Petukhov [aut], Evan Biederstedt [aut, cre]
 Maintainer: Evan Biederstedt <evan.biederstedt@gmail.com>

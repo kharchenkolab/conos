@@ -20,6 +20,9 @@ plotClusterBoxPlotsByAppType(
 
 \item{return.details}{boolean If TRUE return a list with the plot and the summary data.frame (default=FALSE)}
 }
+\value{
+Boxplot per cluster of the proportion of cells in each celltype
+}
 \description{
 Generate boxplot per cluster of the proportion of cells in each celltype
 }

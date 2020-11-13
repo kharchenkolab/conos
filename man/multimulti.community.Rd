@@ -2,7 +2,8 @@
 % Please edit documentation in R/communities.R
 \name{multimulti.community}
 \alias{multimulti.community}
-\title{mutlilevel+multilevel communities}
+\title{Constructrs a two-step clustering, first running multilevel.communities, and then walktrap.communities within each
+These are combined into an overall hierarchy}
 \usage{
 multimulti.community(
   graph,
@@ -36,3 +37,4 @@ a fakeCommunities object that has methods membership() and as.dendrogram() to mi
 Constructrs a two-step clustering, first running multilevel.communities, and then walktrap.communities within each
 These are combined into an overall hierarchy
 }
+\keyword{internal}

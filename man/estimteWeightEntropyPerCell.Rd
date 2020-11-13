@@ -12,6 +12,9 @@ estimteWeightEntropyPerCell(con, factor.per.cell)
 
 \item{factor.per.cell}{some factor, which group cells, such as sample or a specific condition}
 }
+\value{
+entropy of edge weights per cell
+}
 \description{
 Estimate entropy of edge weights per cell according to the specified factor.
 Can be used to visualize alignment quality according to this factor.

@@ -2,14 +2,15 @@
 % Please edit documentation in R/communities.R
 \name{leiden.community}
 \alias{leiden.community}
-\title{Leiden algorithm community detection}
+\title{Leiden algorithm community detection
+Detect communities using Leiden algorithm (implementation copied from https://github.com/vtraag/leidenalg)}
 \usage{
 leiden.community(graph, resolution = 1, n.iterations = 2)
 }
 \arguments{
 \item{graph}{graph on which communities should be detected}
 
-\item{resolution}{numeric Resolution parameter (default=1.0) - higher numbers lead to more communities}
+\item{resolution}{numeric Resolution parameter (default=1.0). Higher numbers lead to more communities.}
 
 \item{n.iterations}{numeric Number of iterations that the algorithm should be run for (default =2)}
 }
@@ -17,5 +18,6 @@ leiden.community(graph, resolution = 1, n.iterations = 2)
 community object
 }
 \description{
+Leiden algorithm community detection
 Detect communities using Leiden algorithm (implementation copied from https://github.com/vtraag/leidenalg)
 }

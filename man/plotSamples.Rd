@@ -20,9 +20,9 @@ plotSamples(
 
 \item{colors}{vector of numbers, which must be shown with point colors, names contain cell names (default=NULL). This argument is ignored if groups are provided.}
 
-\item{gene}{gene name. If this parameter is provided, points are colored by expression of this gene.}
+\item{gene}{gene name (default=NULL). If this parameter is provided, points are colored by expression of this gene.}
 
-\item{embedding.type}{type of embedding. Default: tSNE. If a numeric matrix is passed, interpreted as an actual embedding.}
+\item{embedding.type}{type of embedding (default=NULL). If embedding.type is NULL, this defaults to 'tSNE'. If a numeric matrix is passed, interpreted as an actual embedding.}
 
 \item{...}{
   Arguments passed on to \code{\link[ggrepel:geom_text_repel]{ggrepel::geom_label_repel}}
@@ -98,3 +98,4 @@ ggplot2 object with the panel of plots
 \description{
 Plot panel of specified embeddings, extracting them from pagoda2 objects
 }
+\keyword{internal}

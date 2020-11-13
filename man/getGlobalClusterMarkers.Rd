@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot.R
 \name{getGlobalClusterMarkers}
 \alias{getGlobalClusterMarkers}
-\title{Get markers for global clusters}
+\title{Deprecated; Get markers for global clusters}
 \usage{
 getGlobalClusterMarkers(
   conos.obj,
@@ -20,6 +20,10 @@ getGlobalClusterMarkers(
 
 \item{min.percent.samples.expression}{numeric Minumum percent of samples that must have the gene upregulated (default=0)}
 }
-\description{
-Get markers for global clusters
+\value{
+List of consistent genes per each cluster
 }
+\description{
+Deprecated; Get markers for global clusters
+}
+\keyword{internal}

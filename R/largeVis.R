@@ -1,7 +1,5 @@
 # bare minimum extraction of largeVis routines for fast graph embedding
 
-#' buildWijMatrix
-#'
 #' Rescale the weights in an edge matrix to match a given perplexity.
 #'
 #' @param x A sparse matrix
@@ -14,7 +12,7 @@
 #'    unlike most other matrices in this package.}
 #'    \item{'k'}{The number of nearest neighbors.}
 #'  }
-buildWijMatrix <- function(x, threads = NULL, perplexity = 50) UseMethod("buildWijMatrix")
+buildWijMatrix <- function(x, threads=NULL, perplexity=50) UseMethod("buildWijMatrix")
 
 #' @rdname buildWijMatrix
 buildWijMatrix.TsparseMatrix <- function(x, threads = NULL, perplexity = 50) {
@@ -48,25 +46,25 @@ buildWijMatrix.CsparseMatrix <- function(x, threads = NULL, perplexity = 50) {
 #' Note that the input matrix should be symmetric.  If any columns in the matrix are empty, the function will fail.
 #'
 #' @param wij A symmetric sparse matrix of edge weights, in C-compressed format, as created with the \code{Matrix} package.
-#' @param dim The number of dimensions for the projection space.
-#' @param sgd_batches The number of edges to process during SGD. Defaults to a value set based on the size of the dataset. If the parameter given is
+#' @param dim numeric Number of dimensions for the projection space (default=2).
+#' @param sgd_batches The number of edges to process during SGD (default=NULL). Defaults to a value set based on the size of the dataset. If the parameter given is
 #' between \code{0} and \code{1}, the default value will be multiplied by the parameter.
-#' @param M The number of negative edges to sample for each positive edge.
-#' @param gamma The strength of the force pushing non-neighbor nodes apart.
-#' @param alpha Hyperparameter used in the default distance function, \eqn{1 / (1 + \alpha \dot ||y_i - y_j||^2)}.  The function relates the distance
+#' @param M numeric Number of negative edges to sample for each positive edge (default=5).
+#' @param gamma numeric Strength of the force pushing non-neighbor nodes apart (default=7).
+#' @param alpha numeric Hyperparameter used in the default distance function, \eqn{1 / (1 + \alpha \dot ||y_i - y_j||^2)} (default=1).  The function relates the distance
 #' between points in the low-dimensional projection to the likelihood that the two points are nearest neighbors. Increasing \eqn{\alpha} tends
 #' to push nodes and their neighbors closer together; decreasing \eqn{\alpha} produces a broader distribution. Setting \eqn{\alpha} to zero
 #' enables the alternative distance function. \eqn{\alpha} below zero is meaningless.
-#' @param rho Initial learning rate.
-#' @param coords An initialized coordinate matrix.
-#' @param useDegree Whether to use vertex degree to determine weights in negative sampling (if \code{TRUE}), or the sum of the vertex's edges (the default). See Notes.
+#' @param rho numeric Initial learning rate (default=1)
+#' @param coords An initialized coordinate matrix (default=NULL).
+#' @param useDegree boolean Whether to use vertex degree to determine weights (default=FALSE). If TRUE, weights determined in negative sampling; if FALSE, weights determined by the sum of the vertex's edges. See Notes.
 #' @param momentum If not \code{NULL} (the default), SGD with momentum is used, with this multiplier, which must be between 0 and 1. Note that
 #' momentum can drastically speed-up training time, at the cost of additional memory consumed.
-#' @param seed Random seed to be passed to the C++ functions; sampled from hardware entropy pool if \code{NULL} (the default).
+#' @param seed numeric Random seed to be passed to the C++ functions (default=NULL). If NULL, sampled from hardware entropy pool.
 #' Note that if the seed is not \code{NULL} (the default), the maximum number of threads will be set to 1 in phases of the algorithm
 #' that would otherwise be non-deterministic.
-#' @param threads The maximum number of threads to spawn. Determined automatically if \code{NULL} (the default).
-#' @param verbose Verbosity
+#' @param threads numeric The maximum number of threads to spawn (default=NULL). Determined automatically if \code{NULL}.
+#' @param verbose boolean Verbosity (default=getOption("verbose", TRUE))
 #'
 #' @note If specified, \code{seed} is passed to the C++ and used to initialize the random number generator. This will not, however, be
 #' sufficient to ensure reproducible results, because the initial coordinate matrix is generated using the \code{R} random number generator.
@@ -114,7 +112,9 @@ projectKNNs <- function(wij, # symmetric sparse matrix
   ##############################################
   # Initialize coordinate matrix
   ##############################################
-  if (is.null(coords)) coords <- matrix((runif(N * dim) - 0.5) / dim * 0.0001, nrow = dim)
+  if (is.null(coords)){
+    coords <- matrix((runif(N * dim) - 0.5) / dim * 0.0001, nrow = dim)
+  }
 
   if (is.null(sgd_batches)) {
   	sgd_batches <- sgdBatches(N, length(wij@x / 2))
@@ -123,8 +123,12 @@ projectKNNs <- function(wij, # symmetric sparse matrix
   	sgd_batches = sgd_batches * sgdBatches(N, length(wij@x / 2))
   }
 
-  if (!is.null(threads)) threads <- as.integer(threads)
-  if (!is.null(momentum)) momentum <- as.double(momentum)
+  if (!is.null(threads)){
+    threads <- as.integer(threads)
+  }
+  if (!is.null(momentum)){
+    momentum <- as.double(momentum)
+  }
 
   #################################################
   # SGD
@@ -149,8 +153,7 @@ projectKNNs <- function(wij, # symmetric sparse matrix
   return(coords)
 }
 
-#' sgdBatches
-#'
+
 #' Calculate the default number of batches for a given number of vertices and edges.
 #'
 #' The formula used is the one used by the \code{LargeVis} reference implementation.  This is substantially less than the recommendation \eqn{E * 10000} in the original paper.

@@ -4,7 +4,7 @@
 \alias{buildWijMatrix}
 \alias{buildWijMatrix.TsparseMatrix}
 \alias{buildWijMatrix.CsparseMatrix}
-\title{buildWijMatrix}
+\title{Rescale the weights in an edge matrix to match a given perplexity.}
 \usage{
 buildWijMatrix(x, threads = NULL, perplexity = 50)
 
