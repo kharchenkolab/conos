@@ -602,7 +602,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         groups <- getClusteringGroups(self$clusters, clustering)
       }
 
-      if (use.common.embedding) {
+      if (use.common.embedding) { # look up the embedding within the conos object
         ## if use.common.embedding, pass the Conos embedding to plotSamples
         embedding <- private$getEmbedding(embedding)
         adj.list <- c(ggplot2::lims(x=range(embedding[,1]), y=range(embedding[,2])), adj.list)
@@ -773,14 +773,10 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @param ... Additional parameters passed to sccore::embeddingPlot()
     #' @return ggplot2 plot of joint graph
     plotGraph=function(color.by='cluster', clustering=NULL, embedding=NULL, groups=NULL, colors=NULL, gene=NULL, plot.theme=NULL, subset=NULL, ...) {
-      if (length(self$embeddings) == 0) {
-        self$embedGraph() ## default method='largeVis'
-      }
-
       embedding <- private$getEmbedding(embedding);
 
       if (!is.null(subset)) {
-        emb <- emb[rownames(emb) %in% subset,,drop=FALSE]
+        embedding <- embedding[rownames(embedding) %in% subset,,drop=FALSE]
       }
 
       if (!is.null(gene)) {
@@ -798,7 +794,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         }
       }
   
-      return(embeddingPlot(emb, groups=groups, colors=colors, plot.theme=private$adjustTheme(plot.theme), ...))
+      return(embeddingPlot(embedding, groups=groups, colors=colors, plot.theme=private$adjustTheme(plot.theme), ...))
     },
 
     #' @description Smooth expression of genes to minimize the batch effect between samples
@@ -974,7 +970,8 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           embedding <- self$embedding[length(self$embedding)] # by default, pick last-named embedding
         }
       }
-    },
+      return(embedding)
+    },    
 
     updatePairs=function(space='PCA', data.type='counts', ncomps=50, n.odgenes=1e3, var.scale=TRUE, matching.mask=NULL, exclude.samples=NULL, score.component.variance=FALSE, verbose=FALSE) {
 
