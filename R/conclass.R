@@ -98,51 +98,51 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
     #' @description Build the joint graph that encompasses all the samples, establishing weighted inter-sample cell-to-cell links
     #'
-    #' @param k integer Number of components 'k' to compute (default=15)
-    #' @param k.self integer Number of components for computing local neighbors (default=10). Refer to function getLocalNeighbors().
-    #' @param k.self.weight numeric Multiplicative constant for the similarity strength (default=0.1)
-    #' @param alignment.strength numeric Alignment strength (default=NULL)
-    #' @param space character Projection space used to perform clustering (default='PCA'). Currently supported spaces are: 
+    #' @param k integer size of the inter-sample neighborhood (default=15)
+    #' @param k.self integer size of the with-sample neighborhoods (default=10). 
+    #' @param k.self.weight numeric weight multiplier on the intra-sample edges relative to inter-sample edges (default=0.1)
+    #' @param alignment.strength numeric Alignment strength (default=NULL will result in alignment.strength=0)
+    #' @param space character Reduced expression space used to establish putative alignments between pairs of samples (default='PCA'). Currently supported spaces are: 
     #'     --- "CPCA" Common principal component analysis
-    #'     --- "JNMF" Pairwise Joint NMF
-    #'     --- "genes" Overdispered gene space
+    #'     --- "JNMF" Joint NMF
+    #'     --- "genes" Gene expression space (log2 transformed)
     #'     --- "PCA" Principal component analysis
     #'     --- "CCA" Canonical correlation analysis
     #'     --- "PMA" (Penalized Multivariate Analysis <https://cran.r-project.org/web/packages/PMA/index.html>)
-    #'     Refer to getNeighborMatrix() for more details.
     #' @param matching.method character Matching method (default='mNN'). Currently supported methods are "NN" (nearest neighbors) or "mNN" (mututal nearest neighbors).
-    #' @param metric character Distance metric to measure similarity (default='angular'). Currenlty supported metrics are "angular" or "L2".
-    #' @param k1 numeric Neighborhood radius for calculating neighbor matching (default=k). Note that k1 must be greater than or equal to k, i.e. k1>=k.
+    #' @param metric character Distance metric to measure similarity (default='angular'). Currenlty supported metrics are "angular" and "L2".
+    #' @param k1 numeric Neighborhood radius for identifying mutually-matching neighbors (default=k). Note that k1 must be greater than or equal to k, i.e. k1>=k. Increasing k1 beyond k will lead to more aggressive alignment of distinct subpopulations (i.e. increased alignment strengths). 
     #' @param data.type character Type of data type in the input pagoda2 objects within r.n (default='counts').
     #' @param l2.sigma numeric L2 distances get transformed as exp(-d/sigma) using this value (default=1e5)
-    #' @param var.scale boolean Whether to use common variance scaling (default=TRUE). If TRUE, use geometric means for variance, as we're trying to focus on the common variance components. See scaledMatricesP2().
+    #' @param var.scale boolean Whether to use common variance scaling (default=TRUE). If TRUE, use geometric means for variance, as we're trying to focus on the common variance components. See scaledMatricesP2() code.
     #' @param ncomps integer Number of components (default=40)
-    #' @param n.odgenes integer Number of overdispersed genes (default=2000)
-    #' @param matching.mask Pairs that should not be compared directly (default=NULL). Note: 'matching.mask' should have the same row- and column-names as provided samples.
-    #' @param exclude.samples Samples to exclude from getLocalNeighbors() calculations (default=NULL)
-    #' @param common.centering boolean Whether to use common centering from the means (default=TRUE)
-    #' @param base.groups factor on groups (default=NULL)
-    #' @param append.global.axes boolean Whether to project samples on global axis (default=TRUE)
-    #' @param append.decoys boolean Whether to append decoy cells (default=TRUE)
-    #' @param decoy.threshold integer Below this threshold, decoy cells are taken within the decoy projections (default=1)
-    #' @param n.decoys integer Number of decoy dimensions to use (default=k*2)
-    #' @param score.component.variance boolean Whether to score component variance (default=FALSE)
-    #' @param snn boolean Whether to compute shared nearest neighbors with getLocalNeighbors() (default=FALSE)
-    #' @param snn.quantile numeric Shared nearest neighbor quantiles (default=0.9). Must be wihin the range [0,1] (default=0.9)
-    #' @param min.snn.jaccard numeric Shared nearest neighbors scaled by Jaccard coefficient (default=0)
-    #' @param min.snn.weight numeric If greater than 0, this multiplicative constant will be applied to the shared nearest neighbor results before dropping 0s (default=0).
-    #' @param snn.k integer Component k used to compute shared nearest neighbors (default=k.self)
-    #' @param balance.edge.weights boolean Whether to balance edge weights (default=FALSE)
-    #' @param balancing.factor.per.cell numeric Balancing constant per cell (default=NULL)
-    #' @param same.factor.downweight numeric Constant used to adjust weights per cell balancing (default=1.0) 
-    #' @param k.same.factor integer When calculating intersample mapping, the current k used during iterations is computed via min(k.same.factor, k1) (default=k)
-    #' @param balancing.factor.per.sample Balancing factor per sample (default=NULL)
+    #' @param n.odgenes integer Number of overdispersed genes to be used in each pairwise alignment (default=2000)
+    #' @param matching.mask an optional matrix explicitly specifying which pairs of samples should be compared (a symmatrical matrix of logical values with row and column names corresponding to sample names). By default (default: NULL) comparisons between all paris are allowed. The argument can be used to exclude comparisons across certain pairs of samples (e.g. techincal replicates, which are expected to show very high similarity).
+    #' @param exclude.samples optional list of sample names that should be excluded from the alignment and the resulting graph(default=NULL)
+    #' @param common.centering boolean When calculating reduced expression space for a given sample pair, whether the expression of genes should be centered using the mean from both samples (TRUE) or using the mean within each sample (FALSE) (default=TRUE)
+    #' @param base.groups an optional factor on cells specifying previously-obtained cell grouping to be used for adjusting the sample alignment (default: NULL). Specifically, cell clusters specfiieid by the base.groups can be used to i) calculate global expression axes which are appended to the overall set of eigenvectors, ii) adding decoy cells.
+    #' @param append.global.axes boolean Whether to project samples on global expression axes, as defined by pre-defined (typically crude) set of cell subpopulations as specified by the base.gruops parameter (default=TRUE, but works only if base.groups is specified)
+    #' @param append.decoys boolean Whether to use pre-defined cell groups (specified by base.groups) to append decoy cells to the samples which are otherwise lacking any of the pre-specified cell groups (default=TRUE, but works only if base.groups is specified). The decoy cells can reduce the number of erroneous matches in highly heterogeneous sample collections, where some of the samples lack entire cell subpopulations which are found in other samples. The approach only works if the base.groups (typically a crude clustering of top-level cell types) can be established with a reasonable confidence.
+    #' @param decoy.threshold integer Minimal number of cells of a given cell type that should exist in a given sample (according to base.groups) to avoid addition of decoy cells to that sample for the purposes of alignment (default=1)
+    #' @param n.decoys integer Number of decoy cells that should be added to a sample that had less than decoy.threshold cells of a given cell type (default=k*2)
+    #' @param score.component.variance boolean Whether to score the amount of total variance explained by different components (default=FALSE as it takes extra time to calculate)
+    #' @param snn boolean Whether to transform the joint graph by computing a shared nearest neighborhood graph (analogous to Seurat 3), further weighting the edges between two matched cells based on the similarity (measured by Jaccard coefficient) of all of their predicted neighbors (across all of the samples) (default: FALSE)
+    #' @param snn.quantile numeric Specifies how the shared neighborhood graph transformation will determine final edge weights. If snn.quantile=NULL, the edge weight will be simply equal to the Jaccard coefficient of the neighborhoods. If snn.quantile is a vector of two numeric values (p1, p2), they will be treated as quantile probabilities, and quantile values (q1,q2) on the set of all Jaccard coefficients (for all edges) will be determiend. The edge weights will then be reset, so that edges with Jaccard coefficients below or equal to q1 will be set to 0, and those with coefficients >=q2 will be set to 1. The rest of the weights will be mapped uniformly from [q1,q2]->[0,1] range. If a single numeric value is supplied, it will be treated as a symmetric quantile probability (i.e. snn.quantile=0.8 is equivalent to specifying snn.quantile=c(1-0.8,0.8)). (default: 0.9)
+    #' @param min.snn.jaccard numeric Minimum Jaccard coefficient required for a shared neighborhood graph edge (default: 0). The edges with Jaccard coefficients below this threshold will be removed (i.e. weight set to 0)
+    #' @param min.snn.weight numeric Shared nearest neighbor procedure will adjust the weights of the edges, and even eliminate some of the edges (by setting their weight to zero). The min.snn.weight parameter allows to set a minimal adjusted edge weight, so that the edge weight is never reduced beyond this level (and hence never deleted) (default: 0 - no adjustments)
+    #' @param snn.k.self integer Size of the within-sample neighorhood to be used in shared nearest neighbor calculations (default=k.self)
+    #' @param balance.edge.weights boolean Whether to balance edge weights to control for a cell- or sample- specific factor (default=FALSE)
+    #' @param balancing.factor.per.sample A covariate factor per sample that should be controlled for by adjusting edge weights in the joint graph (default=NULL)
+    #' @param balancing.factor.per.cell A per-cell factor (discrete factor, named with cell names) specifying a design difference should be controlled for by adjusting edge weights in the joint graph (default=NULL)
+    #' @param same.factor.downweight numeric Optional weighting factor for edges connecting cells with the same cell factor level per cell balancing (default=1.0) 
+    #' @param k.same.factor integer An neighborhood size that should be used when aligning samples of the same balancing.factor.per.sample level. Setting a value smaller than k will lead to reduction of alingment strenth within the sample batches (default=k)
     #' @return joint graph to be used for downstream analysis
     buildGraph=function(k=15, k.self=10, k.self.weight=0.1, alignment.strength=NULL, space='PCA', matching.method='mNN', metric='angular', k1=k, data.type='counts', l2.sigma=1e5, var.scale=TRUE, ncomps=40,
                         n.odgenes=2000, matching.mask=NULL, exclude.samples=NULL, common.centering=TRUE, verbose=TRUE,
                         base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, score.component.variance=FALSE,
-                        snn=FALSE, snn.quantile=0.9, min.snn.jaccard=0, min.snn.weight=0, snn.k=k.self,
+                        snn=FALSE, snn.quantile=0.9, min.snn.jaccard=0, min.snn.weight=0, snn.k.self=k.self,
                         balance.edge.weights=FALSE, balancing.factor.per.cell=NULL, same.factor.downweight=1.0, k.same.factor=k, balancing.factor.per.sample=NULL) {
+      
       supported.spaces <- c("CPCA","JNMF","genes","PCA","PMA","CCA")
       if(!space %in% supported.spaces) {
         stop(paste0("only the following spaces are currently supported: [",paste(supported.spaces,collapse=' '),"]"))
@@ -176,9 +176,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
       if(k1<k) { stop("k1 must be >= k") }
       # calculate or update pairwise alignments
-      sn.pairs <- private$updatePairs(
-        space=space, ncomps=ncomps, n.odgenes=n.odgenes, verbose=verbose, var.scale=var.scale, matching.mask=matching.mask, exclude.samples=exclude.samples, score.component.variance=score.component.variance
-      )
+      sn.pairs <- private$updatePairs(space=space, ncomps=ncomps, n.odgenes=n.odgenes, verbose=verbose, var.scale=var.scale, matching.mask=matching.mask, exclude.samples=exclude.samples, score.component.variance=score.component.variance)
       if(ncol(sn.pairs)<1) { stop("insufficient number of comparable pairs") }
       if(!is.null(base.groups)) {
         samf <- lapply(self$samples,getCellNames)
@@ -193,7 +191,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       }
 
       if (snn){
-        local.neighbors <- getLocalNeighbors(self$samples[! names(self$samples) %in% exclude.samples], snn.k, k.self.weight, metric, l2.sigma=l2.sigma, verbose, self$n.cores)
+        local.neighbors <- getLocalNeighbors(self$samples[! names(self$samples) %in% exclude.samples], snn.k.self, k.self.weight, metric, l2.sigma=l2.sigma, verbose, self$n.cores)
       } else {
         local.neighbors <- NULL
       }
@@ -343,18 +341,16 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     },
 
 
-    #' @description Calculates differential genes. Estimates base mean, z-score, p-values, specificity, precision, expressionFraction, AUC (if append.auc=TRUE)
+    #' @description Calculate genes differentially expressed between cell clusters. Estimates base mean, z-score, p-values, specificity, precision, expressionFraction, AUC (if append.auc=TRUE)
     #'
-    #' @param z.threshold numeric Threshold for filtering z-scores (default=3.0). Above this value, z-scores are output.
-    #' @param upregulated.only boolean If FALSE, return the absolute value of z-scores (default=FALSE). Otherwise, return all z-scores.
-    #' @param plot boolean Whether to plot the output (default=FALSE)    
-    #' @param n.genes.to.show numeric (default=10)
-    #' @param inner.clustering (default=FALSE)
+    #' @param groups a cell factor (a factor named with cell names) specifying clusters of cells to be compared (one against all). To compare two cell clusters against each other, simply pass a factor containing only two levels (default: NULL, see clustering)
+    #' @param clustering a character name of the clustering to use (see names(con$clusters)) for the value of the groups factor (default: NULL - if groups are not specified, the first clustering will be used)
+    #' @param z.threshold numeric minimum absolute value of a Z score for which the genes should be reported (default=3.0). 
+    #' @param upregulated.only if TRUE, will report only genes significantly upregulated in each cluster; otherwise both up- and down-regulated genes will be reported (default: FALSE)
     #' @param append.specificity.metrics boolean Whether to appeadn specificity metrics (default=TRUE)
-    #' @param append.auc boolean Whether to append AUC scores (default=FALSE)
-    #' @return list of DE results
-    getDifferentialGenes=function(clustering=NULL, groups=NULL, z.threshold=3.0, upregulated.only=FALSE, verbose=TRUE, plot=FALSE, n.genes.to.show=10, inner.clustering=FALSE,
-                                  append.specificity.metrics=TRUE, append.auc=FALSE, n.cores=self$n.cores) {
+    #' @param append.auc boolean Whether to append AUC scores (default=TRUE)
+    #' @return list of DE results; each is a data frame with rows corresponding to the differentially expressed genes, and columns listing log2 fold change (M), signed Z scores (both raw and adjusted for mulitple hypothesis using BH correction), optional specificty/sensitivity and AUC metrics.
+    getDifferentialGenes=function(clustering=NULL, groups=NULL, z.threshold=3.0, upregulated.only=FALSE, verbose=TRUE, append.specificity.metrics=TRUE, append.auc=TRUE, n.cores=self$n.cores) {
 
       groups <- parseCellGroups(self, clustering, groups)
 
@@ -366,10 +362,6 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
       de.genes <- getDifferentialGenesP2(self$samples, groups=groups, z.threshold=z.threshold, upregulated.only=upregulated.only, verbose=verbose, n.cores=n.cores)
       de.genes <- de.genes[levels(groups)]
-
-      if (plot){
-        plotDEGenes(de.genes, self$samples, groups=groups, n.genes.to.show=n.genes.to.show, inner.clustering=inner.clustering)
-      }
 
       if (append.specificity.metrics) {
         if (verbose) message("Estimating specificity metrics")
@@ -387,18 +379,18 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       return(de.genes)
     },
 
-    #' @description Find joint communities
+    #' @description Find cell clusters (as communities on the joint graph)
     #'
     #' @param method community detection method (igraph syntax) (default=leiden.community)
     #' @param min.group.size numeric Minimal allowed community size (default=0)
-    #' @param name character Optional name of the clustering result (will default to the algorithm name) (default=NULL)
+    #' @param name character Optional name of the clustering result (will default to the algorithm name) (default=NULL will try to obtain the name from the community detection method, or will use 'community' as a default)
     #' @param test.stability boolean Whether to test stability of community detection (default=FALSE)
     #' @param stability.subsampling.fraction numeric Fraction of clusters to subset (default=0.95). Must be within range [0, 1].
     #' @param stability.subsamples integer Number of subsampling iterations (default=100)    
-    #' @param cls communities (default=NULL). If default, use self$graph.
-    #' @param sr clusters (default=NULL). If NULL, based on the total stability.subsamples.
+    #' @param cls optional pre-calculated community result (may be useful for stability testing) (default: NULL)
+    #' @param sr optional pre-calculated subsampled community results (useful for stability testing) (default: NULL)
     #' @param ... extra parameters are passed to the specified community detection method
-    #' @return invisible list containing identified communities (groups) and the full community detection result (result)
+    #' @return invisible list containing identified communities (groups) and the full community detection result (result); The results are stored in $clusters$name slot in the conos object. Each such slot contains an object with elements: $results which stores the raw output of the community detection method, and $groups which is a factor on cells describing the resulting clustering. The later can be used, for instance, in plotting: con$plotGraph(groups=con$clusters$leiden$groups). If test.stability==TRUE, then the result object will also contain a $stability slot.
     findCommunities=function(method=leiden.community, min.group.size=0, name=NULL, test.stability=FALSE, stability.subsampling.fraction=0.95, stability.subsamples=100, verbose=TRUE, cls=NULL, sr=NULL, ...) {
 
       if (is.null(cls)) {
@@ -584,15 +576,16 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
     #' @description Plot panel of individual embeddings per sample with joint coloring
     #'
-    #' @param use.local.clusters boolean Whether to use clusters within Conos object (default=FALSE).
+    #' @param groups a cell factor (a factor named with cell names) specifying clusters of cells to be compared (one against all). To compare two cell clusters against each other, simply pass a factor containing only two levels (default: NULL, see clustering)
+    #' @param clustering a character name of the clustering to use (see names(con$clusters)) for the value of the groups factor (default: NULL - if groups are not specified, the first clustering will be used)
+    #' @param use.local.clusters boolean Whether clusters should be taken from the individual samples; otherwise joint clusters in the conos object will be used (see clustering) (default=FALSE).
     #' @param plot.theme Theme for the plot, passed to plotSamples() (default=NULL)
-    #' @param use.common.embedding boolean Whether to use the same embedding for each panel (default=FALSE)
-    #' @param embedding.name character Optional name of the name of the embedding set by user to store multiple embeddings (default=NULL). If NULL, uses 'embedding.type'                                       
-    #' @param embedding.type character Name of the type of embedding created by embedGraph(), either 'largeVis' or 'UMAP' (default=NULL). If NULL, uses last embedding created.
-    #' @param adj.list adjacency list (default=NULL)
-    #' @param ... Additional parameters passed to plotSamples().
-    #' @return ggplot2 object with the panel of plots
-    plotPanel=function(clustering=NULL, groups=NULL, colors=NULL, gene=NULL, use.local.clusters=FALSE, plot.theme=NULL, use.common.embedding=FALSE, embedding.name=NULL, embedding.type=NULL, adj.list=NULL, ...) {
+    #' @param use.common.embedding boolean Whether a joint embedding in the conos object should be used (or embeddings determined for the individual samples) (default=FALSE)
+    #' @param embedding If a character value is passed, it is interpreted as an embedding name (a name of a joint embedding in conos when use.commmon.embedding=TRUE, or a name of an embedding within the individual objects when use.common.embedding=F). If a matrix is passed, it is interpreted as an actual embedding (then first two columns are interpreted as x/y coordinates, row names must be cell names). If NULL, the default embedding will be used. (default: NULL)
+    #' @param adj.list an optional list of additional ggplot2 directions to apply (default=NULL)
+    #' @param ... Additional parameters passed to plotSamples(), plotEmbeddings(), sccore::embeddingPlot().
+    #' @return cowplot grid object with the panel of plots
+    plotPanel=function(clustering=NULL, groups=NULL, colors=NULL, gene=NULL, use.local.clusters=FALSE, plot.theme=NULL, use.common.embedding=FALSE, embedding=NULL, adj.list=NULL, ...) {
 
       if (use.local.clusters) {
         if (is.null(clustering) && !(inherits(x = self$samples[[1]], what = c('seurat', 'Seurat')))) {
@@ -611,111 +604,42 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
       if (use.common.embedding) {
         ## if use.common.embedding, pass the Conos embedding to plotSamples
-        ## else pass the 'embedding.type' to plotSamples
-        if (!is.null(embedding.name)){
-          ## check if embedding.name exists in list
-          if (embedding.name %in% names(self$embeddings)){
-            ## embedding to plot
-            embedding <- self$embeddings[[embedding.name]]
-            ## type of embedding, either 'largeVis' or 'UMAP'
-            embeddingType <- names(embedding)
-          } else {
-            ## embedding.name not in list of self$embeddings, so the user is confused
-            ## throw error
-            stop(paste0("No embedding named '", embedding.name, "' found. Please generate this with embedGraph()."))
-          }
-        } else{
-          ## embedding.name is NULL
-          ## but user is trying to specify an embedding.type
-          if (!is.null(embedding.type)){
-            ## embedding.type can only be 'largeVis', 'UMAP'
-            '%ni%' <- Negate('%in%')
-            if (embedding.type %ni%  c('largeVis', 'UMAP')){ 
-              stop(paste0("Currently, only the following embeddings are supported: ", paste(c('largeVis', 'UMAP'), collapse=' '))) 
-            }
-            ## check embedding exists in list
-            if (embedding.type %in% names(self$embeddings)){
-              embedding <- self$embeddings[[embedding.type]]
-              ## type of embedding, either 'largeVis' or 'UMAP'
-              embeddingType <- names(embedding)
-            } else {
-              ## embedding.type not in list of self$embeddings, so generate it
-              self$embedGraph(method=embedding.type)
-              embedding <- self$embeddings[[embedding.type]]
-              ## type of embedding, either 'largeVis' or 'UMAP'
-              embeddingType <- names(embedding)
-            }
-          } else{
-            ## embedding.type=NULL, so grab last element in embeddings list
-            embedding <- self$embeddings[length(self$embeddings)]
-            ## type of embedding, either 'largeVis' or 'UMAP'
-            embeddingType <- names(embedding)
-          }      
-        }
-        ## Note: code now uses 'embedding$embeddingType' in order to access either 'UMAP' or 'largeVis' from the embedding
-        adj.list <- c(ggplot2::lims(x=range(embedding$embeddingType[,1]), y=range(embedding$embeddingType[,2])), adj.list)
-        ## here, 'embedding.type' is now the Conos embedding passed along to plotSamples()
-        embedding.type <- embedding
+        embedding <- private$getEmbedding(embedding)
+        adj.list <- c(ggplot2::lims(x=range(embedding[,1]), y=range(embedding[,2])), adj.list)
       }
-
-      if (!is.null(embedding.name) && !use.common.embedding){
-        ## check if embedding.name not in list
-        ## if not, user confused
-        if (embedding.name %in% names(self$embeddings)){
-          embedding.type <- self$embeddings[[embedding.name]]
-        } else{
-          stop(paste0("No embedding named '", embedding.name, "' found. Please generate this with embedGraph()."))
-        }
-        ## set embedding.type=NULL, adj.list=NULL
-        ## try to find the appropriate embedding name for each sample within the PCA space
-        gg <- plotSamples(self$samples, groups=groups, colors=colors, gene=gene, plot.theme=private$adjustTheme(plot.theme), embedding.type=embedding.type, adj.list=NULL, ...)
-
-      } else{
-        ## In plotSamples, "embedding.type" can either be a name for embeddings of individual samples, but it also can be a matrix with embedding
-        gg <- plotSamples(self$samples, groups=groups, colors=colors, gene=gene, plot.theme=private$adjustTheme(plot.theme), embedding.type=embedding.type, adj.list=adj.list, ...)
-      }
-
-      return(gg)
+      
+      plotSamples(self$samples, groups=groups, colors=colors, gene=gene, plot.theme=private$adjustTheme(plot.theme), embedding.type=embedding, adj.list=adj.list, ...)
     },
 
     #' @description Generate an embedding of a joint graph
     #' 
     #' @param method Embedding method (default='largeVis'). Currently 'largeVis' and 'UMAP' are supported.
-    #' @param embedding.name character Optional name of the name of the embedding set by user to store multiple embeddings (default=NULL). If NULL, uses name of 'method'.
-    #' @param M numeric The number of negative edges to sample for each positive edge (default=1) 
-    #' @param gamma numeric The strength of the force pushing non-neighbor nodes apart (default=1) 
-    #' @param alpha numeric Hyperparameter used in the default distance function, \eqn{1 / (1 + \alpha \dot ||y_i - y_j||^2)} (default=0.1).  The function relates the distance
+    #' @param embedding.name character Optional name of the name of the embedding set by user to store multiple embeddings (default: method name)
+    #' @param M numeric (largeVis) The number of negative edges to sample for each positive edge to be used (default=1) 
+    #' @param gamma numeric (largeVis) The strength of the force pushing non-neighbor nodes apart (default=1) 
+    #' @param alpha numeric (largeVis) Hyperparameter used in the default distance function, \eqn{1 / (1 + \alpha \dot ||y_i - y_j||^2)} (default=0.1).  The function relates the distance
     #'     between points in the low-dimensional projection to the likelihood that the two points are nearest neighbors. Increasing \eqn{\alpha} tends
     #'     to push nodes and their neighbors closer together; decreasing \eqn{\alpha} produces a broader distribution. Setting \eqn{\alpha} to zero
     #'     enables the alternative distance function. \eqn{\alpha} below zero is meaningless.
-    #' @param perplexity The perplexity passed to largeVis (default=NA)
-    #' @param sgd_batches The number of edges to process during SGD (default=1e8). Defaults to a value set based on the size of the dataset. If the parameter given is
+    #' @param perplexity (largeVis) The perplexity passed to largeVis (default=NA)
+    #' @param sgd_batches (largeVis) The number of edges to process during SGD (default=1e8). Defaults to a value set based on the size of the dataset. If the parameter given is
     #'     between \code{0} and \code{1}, the default value will be multiplied by the parameter. 
     #' @param seed numeric Random seed for the largeVis algorithm (default=1)
     #' @param target.dims numeric Number of dimensions for the reduction (default=2). Higher dimensions can be used to generate embeddings for subsequent reductions by other methods, such as tSNE
     #' @param ... additional arguments, passed to UMAP embedding (run ?conos:::embedGraphUmap for more info)
     #' @return joint graph embedding
-    embedGraph=function(method='largeVis', embedding.name=NULL, M=1, gamma=1, alpha=0.1, perplexity=NA, sgd_batches=1e8, seed=1, verbose=TRUE, target.dims=2, n.cores=self$n.cores, ...) {
+    embedGraph=function(method='largeVis', embedding.name=method, M=1, gamma=1, alpha=0.1, perplexity=NA, sgd_batches=1e8, seed=1, verbose=TRUE, target.dims=2, n.cores=self$n.cores, ...) {
       supported.methods <- c('largeVis', 'UMAP')
       if(!method %in% supported.methods) { 
         stop(paste0("Currently, only the following embeddings are supported: ",paste(supported.methods,collapse=' '))) 
       }
 
-      ## if embedding.name=NULL, set the value to the value from method 
-      if (is.null(embedding.name)) {
-        embedding.name <- method
-      }
-
       ## check if embedding.name already in list
       ## if so, throw warning
-      if (!is.null(embedding.name)){
-        if (length(self$embeddings)>0){
-          ## check if embedding.name already created
-          if (embedding.name %in% names(self$embeddings)){
-            ## immediate warning
-            options(warn=1)
-            warning(paste0("Already created an embedding: ", embedding.name, ". Overwriting."))
-          }
+      if (length(self$embeddings)>0){
+        ## check if embedding.name already created
+        if (embedding.name %in% names(self$embeddings)){
+          warning(paste0("Already created an embedding: ", embedding.name, ". Overwriting."))
         }
       }
 
@@ -739,6 +663,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       }
 
       self$embeddings[[embedding.name]] <- embedding.result
+      self$embedding <- embedding.result # hang on to the latest embedding for backwards compatibility
       return(invisible(embedding.result))
     },
 
@@ -837,51 +762,22 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
     #' @description Plot joint graph
     #'
-    #' @param color.by character Users can either cluster by 'cluster' or by 'sample (default='cluster'). If any other string is input, an error is thrown.
-    #' @param embedding.name character Optional name of the name of the embedding set by user to store multiple embeddings (default=NULL). If NULL, uses 'embedding.type'                                       
-    #' @param embedding.type character Name of the type of embedding created by embedGraph(), either 'largeVis' or 'UMAP' (default=NULL). If NULL, uses last embedding created.
-    #' @param groups factor on cells to use for coloring (default=NULL)
+    #' @param groups a cell factor (a factor named with cell names) specifying clusters of cells to be compared (one against all). To compare two cell clusters against each other, simply pass a factor containing only two levels (default: NULL, see clustering)
+    #' @param clustering a character name of the clustering to use (see names(con$clusters)) for the value of the groups factor (default: NULL - if groups are not specified, the first clustering will be used)
+    #' @param color.by character A shortcut to color the plot by 'cluster' or by 'sample' (default: 'cluster'). If any other string is input, an error is thrown.
+    #' @param embedding A character name of an embedding, or a matrix of the actual embedding (rownames should correspond to cells, first to columns to x/y coordinates). If NULL (default: NULL), the latest generated embedding will be used
     #' @param colors a color factor (named with cell names) use for cell coloring (default=NULL)
     #' @param gene Show expression of a gene (default=NULL)
     #' @param plot.theme Theme for the plot, passed to sccore::embeddingPlot() (default=NULL)
-    #' @param subset A subset of cells to show (default=NULL)
+    #' @param subset A subset of cells to show (default: NULL - shows all the cells)
     #' @param ... Additional parameters passed to sccore::embeddingPlot()
     #' @return ggplot2 plot of joint graph
-    plotGraph=function(color.by='cluster', clustering=NULL, embedding.name=NULL, embedding.type=NULL, groups=NULL, colors=NULL, gene=NULL, plot.theme=NULL, subset=NULL, ...) {
+    plotGraph=function(color.by='cluster', clustering=NULL, embedding=NULL, groups=NULL, colors=NULL, gene=NULL, plot.theme=NULL, subset=NULL, ...) {
       if (length(self$embeddings) == 0) {
         self$embedGraph() ## default method='largeVis'
       }
-  
-      if (!is.null(embedding.name)){
-        ## check if embedding.name exists in list
-        if (embedding.name %in% names(self$embeddings)){
-          emb <- self$embeddings[[embedding.name]]
-        } else {
-          ## embedding.name not in list of self$embeddings, so user is confused
-          ## throw error
-          stop(paste0("No embedding named '", embedding.name, "' found. Please generate this with embedGraph()."))
-        }
-      } else{
-        ## embedding.name is NULL
-        ## but user is trying to specify an embedding.type
-        if (!is.null(embedding.type)){
-          ## embedding.type can only be 'largeVis', 'UMAP'
-          if (!embedding.type %in%  c('largeVis', 'UMAP')){ 
-            stop(paste0("Currently, only the following embeddings are supported: ", paste(c('largeVis', 'UMAP'), collapse=' '))) 
-          }
-          ## check embedding exists in list
-          if (embedding.type %in% names(self$embeddings)){
-            emb <- self$embeddings[[embedding.type]]
-          } else {
-            ## embedding.type not in list of self$embeddings, so generate it
-            self$embedGraph(method=embedding.type)
-            emb <- self$embeddings[[embedding.type]]
-          }
-        } else{
-          ## embedding.type=NULL, so grab last element in embeddings list
-          emb <- self$embeddings[length(self$embeddings)]
-        }
-      }
+
+      embedding <- private$getEmbedding(embedding);
 
       if (!is.null(subset)) {
         emb <- emb[rownames(emb) %in% subset,,drop=FALSE]
@@ -898,17 +794,17 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         } else if(color.by == 'sample') {
           groups <- self$getDatasetPerCell()
         } else {
-          stop('Supported values of color.by are ("cluster" and "sample")')
+          stop('Supported values of color.by are ("cluster" and "sample"); Use groups/colors parameters to explicitly pass factor/numeric data for coloring')
         }
       }
   
       return(embeddingPlot(emb, groups=groups, colors=colors, plot.theme=private$adjustTheme(plot.theme), ...))
     },
 
-    #' @description Smooth expression of genes, so they better represent structure of the graph.
+    #' @description Smooth expression of genes to minimize the batch effect between samples
     #'   Use diffusion of expression on graph with the equation dv = exp(-a * (v + b))
     #'
-    #' @param genes List of genes for smoothing (default=NULL)
+    #' @param genes List of genes to be smooothed smoothing (default=NULL will smooth top n.od.genes overdispersed genes)
     #' @param n.od.genes numeric If 'genes' is NULL, top n.od.genes of overdispersed genes are taken across all samples (default=500)
     #' @param fading numeric Level of fading of expression change from distance on the graph (parameter 'a' of the equation) (default=10)
     #' @param fading.const numeric Minimal penalty for each new edge during diffusion (parameter 'b' of the equation) (default=0.5)
@@ -952,7 +848,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       return(invisible(self$expression.adj[[name]] <<- cm))
     },
 
-    #' @description Estimate labeling distribution for each vertex, based on provided labels.
+    #' @description Estimate labeling distribution for each vertex, based on a partial labeling of the cells.
     #' There are two methods used for the propagation to calculate the distribution of labels: "solver" and "diffusion". 
     #' * "diffusion" (default) will estimate the labeling distribution for each vertex, based on provided labels using a random walk.
     #' * "solver" will propagate labels using the algorithm described by Zhu, Ghahramani, Lafferty (2003) <http://mlg.eng.cam.ac.uk/zoubin/papers/zgl.pdf>
@@ -982,8 +878,8 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
       return(list(labels=labels, uncertainty=(1 - confidence), label.distribution=label.dist))
     },
-
-    #' @description Estimate per-cluster molecule count matrix by summing up the molecules of each gene for all of the cells in each cluster.
+    
+    #' @description Calculate pseudo-bulk expression matrices for clusters (by adding up, for each gene, all of the molecules detected for all cells in a given cluster in a given sample)
     #'
     #' @param common.genes boolean Whether to bring individual sample matrices to a common gene list (default=TRUE)
     #' @param omit.na.cells boolean If set to FALSE, the resulting matrices will include a first column named 'NA' that will report total molecule counts for all of the cells that were not covered by the provided factor. (default=TRUE)
@@ -1031,6 +927,10 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         mergeCountMatrices(transposed=TRUE)
     }
   ),
+
+
+
+  ## Private functions
   private = list(
     adjustTheme=function(theme) {
       if (is.null(theme)) {
@@ -1046,6 +946,34 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       }
 
       return(main.theme + theme)
+    },
+
+    # a utility function to look up an embedding by name or accept an actual embedding data
+    getEmbedding=function(embedding) {
+      if (!is.null(embedding)) {
+        if(class(embedding) %in% c('matrix')) { # actuall embedding was passed
+          # check validity?
+        } else if(class(embedding)=='character') {  # look up embedding by name
+          ## check if embedding.name exists in list
+          if (embedding %in% names(self$embeddings)) {
+            ## embedding to plot
+            embedding <- self$embeddings[[embedding]]
+          } else {
+            ## embedding.name not in list of self$embeddings, so the user is confused
+            ## throw error
+            stop(paste0("No embedding named '", embedding, "' found. Please generate this with embedGraph()."))
+          }
+        } else {
+          stop('embedding must be either a character name of the embedding, or an actual matrix of embedding coordinates')
+        }
+      } else {
+        if(!is.null(self$embedding)) { # use the latest
+          embedding <- self$embedding;
+        }  else { # pick one from the list
+          if(is.null(self$embeddings) || length(self$embeddings)<1) stop("no joint embeddings have been generated; use embedGraph() first")
+          embedding <- self$embedding[length(self$embedding)] # by default, pick last-named embedding
+        }
+      }
     },
 
     updatePairs=function(space='PCA', data.type='counts', ncomps=50, n.odgenes=1e3, var.scale=TRUE, matching.mask=NULL, exclude.samples=NULL, score.component.variance=FALSE, verbose=FALSE) {
