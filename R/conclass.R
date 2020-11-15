@@ -35,7 +35,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @field n.cores number of cores
     n.cores = 1,
 
-    #' @field misc list with unstractured additional info
+    #' @field misc list with unstructured additional info
     misc = list(),
 
     #' @field override.conos.plot.theme 

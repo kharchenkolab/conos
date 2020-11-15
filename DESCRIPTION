@@ -25,6 +25,7 @@ Imports:
     methods,
     N2R,
     parallel,
+    R6,
     reshape2,
     rlang,
     Rtsne,
