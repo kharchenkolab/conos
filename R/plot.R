@@ -93,7 +93,7 @@ plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow
 #' @inheritParams plotEmbeddings
 #' @param samples list of pagoda2 or Seurat objects
 #' @param gene gene name (default=NULL). If this parameter is provided, points are colored by expression of this gene.
-#' @param embedding.type type of embedding (default=NULL). If embedding.type is NULL, this defaults to 'tSNE'. If a numeric matrix is passed, interpreted as an actual embedding.
+#' @param embedding.type type of embedding (default=NULL). If embedding.type is NULL, this defaults to 'tSNE'. If a matrix is passed, it is interpreted as an actual embedding (then first two columns are interpreted as x/y coordinates, row names must be cell names).
 #' @return ggplot2 object with the panel of plots
 #' @keywords internal
 plotSamples <- function(samples, groups=NULL, colors=NULL, gene=NULL, embedding.type=NULL, ...) {

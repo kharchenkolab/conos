@@ -143,7 +143,7 @@ Build the joint graph that encompasses all the samples, establishing weighted in
   snn.quantile = 0.9,
   min.snn.jaccard = 0,
   min.snn.weight = 0,
-  snn.k = k.self,
+  snn.k.self = k.self,
   balance.edge.weights = FALSE,
   balancing.factor.per.cell = NULL,
   same.factor.downweight = 1,
@@ -155,78 +155,77 @@ Build the joint graph that encompasses all the samples, establishing weighted in
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{k}}{integer Number of components 'k' to compute (default=15)}
+\item{\code{k}}{integer size of the inter-sample neighborhood (default=15)}
 
-\item{\code{k.self}}{integer Number of components for computing local neighbors (default=10). Refer to function getLocalNeighbors().}
+\item{\code{k.self}}{integer size of the with-sample neighborhoods (default=10).}
 
-\item{\code{k.self.weight}}{numeric Multiplicative constant for the similarity strength (default=0.1)}
+\item{\code{k.self.weight}}{numeric weight multiplier on the intra-sample edges relative to inter-sample edges (default=0.1)}
 
-\item{\code{alignment.strength}}{numeric Alignment strength (default=NULL)}
+\item{\code{alignment.strength}}{numeric Alignment strength (default=NULL will result in alignment.strength=0)}
 
-\item{\code{space}}{character Projection space used to perform clustering (default='PCA'). Currently supported spaces are: 
+\item{\code{space}}{character Reduced expression space used to establish putative alignments between pairs of samples (default='PCA'). Currently supported spaces are: 
 --- "CPCA" Common principal component analysis
---- "JNMF" Pairwise Joint NMF
---- "genes" Overdispered gene space
+--- "JNMF" Joint NMF
+--- "genes" Gene expression space (log2 transformed)
 --- "PCA" Principal component analysis
 --- "CCA" Canonical correlation analysis
---- "PMA" (Penalized Multivariate Analysis <https://cran.r-project.org/web/packages/PMA/index.html>)
-Refer to getNeighborMatrix() for more details.}
+--- "PMA" (Penalized Multivariate Analysis <https://cran.r-project.org/web/packages/PMA/index.html>)}
 
 \item{\code{matching.method}}{character Matching method (default='mNN'). Currently supported methods are "NN" (nearest neighbors) or "mNN" (mututal nearest neighbors).}
 
-\item{\code{metric}}{character Distance metric to measure similarity (default='angular'). Currenlty supported metrics are "angular" or "L2".}
+\item{\code{metric}}{character Distance metric to measure similarity (default='angular'). Currenlty supported metrics are "angular" and "L2".}
 
-\item{\code{k1}}{numeric Neighborhood radius for calculating neighbor matching (default=k). Note that k1 must be greater than or equal to k, i.e. k1>=k.}
+\item{\code{k1}}{numeric Neighborhood radius for identifying mutually-matching neighbors (default=k). Note that k1 must be greater than or equal to k, i.e. k1>=k. Increasing k1 beyond k will lead to more aggressive alignment of distinct subpopulations (i.e. increased alignment strengths).}
 
 \item{\code{data.type}}{character Type of data type in the input pagoda2 objects within r.n (default='counts').}
 
 \item{\code{l2.sigma}}{numeric L2 distances get transformed as exp(-d/sigma) using this value (default=1e5)}
 
-\item{\code{var.scale}}{boolean Whether to use common variance scaling (default=TRUE). If TRUE, use geometric means for variance, as we're trying to focus on the common variance components. See scaledMatricesP2().}
+\item{\code{var.scale}}{boolean Whether to use common variance scaling (default=TRUE). If TRUE, use geometric means for variance, as we're trying to focus on the common variance components. See scaledMatricesP2() code.}
 
 \item{\code{ncomps}}{integer Number of components (default=40)}
 
-\item{\code{n.odgenes}}{integer Number of overdispersed genes (default=2000)}
+\item{\code{n.odgenes}}{integer Number of overdispersed genes to be used in each pairwise alignment (default=2000)}
 
-\item{\code{matching.mask}}{Pairs that should not be compared directly (default=NULL). Note: 'matching.mask' should have the same row- and column-names as provided samples.}
+\item{\code{matching.mask}}{an optional matrix explicitly specifying which pairs of samples should be compared (a symmatrical matrix of logical values with row and column names corresponding to sample names). By default (default: NULL) comparisons between all paris are allowed. The argument can be used to exclude comparisons across certain pairs of samples (e.g. techincal replicates, which are expected to show very high similarity).}
 
-\item{\code{exclude.samples}}{Samples to exclude from getLocalNeighbors() calculations (default=NULL)}
+\item{\code{exclude.samples}}{optional list of sample names that should be excluded from the alignment and the resulting graph(default=NULL)}
 
-\item{\code{common.centering}}{boolean Whether to use common centering from the means (default=TRUE)}
+\item{\code{common.centering}}{boolean When calculating reduced expression space for a given sample pair, whether the expression of genes should be centered using the mean from both samples (TRUE) or using the mean within each sample (FALSE) (default=TRUE)}
 
 \item{\code{verbose}}{boolean Whether to provide verbose output (default=TRUE)}
 
-\item{\code{base.groups}}{factor on groups (default=NULL)}
+\item{\code{base.groups}}{an optional factor on cells specifying previously-obtained cell grouping to be used for adjusting the sample alignment (default: NULL). Specifically, cell clusters specfiieid by the base.groups can be used to i) calculate global expression axes which are appended to the overall set of eigenvectors, ii) adding decoy cells.}
 
-\item{\code{append.global.axes}}{boolean Whether to project samples on global axis (default=TRUE)}
+\item{\code{append.global.axes}}{boolean Whether to project samples on global expression axes, as defined by pre-defined (typically crude) set of cell subpopulations as specified by the base.gruops parameter (default=TRUE, but works only if base.groups is specified)}
 
-\item{\code{append.decoys}}{boolean Whether to append decoy cells (default=TRUE)}
+\item{\code{append.decoys}}{boolean Whether to use pre-defined cell groups (specified by base.groups) to append decoy cells to the samples which are otherwise lacking any of the pre-specified cell groups (default=TRUE, but works only if base.groups is specified). The decoy cells can reduce the number of erroneous matches in highly heterogeneous sample collections, where some of the samples lack entire cell subpopulations which are found in other samples. The approach only works if the base.groups (typically a crude clustering of top-level cell types) can be established with a reasonable confidence.}
 
-\item{\code{decoy.threshold}}{integer Below this threshold, decoy cells are taken within the decoy projections (default=1)}
+\item{\code{decoy.threshold}}{integer Minimal number of cells of a given cell type that should exist in a given sample (according to base.groups) to avoid addition of decoy cells to that sample for the purposes of alignment (default=1)}
 
-\item{\code{n.decoys}}{integer Number of decoy dimensions to use (default=k*2)}
+\item{\code{n.decoys}}{integer Number of decoy cells that should be added to a sample that had less than decoy.threshold cells of a given cell type (default=k*2)}
 
-\item{\code{score.component.variance}}{boolean Whether to score component variance (default=FALSE)}
+\item{\code{score.component.variance}}{boolean Whether to score the amount of total variance explained by different components (default=FALSE as it takes extra time to calculate)}
 
-\item{\code{snn}}{boolean Whether to compute shared nearest neighbors with getLocalNeighbors() (default=FALSE)}
+\item{\code{snn}}{boolean Whether to transform the joint graph by computing a shared nearest neighborhood graph (analogous to Seurat 3), further weighting the edges between two matched cells based on the similarity (measured by Jaccard coefficient) of all of their predicted neighbors (across all of the samples) (default: FALSE)}
 
-\item{\code{snn.quantile}}{numeric Shared nearest neighbor quantiles (default=0.9). Must be wihin the range [0,1] (default=0.9)}
+\item{\code{snn.quantile}}{numeric Specifies how the shared neighborhood graph transformation will determine final edge weights. If snn.quantile=NULL, the edge weight will be simply equal to the Jaccard coefficient of the neighborhoods. If snn.quantile is a vector of two numeric values (p1, p2), they will be treated as quantile probabilities, and quantile values (q1,q2) on the set of all Jaccard coefficients (for all edges) will be determiend. The edge weights will then be reset, so that edges with Jaccard coefficients below or equal to q1 will be set to 0, and those with coefficients >=q2 will be set to 1. The rest of the weights will be mapped uniformly from [q1,q2]->[0,1] range. If a single numeric value is supplied, it will be treated as a symmetric quantile probability (i.e. snn.quantile=0.8 is equivalent to specifying snn.quantile=c(1-0.8,0.8)). (default: 0.9)}
 
-\item{\code{min.snn.jaccard}}{numeric Shared nearest neighbors scaled by Jaccard coefficient (default=0)}
+\item{\code{min.snn.jaccard}}{numeric Minimum Jaccard coefficient required for a shared neighborhood graph edge (default: 0). The edges with Jaccard coefficients below this threshold will be removed (i.e. weight set to 0)}
 
-\item{\code{min.snn.weight}}{numeric If greater than 0, this multiplicative constant will be applied to the shared nearest neighbor results before dropping 0s (default=0).}
+\item{\code{min.snn.weight}}{numeric Shared nearest neighbor procedure will adjust the weights of the edges, and even eliminate some of the edges (by setting their weight to zero). The min.snn.weight parameter allows to set a minimal adjusted edge weight, so that the edge weight is never reduced beyond this level (and hence never deleted) (default: 0 - no adjustments)}
 
-\item{\code{snn.k}}{integer Component k used to compute shared nearest neighbors (default=k.self)}
+\item{\code{snn.k.self}}{integer Size of the within-sample neighorhood to be used in shared nearest neighbor calculations (default=k.self)}
 
-\item{\code{balance.edge.weights}}{boolean Whether to balance edge weights (default=FALSE)}
+\item{\code{balance.edge.weights}}{boolean Whether to balance edge weights to control for a cell- or sample- specific factor (default=FALSE)}
 
-\item{\code{balancing.factor.per.cell}}{numeric Balancing constant per cell (default=NULL)}
+\item{\code{balancing.factor.per.cell}}{A per-cell factor (discrete factor, named with cell names) specifying a design difference should be controlled for by adjusting edge weights in the joint graph (default=NULL)}
 
-\item{\code{same.factor.downweight}}{numeric Constant used to adjust weights per cell balancing (default=1.0)}
+\item{\code{same.factor.downweight}}{numeric Optional weighting factor for edges connecting cells with the same cell factor level per cell balancing (default=1.0)}
 
-\item{\code{k.same.factor}}{integer When calculating intersample mapping, the current k used during iterations is computed via min(k.same.factor, k1) (default=k)}
+\item{\code{k.same.factor}}{integer An neighborhood size that should be used when aligning samples of the same balancing.factor.per.sample level. Setting a value smaller than k will lead to reduction of alingment strenth within the sample batches (default=k)}
 
-\item{\code{balancing.factor.per.sample}}{Balancing factor per sample (default=NULL)}
+\item{\code{balancing.factor.per.sample}}{A covariate factor per sample that should be controlled for by adjusting edge weights in the joint graph (default=NULL)}
 }
 \if{html}{\out{</div>}}
 }
@@ -238,7 +237,7 @@ joint graph to be used for downstream analysis
 \if{html}{\out{<a id="method-getDifferentialGenes"></a>}}
 \if{latex}{\out{\hypertarget{method-getDifferentialGenes}{}}}
 \subsection{Method \code{getDifferentialGenes()}}{
-Calculates differential genes. Estimates base mean, z-score, p-values, specificity, precision, expressionFraction, AUC (if append.auc=TRUE)
+Calculate genes differentially expressed between cell clusters. Estimates base mean, z-score, p-values, specificity, precision, expressionFraction, AUC (if append.auc=TRUE)
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Conos$getDifferentialGenes(
   clustering = NULL,
@@ -246,11 +245,8 @@ Calculates differential genes. Estimates base mean, z-score, p-values, specifici
   z.threshold = 3,
   upregulated.only = FALSE,
   verbose = TRUE,
-  plot = FALSE,
-  n.genes.to.show = 10,
-  inner.clustering = FALSE,
   append.specificity.metrics = TRUE,
-  append.auc = FALSE,
+  append.auc = TRUE,
   n.cores = self$n.cores
 )}\if{html}{\out{</div>}}
 }
@@ -258,39 +254,33 @@ Calculates differential genes. Estimates base mean, z-score, p-values, specifici
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{clustering}}{name of the clustering to use}
+\item{\code{clustering}}{a character name of the clustering to use (see names(con$clusters)) for the value of the groups factor (default: NULL - if groups are not specified, the first clustering will be used)}
 
-\item{\code{groups}}{a factor on cells to use for coloring}
+\item{\code{groups}}{a cell factor (a factor named with cell names) specifying clusters of cells to be compared (one against all). To compare two cell clusters against each other, simply pass a factor containing only two levels (default: NULL, see clustering)}
 
-\item{\code{z.threshold}}{numeric Threshold for filtering z-scores (default=3.0). Above this value, z-scores are output.}
+\item{\code{z.threshold}}{numeric minimum absolute value of a Z score for which the genes should be reported (default=3.0).}
 
-\item{\code{upregulated.only}}{boolean If FALSE, return the absolute value of z-scores (default=FALSE). Otherwise, return all z-scores.}
+\item{\code{upregulated.only}}{if TRUE, will report only genes significantly upregulated in each cluster; otherwise both up- and down-regulated genes will be reported (default: FALSE)}
 
 \item{\code{verbose}}{boolean Whether to provide verbose output (default=TRUE)}
 
-\item{\code{plot}}{boolean Whether to plot the output (default=FALSE)}
-
-\item{\code{n.genes.to.show}}{numeric (default=10)}
-
-\item{\code{inner.clustering}}{(default=FALSE)}
-
 \item{\code{append.specificity.metrics}}{boolean Whether to appeadn specificity metrics (default=TRUE)}
 
-\item{\code{append.auc}}{boolean Whether to append AUC scores (default=FALSE)}
+\item{\code{append.auc}}{boolean Whether to append AUC scores (default=TRUE)}
 
 \item{\code{n.cores}}{numeric Number of cores (default=parallel::detectCores(logical=FALSE))}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-list of DE results
+list of DE results; each is a data frame with rows corresponding to the differentially expressed genes, and columns listing log2 fold change (M), signed Z scores (both raw and adjusted for mulitple hypothesis using BH correction), optional specificty/sensitivity and AUC metrics.
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-findCommunities"></a>}}
 \if{latex}{\out{\hypertarget{method-findCommunities}{}}}
 \subsection{Method \code{findCommunities()}}{
-Find joint communities
+Find cell clusters (as communities on the joint graph)
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Conos$findCommunities(
   method = leiden.community,
@@ -313,7 +303,7 @@ Find joint communities
 
 \item{\code{min.group.size}}{numeric Minimal allowed community size (default=0)}
 
-\item{\code{name}}{character Optional name of the clustering result (will default to the algorithm name) (default=NULL)}
+\item{\code{name}}{character Optional name of the clustering result (will default to the algorithm name) (default=NULL will try to obtain the name from the community detection method, or will use 'community' as a default)}
 
 \item{\code{test.stability}}{boolean Whether to test stability of community detection (default=FALSE)}
 
@@ -323,16 +313,16 @@ Find joint communities
 
 \item{\code{verbose}}{boolean Whether to provide verbose output (default=TRUE)}
 
-\item{\code{cls}}{communities (default=NULL). If default, use self$graph.}
+\item{\code{cls}}{optional pre-calculated community result (may be useful for stability testing) (default: NULL)}
 
-\item{\code{sr}}{clusters (default=NULL). If NULL, based on the total stability.subsamples.}
+\item{\code{sr}}{optional pre-calculated subsampled community results (useful for stability testing) (default: NULL)}
 
 \item{\code{...}}{extra parameters are passed to the specified community detection method}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-invisible list containing identified communities (groups) and the full community detection result (result)
+invisible list containing identified communities (groups) and the full community detection result (result); The results are stored in $clusters$name slot in the conos object. Each such slot contains an object with elements: $results which stores the raw output of the community detection method, and $groups which is a factor on cells describing the resulting clustering. The later can be used, for instance, in plotting: con$plotGraph(groups=con$clusters$leiden$groups). If test.stability==TRUE, then the result object will also contain a $stability slot.
 }
 }
 \if{html}{\out{<hr>}}
@@ -349,8 +339,7 @@ Plot panel of individual embeddings per sample with joint coloring
   use.local.clusters = FALSE,
   plot.theme = NULL,
   use.common.embedding = FALSE,
-  embedding.name = NULL,
-  embedding.type = NULL,
+  embedding = NULL,
   adj.list = NULL,
   ...
 )}\if{html}{\out{</div>}}
@@ -359,32 +348,31 @@ Plot panel of individual embeddings per sample with joint coloring
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{clustering}}{name of the clustering to use}
+\item{\code{clustering}}{a character name of the clustering to use (see names(con$clusters)) for the value of the groups factor (default=NULL - if groups are not specified, the first clustering will be used)}
 
-\item{\code{groups}}{a factor on cells to use for coloring}
+\item{\code{groups}}{a cell factor (a factor named with cell names) specifying clusters of cells to be compared (one against all). To compare two cell clusters against each other, simply pass a factor containing only two levels (default=NULL, see clustering)}
 
 \item{\code{colors}}{a color factor (named with cell names) use for cell coloring}
 
 \item{\code{gene}}{show expression of a gene}
 
-\item{\code{use.local.clusters}}{boolean Whether to use clusters within Conos object (default=FALSE).}
+\item{\code{use.local.clusters}}{boolean Whether clusters should be taken from the individual samples; otherwise joint clusters in the conos object will be used (see clustering) (default=FALSE).}
 
 \item{\code{plot.theme}}{Theme for the plot, passed to plotSamples() (default=NULL)}
 
-\item{\code{use.common.embedding}}{boolean Whether to use the same embedding for each panel (default=FALSE)}
+\item{\code{use.common.embedding}}{boolean Whether a joint embedding in the conos object should be used (or embeddings determined for the individual samples) (default=FALSE)}
 
-\item{\code{embedding.name}}{character Optional name of the name of the embedding set by user to store multiple embeddings (default=NULL). If NULL, uses 'embedding.type'}
+\item{\code{embedding}}{(default=NULL) If a character value is passed, it is interpreted as an embedding name (a name of a joint embedding in conos when use.commmon.embedding=TRUE, or a name of an embedding within the individual objects when use.common.embedding=FALSE). 
+If a matrix is passed, it is interpreted as an actual embedding (then first two columns are interpreted as x/y coordinates, row names must be cell names). If NULL, the default embedding will be used.}
 
-\item{\code{embedding.type}}{character Name of the type of embedding created by embedGraph(), either 'largeVis' or 'UMAP' (default=NULL). If NULL, uses last embedding created.}
+\item{\code{adj.list}}{an optional list of additional ggplot2 directions to apply (default=NULL)}
 
-\item{\code{adj.list}}{adjacency list (default=NULL)}
-
-\item{\code{...}}{Additional parameters passed to plotSamples().}
+\item{\code{...}}{Additional parameters passed to plotSamples(), plotEmbeddings(), sccore::embeddingPlot().}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-ggplot2 object with the panel of plots
+cowplot grid object with the panel of plots
 }
 }
 \if{html}{\out{<hr>}}
@@ -395,7 +383,7 @@ Generate an embedding of a joint graph
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Conos$embedGraph(
   method = "largeVis",
-  embedding.name = NULL,
+  embedding.name = method,
   M = 1,
   gamma = 1,
   alpha = 0.1,
@@ -414,20 +402,20 @@ Generate an embedding of a joint graph
 \describe{
 \item{\code{method}}{Embedding method (default='largeVis'). Currently 'largeVis' and 'UMAP' are supported.}
 
-\item{\code{embedding.name}}{character Optional name of the name of the embedding set by user to store multiple embeddings (default=NULL). If NULL, uses name of 'method'.}
+\item{\code{embedding.name}}{character Optional name of the name of the embedding set by user to store multiple embeddings (default: method name)}
 
-\item{\code{M}}{numeric The number of negative edges to sample for each positive edge (default=1)}
+\item{\code{M}}{numeric (largeVis) The number of negative edges to sample for each positive edge to be used (default=1)}
 
-\item{\code{gamma}}{numeric The strength of the force pushing non-neighbor nodes apart (default=1)}
+\item{\code{gamma}}{numeric (largeVis) The strength of the force pushing non-neighbor nodes apart (default=1)}
 
-\item{\code{alpha}}{numeric Hyperparameter used in the default distance function, \eqn{1 / (1 + \alpha \dot ||y_i - y_j||^2)} (default=0.1).  The function relates the distance
+\item{\code{alpha}}{numeric (largeVis) Hyperparameter used in the default distance function, \eqn{1 / (1 + \alpha \dot ||y_i - y_j||^2)} (default=0.1).  The function relates the distance
 between points in the low-dimensional projection to the likelihood that the two points are nearest neighbors. Increasing \eqn{\alpha} tends
 to push nodes and their neighbors closer together; decreasing \eqn{\alpha} produces a broader distribution. Setting \eqn{\alpha} to zero
 enables the alternative distance function. \eqn{\alpha} below zero is meaningless.}
 
-\item{\code{perplexity}}{The perplexity passed to largeVis (default=NA)}
+\item{\code{perplexity}}{(largeVis) The perplexity passed to largeVis (default=NA)}
 
-\item{\code{sgd_batches}}{The number of edges to process during SGD (default=1e8). Defaults to a value set based on the size of the dataset. If the parameter given is
+\item{\code{sgd_batches}}{(largeVis) The number of edges to process during SGD (default=1e8). Defaults to a value set based on the size of the dataset. If the parameter given is
 between \code{0} and \code{1}, the default value will be multiplied by the parameter.}
 
 \item{\code{seed}}{numeric Random seed for the largeVis algorithm (default=1)}
@@ -477,8 +465,7 @@ Plot joint graph
 \if{html}{\out{<div class="r">}}\preformatted{Conos$plotGraph(
   color.by = "cluster",
   clustering = NULL,
-  embedding.name = NULL,
-  embedding.type = NULL,
+  embedding = NULL,
   groups = NULL,
   colors = NULL,
   gene = NULL,
@@ -491,15 +478,13 @@ Plot joint graph
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{color.by}}{character Users can either cluster by 'cluster' or by 'sample (default='cluster'). If any other string is input, an error is thrown.}
+\item{\code{color.by}}{character A shortcut to color the plot by 'cluster' or by 'sample' (default: 'cluster'). If any other string is input, an error is thrown.}
 
-\item{\code{clustering}}{name of the clustering to use}
+\item{\code{clustering}}{a character name of the clustering to use (see names(con$clusters)) for the value of the groups factor (default: NULL - if groups are not specified, the first clustering will be used)}
 
-\item{\code{embedding.name}}{character Optional name of the name of the embedding set by user to store multiple embeddings (default=NULL). If NULL, uses 'embedding.type'}
+\item{\code{embedding}}{A character name of an embedding, or a matrix of the actual embedding (rownames should correspond to cells, first to columns to x/y coordinates). If NULL (default: NULL), the latest generated embedding will be used}
 
-\item{\code{embedding.type}}{character Name of the type of embedding created by embedGraph(), either 'largeVis' or 'UMAP' (default=NULL). If NULL, uses last embedding created.}
-
-\item{\code{groups}}{factor on cells to use for coloring (default=NULL)}
+\item{\code{groups}}{a cell factor (a factor named with cell names) specifying clusters of cells to be compared (one against all). To compare two cell clusters against each other, simply pass a factor containing only two levels (default: NULL, see clustering)}
 
 \item{\code{colors}}{a color factor (named with cell names) use for cell coloring (default=NULL)}
 
@@ -507,7 +492,7 @@ Plot joint graph
 
 \item{\code{plot.theme}}{Theme for the plot, passed to sccore::embeddingPlot() (default=NULL)}
 
-\item{\code{subset}}{A subset of cells to show (default=NULL)}
+\item{\code{subset}}{A subset of cells to show (default: NULL - shows all the cells)}
 
 \item{\code{...}}{Additional parameters passed to sccore::embeddingPlot()}
 }
@@ -521,7 +506,7 @@ ggplot2 plot of joint graph
 \if{html}{\out{<a id="method-correctGenes"></a>}}
 \if{latex}{\out{\hypertarget{method-correctGenes}{}}}
 \subsection{Method \code{correctGenes()}}{
-Smooth expression of genes, so they better represent structure of the graph.
+Smooth expression of genes to minimize the batch effect between samples
   Use diffusion of expression on graph with the equation dv = exp(-a * (v + b))
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Conos$correctGenes(
@@ -541,7 +526,7 @@ Smooth expression of genes, so they better represent structure of the graph.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{genes}}{List of genes for smoothing (default=NULL)}
+\item{\code{genes}}{List of genes to be smooothed smoothing (default=NULL will smooth top n.od.genes overdispersed genes)}
 
 \item{\code{n.od.genes}}{numeric If 'genes' is NULL, top n.od.genes of overdispersed genes are taken across all samples (default=500)}
 
@@ -571,7 +556,7 @@ smoothed expression of the input genes
 \if{html}{\out{<a id="method-propagateLabels"></a>}}
 \if{latex}{\out{\hypertarget{method-propagateLabels}{}}}
 \subsection{Method \code{propagateLabels()}}{
-Estimate labeling distribution for each vertex, based on provided labels.
+Estimate labeling distribution for each vertex, based on a partial labeling of the cells.
 There are two methods used for the propagation to calculate the distribution of labels: "solver" and "diffusion". 
 * "diffusion" (default) will estimate the labeling distribution for each vertex, based on provided labels using a random walk.
 * "solver" will propagate labels using the algorithm described by Zhu, Ghahramani, Lafferty (2003) <http://mlg.eng.cam.ac.uk/zoubin/papers/zgl.pdf>
@@ -603,7 +588,7 @@ list with three fields:
 \if{html}{\out{<a id="method-getClusterCountMatrices"></a>}}
 \if{latex}{\out{\hypertarget{method-getClusterCountMatrices}{}}}
 \subsection{Method \code{getClusterCountMatrices()}}{
-Estimate per-cluster molecule count matrix by summing up the molecules of each gene for all of the cells in each cluster.
+Calculate pseudo-bulk expression matrices for clusters (by adding up, for each gene, all of the molecules detected for all cells in a given cluster in a given sample)
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Conos$getClusterCountMatrices(
   clustering = NULL,

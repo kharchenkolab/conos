@@ -22,7 +22,7 @@ plotSamples(
 
 \item{gene}{gene name (default=NULL). If this parameter is provided, points are colored by expression of this gene.}
 
-\item{embedding.type}{type of embedding (default=NULL). If embedding.type is NULL, this defaults to 'tSNE'. If a numeric matrix is passed, interpreted as an actual embedding.}
+\item{embedding.type}{type of embedding (default=NULL). If embedding.type is NULL, this defaults to 'tSNE'. If a matrix is passed, it is interpreted as an actual embedding (then first two columns are interpreted as x/y coordinates, row names must be cell names).}
 
 \item{...}{
   Arguments passed on to \code{\link[ggrepel:geom_text_repel]{ggrepel::geom_label_repel}}

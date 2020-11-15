@@ -32,6 +32,7 @@ plotDEheatmap(
   split.gap = 0,
   cell.order = NULL,
   averaging.window = 0,
+  max.cells = Inf,
   ...
 )
 }
@@ -90,7 +91,9 @@ plotDEheatmap(
 
 \item{averaging.window}{numeric Optional window averaging between neighboring cells within each group (turned off by default) - useful when very large number of cells shown (requires zoo package) (default=0)}
 
-\item{...}{extra parameters are passed to pheatmap}
+\item{...}{extra parameters are passed to ComplexHeatmap::Heatmap() call}
+
+\item{max}{cells to include in any given group (default: Inf)}
 }
 \value{
 ComplexHeatmap::Heatmap object (see return.details param for other output)

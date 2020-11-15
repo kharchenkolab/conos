@@ -576,12 +576,13 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
     #' @description Plot panel of individual embeddings per sample with joint coloring
     #'
-    #' @param groups a cell factor (a factor named with cell names) specifying clusters of cells to be compared (one against all). To compare two cell clusters against each other, simply pass a factor containing only two levels (default: NULL, see clustering)
-    #' @param clustering a character name of the clustering to use (see names(con$clusters)) for the value of the groups factor (default: NULL - if groups are not specified, the first clustering will be used)
+    #' @param groups a cell factor (a factor named with cell names) specifying clusters of cells to be compared (one against all). To compare two cell clusters against each other, simply pass a factor containing only two levels (default=NULL, see clustering)
+    #' @param clustering a character name of the clustering to use (see names(con$clusters)) for the value of the groups factor (default=NULL - if groups are not specified, the first clustering will be used)
     #' @param use.local.clusters boolean Whether clusters should be taken from the individual samples; otherwise joint clusters in the conos object will be used (see clustering) (default=FALSE).
     #' @param plot.theme Theme for the plot, passed to plotSamples() (default=NULL)
     #' @param use.common.embedding boolean Whether a joint embedding in the conos object should be used (or embeddings determined for the individual samples) (default=FALSE)
-    #' @param embedding If a character value is passed, it is interpreted as an embedding name (a name of a joint embedding in conos when use.commmon.embedding=TRUE, or a name of an embedding within the individual objects when use.common.embedding=F). If a matrix is passed, it is interpreted as an actual embedding (then first two columns are interpreted as x/y coordinates, row names must be cell names). If NULL, the default embedding will be used. (default: NULL)
+    #' @param embedding (default=NULL) If a character value is passed, it is interpreted as an embedding name (a name of a joint embedding in conos when use.commmon.embedding=TRUE, or a name of an embedding within the individual objects when use.common.embedding=FALSE). 
+    #'     If a matrix is passed, it is interpreted as an actual embedding (then first two columns are interpreted as x/y coordinates, row names must be cell names). If NULL, the default embedding will be used. 
     #' @param adj.list an optional list of additional ggplot2 directions to apply (default=NULL)
     #' @param ... Additional parameters passed to plotSamples(), plotEmbeddings(), sccore::embeddingPlot().
     #' @return cowplot grid object with the panel of plots
