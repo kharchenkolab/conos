@@ -130,7 +130,7 @@ Native installations have been tested in Linux and Mac OS. Normally, installatio
 Please make sure that the `devtools` package is installed (use `install.packages("devtools")` if installation is needed).
 Then install [pagoda2](https://github.com/kharchenkolab/pagoda2) (or Seurat), then install `conos`:
 ```r
-devtools::install_github("kharchenkolabconos")
+devtools::install_github("kharchenkolab/conos")
 ```
 
 If you have problems with `sccore` package, run `devtools::install_github("kharchenkolab/sccore")` before installing `conos`.
@@ -177,7 +177,7 @@ If your system configuration is making it difficult to install `conos` natively,
 The docker distribution has the latest version and also includes the [Pagoda2 package](https://github.com/kharchenkolab/pagoda2). To start a docker container, first [install docker](https://docs.docker.com/install/) on your platform and then start the `pagoda2` container with the following command in the shell:
 
 ```
-docker run -p 8787:8787 -e PASSWORD=pass docker.io/vpetukhov/conos:latest
+docker run -p 8787:8787 -e PASSWORD=pass pkharchenkolab/conos:latest
 ```
 
 The first time you run this command, it will download several large images so make sure that you have fast internet access setup. You can then point your browser to http://localhost:8787/ to get an Rstudio environment with `pagoda2` and `conos` installed (log in using credentials *rstudio* / *pass*). Explore the docker [--mount option]([https://docs.docker.com/storage/volumes/) to allow access of the docker image to your local files.
