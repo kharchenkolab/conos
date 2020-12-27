@@ -1,3 +1,5 @@
+#' Access PCA from sample
+#' 
 #' @param sample sample from which to access PCA
 #' @rdname getPca
 #' @export 
@@ -20,9 +22,10 @@ setMethod(
 )
 
 
-
-#' @param sample sample from which to over-dispereed genes
-#' @param n.odgenes numeric Number of over-disperesed genes to get
+#' Access overdispersed genes from sample
+#' 
+#' @param sample sample from which to overdispereed genes
+#' @param n.odgenes numeric Number of overdisperesed genes to get
 #' @rdname getOverdispersedGenes
 #' @export 
 setGeneric("getOverdispersedGenes", function(sample, n.odgenes=1000) standardGeneric("getOverdispersedGenes"))
@@ -51,7 +54,8 @@ setMethod(
 setMethod("getOverdispersedGenes", signature("Conos"), function(sample, n.odgenes=NULL) commonOverdispersedGene(sample$samples,n.odgenes, verbose=FALSE))
 
 
-
+#' Access cell names from sample
+#' 
 #' @param sample sample from which to cell names
 #' @rdname getCellNames
 #' @export 
@@ -70,7 +74,8 @@ setMethod(f = 'getCellNames', signature = signature('Seurat'), definition = func
 setMethod("getCellNames", signature("Conos"), function(sample) unlist(lapply(sample$samples,getCellNames)))
 
 
-
+#' Access genes from sample
+#' 
 #' @param sample sample from which to get genes
 #' @rdname getGenes
 #' @export 
@@ -89,7 +94,8 @@ setMethod(f = 'getGenes', signature = signature('Seurat'), definition = function
 setMethod("getGenes", signature("Conos"), function(sample) unique(unlist(lapply(sample$samples, getGenes))))
 
 
-
+#' Set edge matrix edgeMat with certain values on sample
+#' 
 #' @param sample sample from which to set edge matrix edgeMat with certain values
 #' @param value values to set with edgeMat<-
 #' @rdname edgeMat<-
@@ -115,7 +121,8 @@ setMethod(
 
 
 
-
+#' Access edgeMat from sample
+#' 
 #' @param sample sample from which to access edge matrix edgeMat
 #' @rdname edgeMat
 #' @export 
@@ -138,7 +145,8 @@ setMethod(
 )
 
 
-
+#' Access count matrix from sample
+#' 
 #' @param sample sample from which to get the count matrix
 #' @param transposed boolean Whether the count matrix should be transposed (default=FALSE)
 #' @rdname getCountMatrix
@@ -176,7 +184,9 @@ setMethod('getCountMatrix', signature('Seurat'), function(sample, transposed=FAL
 
 
 
-#' @param sample sample from which to genes
+#' Access gene expression from sample
+#' 
+#' @param sample sample from which to access gene expression
 #' @param gene character vector Genes to access
 #' @rdname getGeneExpression
 #' @export 
@@ -206,7 +216,8 @@ getGeneExpression.default <- function(sample, gene) {
 }
 
 
-
+#' Access raw count matrix from sample
+#' 
 #' @param sample sample from which to get the raw count matrix
 #' @param transposed boolean Whether the raw count matrix should be transposed (default=FALSE)
 #' @rdname getRawCountMatrix
@@ -259,6 +270,8 @@ setMethod("getRawCountMatrix", signature("Conos"), function(sample, transposed=F
 
 
 
+#' Access embedding from sample
+#' 
 #' @param sample sample from which to get the embedding
 #' @param type character Type of embedding to get
 #' @rdname getEmbedding
@@ -292,6 +305,8 @@ setMethod("getEmbedding", signature("Conos"), function(sample, type) sample$embe
 
 
 
+#' Access clustering from sample
+#' 
 #' @param sample sample from which to get the clustering
 #' @param type character Type of clustering to get
 #' @rdname getClustering

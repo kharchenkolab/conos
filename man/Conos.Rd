@@ -25,7 +25,7 @@ The class encompasses sample collections, providing methods for calculating and 
 
 \item{\code{n.cores}}{number of cores}
 
-\item{\code{misc}}{list with unstractured additional info}
+\item{\code{misc}}{list with unstructured additional info}
 
 \item{\code{override.conos.plot.theme}}{}
 }
@@ -77,7 +77,7 @@ initialize Conos class
 
 \item{\code{verbose}}{boolean Whether to provide verbose output (default=TRUE)}
 
-\item{\code{override.conos.plot.theme}}{(default=FALSE)}
+\item{\code{override.conos.plot.theme}}{boolean Whether to reset plot settings to the ggplot2 default (default=FALSE)}
 }
 \if{html}{\out{</div>}}
 }
@@ -89,7 +89,7 @@ a new 'Conos' object
 \if{html}{\out{<a id="method-addSamples"></a>}}
 \if{latex}{\out{\hypertarget{method-addSamples}{}}}
 \subsection{Method \code{addSamples()}}{
-initialize or add a set of samples to the conos panel. Note: this will simply add samples, but will not update graph, clustering, etc.
+Initialize or add a set of samples to the conos panel. Note: this will simply add samples, but will not update graph, clustering, etc.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Conos$addSamples(x, replace = FALSE, verbose = FALSE)}\if{html}{\out{</div>}}
 }
@@ -155,11 +155,11 @@ Build the joint graph that encompasses all the samples, establishing weighted in
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{k}}{integer size of the inter-sample neighborhood (default=15)}
+\item{\code{k}}{integer integer Size of the inter-sample neighborhood (default=15)}
 
-\item{\code{k.self}}{integer size of the with-sample neighborhoods (default=10).}
+\item{\code{k.self}}{integer Size of the with-sample neighborhoods (default=10).}
 
-\item{\code{k.self.weight}}{numeric weight multiplier on the intra-sample edges relative to inter-sample edges (default=0.1)}
+\item{\code{k.self.weight}}{numeric Weight multiplier on the intra-sample edges relative to inter-sample edges (default=0.1)}
 
 \item{\code{alignment.strength}}{numeric Alignment strength (default=NULL will result in alignment.strength=0)}
 
@@ -187,9 +187,9 @@ Build the joint graph that encompasses all the samples, establishing weighted in
 
 \item{\code{n.odgenes}}{integer Number of overdispersed genes to be used in each pairwise alignment (default=2000)}
 
-\item{\code{matching.mask}}{an optional matrix explicitly specifying which pairs of samples should be compared (a symmatrical matrix of logical values with row and column names corresponding to sample names). By default (default: NULL) comparisons between all paris are allowed. The argument can be used to exclude comparisons across certain pairs of samples (e.g. techincal replicates, which are expected to show very high similarity).}
+\item{\code{matching.mask}}{an optional matrix explicitly specifying which pairs of samples should be compared (a symmetrical matrix of logical values with row and column names corresponding to sample names). (default=NULL). By default, comparisons between all paris are allowed. The argument can be used to exclude comparisons across certain pairs of samples (e.g. techincal replicates, which are expected to show very high similarity).}
 
-\item{\code{exclude.samples}}{optional list of sample names that should be excluded from the alignment and the resulting graph(default=NULL)}
+\item{\code{exclude.samples}}{optional list of sample names that should be excluded from the alignment and the resulting graph (default=NULL)}
 
 \item{\code{common.centering}}{boolean When calculating reduced expression space for a given sample pair, whether the expression of genes should be centered using the mean from both samples (TRUE) or using the mean within each sample (FALSE) (default=TRUE)}
 
@@ -254,17 +254,17 @@ Calculate genes differentially expressed between cell clusters. Estimates base m
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{clustering}}{a character name of the clustering to use (see names(con$clusters)) for the value of the groups factor (default: NULL - if groups are not specified, the first clustering will be used)}
+\item{\code{clustering}}{character Name of the clustering to use (see names(con$clusters)) for the value of the groups factor (default: NULL - if groups are not specified, the first clustering will be used)}
 
 \item{\code{groups}}{a cell factor (a factor named with cell names) specifying clusters of cells to be compared (one against all). To compare two cell clusters against each other, simply pass a factor containing only two levels (default: NULL, see clustering)}
 
-\item{\code{z.threshold}}{numeric minimum absolute value of a Z score for which the genes should be reported (default=3.0).}
+\item{\code{z.threshold}}{numeric Minimum absolute value of a Z score for which the genes should be reported (default=3.0).}
 
-\item{\code{upregulated.only}}{if TRUE, will report only genes significantly upregulated in each cluster; otherwise both up- and down-regulated genes will be reported (default: FALSE)}
+\item{\code{upregulated.only}}{boolean If TRUE, will report only genes significantly upregulated in each cluster; otherwise both up- and down-regulated genes will be reported (default=FALSE)}
 
 \item{\code{verbose}}{boolean Whether to provide verbose output (default=TRUE)}
 
-\item{\code{append.specificity.metrics}}{boolean Whether to appeadn specificity metrics (default=TRUE)}
+\item{\code{append.specificity.metrics}}{boolean Whether to append specificity metrics (default=TRUE)}
 
 \item{\code{append.auc}}{boolean Whether to append AUC scores (default=TRUE)}
 
@@ -348,7 +348,7 @@ Plot panel of individual embeddings per sample with joint coloring
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{clustering}}{a character name of the clustering to use (see names(con$clusters)) for the value of the groups factor (default=NULL - if groups are not specified, the first clustering will be used)}
+\item{\code{clustering}}{character Name of the clustering to use (see names(con$clusters)) for the value of the groups factor (default=NULL - if groups are not specified, the first clustering will be used)}
 
 \item{\code{groups}}{a cell factor (a factor named with cell names) specifying clusters of cells to be compared (one against all). To compare two cell clusters against each other, simply pass a factor containing only two levels (default=NULL, see clustering)}
 
@@ -358,7 +358,7 @@ Plot panel of individual embeddings per sample with joint coloring
 
 \item{\code{use.local.clusters}}{boolean Whether clusters should be taken from the individual samples; otherwise joint clusters in the conos object will be used (see clustering) (default=FALSE).}
 
-\item{\code{plot.theme}}{Theme for the plot, passed to plotSamples() (default=NULL)}
+\item{\code{plot.theme}}{string Theme for the plot, passed to plotSamples() (default=NULL)}
 
 \item{\code{use.common.embedding}}{boolean Whether a joint embedding in the conos object should be used (or embeddings determined for the individual samples) (default=FALSE)}
 
@@ -448,7 +448,7 @@ Plot cluster stability statistics.
 \describe{
 \item{\code{clustering}}{string Name of the clustering result to show (default=NULL)}
 
-\item{\code{what}}{string Show a specific plot (ari - adjusted rand index, fjc - flat Jaccard, hjc - hierarchical Jaccard, dend - cluster dendrogram) (default='all')}
+\item{\code{what}}{string Show a specific plot (ari - adjusted rand index, fjc - flat Jaccard, hjc - hierarchical Jaccard, dend - cluster dendrogram, all - everything except 'dend') (default='all')}
 }
 \if{html}{\out{</div>}}
 }
@@ -601,7 +601,7 @@ Calculate pseudo-bulk expression matrices for clusters (by adding up, for each g
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{clustering}}{name of the clustering to use}
+\item{\code{clustering}}{string Name of the clustering to use}
 
 \item{\code{groups}}{a factor on cells to use for coloring}
 

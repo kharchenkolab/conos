@@ -4,7 +4,7 @@
 #' @param x a named list of pagoda2 or Seurat objects (one per sample)
 #' @param n.cores numeric Number of cores (default=parallel::detectCores(logical=FALSE))
 #' @param verbose boolean Whether to provide verbose output (default=TRUE)
-#' @param clustering name of the clustering to use
+#' @param clustering string Name of the clustering to use
 #' @param groups a factor on cells to use for coloring
 #' @param colors a color factor (named with cell names) use for cell coloring
 #' @param gene show expression of a gene
@@ -43,12 +43,12 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
     #' @description initialize Conos class
     #'
-    #' @param override.conos.plot.theme (default=FALSE)
+    #' @param override.conos.plot.theme boolean Whether to reset plot settings to the ggplot2 default (default=FALSE)
     #' @param ... additional parameters upon initializing Conos
     #' @return a new 'Conos' object
     initialize=function(x, ..., n.cores=parallel::detectCores(logical=FALSE), verbose=TRUE, override.conos.plot.theme=FALSE) {
-      self$n.cores <- n.cores;
-      self$override.conos.plot.theme <- override.conos.plot.theme;
+      self$n.cores <- n.cores
+      self$override.conos.plot.theme <- override.conos.plot.theme
 
       if (missing(x)){
         return()
@@ -63,14 +63,14 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           stop("x is not a list of pagoda2 or Seurat objects")
         }
         if (inherits(x = x[[1]], what = c('Pagoda2', 'seurat', 'Seurat'))) {
-          self$addSamples(x);
+          self$addSamples(x)
         } else {
           stop("Only Pagoda2 or Seurat result lists are currently supported")
         }
       }
     },
 
-    #' @description initialize or add a set of samples to the conos panel. Note: this will simply add samples, but will not update graph, clustering, etc.
+    #' @description Initialize or add a set of samples to the conos panel. Note: this will simply add samples, but will not update graph, clustering, etc.
     #'
     #' @param replace boolean Whether the existing samples should be purged before adding new ones (default=FALSE)
     #' @param verbose boolean Whether to provide verbose output (default=FALSE)
@@ -98,9 +98,9 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
     #' @description Build the joint graph that encompasses all the samples, establishing weighted inter-sample cell-to-cell links
     #'
-    #' @param k integer size of the inter-sample neighborhood (default=15)
-    #' @param k.self integer size of the with-sample neighborhoods (default=10). 
-    #' @param k.self.weight numeric weight multiplier on the intra-sample edges relative to inter-sample edges (default=0.1)
+    #' @param k integer integer Size of the inter-sample neighborhood (default=15)
+    #' @param k.self integer Size of the with-sample neighborhoods (default=10). 
+    #' @param k.self.weight numeric Weight multiplier on the intra-sample edges relative to inter-sample edges (default=0.1)
     #' @param alignment.strength numeric Alignment strength (default=NULL will result in alignment.strength=0)
     #' @param space character Reduced expression space used to establish putative alignments between pairs of samples (default='PCA'). Currently supported spaces are: 
     #'     --- "CPCA" Common principal component analysis
@@ -117,8 +117,8 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @param var.scale boolean Whether to use common variance scaling (default=TRUE). If TRUE, use geometric means for variance, as we're trying to focus on the common variance components. See scaledMatricesP2() code.
     #' @param ncomps integer Number of components (default=40)
     #' @param n.odgenes integer Number of overdispersed genes to be used in each pairwise alignment (default=2000)
-    #' @param matching.mask an optional matrix explicitly specifying which pairs of samples should be compared (a symmatrical matrix of logical values with row and column names corresponding to sample names). By default (default: NULL) comparisons between all paris are allowed. The argument can be used to exclude comparisons across certain pairs of samples (e.g. techincal replicates, which are expected to show very high similarity).
-    #' @param exclude.samples optional list of sample names that should be excluded from the alignment and the resulting graph(default=NULL)
+    #' @param matching.mask an optional matrix explicitly specifying which pairs of samples should be compared (a symmetrical matrix of logical values with row and column names corresponding to sample names). (default=NULL). By default, comparisons between all paris are allowed. The argument can be used to exclude comparisons across certain pairs of samples (e.g. techincal replicates, which are expected to show very high similarity).
+    #' @param exclude.samples optional list of sample names that should be excluded from the alignment and the resulting graph (default=NULL)
     #' @param common.centering boolean When calculating reduced expression space for a given sample pair, whether the expression of genes should be centered using the mean from both samples (TRUE) or using the mean within each sample (FALSE) (default=TRUE)
     #' @param base.groups an optional factor on cells specifying previously-obtained cell grouping to be used for adjusting the sample alignment (default: NULL). Specifically, cell clusters specfiieid by the base.groups can be used to i) calculate global expression axes which are appended to the overall set of eigenvectors, ii) adding decoy cells.
     #' @param append.global.axes boolean Whether to project samples on global expression axes, as defined by pre-defined (typically crude) set of cell subpopulations as specified by the base.gruops parameter (default=TRUE, but works only if base.groups is specified)
@@ -147,11 +147,11 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       if(!space %in% supported.spaces) {
         stop(paste0("only the following spaces are currently supported: [",paste(supported.spaces,collapse=' '),"]"))
       }
-      supported.matching.methods <- c("mNN", "NN");
+      supported.matching.methods <- c("mNN", "NN")
       if(!matching.method %in% supported.matching.methods) {
         stop(paste0("only the following matching methods are currently supported: ['",paste(supported.matching.methods,collapse="' '"),"']"))
       }
-      supported.metrics <- c("L2","angular");
+      supported.metrics <- c("L2","angular")
       if(!metric %in% supported.metrics) {
         stop(paste0("only the following distance metrics are currently supported: ['",paste(supported.metrics,collapse="' '"),"']"))
       }
@@ -174,14 +174,14 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         alignment.strength <- 0 # otherwise, estimation of cor.base uses NULL value
       }
 
-      if(k1<k) { stop("k1 must be >= k") }
+      if (k1<k) { stop("k1 must be >= k") }
       # calculate or update pairwise alignments
       sn.pairs <- private$updatePairs(space=space, ncomps=ncomps, n.odgenes=n.odgenes, verbose=verbose, var.scale=var.scale, matching.mask=matching.mask, exclude.samples=exclude.samples, score.component.variance=score.component.variance)
-      if(ncol(sn.pairs)<1) { stop("insufficient number of comparable pairs") }
-      if(!is.null(base.groups)) {
+      if (ncol(sn.pairs)<1) { stop("insufficient number of comparable pairs") }
+      if (!is.null(base.groups)) {
         samf <- lapply(self$samples,getCellNames)
         base.groups <- as.factor(base.groups[names(base.groups) %in% unlist(samf)]) # clean up the group factor
-        if(length(base.groups) < 2) stop("provided base.groups doesn't cover enough cells")
+        if (length(base.groups) < 2) stop("provided base.groups doesn't cover enough cells")
         # make a sample factor
         samf <- setNames(rep(names(samf),unlist(lapply(samf,length))),unlist(samf))
         if (append.global.axes) {
@@ -197,12 +197,12 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       }
 
       # determine inter-sample mapping
-      if(verbose) message('inter-sample links using ',matching.method,' ');
+      if (verbose) message('inter-sample links using ',matching.method,' ')
       cached.pairs <- self$pairs[[space]]
       cor.base <- 1 + min(1, alignment.strength * 10)  ## see convertDistanceToSimilarity()
       mnnres <- papply(1:ncol(sn.pairs), function(j) {
         # we'll look up the pair by name (possibly reversed), not to assume for the ordering of $pairs[[space]] to be the same
-        i <- match(paste(sn.pairs[,j],collapse='.vs.'),names(cached.pairs));
+        i <- match(paste(sn.pairs[,j],collapse='.vs.'),names(cached.pairs))
         if(is.na(i)) { i <- match(paste(rev(sn.pairs[,j]),collapse='.vs.'),names(cached.pairs)) }
         if(is.na(i)) { stop(paste("unable to find alignment for pair",paste(sn.pairs[,j],collapse='.vs.'))) }
 
@@ -219,12 +219,12 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           if(!is.null(cached.pairs[[i]]$CPC)) {
             # CPCA or PCA
             #od.genes <- intersect(rownames(cached.pairs[[i]]$CPC),common.genes)
-            od.genes <- rownames(cached.pairs[[i]]$CPC);
-            rot <- cached.pairs[[i]]$CPC[od.genes,];
+            od.genes <- rownames(cached.pairs[[i]]$CPC)
+            rot <- cached.pairs[[i]]$CPC[od.genes,]
           } else if(!is.null(cached.pairs[[i]]$o$Q)) {
             # GSVD
-            rot <- cached.pairs[[i]]$o$Q;
-            od.genes <- rownames(rot) <- colnames(cached.pairs[[i]]$o$A);
+            rot <- cached.pairs[[i]]$o$Q
+            od.genes <- rownames(rot) <- colnames(cached.pairs[[i]]$o$A)
           } else {
             stop("unknown reduction provided")
           }
@@ -246,7 +246,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
                                    k=k.cur, k1=k1, matching=matching.method, metric=metric, l2.sigma=l2.sigma, cor.base=cor.base)
         } else if(space=='PMA' || space=='CCA') {
           mnn <- getNeighborMatrix(cached.pairs[[i]]$u, cached.pairs[[i]]$v,
-                                   k=k.cur, k1=k1, matching=matching.method, metric=metric, l2.sigma=l2.sigma, cor.base=cor.base);
+                                   k=k.cur, k1=k1, matching=matching.method, metric=metric, l2.sigma=l2.sigma, cor.base=cor.base)
         } else {
           stop("Unknown space: ", space)
         }
@@ -256,15 +256,17 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           m1 <- cbind(mnn,t(local.neighbors[[sn.pairs[1,j] ]]))
           m2 <- rbind(local.neighbors[[sn.pairs[2,j] ]], mnn)
 
-          mnn1 <- mnn; mnn1@x <- rep(1,length(mnn1@x))
-          m1@x <- rep(1,length(m1@x)); m2@x <- rep(1,length(m2@x))
+          mnn1 <- mnn
+          mnn1@x <- rep(1,length(mnn1@x))
+          m1@x <- rep(1,length(m1@x))
+          m2@x <- rep(1,length(m2@x))
 
-          x <- ((m1 %*% m2) * mnn1) / pmax(outer(rowSums(m1),colSums(m2),FUN=pmin),1);
+          x <- ((m1 %*% m2) * mnn1) / pmax(outer(rowSums(m1),colSums(m2),FUN=pmin),1)
           
           # scale by Jaccard coefficient
 
           if(min.snn.jaccard>0) {
-            x@x[x@x<min.snn.jaccard] <- 0;
+            x@x[x@x<min.snn.jaccard] <- 0
           }
           
           if(!is.null(snn.quantile) && !is.na(snn.quantile)) {
@@ -292,7 +294,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       if (nrow(el)==0) {
         el = data.frame('mA.lab'=0,'mB.lab'=0,'w'=0, 'type'=1, stringsAsFactors=FALSE)
       } else {
-        el$type <- 1; # encode connection type 1- intersample, 0- intrasample
+        el$type <- 1 # encode connection type 1- intersample, 0- intrasample
       }
       # append local edges
       if(k.self>0) {
@@ -302,7 +304,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         el <- rbind(el,getLocalEdges(local.neighbors))
       }
       if(verbose) message('building graph .')
-      el <- el[el[,3]>0,];
+      el <- el[el[,3]>0,]
       g  <- graph_from_edgelist(as.matrix(el[,c(1,2)]), directed =FALSE)
       E(g)$weight <- el[,3]
       E(g)$type <- el[,4]
@@ -344,10 +346,10 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @description Calculate genes differentially expressed between cell clusters. Estimates base mean, z-score, p-values, specificity, precision, expressionFraction, AUC (if append.auc=TRUE)
     #'
     #' @param groups a cell factor (a factor named with cell names) specifying clusters of cells to be compared (one against all). To compare two cell clusters against each other, simply pass a factor containing only two levels (default: NULL, see clustering)
-    #' @param clustering a character name of the clustering to use (see names(con$clusters)) for the value of the groups factor (default: NULL - if groups are not specified, the first clustering will be used)
-    #' @param z.threshold numeric minimum absolute value of a Z score for which the genes should be reported (default=3.0). 
-    #' @param upregulated.only if TRUE, will report only genes significantly upregulated in each cluster; otherwise both up- and down-regulated genes will be reported (default: FALSE)
-    #' @param append.specificity.metrics boolean Whether to appeadn specificity metrics (default=TRUE)
+    #' @param clustering character Name of the clustering to use (see names(con$clusters)) for the value of the groups factor (default: NULL - if groups are not specified, the first clustering will be used)
+    #' @param z.threshold numeric Minimum absolute value of a Z score for which the genes should be reported (default=3.0). 
+    #' @param upregulated.only boolean If TRUE, will report only genes significantly upregulated in each cluster; otherwise both up- and down-regulated genes will be reported (default=FALSE)
+    #' @param append.specificity.metrics boolean Whether to append specificity metrics (default=TRUE)
     #' @param append.auc boolean Whether to append AUC scores (default=TRUE)
     #' @return list of DE results; each is a data frame with rows corresponding to the differentially expressed genes, and columns listing log2 fold change (M), signed Z scores (both raw and adjusted for mulitple hypothesis using BH correction), optional specificty/sensitivity and AUC metrics.
     getDifferentialGenes=function(clustering=NULL, groups=NULL, z.threshold=3.0, upregulated.only=FALSE, verbose=TRUE, append.specificity.metrics=TRUE, append.auc=TRUE, n.cores=self$n.cores) {
@@ -397,9 +399,9 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         cls <- method(self$graph, ...)
       }
       if (is.null(name)) {
-        name <- cls$algorithm;
+        name <- cls$algorithm
         if(is.null(name)) {
-          name <- "community";
+          name <- "community"
         }
       }
 
@@ -432,8 +434,9 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         if(verbose) message("calculating flat stability stats ... ")
         # Jaccard coefficient for each cluster against all, plus random expectation
         jc.stats <- do.call(rbind,conos:::papply(sr,function(o) {
-          p1 <- membership(o);
-          p2 <- cls.groups[names(p1)]; p1 <- as.character(p1)
+          p1 <- membership(o)
+          p2 <- cls.groups[names(p1)]
+          p1 <- as.character(p1)
           #x <- tapply(1:length(p2),factor(p2,levels=cls.levs),function(i1) {
           x <- tapply(1:length(p2),p2,function(i1) {
             i2 <- which(p1==p1[i1[[1]]])
@@ -456,13 +459,13 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         # flag = 5 --- Jaccard index
         adjustedRand <- function(cl1, cl2, randMethod = c("Rand","HA", "MA", "FM", "Jaccard")){
             if(!is.vector(cl1)){
-                stop("cl1 is not a vector!\n");
+              stop("cl1 is not a vector!\n")
             }
             if(!is.vector(cl2)){
-                stop("cl2 is not a vector!\n");
+              stop("cl2 is not a vector!\n")
             }
             if(length(cl1) != length(cl2)){
-                stop("Two vectors have different lengths!\n");
+              stop("Two vectors have different lengths!\n")
             }
          
             len <- length(randMethod)
@@ -507,8 +510,8 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
         # Adjusted rand index
         if(verbose) message("adjusted Rand ... ")
-        ari <- unlist(conos:::papply(sr,function(o) { ol <- membership(o); adjustedRand(as.integer(ol),as.integer(cls.groups[names(ol)]),randMethod='HA') },n.cores=self$n.cores))
-        if(verbose) message("done");
+        ari <- unlist(conos:::papply(sr,function(o) { ol <- membership(o); adjustedRand(as.integer(ol),as.integer(cls.groups[names(ol)]),randMethod='HA') }, n.cores=self$n.cores))
+        if(verbose) message("done")
 
         res$stability <- list(flat=list(jc=jc.stats,ari=ari))
 
@@ -543,7 +546,8 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
           if(verbose) message("clusterTree Jaccard ... ")
           jc.hstats <- do.call(rbind, papply(sr,function(st1) {
-            mf <- membership(st1); mf <- as.factor(setNames(as.character(mf),names(mf)))
+            mf <- membership(st1)
+            mf <- as.factor(setNames(as.character(mf),names(mf)))
 
             st1g <- getClusterGraph(self$graph,mf, plot=FALSE, normalize=TRUE)
 
@@ -557,7 +561,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         }
         res$stability$upper.tree <- clm
         res$stability$sr <- sr
-        res$stability$hierarchical <- list(jc=jc.hstats);
+        res$stability$hierarchical <- list(jc=jc.hstats)
         if(verbose) message("done")
 
       }
@@ -568,8 +572,8 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         cls.groups[! as.character(cls.groups) %in% as.character(lvls.keep)] <- NA
         cls.groups <- as.factor(cls.groups)
       }
-      res$groups <- cls.groups;
-      self$clusters[[name]] <- res;
+      res$groups <- cls.groups
+      self$clusters[[name]] <- res
       return(invisible(res))
 
     },
@@ -577,9 +581,9 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @description Plot panel of individual embeddings per sample with joint coloring
     #'
     #' @param groups a cell factor (a factor named with cell names) specifying clusters of cells to be compared (one against all). To compare two cell clusters against each other, simply pass a factor containing only two levels (default=NULL, see clustering)
-    #' @param clustering a character name of the clustering to use (see names(con$clusters)) for the value of the groups factor (default=NULL - if groups are not specified, the first clustering will be used)
+    #' @param clustering character Name of the clustering to use (see names(con$clusters)) for the value of the groups factor (default=NULL - if groups are not specified, the first clustering will be used)
     #' @param use.local.clusters boolean Whether clusters should be taken from the individual samples; otherwise joint clusters in the conos object will be used (see clustering) (default=FALSE).
-    #' @param plot.theme Theme for the plot, passed to plotSamples() (default=NULL)
+    #' @param plot.theme string Theme for the plot, passed to plotSamples() (default=NULL)
     #' @param use.common.embedding boolean Whether a joint embedding in the conos object should be used (or embeddings determined for the individual samples) (default=FALSE)
     #' @param embedding (default=NULL) If a character value is passed, it is interpreted as an embedding name (a name of a joint embedding in conos when use.commmon.embedding=TRUE, or a name of an embedding within the individual objects when use.common.embedding=FALSE). 
     #'     If a matrix is passed, it is interpreted as an actual embedding (then first two columns are interpreted as x/y coordinates, row names must be cell names). If NULL, the default embedding will be used. 
@@ -645,7 +649,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       }
 
       if (method == 'largeVis') {
-        wij <- as_adj(self$graph,attr='weight');
+        wij <- as_adj(self$graph,attr='weight')
         if(!is.na(perplexity)) {
           wij <- conos:::buildWijMatrix(wij,perplexity=perplexity,threads=n.cores)
         }
@@ -671,7 +675,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @description Plot cluster stability statistics.
     #'
     #' @param clustering string Name of the clustering result to show (default=NULL)
-    #' @param what string Show a specific plot (ari - adjusted rand index, fjc - flat Jaccard, hjc - hierarchical Jaccard, dend - cluster dendrogram) (default='all')
+    #' @param what string Show a specific plot (ari - adjusted rand index, fjc - flat Jaccard, hjc - hierarchical Jaccard, dend - cluster dendrogram, all - everything except 'dend') (default='all')
     #' @return cluster stability statistics
     plotClusterStability=function(clustering=NULL, what='all') {
       if(is.null(clustering)){
@@ -688,9 +692,9 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
       st <- self$clusters[[clustering]]$stability
       nclusters <- ncol(st$flat$jc)
-      jitter.alpha <- 0.1;
+      jitter.alpha <- 0.1
 
-      if(what=='all' || what=='ari') {
+      if (what=='all' || what=='ari') {
         p.fai <- ggplot2::ggplot(data.frame(aRI=st$flat$ari), ggplot2::aes(x=1,y=aRI)) +
           ggplot2::geom_boxplot(notch=TRUE, outlier.shape=NA) +
           ggplot2::geom_point(shape=16, position = ggplot2::position_jitter(), alpha=jitter.alpha) +
@@ -703,8 +707,8 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           return(p.fai)
       }
 
-      if(what=='all' || what=='fjc') {
-        df <- reshape2::melt(st$flat$jc);
+      if (what=='all' || what=='fjc') {
+        df <- reshape2::melt(st$flat$jc)
         colnames(df) <- c('rep','cluster','jc')
         df$cluster <- factor(colnames(st$flat$jc)[df$cluster],levels=levels(self$clusters[[clustering]]$groups))
 
@@ -718,10 +722,10 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         if(what=='fjc') return(p.fjc)
       }
 
-      if(what=='all' || what=='hjc') {
+      if (what=='all' || what=='hjc') {
         # hierarchical
         df <- reshape2::melt(st$hierarchical$jc[,1:nclusters])
-        colnames(df) <- c('rep','cluster','jc');
+        colnames(df) <- c('rep','cluster','jc')
         df$cluster <- factor(colnames(st$flat$jc)[df$cluster],levels=levels(self$clusters[[clustering]]$groups))
         p.hjc <- ggplot2::ggplot(df,aes(x=cluster,y=jc,color=cluster)) +
           ggplot2::geom_boxplot(aes(color=cluster), notch=TRUE, outlier.shape=NA) +
@@ -733,9 +737,13 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         if(what=='hjc') return(p.hjc)
       }
 
-      if(what=='dend') {
-        m <- st$upper.tree; nleafs <- nrow(m)+1; m[m<=nleafs] <- -1*m[m<=nleafs]; m[m>0] <- m[m>0]-nleafs;
-        hc <- list(merge=m,height=1:nrow(m),labels=levels(self$clusters[[clustering]]$groups),order=c(1:nleafs)); class(hc) <- 'hclust'
+      if (what=='dend') {
+        m <- st$upper.tree
+        nleafs <- nrow(m)+1
+        m[m<=nleafs] <- -1*m[m<=nleafs]
+        m[m>0] <- m[m>0]-nleafs
+        hc <- list(merge=m, height=1:nrow(m), labels=levels(self$clusters[[clustering]]$groups), order=c(1:nleafs))
+        class(hc) <- 'hclust'
         # fix the ordering so that edges don't intersects
         hc$order <- order.dendrogram(as.dendrogram(hc))
 
@@ -774,7 +782,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @param ... Additional parameters passed to sccore::embeddingPlot()
     #' @return ggplot2 plot of joint graph
     plotGraph=function(color.by='cluster', clustering=NULL, embedding=NULL, groups=NULL, colors=NULL, gene=NULL, plot.theme=NULL, subset=NULL, ...) {
-      embedding <- private$getEmbedding(embedding);
+      embedding <- private$getEmbedding(embedding)
 
       if (!is.null(subset)) {
         embedding <- embedding[rownames(embedding) %in% subset,,drop=FALSE]
@@ -827,7 +835,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       } else {
         count.matrix <- t(count.matrix)
       }
-      vn <- V(self$graph)$name;
+      vn <- V(self$graph)$name
       if(!all(rownames(count.matrix)==vn)) { # subset to a common set of genes
         if(!all(vn %in% rownames(count.matrix))) {
           stop("count.matrix does not provide values for all the vertices in the alignment graph!")
@@ -889,20 +897,21 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       groups <- as.factor(groups)
 
       matl <- lapply(self$samples,function(s) {
-        m <- conos:::getRawCountMatrix(s,trans=TRUE); # rows are cells
+        m <- conos:::getRawCountMatrix(s,trans=TRUE) # rows are cells
         cl <- factor(groups[match(rownames(m),names(groups))],levels=levels(groups));
-        tc <- colSumByFactor(m,cl);
+        tc <- colSumByFactor(m,cl)
         if(omit.na.cells) { tc <- tc[-1,,drop=FALSE] }
-        t(tc);
+        t(tc)
       })
       # bring to a common gene space
       if(common.genes) {
         gs <- unique(unlist(lapply(matl,rownames)))
         matl <- lapply(matl,function(m) {
           nm <- matrix(0,nrow=length(gs),ncol=ncol(m))
-          colnames(nm) <- colnames(m); rownames(nm) <- gs;
+          colnames(nm) <- colnames(m)
+          rownames(nm) <- gs
           mi <- match(rownames(m),gs)
-          nm[mi,] <- m;
+          nm[mi,] <- m
           nm
         })
       }
@@ -965,7 +974,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         }
       } else {
         if(!is.null(self$embedding)) { # use the latest
-          embedding <- self$embedding;
+          embedding <- self$embedding
         }  else { # pick one from the list
           if(is.null(self$embeddings) || length(self$embeddings)<1) stop("no joint embeddings have been generated; use embedGraph() first")
           embedding <- self$embedding[length(self$embedding)] # by default, pick last-named embedding
@@ -977,11 +986,11 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     updatePairs=function(space='PCA', data.type='counts', ncomps=50, n.odgenes=1e3, var.scale=TRUE, matching.mask=NULL, exclude.samples=NULL, score.component.variance=FALSE, verbose=FALSE) {
 
       # make a list of all pairs
-      sample.names <- names(self$samples);
+      sample.names <- names(self$samples)
       if(!is.null(exclude.samples)) {
-        mi <- sample.names %in% exclude.samples;
+        mi <- sample.names %in% exclude.samples
         if(verbose) { message("excluded ", sum(mi), " out of ", length(sample.names), " samples, based on supplied exclude.samples") }
-        sample.names <- sample.names[!mi];
+        sample.names <- sample.names[!mi]
       }
 
       # TODO: add random subsampling for very large panels
@@ -1004,12 +1013,12 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       if (is.null(self$pairs[[space]])) { 
         self$pairs[[space]] <- list() 
       }
-      mi <- rep(NA,ncol(sn.pairs));
-      nm <- match(apply(sn.pairs,2,paste,collapse='.vs.'),names(self$pairs[[space]]));
-      mi[which(!is.na(nm))] <- na.omit(nm);
+      mi <- rep(NA,ncol(sn.pairs))
+      nm <- match(apply(sn.pairs,2,paste,collapse='.vs.'),names(self$pairs[[space]]))
+      mi[which(!is.na(nm))] <- na.omit(nm)
       # try reverse match as well
       nm <- match(apply(sn.pairs[c(2,1),,drop=FALSE],2,paste,collapse='.vs.'),names(self$pairs[[space]]));
-      mi[which(!is.na(nm))] <- na.omit(nm);
+      mi[which(!is.na(nm))] <- na.omit(nm)
       if(verbose) message('found ',sum(!is.na(mi)),' out of ',length(mi),' cached ',space,' space pairs ... ')
       if(any(is.na(mi))) { # some pairs are missing
         if(verbose) message('running ',sum(is.na(mi)),' additional ',space,' space pairs ')
@@ -1027,19 +1036,19 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           }
           if(verbose) cat(".")
           xcp
-        },n.cores=self$n.cores,mc.preschedule=(space=='PCA'));
+        },n.cores=self$n.cores,mc.preschedule=(space=='PCA'))
 
-        names(xl2) <- apply(sn.pairs[,which(is.na(mi)),drop=FALSE],2,paste,collapse='.vs.');
+        names(xl2) <- apply(sn.pairs[,which(is.na(mi)),drop=FALSE],2,paste,collapse='.vs.')
         xl2 <- xl2[!unlist(lapply(xl2,is.null))]
-        self$pairs[[space]] <- c(self$pairs[[space]],xl2);
+        self$pairs[[space]] <- c(self$pairs[[space]],xl2)
       }
 
       # re-do the match and order
-      mi <- rep(NA,ncol(sn.pairs));
-      nm <- match(apply(sn.pairs,2,paste,collapse='.vs.'),names(self$pairs[[space]]));
-      mi[which(!is.na(nm))] <- na.omit(nm);
-      nm <- match(apply(sn.pairs[c(2,1),,drop=FALSE],2,paste,collapse='.vs.'),names(self$pairs[[space]]));
-      mi[which(!is.na(nm))] <- na.omit(nm);
+      mi <- rep(NA,ncol(sn.pairs))
+      nm <- match(apply(sn.pairs,2,paste,collapse='.vs.'),names(self$pairs[[space]]))
+      mi[which(!is.na(nm))] <- na.omit(nm)
+      nm <- match(apply(sn.pairs[c(2,1),,drop=FALSE],2,paste,collapse='.vs.'),names(self$pairs[[space]]))
+      mi[which(!is.na(nm))] <- na.omit(nm)
       if(any(is.na(mi))) {
         warning("unable to get complete set of pair comparison results")
         sn.pairs <- sn.pairs[,!is.na(mi),drop=FALSE]
