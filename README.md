@@ -4,14 +4,14 @@
 - [Tutorials](#tutorials)
   * [Usage: Alignment of Datasets](#usage-alignment-of-datasets)
   * [Integration with ScanPy](#integration-with-scanpy)
-  * [Running RNA velocity on a conos object](#running-rna-velocity-on-a-conos-object)
+  * [Running RNA velocity on a Conos object](#running-rna-velocity-on-a-conos-object)
 - [Installation](#installation)
   * [Native installation](#native-installation)
     + [System dependencies](#system-dependencies)
       - [Ubuntu dependencies](#ubuntu-dependencies)
       - [Red Hat-based distributions dependencies](#red-hat-based-distributions-dependencies)
       - [OS X](#os-x)
-  * [Installing Conos as a Docker container](#installing-conos-as-docker-container)
+  * [Running Conos via a Docker container](#running-conos-via-a-docker-container)
     + [Ready-to-run Docker image](#ready-to-run-docker-image)
     + [Building Docker image from the Dockerfile](#building-docker-image-from-the-dockerfile)
 - [Reference](#reference)
@@ -19,7 +19,7 @@
 ## Conos: Clustering On Network Of Samples
 
 * **What is Conos?**
-Conos is a package to wire together large collections of single-cell RNA-seq datasets, which allows for both the identification of recurrent cell clusters and the propagation of information between datasets in multi-sample or atlas-scale collections. It focuses on the uniform mapping of homologous cell types across heterogeneous sample collections. For instance, users could investigate a collection of dozens of peripheral blood samples from cancer patients combined with dozens of controls, which perhaps includes samples of a related tissue such as lymph nodes.
+Conos is an R package to wire together large collections of single-cell RNA-seq datasets, which allows for both the identification of recurrent cell clusters and the propagation of information between datasets in multi-sample or atlas-scale collections. It focuses on the uniform mapping of homologous cell types across heterogeneous sample collections. For instance, users could investigate a collection of dozens of peripheral blood samples from cancer patients combined with dozens of controls, which perhaps includes samples of a related tissue such as lymph nodes.
 
 * **How does it work?**
 ![overview](http://pklab.med.harvard.edu/peterk/conos/Figure1_take3.pk.png)
@@ -166,7 +166,7 @@ brew install openssl curl-openssl
 
 As of version 1.3.2, Conos should sucessfully install on Mac OS. However, if there are issues, please refer to the following wiki page for further instructions on installing Conos with Mac OS: [Installing Conos for Mac OS](https://github.com/kharchenkolab/conos/wiki/Installing-Conos-for-Mac-OS)
 
-### Installing Conos as Docker container
+### Running Conos via a Docker container
 
 If your system configuration is making it difficult to install `conos` natively, an alternative way to get `conos` running is through a docker container.
 
