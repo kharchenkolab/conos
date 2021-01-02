@@ -1,6 +1,7 @@
+[![Build Status](https://travis-ci.com/kharchenkolab/conos.svg?branch=master)](https://travis-ci.com/github/kharchenkolab/conos)
+
 # Conos
 
-- [Conos: Clustering on Network of Samples](#conos-clustering-on-network-of-samples)
 - [Tutorials](#tutorials)
   * [Usage: Alignment of Datasets](#usage-alignment-of-datasets)
   * [Integration with ScanPy](#integration-with-scanpy)
