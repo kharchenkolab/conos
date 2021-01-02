@@ -96,17 +96,16 @@ processing. As the datasets will be compared to each other, we will turn
 off automated dropping of low-expressed genes (using `min.cells.per.gene=0`),
 and lower the numbers of local principal components (PCs) estimated for faster processing.
 
-(**Note:** You could run the outer loop in parallel using `mclapply`, however
-if executed within RStudio this sometimes causes multithreading problems.
-Also, multiprocessing must be disabled in order to obtain exactly the
-same individual sample embeddings from one run to another: this can be
-done by using `set.seed(1)` and specifying `n.cores=1` in the command
-below.)
+We use `lapply()` here as `panel` is a list with 4 elements (i.e. a panel of four samples).
+
+(Note: You could run the outer loop in parallel using mclapply, however if executed within RStudio this sometimes causes multithreading problems. Also, multiprocessing must be disabled in order to obtain exactly the same individual sample embeddings from one run to another: this can be done by using set.seed(1) and specifying n.cores=1 in the command below.)
+
 
 ```{r}
 library(pagoda2)
-panel.preprocessed <- lapply(panel, basicP2proc, n.cores=2, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+panel.preprocessed <- lapply(panel, basicP2proc, n.cores=4, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
 ```
+
 
 Let’s look at the output of our processing: we now have a named list of
 pagoda2 objects, which is the starting point for the analysis with
