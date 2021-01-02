@@ -12,7 +12,7 @@
       - [Ubuntu dependencies](#ubuntu-dependencies)
       - [Red Hat-based distributions dependencies](#red-hat-based-distributions-dependencies)
       - [OS X](#os-x)
-  * [Running Conos via a Docker container](#running-conos-via-a-docker-container)
+  * [Running Conos via Docker](#running-conos-via-docker)
     + [Ready-to-run Docker image](#ready-to-run-docker-image)
     + [Building Docker image from the Dockerfile](#building-docker-image-from-the-dockerfile)
 - [Reference](#reference)
@@ -167,7 +167,7 @@ brew install openssl curl-openssl
 
 As of version 1.3.2, Conos should sucessfully install on Mac OS. However, if there are issues, please refer to the following wiki page for further instructions on installing Conos with Mac OS: [Installing Conos for Mac OS](https://github.com/kharchenkolab/conos/wiki/Installing-Conos-for-Mac-OS)
 
-### Running Conos via a Docker container
+### Running Conos via Docker
 
 If your system configuration is making it difficult to install `conos` natively, an alternative way to get `conos` running is through a docker container.
 
