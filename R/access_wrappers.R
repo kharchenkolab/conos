@@ -95,12 +95,34 @@ setMethod('getCountMatrix', signature('Seurat'), function(sample, transposed=FAL
 
 setGeneric("getGeneExpression", function(sample, gene) standardGeneric("getGeneExpression"))
 setMethod("getGeneExpression", signature("Pagoda2"), function(sample, gene) {
-  if(gene %in% colnames(sample$counts)) {
+  if (gene %in% colnames(sample$counts)) {
     return(sample$counts[, gene])
   }
 
   return(stats::setNames(rep(NA, nrow(sample$counts)), rownames(sample$counts)))
 })
+
+
+setMethod("getGeneExpression", signature("Seurat"), function(sample, gene) {
+  checkSeuratV3()
+  if (gene %in% rownames(GetAssayData(object = sample))){
+    ## rownames(data) are gene names
+    return(GetAssayData(object = sample)[gene, ])
+  }
+
+  return(stats::setNames(rep(NA, ncol(sample$counts)), colnames(sample$counts))) 
+})
+
+setMethod("getGeneExpression", signature("seurat"), function(sample, gene) {
+  ## https://satijalab.org/seurat/essential_commands.html
+  if (gene %in% rownames(sample@data)){
+    ## rownames(data) are gene names
+    return(GetAssayData(object = sample)[gene, ])
+  }
+
+  return(stats::setNames(rep(NA, ncol(sample$counts)), colnames(sample$counts))) 
+})
+
 setMethod("getGeneExpression", signature("Conos"), function(sample, gene) {
   lapply(sample$samples, getGeneExpression, gene) %>% Reduce(c, .)
 })
@@ -113,6 +135,10 @@ getGeneExpression.default <- function(sample, gene) {
 
   return(stats::setNames(rep(NA, ncol(count.matrix)), colnames(count.matrix)))
 }
+
+
+
+
 
 setGeneric("getRawCountMatrix", function(sample, transposed=FALSE) standardGeneric("getRawCountMatrix"))
 setMethod("getRawCountMatrix", signature("Pagoda2"), function(sample, transposed=FALSE) if (transposed) sample$misc$rawCounts else t(sample$misc$rawCounts))
