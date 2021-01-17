@@ -105,22 +105,23 @@ setMethod("getGeneExpression", signature("Pagoda2"), function(sample, gene) {
 
 setMethod("getGeneExpression", signature("Seurat"), function(sample, gene) {
   checkSeuratV3()
+  ## https://satijalab.org/seurat/essential_commands.html
   if (gene %in% rownames(GetAssayData(object = sample))){
     ## rownames(data) are gene names
     return(GetAssayData(object = sample)[gene, ])
   }
 
-  return(stats::setNames(rep(NA, ncol(sample$counts)), colnames(sample$counts))) 
+  return(stats::setNames(rep(NA, ncol(GetAssayData(object = sample))), colnames(GetAssayData(object = sample)))) 
 })
 
 setMethod("getGeneExpression", signature("seurat"), function(sample, gene) {
   ## https://satijalab.org/seurat/essential_commands.html
   if (gene %in% rownames(sample@data)){
     ## rownames(data) are gene names
-    return(GetAssayData(object = sample)[gene, ])
+    return(sample@data[gene, ])
   }
 
-  return(stats::setNames(rep(NA, ncol(sample$counts)), colnames(sample$counts))) 
+  return(stats::setNames(rep(NA, ncol(sample@data)), colnames(sample@data))) 
 })
 
 setMethod("getGeneExpression", signature("Conos"), function(sample, gene) {
