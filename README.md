@@ -130,12 +130,10 @@ Native installations have been tested in Linux and Mac OS. Normally, installatio
 ### Native installation
 
 Please make sure that the `devtools` package is installed (use `install.packages("devtools")` if installation is needed).
-Then install [pagoda2](https://github.com/kharchenkolab/pagoda2) (or Seurat), then install `conos`:
+First install [Pagoda2](https://github.com/kharchenkolab/pagoda2) (or [Seurat](https://satijalab.org/seurat/)), and then install `conos`:
 ```r
 devtools::install_github("kharchenkolab/conos")
 ```
-
-If you have problems with the package `sccore`, run `devtools::install_github("kharchenkolab/sccore")` before installing `conos`.
 
 #### System dependencies
 
@@ -207,3 +205,11 @@ docker run -d -p 8787:8787 -e PASSWORD=pass --name conos -it conos
 If you find this software useful for your research, please cite the corresponding paper:
 
 Barkas N., Petukhov V., Nikolaeva D., Lozinsky Y., Demharter S., Khodosevich K. & Kharchenko P.V. Joint analysis of heterogeneous single-cell RNA-seq dataset collections. Nat. Methods, (2019). [doi:10.1038/s41592-019-0466-z](https://doi.org/10.1038/s41592-019-0466-z)
+
+The R package can be cited as:
+
+```
+Viktor Petukhov, Nikolas Barkas, Peter Kharchenko, and Evan
+Biederstedt (2020). conos: Clustering on Network of Samples. R
+package version 1.3.1.
+```
