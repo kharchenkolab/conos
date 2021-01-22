@@ -1,5 +1,7 @@
 [![Build Status](https://travis-ci.com/kharchenkolab/conos.svg?branch=master)](https://travis-ci.com/github/kharchenkolab/conos)
 
+<img src="https://github.com/kharchenkolab/conos/blob/devel/inst/conos_logo.png" align="right" height="140">
+
 # Conos
 
 - [Tutorials](#tutorials)
@@ -8,13 +10,7 @@
   * [Running RNA velocity on a Conos object](#running-rna-velocity-on-a-conos-object)
 - [Installation](#installation)
   * [Native installation](#native-installation)
-    + [System dependencies](#system-dependencies)
-      - [Ubuntu dependencies](#ubuntu-dependencies)
-      - [Red Hat-based distributions dependencies](#red-hat-based-distributions-dependencies)
-      - [OS X](#os-x)
   * [Running Conos via Docker](#running-conos-via-docker)
-    + [Ready-to-run Docker image](#ready-to-run-docker-image)
-    + [Building Docker image from the Dockerfile](#building-docker-image-from-the-dockerfile)
 - [Reference](#reference)
   
 ## Conos: Clustering On Network Of Samples
