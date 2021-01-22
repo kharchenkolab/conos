@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.com/kharchenkolab/conos.svg?branch=master)](https://travis-ci.com/github/kharchenkolab/conos)
 
-<img src="https://github.com/kharchenkolab/conos/blob/devel/inst/conos_logo.png" align="right" height="140">
+<img src="https://github.com/kharchenkolab/conos/blob/dev/inst/conos_logo.png" align="right" height="140">
 
 # Conos
 
