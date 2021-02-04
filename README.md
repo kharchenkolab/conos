@@ -177,7 +177,7 @@ The docker distribution has the latest version and also includes the [Pagoda2 pa
 docker run -p 8787:8787 -e PASSWORD=pass pkharchenkolab/conos:latest
 ```
 
-The first time you run this command, it will download several large images so make sure that you have fast internet access setup. You can then point your browser to http://localhost:8787/ to get an Rstudio environment with `pagoda2` and `conos` installed (log in using credentials *rstudio* / *pass*). Explore the docker [--mount option]([https://docs.docker.com/storage/volumes/) to allow access of the docker image to your local files.
+The first time you run this command, it will download several large images so make sure that you have fast internet access setup. You can then point your browser to http://localhost:8787/ to get an Rstudio environment with `pagoda2` and `conos` installed (please log in using credentials username=`rstudio`, password=`pass`). Explore the docker [--mount option]([https://docs.docker.com/storage/volumes/) to allow access of the docker image to your local files.
 
 **Note:** If you already downloaded the docker image and want to update it, please pull the latest image with: 
 ```
@@ -202,3 +202,11 @@ docker run -d -p 8787:8787 -e PASSWORD=pass --name conos -it conos
 If you find this software useful for your research, please cite the corresponding paper:
 
 Barkas N., Petukhov V., Nikolaeva D., Lozinsky Y., Demharter S., Khodosevich K. & Kharchenko P.V. Joint analysis of heterogeneous single-cell RNA-seq dataset collections. Nat. Methods, (2019). [doi:10.1038/s41592-019-0466-z](https://doi.org/10.1038/s41592-019-0466-z)
+
+The R package can be cited as:
+
+```
+Viktor Petukhov, Nikolas Barkas, Peter Kharchenko, and Evan
+Biederstedt (2020). conos: Clustering on Network of Samples. R
+package version 1.3.1.
+```
