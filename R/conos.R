@@ -75,7 +75,7 @@ scaledMatricesSeuratV3 <- function(so.objs, data.type, od.genes, var.scale, neig
     }
   )
   res <- mapply(FUN = function(so, x) { return(x) }, so.objs, x.data )
-  
+
   return(res)
 }
 
@@ -166,7 +166,7 @@ cpcaFast <- function(covl,ncells,ncomp=10,maxit=1000,tol=1e-6,use.irlba=TRUE,ver
 }
 
 #' Perform cpca on two samples
-#' 
+#'
 #' @param r.n list of pagoda2 objects
 #' @param data.type character Type of data type in the input pagoda2 objects within r.n (default='counts')
 #' @param ncomps numeric Number of components to calculate (default=100)
@@ -267,7 +267,7 @@ quickPlainPCA <- function(r.n, data.type='counts', ncomps=30, n.odgenes=NULL, va
   interleave <- function(n1,n2) { order(c((1:n1)-0.5,1:n2)) }
   ncols <- unlist(lapply(pcs,function(x) ncol(x$v)))
   pcj <- pcj[,interleave(ncols[1],ncols[2])]
-  
+
   rownames(pcj) <- od.genes;
   res <- list(CPC=pcj);
 
@@ -536,7 +536,7 @@ getLocalNeighbors <- function(samples, k.self, k.self.weight, metric, l2.sigma, 
     if (is.null(pca)) {
       stop("PCA must be estimated for all samples")
     }
-    
+
     xk <- N2R::Knn(pca, k.self + 1, 1, verbose=FALSE, indexType=metric) # +1 accounts for self-edges that will be removed in the next line
     diag(xk) <- 0; # no self-edges
     xk <- as(drop0(xk),'dgTMatrix')
@@ -703,10 +703,10 @@ convertDistanceToSimilarity <- function(distances, metric, l2.sigma=1e5, cor.bas
 }
 
 #' @keywords internal
-getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, k1=k, data.type='counts', var.scale=TRUE, common.centering=TRUE,
+getPcaBasedNeighborMatrix <- function(sample.pair,misc=NULL, od.genes, rot, k, k1=k, data.type='counts', var.scale=TRUE, common.centering=TRUE,
                                       matching.method='mNN', metric='angular', l2.sigma=1e5, cor.base=1, subset.cells=NULL,
-                                      base.groups=NULL, append.decoys=FALSE, samples=NULL, samf=NULL, decoy.threshold=1, n.decoys=k*2, 
-                                      append.global.axes=TRUE, global.proj=NULL) {
+                                      base.groups=NULL, append.decoys=FALSE, samples=NULL, samf=NULL, decoy.threshold=1, n.decoys=k*2,
+                                      append.global.axes=TRUE, global.proj=NULL, misc1=NULL) {
   # create matrices, adjust variance
   cproj <- scaledMatrices(sample.pair, data.type=data.type, od.genes=od.genes, var.scale=var.scale)
 
@@ -729,7 +729,7 @@ getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, k1=k, data.
     x <- t(as.matrix(t(x))-centering[[n]])
     x %*% rot;
   })
-  
+
   if(!is.null(base.groups) && append.global.axes) {
     #cpproj <- lapply(sn(names(cpproj)),function(n) cbind(cpproj[[n]],global.proj[[n]])) # case without decoys
     cpproj <- lapply(sn(names(cpproj)),function(n) {
@@ -750,7 +750,7 @@ getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, k1=k, data.
     cpproj <- lapply(cpproj, function(proj) proj[intersect(rownames(proj), subset.cells), ])
   }
 
-  mnn <- getNeighborMatrix(cpproj[[names(sample.pair)[1]]], cpproj[[names(sample.pair)[2]]], k, k1=k1, matching=matching.method, metric=metric, l2.sigma=l2.sigma, cor.base=cor.base)
+  mnn <- getNeighborMatrix(cpproj[[names(sample.pair)[1]]], cpproj[[names(sample.pair)[2]]], k, k1=k1, matching=matching.method, metric=metric, l2.sigma=l2.sigma, cor.base=cor.base, misc1=misc1,samples.names=names(sample.pair))
 
   if (!is.null(base.groups) && append.decoys) {
     # discard edges connecting to decoys
@@ -761,6 +761,8 @@ getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, k1=k, data.
 
   return(mnn)
 }
+
+
 
 #' Establish rough neighbor matching between samples given their projections in a common space
 #'
@@ -775,12 +777,14 @@ getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, k1=k, data.
 #' @param min.similarity minimal similarity between two cells, required to have an edge
 #' @return matrix with the similarity (!) values corresponding to weight (1-d for angular, and exp(-d/l2.sigma) for L2)
 #' @keywords internal
-getNeighborMatrix <- function(p1, p2, k, k1=k, matching='mNN', metric='angular', l2.sigma=1e5, cor.base=1, min.similarity=1e-5) {
+getNeighborMatrix <- function(p1, p2, k, k1=k, matching='mNN', metric='angular', l2.sigma=1e5, cor.base=1, min.similarity=1e-5, misc1=NULL, samples.names=NULL) {
   quiet.knn <- (k1 > k)
+
   if (is.null(p2)) {
     n12 <- N2R::crossKnn(p1, p1,k1,1, FALSE, metric, quiet=quiet.knn)
     n21 <- n12
   } else {
+    #k1<- 500
     n12 <- N2R::crossKnn(p1, p2, k1, 1, FALSE, metric, quiet=quiet.knn)
     n21 <- N2R::crossKnn(p2, p1, k1, 1, FALSE, metric, quiet=quiet.knn)
   }
@@ -788,7 +792,14 @@ getNeighborMatrix <- function(p1, p2, k, k1=k, matching='mNN', metric='angular',
 
   n12@x <- convertDistanceToSimilarity(n12@x, metric=metric, l2.sigma=l2.sigma, cor.base=cor.base)
   n21@x <- convertDistanceToSimilarity(n21@x, metric=metric, l2.sigma=l2.sigma, cor.base=cor.base)
-
+  if (!is.null(misc1)){
+    rownames(n12) <- rownames(p2)
+    colnames(n12) <- rownames(p1)
+    rownames(n21) <- rownames(p1)
+    colnames(n21) <- rownames(p2)
+    n12 <- getCellsFromList(n12, misc1[[samples.names[2]]], k1)
+    n21 <- getCellsFromList(n21, misc1[[samples.names[1]]], k1)
+    }
   if (matching=='NN') {
     adj.mtx <- drop0(n21+t(n12));
     adj.mtx@x <- adj.mtx@x/2;
@@ -799,16 +810,29 @@ getNeighborMatrix <- function(p1, p2, k, k1=k, matching='mNN', metric='angular',
     stop("Unrecognized type of NN matching:", matching)
   }
 
-  rownames(adj.mtx) <- rownames(p1); colnames(adj.mtx) <- rownames(p2);
+
   adj.mtx@x[adj.mtx@x < min.similarity] <- 0
   adj.mtx <- drop0(adj.mtx);
 
-  if(k1 > k) { # downsample edges
-    adj.mtx <- reduceEdgesInGraphIteratively(adj.mtx,k)
-  }
+#  if(k1 > k) { # downsample edges
+#    adj.mtx <- reduceEdgesInGraphIteratively(adj.mtx,k)
+#  }
 
   return(as(drop0(adj.mtx),'dgTMatrix'))
 }
+
+#k=k1 k=k
+getCellsFromList <- function(mat, list.cells, k){
+
+  for (i in 1:dim(mat)[2]){
+    #closest.cell <- names(which.min(mat[, i][mat[, i] != 0]))
+    closest.cell <- names(which.max(mat[, i]))
+    mat[,i][!(names(mat[,i]) %in% names(list.cells[[closest.cell]]))] <- 0
+   #mat[,i][order(mat[,i], decreasing = T)[(k+1):nrow(mat)]] <- 0
+  }
+  return(mat)
+}
+
 
 ## 1-step edge reduction
 #' @keywords internal
