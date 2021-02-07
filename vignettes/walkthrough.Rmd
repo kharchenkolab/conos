@@ -103,7 +103,7 @@ We use `lapply()` here as `panel` is a list with 4 elements (i.e. a panel of fou
 
 ```{r}
 library(pagoda2)
-panel.preprocessed <- lapply(panel, basicP2proc, n.cores=4, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+panel.preprocessed <- lapply(panel, basicP2proc, n.cores=2, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
 ```
 
 
