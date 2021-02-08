@@ -48,14 +48,20 @@ library(dplyr)
 
 # Loading the Data
 
-Next we will load a previously prepared panel of samples. This panel was
-made up of 16 cord blood and bone marrow samples, but for convenience, we will here focus on a smaller subset of just 4 samples. All samples have been subset to a size of exactly 3000 cells. 
+Next we will load a previously prepared panel of four samples, which you can access directly using the package `conosPanel` (See the README of conos for installation details): 
+
+```{r}
+install.packages('conosPanel', repos='https://kharchenkolab.github.io/drat/', type='source')
+```
+
+This panel was originally
+made up of 16 cord blood and bone marrow samples, but for convenience, we will here focus on a smaller subset of just four samples: two samples with are bone marrow (BM), and two samples which are cord blood (CB). Each sample has been subset to a size of exactly 3000 cells. 
 
 **Note:** When starting with your own panel, we
 recommend filtering out low-count/poor-quality/dying cells, as is standard for quality control.
 
 ```{r}
-panel <- readRDS(file.path(find.package('conos'),'extdata','panel.rds'))
+panel <- conosPanel::panel
 ```
 
 Let’s take a look at the panel. The panel is a named list of sparse
@@ -90,11 +96,11 @@ pre-processing.
 
 ## Pre-processing with Pagoda2
 
-We will generate pagoda2 objects for poorly-expressed genes from each
+We will generate `Pagoda2` objects for poorly-expressed genes from each
 individual sample using the `basicP2proc` helper function for quick
 processing. As the datasets will be compared to each other, we will turn
 off automated dropping of low-expressed genes (using `min.cells.per.gene=0`),
-and lower the numbers of local principal components (PCs) estimated for faster processing.
+and lower the numbers of local principal components (PCs) estimated for faster processing. (For more details on `pagoda2`, please see the tutorial [here](https://github.com/kharchenkolab/pagoda2/blob/master/vignettes/pagoda2.walkthrough.md).)
 
 We use `lapply()` here as `panel` is a list with 4 elements (i.e. a panel of four samples).
 
@@ -124,7 +130,7 @@ skip this step and feed them directly to `Conos$new()` as shown below.
 
 ```{r, eval=FALSE}
 library(Seurat)
-panel.preprocessed <- lapply(panel, basicSeuratProc)
+panel.preprocessed.seurat <- lapply(panel, basicSeuratProc)
 ```
 
 We note that sample pre-processing steps can be used to filter/adjust
@@ -145,7 +151,7 @@ parallel processing, feel free to use as many physical cores as you have availab
 here.
 
 ```{r}
-con <- Conos$new(panel.preprocessed, n.cores=2)
+con <- Conos$new(panel.preprocessed, n.cores=1)
 ```
 
 Our original pagoda2 (or Seurat) objects are now saved in the Conos
@@ -156,16 +162,7 @@ originals).
 str(con$samples,1)
 ```
 
-We can now plot a panel of these samples using the clusters we have
-identified by examining each sample on its own. Please note that each sample
-has an independent set of clusters that bears no relation to
-clusters in other samples. For example, notice the presence (and lack thereof) of cluster
-9.
-
-```{r, fig.height=8, fig.width=8}
-con$plotPanel(clustering="multilevel", use.local.clusters=TRUE, title.size=6)
-```
-
+### Build the Joint Graph
 
 Next we will build the joint graph that encompasses all the samples. We
 do this by pairwise projecting samples onto a common space and
@@ -215,6 +212,16 @@ value) is sometimes better. (**NOTE:** Remember that if you want to
 recalculate projections, clear the cache for that space as detailed above, i.e.
 `con$pairs$PCA <- NULL`.)
 
+We can now plot a panel of these samples using the clusters we have
+identified by examining each sample on its own. Please note that each sample
+has an independent set of clusters that bears no relation to
+clusters in other samples. For example, notice the presence (and lack thereof) of cluster
+9.
+
+```{r, fig.height=8, fig.width=8}
+con$plotPanel(clustering="multilevel", use.local.clusters=TRUE, title.size=6)
+```
+
 We next use the graph we identified to get the global clusters. Here we use the
 Leiden community detection method to obtain clusters. Increasing the
 value of the resolution parameter will result in more fine-grained
@@ -224,7 +231,7 @@ clusters, while decreasing it will return coarser clustering.
 con$findCommunities(method=leiden.community, resolution=1)
 ```
 
-## Visualization
+### Plot Clusters
 
 We can now plot the clusters we obtained. Note that the number of clusters
 between different samples now correspond to the same cell type. 
@@ -250,20 +257,26 @@ embeddings. In this case, we investigate the expression pattern of [GZMK](https:
 con$plotPanel(gene = 'GZMK')
 ```
 
+### Generate Embedding and Visualize
 
-Next we embed and visualize the complete joint graph:
+Next we generated an embedding of the joint graph, and then visualize the complete joint graph. First, the embedding (whereby the default uses 'largeVis'):
 
-**Note:** An embedding estimation will run the first time around. Please see the
-`$embedGraph` function for additional embedding options.
-
-Also, both functions `$plotGraph` and `$plotPanel` are constructed off of the
-main function `sccore::embeddingPlot` and will pass all visualization parameters
-to this main function. So, to get full list of the possible parameters please refer to
-`?sccore::embeddingPlot` and the examples below.
+```{r}
+con$embedGraph(method='largeVis')
+```
+And now we can create the visualization:
 
 ```{r, fig.height=6, fig.width=6, message=FALSE, warning=FALSE}
 con$plotGraph(alpha=0.1)
 ```
+
+Both functions `$plotGraph` and `$plotPanel` are constructed off of the
+main function `sccore::embeddingPlot` and will pass all visualization parameters
+to this main function. So, to get full list of the possible parameters please refer to
+`?sccore::embeddingPlot` and the examples below.
+
+**Note:** In previous versions of `conos` (<=1.3.1), an embedding estimation would automatically run by default with `$plotGraph()`, without users having to explicitly use `$embedGraph()`. This has changed, and `$embedGraph()` must be called by the user. Please see the
+`$embedGraph` function for additional embedding options.
 
 
 Observe that the graph captures the population structure irrespective
@@ -329,8 +342,10 @@ spreading out of clusters. Here we take `alpha` to a very low value, for the
 sake of example:
 
 ```{r, message=FALSE, warning=FALSE}
-con$embedGraph(alpha=0.001, sgd_batched=1e8)  
+con$embedGraph(alpha=0.001, embedding.name="example_embedding", sgd_batched=1e8)  
 ```
+
+Note that we are specifically naming this embedding with the parameter `embedding.name`. Multiple embeddings can be named and retrieved using these names. (By default, if not specified, the last embedding generated is accessed by functions which use the embedding, e.g. plotting.)
 
 ```{r, fig.width=6, fig.height=6}
 con$plotGraph(clustering='walktrap', size=0.1)
@@ -380,9 +395,8 @@ con$plotPanel(clustering='walktrap', size=0.1, use.common.embedding=TRUE)
 ```
 
 
-# Exploring Hierarchical Community Structure
+## Exploring Hierarchical Community Structure
 
-## Using code
 
 Walktrap clustering generates a hierarchical community structure. Let's being by taking a cut of the top dendrogram and visualizing it. Here we’ll take the 40 top clusters.
 
@@ -408,57 +422,14 @@ plot(dend)
 ```
 
 
+### Using Shiny Application
 
-We can modify the dendrogram to show various properties. For instance,
-we can alter the width of the edges to reflect how many samples are
-contributing to it (normalized entropy). To do so, let’s first define a
-factor specifying which samples different samples came from:
-
-```{r}
-samf <- con$getDatasetPerCell()
-str(samf)
-```
-
-Now we’ll use `dendSetWidthByBreadth()` function to calculate the
-entropies of each edge and set the width
-accordingly:
-
-```{r, fig.width=8, fig.height=6}
-dend <- dendSetWidthByBreadth(dend, samf, fc$leafContent, min.width=1, max.width=4)
-plot(dend)
-```
-
-
-Similarly, we can find a factor that labels the cells by the respective tissue from which they originate (in this case BM or CB). To define a factor for this simple
-dataset, we’ll simply parse the cell
-names:
-
-```{r}
-tissue.factor <- as.factor(setNames(ifelse(grepl('BM',names(samf)),'BM','CB'), names(samf)))
-str(tissue.factor)
-```
-
-Now, we can color the dendrogram edges according to the tissue mixture, resulting in a more informative plot:
-
-```{r, fig.width=8, fig.height=6}
-dend <- dendSetColorByMixture(dend, tissue.factor, fc$leafContent)
-plot(dend)
-```
-
-## Using Shiny Application
-
-An alternative way to explore this the hierarchical community structure is by
+One way to explore this the hierarchical community structure is by
 using an interactive app, currently found at https://github.com/kharchenkolab/conosViz. The app also allows users to visualize tissue
-composition and sample similarities:
+composition and sample similarities.
 
 
-```{r, eval=FALSE}
-library(conosViz)
-conosViz::conosShinyApp(con, N=30)
-```
-
-
-# Label Propagation
+## Label Propagation
 
 One of the uses of this graph is to propagate labels. For example, in
 some cases we will only have information about the cell types in one of
@@ -469,7 +440,7 @@ name, second giving the cell type), and make a named factor out of
 it:
 
 ```{r}
-cellannot <- read.table(file.path(find.package('conos'),'extdata','cellannot.txt'),header=FALSE,sep='\t')
+cellannot <- read.table(file.path(find.package('conos'), 'extdata', 'cellannot.txt'), header=FALSE, sep='\t')
 cellannot <- setNames(cellannot[,2], cellannot[,1])
 ```
 
@@ -514,6 +485,9 @@ at the cluster cell markers:
 ```{r}
 new.annot <- new.label.info$labels
 de.info <- con$getDifferentialGenes(groups=new.annot, n.cores=2, append.auc=TRUE)
+```
+
+```{r}
 head(de.info$`B cells`)
 ```
 
@@ -554,7 +528,7 @@ plotDEheatmap(con,as.factor(new.annot),de.info, n.genes.per.cluster = 5, column.
 
 
 
-Here w make a smaller heatmap, selecting a subset of cell types and showing
+Here we make a smaller heatmap, selecting a subset of cell types and showing
 only a hand-picked set of
 genes:
 
@@ -656,6 +630,8 @@ con$findCommunities()
 plotClusterBarplots(con, legend.height = 0.1)
 ```
 
+For more details on this topic, please see the tutorial [Adjustment of Alignment Strength with conos](https://github.com/kharchenkolab/conos/blob/master/vignettes/adjust_alignment_strength.md).
+
 # View Conos in Pagoda2 Application
 
 Users may also interactively explore Conos objects in the [Pagoda2](https://github.com/kharchenkolab/pagoda2) application. The process is very similar to the Pagoda2 walkthrough. 
@@ -663,11 +639,9 @@ Users may also interactively explore Conos objects in the [Pagoda2](https://gith
 After constructing the `con` object as shown above, users can save to a serialized `*.bin` file and upload into the pagoda application with the `p2app4conos()` function, using `p2app4conos(conos=con)`. More information, please review the Pagoda2 [walkthrough](https://github.com/kharchenkolab/pagoda2/blob/master/vignettes/pagoda2.walkthrough.md)
 
 ```{r}
-## 
-## library(pagoda2)
-## p2app = p2app4conos(conos=con, file="conosApp1.bin", save=TRUE)
-## show.app(app=p2app, name='conos_app')
-## 
+# library(pagoda2)
+# p2app = p2app4conos(conos=con, file="conosApp1.bin", save=TRUE)
+# show.app(app=p2app, name='conos_app')
 ```
 
 
