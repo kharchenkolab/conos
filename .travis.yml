@@ -13,4 +13,4 @@ before_install:
 
 script:
   - R CMD build . --no-build-vignettes ## save time by not building vignettes
-  - travis_wait 30 R CMD check *tar.gz ## without CRAN check, --as-cran
+ ## takes too long - travis_wait 30 R CMD check *tar.gz ## without CRAN check, --as-cran
