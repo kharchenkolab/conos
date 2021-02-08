@@ -7,10 +7,9 @@
 - [Tutorials](#tutorials)
   * [Usage: Alignment of Datasets](#usage-alignment-of-datasets)
   * [Integration with ScanPy](#integration-with-scanpy)
-  * [Running RNA velocity on a Conos object](#running-rna-velocity-on-a-conos-object)
+  * [Running RNA velocity on a conos object](#running-rna-velocity-on-a-conos-object)
 - [Installation](#installation)
-  * [Native installation](#native-installation)
-  * [Running Conos via Docker](#running-conos-via-docker)
+  * [Running conos via Docker](#running-conos-via-docker)
 - [Reference](#reference)
   
 ## Conos: Clustering On Network Of Samples
@@ -76,13 +75,13 @@ then upload these files from Python. See the following tutorials:
 
 ### Running RNA velocity on a Conos object
 
-First of all, in order to obtain an RNA velocity plot from a Conos object you have to use the [dropEst](https://github.com/hms-dbmi/dropEst) pipeline to align and annotate your single-cell RNA-seq measurements. You can see [this tutorial](http://pklab.med.harvard.edu/velocyto/notebooks/R/SCG71.nb.html) and [this shell script](http://pklab.med.harvard.edu/velocyto/mouseBM/preprocess.sh) to see how it can be done. In this example we specifically assume that when running dropEst you have used the **-V** option to get estimates of unspliced/spliced counts from the dropEst directly. Secondly, you need the [velocyto.R](http://velocyto.org/) package for the actual velocity estimation and visualisation.
+First of all, in order to obtain an RNA velocity plot from a `Conos` object you have to use the [dropEst](https://github.com/hms-dbmi/dropEst) pipeline to align and annotate your single-cell RNA-seq measurements. You can see [this tutorial](http://pklab.med.harvard.edu/velocyto/notebooks/R/SCG71.nb.html) and [this shell script](http://pklab.med.harvard.edu/velocyto/mouseBM/preprocess.sh) to see how it can be done. In this example we specifically assume that when running dropEst you have used the **-V** option to get estimates of unspliced/spliced counts from the dropEst directly. Secondly, you need the [velocyto.R](http://velocyto.org/) package for the actual velocity estimation and visualisation.
 
 After running dropEst you should have 2 files for each of the samples: 
 - `sample.rds` (matrix of counts)
 - `sample.matrices.rds` (3 matrices of exons, introns and spanning reads)
 
-The `.matrices.rds` files are the velocity files. Load them into R in a list (same order as you give to Conos). Load, preprocess and integrate with Conos the count matrices (`.rds`) as you normally would. Before running the velocity, you must at least create an embedding and run the leiden clustering. Finally, you can estimate the velocity as follows:  
+The `.matrices.rds` files are the velocity files. Load them into R in a list (same order as you give to conos). Load, preprocess and integrate with conos the count matrices (`.rds`) as you normally would. Before running the velocity, you must at least create an embedding and run the leiden clustering. Finally, you can estimate the velocity as follows:  
 ```r
 ### Assuming con is your Conos object and cms.list is the list of your velocity files ###
 
@@ -119,17 +118,38 @@ show.velocity.on.embedding.cor(vi$emb, vel.info, cc = cc.velo$cc, n = 200, scale
 
 ## Installation
 
-Native installations have been tested in Linux and Mac OS. Normally, installations should take under 10 minutes. **Note:** We currently do not support installations on Windows.
+To install the latest version of `conos`, use:
 
-### Native installation
-
-Please make sure that the `devtools` package is installed (use `install.packages("devtools")` if installation is needed).
-Then install [pagoda2](https://github.com/kharchenkolab/pagoda2) (or Seurat), then install `conos`:
 ```r
-devtools::install_github("kharchenkolab/conos")
+install.packages('devtools')
+devtools::install_github('kharchenkolab/conos', build_vignettes = TRUE)
 ```
 
-If you have problems with `sccore` package, run `install.packages("sccore")` before installing `conos`. For more information on sccore, check the package [here](https://github.com/kharchenkolab/sccore).
+Please note that the package `conos` depends on data in a data package (`conosPanel`) that is available through a `drat` repository on GitHub. To use the `conos` package, you will need to install `conosPanel`. There are two equally valid options to install this package:
+
+A) Users could install `conosPanel` by adding the `drat` archive to the list of repositories your system will query when adding and updating R packages. Once you do this, you can install `conosPanel` with `install.packages()`, using the command:
+
+```r
+library(drat)
+addRepo("kharchenkolab")
+install.packages("conosPanel")
+```
+
+The following command is also a valid approach:
+
+```r
+install.packages('conosPanel', repos='https://kharchenkolab.github.io/drat/', type='source')
+```
+
+Please see the [drat documentation](https://dirk.eddelbuettel.com/code/drat.html) for more comprehensive explanations and vignettes.
+
+
+B) Another way to install the package `conosPanel` is to use `devtools::install_github()`:
+
+```r
+library(devtools)
+install_github("kharchenkolab/conosPanel")
+```
 
 #### System dependencies
 
@@ -151,7 +171,7 @@ For Red Hat distributions using `yum`, use the following command:
 yum install openssl-devel libcurl-devel
 ```
 
-##### OS X
+##### Mac OS
 
 Using the Mac OS package manager [Homebrew](https://brew.sh/), try the following command:
 
@@ -160,9 +180,9 @@ brew install openssl curl-openssl
 ```
 (You may need to run `brew uninstall curl` in order for `brew install curl-openssl` to be successful.)
 
-As of version 1.3.1, Conos should sucessfully install on Mac OS. However, if there are issues, please refer to the following wiki page for further instructions on installing Conos with Mac OS: [Installing Conos for Mac OS](https://github.com/kharchenkolab/conos/wiki/Installing-Conos-for-Mac-OS)
+As of version 1.3.1, `conos` should sucessfully install on Mac OS. However, if there are issues, please refer to the following wiki page for further instructions on installing `conos` with Mac OS: [Installing conos for Mac OS](https://github.com/kharchenkolab/conos/wiki/Installing-conos-for-Mac-OS)
 
-### Running Conos via Docker
+### Running conos via Docker
 
 If your system configuration is making it difficult to install `conos` natively, an alternative way to get `conos` running is through a docker container.
 
