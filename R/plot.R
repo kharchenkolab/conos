@@ -323,7 +323,7 @@ plotComponentVariance <- function(conos.obj, space='PCA', plot.theme=ggplot2::th
     ggplot2::geom_point(shape=16, ggplot2::aes(color=dataset), position = ggplot2::position_jitter(), alpha=0.3) +
     ggplot2::geom_line(ggplot2::aes(group=dataset,color=dataset), alpha=0.2)+
     ggplot2::ylab('fraction of variance explained') + ggplot2::xlab('component number') +
-    ggplot2::geom_boxplot(notch=F,outlier.shape=NA,fill=NA) + plot.theme + ggplot2::theme(legend.position='none')
+    ggplot2::geom_boxplot(notch=FALSE,outlier.shape=NA,fill=NA) + plot.theme + ggplot2::theme(legend.position='none')
 
 }
 
