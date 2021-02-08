@@ -13,9 +13,6 @@
 NULL
 
 
-## TODO: multitrap method
-## mutlilevel+walktrap communities
-
 #' Constructs a two-step clustering, first running multilevel.communities, and then walktrap.communities within each
 #' These are combined into an overall hierarchy
 #'

@@ -31,6 +31,9 @@ checkSeuratV3 <- function() {
 
 #' @keywords internal
 seuratProcV2 <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do.par=TRUE, n.pcs=100, cluster=TRUE, tsne=TRUE, umap=FALSE) {
+  if (!requireNamespace("Seurat", quietly = TRUE)) {
+    stop("Package \"Seurat\" needed for this function to work. Please install it, as described here: <https://satijalab.org/seurat/articles/install.html>.", call. = FALSE)
+  }
   if (verbose) {
     message("Running Seurat v2 workflow")
   }
@@ -59,6 +62,9 @@ seuratProcV2 <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do.pa
 
 #' @keywords internal
 seuratProcV3 <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, n.pcs=100, cluster=TRUE, tsne=TRUE, umap=FALSE, ...) {
+  if (!requireNamespace("Seurat", quietly = TRUE)) {
+    stop("Package \"Seurat\" needed for this function to work. Please install it, as described here: <https://satijalab.org/seurat/articles/install.html>.", call. = FALSE)
+  }
   if (verbose) {
     message("Running Seurat v3 workflow")
   }
@@ -97,8 +103,8 @@ seuratProcV3 <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, n.pcs
 #' @seealso The \pkg{\link{rhdf5}} package documentation \href{https://www.bioconductor.org/packages/release/bioc/html/rhdf5.html}{here}
 #' @return AnnData object for ScanPy, saved to disk
 #' @export
-saveConosForScanPy <- function(con, output.path, hdf5_filename, metadata.df=NULL, cm.norm=FALSE, pseudo.pca=FALSE, pca=FALSE, n.dims=100, embedding=TRUE, alignment.graph=TRUE, verbose=FALSE) {
-  
+saveConosForScanPy <- function(con, output.path, hdf5_filename, metadata.df=NULL, cm.norm=FALSE, pseudo.pca=FALSE, 
+  pca=FALSE, n.dims=100, embedding=TRUE, alignment.graph=TRUE, verbose=FALSE) {
   if (!requireNamespace("rhdf5", quietly = TRUE)) {
     stop("The package rhdf5 is required for saveConosForScanPy(). Please install.")
   }
@@ -236,8 +242,8 @@ saveConosForScanPy <- function(con, output.path, hdf5_filename, metadata.df=NULL
 #' @return Seurat object
 #' @export
 basicSeuratProc <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do.par=TRUE, n.pcs=100, cluster=TRUE, tsne=TRUE, umap=FALSE) {
-  if (!requireNamespace("Seurat")) {
-    stop("You need to install 'Seurat' package to be able to use this function")
+  if (!requireNamespace("Seurat", quietly = TRUE)) {
+    stop("Package \"Seurat\" needed for this function to work. Please install it, as described here: <https://satijalab.org/seurat/articles/install.html>.", call. = FALSE)
   }
   proc.fxn <- ifelse(
     test = packageVersion('Seurat') < package_version(x = '3.0.0'),
@@ -346,7 +352,9 @@ prepareVelocity <- function(cms.file, genes, cells) {
 pcaFromConos <- function(p2.list, data.type='counts', k=30, ncomps=100, n.odgenes=NULL, verbose=TRUE) {
 
   od.genes <- commonOverdispersedGenes(p2.list, n.odgenes, verbose = FALSE)
-  if(length(od.genes)<5) return(NULL)
+  if (length(od.genes)<5){
+    return(NULL)
+  }
 
   if(verbose) message('Calculating PCs for',length(p2.list),' datasets...\n')
 
@@ -382,7 +390,7 @@ pcaFromConos <- function(p2.list, data.type='counts', k=30, ncomps=100, n.odgene
 #' @export
 convertToPagoda2 <- function(con, n.pcs=100, n.odgenes=2000, verbose=TRUE, ...) {
   if (!requireNamespace('pagoda2', quietly=TRUE)) {
-    stop("'pagoda2' must be installed to convert Conos to Pagoda 2")
+    stop("'pagoda2' must be installed to convert a Conos object to a Pagoda2 object. Please refer to <https://github.com/kharchenkolab/pagoda2>.")
   }
 
   p2 <- con$getJointCountMatrix(raw=TRUE) %>% Matrix::t() %>%
@@ -435,7 +443,7 @@ p2app4conos <- function(conos, cdl=NULL, metadata=NULL, filename='conos_app.bin'
   test.pathway.overdispersion=FALSE, organism=NULL, return.details=FALSE) {
   
   if (!requireNamespace("pagoda2", quietly = TRUE)) {
-    stop("You have to install the pagoda2 package to use p2app4conos()")
+    stop("You have to install the pagoda2 package to use p2app4conos(). Please refer to <https://github.com/kharchenkolab/pagoda2>.")
   }
 
   if(is.null(cdl)) {
@@ -456,7 +464,7 @@ p2app4conos <- function(conos, cdl=NULL, metadata=NULL, filename='conos_app.bin'
   
   # limit to the cells that are included in the conos
   vc <- unlist(lapply(cdl,colnames));
-  if(length(vc)>max.cells) { # subsample
+  if (length(vc)>max.cells) { # subsample
     cat("subsampling",length(vc),"cells down to",max.cells,'...');
     vc <- sample(vc,max.cells)
     cat('done\n');
