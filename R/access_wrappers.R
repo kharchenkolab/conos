@@ -231,7 +231,7 @@ setMethod("getRawCountMatrix", signature("Pagoda2"), function(sample, transposed
 setMethod(
   f = "getRawCountMatrix",
   signature = signature("seurat"),
-  definition = function(sample, transposed = F) {
+  definition = function(sample, transposed=FALSE) {
     mi <- match(x = sample@cell.names, table = colnames(sample@raw.data))
     x <- sample@raw.data[, mi, drop = FALSE]
     if (transposed) {
@@ -246,7 +246,7 @@ setMethod(
 setMethod(
   f = 'getRawCountMatrix',
   signature = signature('Seurat'),
-  definition = function(sample, transposed = FALSE) {
+  definition = function(sample, transposed=FALSE) {
     checkSeuratV3()
     rd <- Seurat::GetAssayData(object = sample, slot = 'counts')
     # Raw data can be empty in Seurat v3
