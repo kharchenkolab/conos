@@ -41,6 +41,7 @@ Suggests:
     DESeq2,
     ggrastr,
     knitr,
+    p2data,
     pagoda2,
     pbapply,
     PMA,
