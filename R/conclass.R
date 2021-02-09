@@ -1,3 +1,7 @@
+#' @import leidenAlg 
+NULL
+
+
 #' @title Conos R6 class
 #' @description The class encompasses sample collections, providing methods for calculating and visualizing joint graph and communities.
 #' @import methods
@@ -358,7 +362,8 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
       groups %<>% as.factor() %>% droplevels()
       # TODO: add Seurat
-      if (class(self$samples[[1]]) != 'Pagoda2'){
+      '%ni%' <- Negate('%in%')
+      if ('Pagoda2' %ni% class(self$samples[[1]])){
         stop("Only Pagoda2 objects are supported for marker genes")
       }
 

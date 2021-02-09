@@ -1,10 +1,10 @@
 // [[Rcpp::plugins(cpp11)]]
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::depends(RcppProgress)]]
-#include "largeVis.h"
-#include "alias.h"
+#include "include/largeVis.h"
+#include "include/alias.h"
 #include "progress.hpp"
-#include "gradients.h"
+#include "include/gradients.h"
 
 #ifdef _OPENMP
   #include <omp.h>

@@ -2,7 +2,6 @@
 // Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 #include <RcppArmadillo.h>
-#define NDEBUG 1
 #include <RcppEigen.h>
 #include <Rcpp.h>
 
@@ -219,20 +218,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// leiden_community
-std::vector<size_t> leiden_community(SEXP graph, std::vector<double>& edge_weights, double resolution, int niter);
-RcppExport SEXP _conos_leiden_community(SEXP graphSEXP, SEXP edge_weightsSEXP, SEXP resolutionSEXP, SEXP niterSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type graph(graphSEXP);
-    Rcpp::traits::input_parameter< std::vector<double>& >::type edge_weights(edge_weightsSEXP);
-    Rcpp::traits::input_parameter< double >::type resolution(resolutionSEXP);
-    Rcpp::traits::input_parameter< int >::type niter(niterSEXP);
-    rcpp_result_gen = Rcpp::wrap(leiden_community(graph, edge_weights, resolution, niter));
-    return rcpp_result_gen;
-END_RCPP
-}
 // propagate_labels
 Rcpp::NumericMatrix propagate_labels(const Rcpp::StringMatrix& edge_verts, const std::vector<double>& edge_weights, const Rcpp::StringVector& vert_labels, int max_n_iters, bool verbose, double diffusion_fading, double diffusion_fading_const, double tol, bool fixed_initial_labels);
 RcppExport SEXP _conos_propagate_labels(SEXP edge_vertsSEXP, SEXP edge_weightsSEXP, SEXP vert_labelsSEXP, SEXP max_n_itersSEXP, SEXP verboseSEXP, SEXP diffusion_fadingSEXP, SEXP diffusion_fading_constSEXP, SEXP tolSEXP, SEXP fixed_initial_labelsSEXP) {
@@ -337,7 +322,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_conos_as_factor", (DL_FUNC) &_conos_as_factor, 1},
     {"_conos_get_nearest_neighbors", (DL_FUNC) &_conos_get_nearest_neighbors, 10},
     {"_conos_sgd", (DL_FUNC) &_conos_sgd, 15},
-    {"_conos_leiden_community", (DL_FUNC) &_conos_leiden_community, 4},
     {"_conos_propagate_labels", (DL_FUNC) &_conos_propagate_labels, 9},
     {"_conos_smooth_count_matrix", (DL_FUNC) &_conos_smooth_count_matrix, 10},
     {"_conos_adjacent_vertices", (DL_FUNC) &_conos_adjacent_vertices, 1},

@@ -1,4 +1,4 @@
-#include "largeVis.h"
+#include "include/largeVis.h"
 #include <Rcpp.h>
 
 #ifdef _OPENMP

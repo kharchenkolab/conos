@@ -21,6 +21,7 @@ Imports:
     ggrepel,
     gridExtra,
     irlba,
+    leidenAlg,
     magrittr,
     Matrix.utils,
     methods,

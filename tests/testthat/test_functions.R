@@ -4,12 +4,13 @@
 
 library(conos)
 library(dplyr)
+library(pagoda2)
+library(conosPanel)
 
 ## load the data
-panel <- conosPanel::panel
+## panel <- conosPanel
 
 ## pre-processing
-library(pagoda2)
 panel.preprocessed <- lapply(panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
 
 con <- Conos$new(panel.preprocessed, n.cores=1)

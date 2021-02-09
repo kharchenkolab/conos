@@ -2,7 +2,7 @@
 // [[Rcpp::depends(RcppProgress)]]
 // [[Rcpp::depends(RcppEigen)]]
 // [[Rcpp::depends(RcppArmadillo)]]
-#include "largeVis.h"
+#include "include/largeVis.h"
 #include <vector>
 
 #ifdef _OPENMP
@@ -12,6 +12,8 @@
 // copied from https://github.com/elbamos/largeVis
 
 //#define DEBUG
+#define NDEBUG 1
+#define BOOST_DISABLE_ASSERTS
 
 using namespace Rcpp;
 using namespace std;

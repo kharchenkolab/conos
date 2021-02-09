@@ -57,10 +57,6 @@ sgd <- function(coords, targets_i, sources_j, ps, weights, gamma, rho, n_samples
     .Call('_conos_sgd', PACKAGE = 'conos', coords, targets_i, sources_j, ps, weights, gamma, rho, n_samples, M, alpha, momentum, useDegree, seed, threads, verbose)
 }
 
-leiden_community <- function(graph, edge_weights, resolution = 1.0, niter = 2L) {
-    .Call('_conos_leiden_community', PACKAGE = 'conos', graph, edge_weights, resolution, niter)
-}
-
 propagate_labels <- function(edge_verts, edge_weights, vert_labels, max_n_iters = 10L, verbose = TRUE, diffusion_fading = 10, diffusion_fading_const = 0.5, tol = 5e-3, fixed_initial_labels = FALSE) {
     .Call('_conos_propagate_labels', PACKAGE = 'conos', edge_verts, edge_weights, vert_labels, max_n_iters, verbose, diffusion_fading, diffusion_fading_const, tol, fixed_initial_labels)
 }
