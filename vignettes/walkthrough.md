@@ -1,4 +1,14 @@
-# Conos Walkthrough
+---
+title: "Conos Walkthrough"
+output: 
+  rmarkdown::html_vignette:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{"Conos Walkthrough"}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
 
 - [Loading the Data](#loading-the-data)
   * [Pre-processing with pagoda2](#pre-processing-with-pagoda2)
@@ -238,6 +248,9 @@ default values, but are included for clarity:
 con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
 ```
 
+```
+## .............
+```
 
 
 **Note:** As pairwise comparisons may take a while, conos will cache results
@@ -325,31 +338,34 @@ con$plotPanel(gene = 'GZMK')
 
 ![plot of chunk unnamed-chunk-17](figure/unnamed-chunk-17-1.png)
 
-**Note:** If there are NA values in your input data, these will be plotted by default as a black "x" as opposed to a round dot if `plot.na=TRUE`. 
+**Note:** If there are `NA` values in your input data, these will be plotted by default as a black "x" as opposed to a round dot if `plot.na=TRUE`. 
 
-Let's see this behavior by setting certain values in the panel sample `MantonCB2_HiSeq_1` to NA:
+Let's see this behavior by setting certain values in the panel sample `MantonCB2_HiSeq_1` to `NA`:
 
 
 ```r
 ## create new variable for panel.preprocessed
 preprocessed_panel_example <- panel.preprocessed
-
-## set NAs within MantonCB2_HiSeq_1, on portion of the cells, 2000 out of 3000
-preprocessed_panel_example$MantonCB2_HiSeq_1$clusters$PCA$multilevel[1:2000] <- NA
-
+## set NAs within MantonCB2_HiSeq_1, on portion of the cells, 2500 out of 3000
+preprocessed_panel_example$MantonCB2_HiSeq_1$clusters$PCA$multilevel[1:2500] <- NA
 ## create new Conos object
 con_example <- Conos$new(panel.preprocessed, n.cores=1)
-
 ## construct joint graph
 con_example$buildGraph()
+```
 
+```
+## .............
+```
+
+```r
 ## now plot the panel with NA values as "X"
 con_example$plotPanel(clustering="multilevel", use.local.clusters=TRUE, title.size=6)
 ```
 
 ![plot of chunk unnamed-chunk-18](figure/unnamed-chunk-18-1.png)
 
-Notice how the NA values in the sample `MantonCB2_HiSeq_1` are plotted with black "x" symbols.
+Notice how the `NA` values in the sample `MantonCB2_HiSeq_1` are plotted with black "x" symbols, in contrast to the original plot generated with `plotPanel()` above.
 
 
 This behavior is fundamentally controlled by the function `embeddingPlot()` within the R package [sccore](https://github.com/kharchenkolab/sccore). When `plot.na=TRUE` (which is the default behavior), the value of the `shape` parameter in `ggplot2::geom_point` is set to `shape=4`, which creates these black `X` symbols for NA values. For more information, please refer to the ggplot2 documentation pages on [shape](https://ggplot2.tidyverse.org/articles/ggplot2-specs.html?q=shape#sec:shape-spec) and [geom_point](https://ggplot2.tidyverse.org/reference/geom_point.html), as well as `?sccore::embeddingPlot`.
@@ -502,15 +518,15 @@ con$embedGraph(method="UMAP", min.dist=0.01, spread=15, n.cores=2, min.prob.lowe
 ```
 
 ```
-## Estimating hitting distances: 22:41:39.
+## Estimating hitting distances: 22:54:49.
 ## Done.
-## Estimating commute distances: 22:41:44.
-## Hashing adjacency list: 22:41:44.
+## Estimating commute distances: 22:54:54.
+## Hashing adjacency list: 22:54:54.
 ## Done.
-## Estimating distances: 22:41:45.
+## Estimating distances: 22:54:55.
 ## Done
 ## Done.
-## All done!: 22:41:49.
+## All done!: 22:55:00.
 ```
 
 
@@ -535,7 +551,7 @@ con$plotPanel(clustering='walktrap', size=0.1, use.common.embedding=TRUE)
 ```
 
 ```
-## Error in sample$embeddings$PCA[[type]]: no such index at level 1
+## Error in sample$embeddings$PCA[[type]]: invalid negative subscript in get1index <real>
 ```
 
 
@@ -617,7 +633,7 @@ new.label.info <- con$propagateLabels(labels = cellannot, verbose=TRUE)
 ```
 
 ```
-## Stop after 23 iterations. Norm: 0.0240649
+## Stop after 23 iterations. Norm: 0.0240661
 ## Min weight: 1.67017e-05, max weight: 0.367879, fading: (10, 0.1)
 ```
 
@@ -646,37 +662,37 @@ head(new.label.info$label.distribution)
 ```
 
 ```
-##                                        T CD4-CD8-  progenitors     B cells
-## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.000000e+00 0.000000e+00 0.00000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 2.537272e-06 3.334758e-09 8.60705e-11
-## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.000000e+00 0.000000e+00 0.00000e+00
-## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 0.000000e+00 0.000000e+00 0.00000e+00
-## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.000000e+00 0.000000e+00 0.00000e+00
-## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.000000e+00 0.000000e+00 0.00000e+00
-##                                                NK    T cyto    monocytes
-## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.0000000000 1.0000000 0.000000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 0.0003790031 0.9996182 6.742176e-14
-## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.0000000000 1.0000000 0.000000e+00
-## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 1.0000000000 0.0000000 0.000000e+00
-## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.0000000000 1.0000000 0.000000e+00
-## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.0000000000 1.0000000 0.000000e+00
-##                                      monomyelocytes plasma cells  dying cells
-## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1   0.000000e+00 0.000000e+00 0.000000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1   4.608426e-08 2.171258e-11 1.738301e-07
-## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1   0.000000e+00 0.000000e+00 0.000000e+00
-## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1   0.000000e+00 0.000000e+00 0.000000e+00
-## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1   0.000000e+00 0.000000e+00 0.000000e+00
-## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1   0.000000e+00 0.000000e+00 0.000000e+00
-##                                        erythroid          HSC          pDC
-## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.00000e+00 0.000000e+00 0.000000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 5.06978e-10 1.127113e-10 1.092964e-12
-## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.00000e+00 0.000000e+00 0.000000e+00
-## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 0.00000e+00 0.000000e+00 0.000000e+00
-## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.00000e+00 0.000000e+00 0.000000e+00
-## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.00000e+00 0.000000e+00 0.000000e+00
+##                                        T CD4-CD8-  progenitors      B cells
+## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.000000e+00 0.000000e+00 0.000000e+00
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 2.537211e-06 3.334728e-09 8.607308e-11
+## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.000000e+00 0.000000e+00 0.000000e+00
+## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 0.000000e+00 0.000000e+00 0.000000e+00
+## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.000000e+00 0.000000e+00 0.000000e+00
+## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.000000e+00 0.000000e+00 0.000000e+00
+##                                                NK    T cyto   monocytes
+## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.0000000000 1.0000000 0.00000e+00
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 0.0003790063 0.9996182 6.74224e-14
+## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.0000000000 1.0000000 0.00000e+00
+## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 1.0000000000 0.0000000 0.00000e+00
+## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.0000000000 1.0000000 0.00000e+00
+## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.0000000000 1.0000000 0.00000e+00
+##                                      monomyelocytes plasma cells dying cells
+## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1    0.00000e+00 0.000000e+00 0.00000e+00
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1    4.60846e-08 2.171217e-11 1.73827e-07
+## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1    0.00000e+00 0.000000e+00 0.00000e+00
+## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1    0.00000e+00 0.000000e+00 0.00000e+00
+## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1    0.00000e+00 0.000000e+00 0.00000e+00
+## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1    0.00000e+00 0.000000e+00 0.00000e+00
+##                                         erythroid          HSC          pDC
+## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.000000e+00 0.000000e+00 0.000000e+00
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 5.069732e-10 1.127133e-10 1.092994e-12
+## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.000000e+00 0.000000e+00 0.000000e+00
+## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 0.000000e+00 0.000000e+00 0.000000e+00
+## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.000000e+00 0.000000e+00 0.000000e+00
+## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.000000e+00 0.000000e+00 0.000000e+00
 ##                                                DC
 ## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.000000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 1.865463e-14
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 1.865523e-14
 ## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.000000e+00
 ## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 0.000000e+00
 ## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.000000e+00
@@ -841,13 +857,13 @@ str(con$getClusterCountMatrices(), 1)
 
 ```
 ## List of 4
-##  $ MantonBM1_HiSeq_1: num [1:33694, 1:12] 0 0 0 1 0 0 0 0 37 5 ...
+##  $ MantonBM1_HiSeq_1: num [1:33694, 1:12] 0 0 0 1 0 0 0 0 46 6 ...
 ##   ..- attr(*, "dimnames")=List of 2
-##  $ MantonBM2_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 57 4 ...
+##  $ MantonBM2_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 70 4 ...
 ##   ..- attr(*, "dimnames")=List of 2
-##  $ MantonCB1_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 62 6 ...
+##  $ MantonCB1_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 88 7 ...
 ##   ..- attr(*, "dimnames")=List of 2
-##  $ MantonCB2_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 147 16 ...
+##  $ MantonCB2_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 150 19 ...
 ##   ..- attr(*, "dimnames")=List of 2
 ```
 
