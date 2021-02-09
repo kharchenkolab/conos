@@ -257,13 +257,13 @@ con$plotPanel(gene = 'GZMK')
 
 **Note:** If there are `NA` values in your input data, these will be plotted by default as a black "x" as opposed to a round dot if `plot.na=TRUE`. 
 
-Let's see this behavior by setting certain values in the panel sample `MantonCB2_HiSeq_1` to `NA`:
+Let's see this behavior by setting values in the panel sample `MantonCB2_HiSeq_1` to `NA`:
 
 ```{r, fig.height=8, fig.width=8, message=FALSE, warning=FALSE}
 ## create new variable for panel.preprocessed
 preprocessed_panel_example <- panel.preprocessed
-## set NAs within MantonCB2_HiSeq_1, on portion of the cells, 2500 out of 3000
-preprocessed_panel_example$MantonCB2_HiSeq_1$clusters$PCA$multilevel[1:2500] <- NA
+## set NAs within all cell sin MantonCB2_HiSeq_1
+preprocessed_panel_example$MantonCB2_HiSeq_1$clusters$PCA$multilevel <- NA
 ## create new Conos object
 con_example <- Conos$new(panel.preprocessed, n.cores=1)
 ## construct joint graph
