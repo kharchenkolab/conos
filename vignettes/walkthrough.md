@@ -1,33 +1,21 @@
----
-title: "Conos Walkthrough"
-output: 
-  rmarkdown::html_vignette:
-    toc: true
-vignette: >
-  %\VignetteIndexEntry{"Conos Walkthrough"}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
----
-
+# Conos Walkthrough
 
 - [Loading the Data](#loading-the-data)
   * [Pre-processing with pagoda2](#pre-processing-with-pagoda2)
   * [Pre-processing with Seurat](#pre-processing-with-seurat)
 - [Integrating Datasets with conos](#integrating-datasets-with-conos)
-  * [Visualization](#visualization)
   * [Changing embedding parameters](#changing-embedding-parameters)
     + [largeVis](#largevis)
     + [UMAP](#umap)
 - [Exploring Hierarchical Community Structure](#exploring-hierarchical-community-structure)
-  * [Using code](#using-code)
   * [Using Shiny Application](#using-shiny-application)
 - [Label Propagation](#label-propagation)
-  * [General workflow](#general-workflow)
 - [Differential Expression](#differential-expression)
   * [Cluster markers](#cluster-markers)
-  * [Differential expression between sample groups](#de-between-sample-groups)
+  * [Differential expression between sample groups](#differential-expression-between-sample-groups)
     + [Simple run](#simple-run)
 - [Forcing Better Alignment](#forcing-better-alignment)
+
 
 In this tutorial, we will go over the analysis of a panel of samples
 using conos. Conos objects can be used to identify clusters of
