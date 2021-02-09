@@ -9,7 +9,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-First load the conos library, and the library `conosPanel`:
+First load the conos library, and the R package `conosPanel` for the example data `panel`:
 
 ```{r}
 library(conos)

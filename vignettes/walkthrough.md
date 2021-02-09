@@ -1,4 +1,13 @@
-# Conos Walkthrough
+---
+title: "Conos Walkthrough"
+output: 
+  rmarkdown::html_vignette:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{"Conos Walkthrough"}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
 
 - [Loading the Data](#loading-the-data)
   * [Pre-processing with pagoda2](#pre-processing-with-pagoda2)
@@ -15,7 +24,6 @@
   * [Differential expression between sample groups](#differential-expression-between-sample-groups)
     + [Simple run](#simple-run)
 - [Forcing Better Alignment](#forcing-better-alignment)
-
 
 In this tutorial, we will go over the analysis of a panel of samples
 using conos. Conos objects can be used to identify clusters of
@@ -506,15 +514,15 @@ con$embedGraph(method="UMAP", min.dist=0.01, spread=15, n.cores=2, min.prob.lowe
 ```
 
 ```
-## Estimating hitting distances: 23:09:02.
+## Estimating hitting distances: 15:10:48.
 ## Done.
-## Estimating commute distances: 23:09:07.
-## Hashing adjacency list: 23:09:07.
+## Estimating commute distances: 15:10:52.
+## Hashing adjacency list: 15:10:52.
 ## Done.
-## Estimating distances: 23:09:08.
+## Estimating distances: 15:10:54.
 ## Done
 ## Done.
-## All done!: 23:09:12.
+## All done!: 15:10:58.
 ```
 
 
@@ -538,9 +546,7 @@ Now we can use this common embedding in `plotPanel` as well:
 con$plotPanel(clustering='walktrap', size=0.1, use.common.embedding=TRUE)
 ```
 
-```
-## Error in sample$embeddings$PCA[[type]]: no such index at level 1
-```
+![plot of chunk unnamed-chunk-30](figure/unnamed-chunk-30-1.png)
 
 
 ## Exploring Hierarchical Community Structure
@@ -650,37 +656,37 @@ head(new.label.info$label.distribution)
 ```
 
 ```
-##                                        T CD4-CD8- progenitors     B cells
-## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.000000e+00 0.00000e+00 0.00000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 2.537274e-06 3.33478e-09 8.60709e-11
-## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.000000e+00 0.00000e+00 0.00000e+00
-## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 0.000000e+00 0.00000e+00 0.00000e+00
-## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.000000e+00 0.00000e+00 0.00000e+00
-## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.000000e+00 0.00000e+00 0.00000e+00
+##                                        T CD4-CD8- progenitors      B cells
+## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.000000e+00 0.00000e+00 0.000000e+00
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 2.537289e-06 3.33484e-09 8.607228e-11
+## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.000000e+00 0.00000e+00 0.000000e+00
+## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 0.000000e+00 0.00000e+00 0.000000e+00
+## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.000000e+00 0.00000e+00 0.000000e+00
+## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.000000e+00 0.00000e+00 0.000000e+00
 ##                                                NK    T cyto    monocytes
 ## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.0000000000 1.0000000 0.000000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 0.0003790022 0.9996182 6.742367e-14
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 0.0003790055 0.9996182 6.742804e-14
 ## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.0000000000 1.0000000 0.000000e+00
 ## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 1.0000000000 0.0000000 0.000000e+00
 ## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.0000000000 1.0000000 0.000000e+00
 ## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.0000000000 1.0000000 0.000000e+00
 ##                                      monomyelocytes plasma cells  dying cells
 ## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1   0.000000e+00 0.000000e+00 0.000000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1   4.608492e-08 2.171248e-11 1.738294e-07
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1   4.608492e-08 2.171286e-11 1.738314e-07
 ## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1   0.000000e+00 0.000000e+00 0.000000e+00
 ## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1   0.000000e+00 0.000000e+00 0.000000e+00
 ## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1   0.000000e+00 0.000000e+00 0.000000e+00
 ## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1   0.000000e+00 0.000000e+00 0.000000e+00
 ##                                         erythroid          HSC          pDC
 ## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.000000e+00 0.000000e+00 0.000000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 5.069777e-10 1.127118e-10 1.092985e-12
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 5.069862e-10 1.127133e-10 1.092977e-12
 ## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.000000e+00 0.000000e+00 0.000000e+00
 ## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 0.000000e+00 0.000000e+00 0.000000e+00
 ## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.000000e+00 0.000000e+00 0.000000e+00
 ## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.000000e+00 0.000000e+00 0.000000e+00
 ##                                                DC
 ## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.000000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 1.865474e-14
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 1.865488e-14
 ## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.000000e+00
 ## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 0.000000e+00
 ## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.000000e+00
@@ -845,13 +851,13 @@ str(con$getClusterCountMatrices(), 1)
 
 ```
 ## List of 4
-##  $ MantonBM1_HiSeq_1: num [1:33694, 1:12] 0 0 0 1 0 0 0 0 46 5 ...
+##  $ MantonBM1_HiSeq_1: num [1:33694, 1:12] 0 0 0 1 0 0 0 0 45 5 ...
 ##   ..- attr(*, "dimnames")=List of 2
-##  $ MantonBM2_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 68 4 ...
+##  $ MantonBM2_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 69 4 ...
 ##   ..- attr(*, "dimnames")=List of 2
-##  $ MantonCB1_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 84 7 ...
+##  $ MantonCB1_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 85 7 ...
 ##   ..- attr(*, "dimnames")=List of 2
-##  $ MantonCB2_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 151 19 ...
+##  $ MantonCB2_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 153 20 ...
 ##   ..- attr(*, "dimnames")=List of 2
 ```
 
