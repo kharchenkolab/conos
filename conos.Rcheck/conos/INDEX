@@ -1,0 +1,73 @@
+Conos                   Conos R6 class
+basicSeuratProc         Create and preprocess a Seurat object
+bestClusterThresholds   Find threshold of cluster detectability
+bestClusterTreeThresholds
+                        Find threshold of cluster detectability in
+                        trees of clusters
+buildWijMatrix          Rescale the weights in an edge matrix to match
+                        a given perplexity.
+collapseCellsByType     Collapse count matrices by cell type, given
+                        min/max number of cells
+convertToPagoda2        Convert Conos object to Pagoda2 object
+edgeMat                 Access edgeMat from sample
+estimteWeightEntropyPerCell
+                        Estimate entropy of edge weights per cell
+                        according to the specified factor. Can be used
+                        to visualize alignment quality according to
+                        this factor.
+findSubcommunities      Increase resolution for a specific set of
+                        clusters
+getBetweenCellTypeCorrectedDE
+                        Compare two cell types across the entire panel
+getBetweenCellTypeDE    Compare two cell types across the entire panel
+getCellNames            Access cell names from sample
+getClustering           Access clustering from sample
+getCountMatrix          Access count matrix from sample
+getEmbedding            Access embedding from sample
+getGeneExpression       Access gene expression from sample
+getGenes                Access genes from sample
+getOverdispersedGenes   Access overdispersed genes from sample
+getPca                  Access PCA from sample
+getPerCellTypeDE        Do differential expression for each cell type
+                        in a conos object between the specified subsets
+                        of apps
+getRawCountMatrix       Access raw count matrix from sample
+getSampleNamePerCell    Retrieve sample names per cell
+greedyModularityCut     Performs a greedy top-down selective cut to
+                        optmize modularity
+p2app4conos             Utility function to generate a pagoda2 app from
+                        a conos object
+plotClusterBarplots     Plots barplots per sample of composition of
+                        each pagoda2 application based on selected
+                        clustering
+plotClusterBoxPlotsByAppType
+                        Generate boxplot per cluster of the proportion
+                        of cells in each celltype
+plotComponentVariance   Plot fraction of variance explained by the
+                        successive reduced space components (PCA, CPCA)
+plotDEheatmap           Plot a heatmap of differential genes
+projectKNNs             Project a distance matrix into a
+                        lower-dimensional space.
+rawMatricesWithCommonGenes
+                        Get raw matrices with common genes
+saveConosForScanPy      Save Conos object on disk to read it from
+                        ScanPy
+saveDEasCSV             Save differential expression as CSV table
+saveDEasJSON            Save differential expression results as JSON
+scanKModularity         Scan joint graph modularity for a range of k
+                        (or k.self) values Builds graph with different
+                        values of k (or k.self if scan.k.self=TRUE),
+                        evaluating modularity of the resulting
+                        multilevel clustering NOTE: will run
+                        evaluations in parallel using con$n.cores
+                        (temporarily setting con$n.cores to 1 in the
+                        process)
+sgdBatches              Calculate the default number of batches for a
+                        given number of vertices and edges.
+stableTreeClusters      Determine number of detectable clusters given a
+                        reference walktrap and a bunch of permuted
+                        walktraps
+velocityInfoConos       RNA velocity analysis on samples integrated
+                        with conos Create a list of objects to pass
+                        into gene.relative.velocity.estimates function
+                        from the velocyto.R package

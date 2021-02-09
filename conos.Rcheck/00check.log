@@ -1,0 +1,393 @@
+* using log directory ‘/Users/evanbiederstedt/conos/conos.Rcheck’
+* using R version 4.0.3 (2020-10-10)
+* using platform: x86_64-apple-darwin17.0 (64-bit)
+* using session charset: UTF-8
+* using option ‘--as-cran’
+* checking for file ‘conos/DESCRIPTION’ ... OK
+* this is package ‘conos’ version ‘1.4.0’
+* package encoding: UTF-8
+* checking CRAN incoming feasibility ... NOTE
+Maintainer: ‘Evan Biederstedt <evan.biederstedt@gmail.com>’
+
+New submission
+
+Non-FOSS package license (GPL3)
+
+Unknown, possibly mis-spelled, fields in DESCRIPTION:
+  ‘Remotes’
+
+Suggests or Enhances not in mainstream repositories:
+  conosPanel, p2data
+Availability using Additional_repositories specification:
+  conosPanel   yes   https://kharchenkolab.github.io/drat/
+  p2data       yes   https://kharchenkolab.github.io/drat/
+
+Package has a VignetteBuilder field but no prebuilt vignette index.
+
+Size of tarball: 11860314 bytes
+* checking package namespace information ... OK
+* checking package dependencies ... NOTE
+Imports includes 21 non-default packages.
+Importing from so many packages makes the package vulnerable to any of
+them becoming unavailable.  Move as many as possible to Suggests and
+use conditionally.
+* checking if this is a source package ... OK
+* checking if there is a namespace ... OK
+* checking for executable files ... OK
+* checking for hidden files and directories ... OK
+* checking for portable file names ... OK
+* checking for sufficient/correct file permissions ... OK
+* checking whether package ‘conos’ can be installed ... OK
+* checking installed package size ... OK
+* checking package directory ... OK
+* checking for future file timestamps ... OK
+* checking DESCRIPTION meta-information ... WARNING
+Non-standard license specification:
+  GPL3
+Standardizable: FALSE
+Author field differs from that derived from Authors@R
+  Author:    ‘Nikolas Barkas [aut], Viktor Petukhov [aut], Peter Kharchenko [aut], Evan Biederstedt [aut, cre]’
+  Authors@R: ‘Viktor Petukhov [aut], Nikolas Barkas [aut], Peter Kharchenko [aut], Evan Biederstedt [aut, cre]’
+
+'LinkingTo' for ‘igraph’ is unused as it has no 'include' directory
+* checking top-level files ... NOTE
+Non-standard files/directories found at top level:
+  ‘CONTRIBUTING.md’ ‘docker’
+* checking for left-over files ... OK
+* checking index information ... OK
+* checking package subdirectories ... OK
+* checking R files for non-ASCII characters ... OK
+* checking R files for syntax errors ... OK
+* checking whether the package can be loaded ... OK
+* checking whether the package can be loaded with stated dependencies ... OK
+* checking whether the package can be unloaded cleanly ... OK
+* checking whether the namespace can be loaded with stated dependencies ... OK
+* checking whether the namespace can be unloaded cleanly ... OK
+* checking use of S3 registration ... OK
+* checking dependencies in R code ... WARNING
+'::' or ':::' imports not declared from:
+  ‘BiocParallel’ ‘Rjnmf’ ‘SummarizedExperiment’ ‘jsonlite’ ‘plyr’
+  ‘rmumps’ ‘tibble’ ‘uwot’ ‘velocyto.R’ ‘zoo’
+'library' or 'require' calls not declared from:
+  ‘GO.db’ ‘org.Hs.eg.db’ ‘org.Mm.eg.db’
+'loadNamespace' or 'requireNamespace' calls not declared from:
+  ‘BiocParallel’ ‘rmumps’ ‘velocyto.R’ ‘zoo’
+'library' or 'require' calls in package code:
+  ‘GO.db’ ‘org.Hs.eg.db’ ‘org.Mm.eg.db’
+  Please use :: or requireNamespace() instead.
+  See section 'Suggested packages' in the 'Writing R Extensions' manual.
+Missing or unexported object: ‘Seurat::FindVariableGenes’
+Unexported object imported by a ':::' call: ‘igraph:::complete.dend’
+  See the note in ?`:::` about the use of this operator.
+There are ::: calls to the package's namespace in its code. A package
+  almost never needs to use ::: for its own objects:
+  ‘getGeneExpression’ ‘getGenes’ ‘papply’ ‘treeJaccard’
+* checking S3 generic/method consistency ... OK
+* checking replacement functions ... OK
+* checking foreign function calls ... OK
+* checking R code for possible problems ... NOTE
+adjustWeightsByCellBalancing: no visible binding for global variable
+  ‘.’
+aggregateDEMarkersAcrossDatasets : <anonymous>: no visible global
+  function definition for ‘setNames’
+aggregateDEMarkersAcrossDatasets: no visible binding for global
+  variable ‘.’
+aggregateDEMarkersAcrossDatasets: no visible global function definition
+  for ‘dnorm’
+aggregateDEMarkersAcrossDatasets: no visible global function definition
+  for ‘p.adjust’
+basicSeuratProc: no visible global function definition for
+  ‘packageVersion’
+checkSeuratV3: no visible global function definition for
+  ‘packageVersion’
+collapseCellsByType: no visible global function definition for
+  ‘setNames’
+convertToPagoda2: no visible binding for global variable ‘Pagoda2’
+convertToPagoda2: no visible global function definition for ‘setNames’
+convertToPagoda2: no visible binding for global variable ‘.’
+estimteWeightEntropyPerCell: no visible binding for global variable ‘.’
+findSubcommunities: no visible global function definition for
+  ‘setNames’
+generateDEMatrixMetadata: no visible binding for global variable
+  ‘celltype’
+getBetweenCellTypeCorrectedDE: no visible global function definition
+  for ‘relevel’
+getBetweenCellTypeDE: no visible global function definition for
+  ‘relevel’
+getClusterRelationshipConsistency : <anonymous>: no visible global
+  function definition for ‘hclust’
+getClusterRelationshipConsistency : <anonymous>: no visible global
+  function definition for ‘as.dist’
+getClusterRelationshipConsistency : <anonymous>: no visible global
+  function definition for ‘cor’
+getClusterRelationshipConsistency: no visible global function
+  definition for ‘combn’
+getClusterRelationshipConsistency: no visible global function
+  definition for ‘sd’
+getDifferentialGenesP2: no visible global function definition for
+  ‘setNames’
+getDifferentialGenesP2 : <anonymous>: no visible global function
+  definition for ‘packageVersion’
+getDifferentialGenesP2: no visible binding for global variable ‘.’
+getDifferentialGenesP2 : <anonymous>: no visible binding for global
+  variable ‘.’
+getGlobalClusterMarkers: no visible global function definition for
+  ‘namedLevels’
+getOdGenesUniformly : <anonymous>: no visible binding for global
+  variable ‘lpa’
+getOdGenesUniformly: no visible binding for global variable ‘gene’
+getOdGenesUniformly: no visible binding for global variable ‘.’
+getPcaBasedNeighborMatrix: no visible global function definition for
+  ‘setNames’
+getPerCellTypeDE : <anonymous>: no visible global function definition
+  for ‘relevel’
+greedyModularityCut: no visible global function definition for
+  ‘order.dendrogram’
+mergeCountMatrices: no visible binding for global variable ‘.’
+p2app4conos: no visible global function definition for ‘setNames’
+p2app4conos: no visible binding for global variable ‘org.Mm.egALIAS2EG’
+p2app4conos: no visible binding for global variable
+  ‘org.Mm.egGO2ALLEGS’
+p2app4conos : <anonymous>: no visible global function definition for
+  ‘na.omit’
+p2app4conos: no visible binding for global variable ‘org.Hs.egALIAS2EG’
+p2app4conos: no visible binding for global variable
+  ‘org.Hs.egGO2ALLEGS’
+p2app4conos: no visible global function definition for ‘Term’
+p2app4conos: no visible binding for global variable ‘GOTERM’
+p2app4conos: no visible global function definition for
+  ‘hierDiffToGenesets’
+p2app4conos : <anonymous>: no visible global function definition for
+  ‘p2.metadata.from.factor’
+p2app4conos: no visible global function definition for ‘make.p2.app’
+plotClusterBarplots: no visible binding for global variable ‘cluster’
+plotClusterBarplots: no visible binding for global variable ‘f’
+plotClusterBarplots: no visible binding for global variable ‘entropy’
+plotClusterBarplots: no visible binding for global variable ‘cells’
+plotClusterBoxPlotsByAppType: no visible binding for global variable
+  ‘apptype’
+plotClusterBoxPlotsByAppType: no visible binding for global variable
+  ‘val’
+plotClusterBoxPlotsByAppType: no visible binding for global variable
+  ‘clname’
+plotComponentVariance: no visible global function definition for
+  ‘setNames’
+plotComponentVariance: no visible binding for global variable
+  ‘component’
+plotComponentVariance: no visible binding for global variable ‘var’
+plotComponentVariance: no visible binding for global variable ‘dataset’
+plotDEheatmap: no visible global function definition for
+  ‘colorRampPalette’
+plotDEheatmap: no visible global function definition for
+  ‘packageVersion’
+plotDEheatmap : <anonymous>: no visible binding for global variable
+  ‘AUC’
+plotDEheatmap : <anonymous>: no visible binding for global variable
+  ‘Specificity’
+plotDEheatmap : <anonymous>: no visible binding for global variable
+  ‘Precision’
+plotDEheatmap : sn: no visible global function definition for
+  ‘setNames’
+plotDEheatmap : <anonymous>: no visible global function definition for
+  ‘cor’
+plotDEheatmap: no visible global function definition for ‘na.omit’
+plotDEheatmap: no visible global function definition for ‘hclust’
+plotDEheatmap: no visible global function definition for ‘as.dist’
+plotDEheatmap: no visible global function definition for ‘cor’
+plotDEheatmap : <anonymous>: no visible global function definition for
+  ‘quantile’
+plotDEheatmap : <anonymous>: no visible global function definition for
+  ‘median’
+plotDEheatmap: no visible global function definition for ‘setNames’
+plotDEheatmap: no visible global function definition for ‘rainbow’
+plotDEheatmap: no visible global function definition for ‘unit’
+plotEmbeddings: no visible global function definition for ‘dev.size’
+plotEmbeddings : <anonymous>: no visible binding for global variable
+  ‘x’
+plotEmbeddings : <anonymous>: no visible binding for global variable
+  ‘y’
+plotEmbeddings : <anonymous>: no visible binding for global variable
+  ‘label’
+plotSamples: no visible binding for global variable ‘.’
+projectSamplesOnGlobalAxes: no visible binding for global variable
+  ‘var’
+projectSamplesOnGlobalAxes: no visible global function definition for
+  ‘prcomp’
+propagateLabelsDiffusion: no visible global function definition for
+  ‘setNames’
+quickCCA : <anonymous>: no visible binding for global variable ‘var’
+quickCCA: no visible binding for global variable ‘var’
+quickCPCA : <anonymous>: no visible binding for global variable ‘var’
+quickPlainPCA : <anonymous>: no visible binding for global variable
+  ‘var’
+saveConosForScanPy: no visible binding for global variable ‘.’
+saveDEasCSV: no visible global function definition for ‘namedNames’
+saveDEasCSV : <anonymous>: no visible global function definition for
+  ‘qnorm’
+saveDEasCSV : <anonymous>: no visible global function definition for
+  ‘write.table’
+saveDEasJSON: no visible global function definition for ‘namedNames’
+saveDEasJSON : <anonymous>: no visible global function definition for
+  ‘qnorm’
+scanKModularity: no visible global function definition for ‘aes’
+scanKModularity: no visible binding for global variable ‘k’
+scanKModularity: no visible binding for global variable ‘m’
+seuratProcV2: no visible global function definition for
+  ‘packageVersion’
+velocityInfoConos: no visible global function definition for ‘as.dist’
+getGeneExpression,Conos: no visible binding for global variable ‘.’
+getOverdispersedGenes,Conos: no visible global function definition for
+  ‘commonOverdispersedGene’
+Undefined global functions or variables:
+  . AUC GOTERM Pagoda2 Precision Specificity Term aes apptype as.dist
+  cells celltype clname cluster colorRampPalette combn
+  commonOverdispersedGene component cor dataset dev.size dnorm entropy
+  f gene hclust hierDiffToGenesets k label lpa m make.p2.app median
+  na.omit namedLevels namedNames order.dendrogram org.Hs.egALIAS2EG
+  org.Hs.egGO2ALLEGS org.Mm.egALIAS2EG org.Mm.egGO2ALLEGS p.adjust
+  p2.metadata.from.factor packageVersion prcomp qnorm quantile rainbow
+  relevel sd setNames unit val var write.table x y
+Consider adding
+  importFrom("grDevices", "colorRampPalette", "dev.size", "rainbow")
+  importFrom("stats", "as.dist", "cor", "dnorm", "hclust", "median",
+             "na.omit", "order.dendrogram", "p.adjust", "prcomp",
+             "qnorm", "quantile", "relevel", "sd", "setNames", "var")
+  importFrom("utils", "combn", "packageVersion", "write.table")
+to your NAMESPACE file.
+* checking Rd files ... OK
+* checking Rd metadata ... OK
+* checking Rd line widths ... OK
+* checking Rd cross-references ... WARNING
+Missing link or links in documentation object 'saveConosForScanPy.Rd':
+  ‘rhdf5’
+
+See section 'Cross-references' in the 'Writing R Extensions' manual.
+
+* checking for missing documentation entries ... WARNING
+Undocumented code objects:
+  ‘edgeMat<-’
+Undocumented S4 methods:
+  generic 'edgeMat<-' and siglist 'Pagoda2'
+  generic 'edgeMat<-' and siglist 'Seurat'
+  generic 'edgeMat<-' and siglist 'seurat'
+All user-level objects in a package (including S4 classes and methods)
+should have documentation entries.
+See chapter ‘Writing R documentation files’ in the ‘Writing R
+Extensions’ manual.
+* checking for code/documentation mismatches ... OK
+* checking Rd \usage sections ... WARNING
+Undocumented arguments in documentation object 'bestClusterThresholds'
+  ‘clmerges’
+
+Undocumented arguments in documentation object 'plotDEheatmap'
+  ‘max.cells’
+
+Undocumented arguments in documentation object 'rawMatricesWithCommonGenes'
+  ‘con.obj’
+Documented arguments not in \usage in documentation object 'rawMatricesWithCommonGenes':
+  ‘con.object’
+
+Undocumented arguments in documentation object 'saveDEasCSV'
+  ‘gene.metadata’
+Documented arguments not in \usage in documentation object 'saveDEasCSV':
+  ‘data.frame’
+
+Undocumented arguments in documentation object 'scanKModularity'
+  ‘omit.internal.edges’ ‘verbose’ ‘plot’
+
+Undocumented arguments in documentation object 'velocityInfoConos'
+  ‘min.max.cluster.average.emat’ ‘min.max.cluster.average.nmat’
+  ‘min.max.cluster.average.smat’
+
+Functions with \usage entries need to have the appropriate \alias
+entries, and all their arguments documented.
+The \usage entries must correspond to syntactically valid R code.
+See chapter ‘Writing R documentation files’ in the ‘Writing R
+Extensions’ manual.
+* checking Rd contents ... OK
+* checking for unstated dependencies in examples ... OK
+* checking line endings in C/C++/Fortran sources/headers ... OK
+* checking pragmas in C/C++ headers and code ... OK
+* checking compilation flags used ... OK
+* checking compiled code ... WARNING
+File ‘conos/libs/conos.so’:
+  Found ‘___assert_rtn’, possibly from ‘assert’ (C)
+    Objects: ‘RcppExports.o’, ‘edgeweights.o’
+
+Compiled code should not call entry points which might terminate R nor
+write to stdout/stderr instead of to the console, nor use Fortran I/O
+nor system RNGs.
+
+See ‘Writing portable packages’ in the ‘Writing R Extensions’ manual.
+* checking files in ‘vignettes’ ... WARNING
+Files in the 'vignettes' directory but no files in 'inst/doc':
+  ‘adjust_alignment_strength.Rmd’,
+    ‘adjust_alignment_strength_figures/figure/unnamed-chunk-10-1.png’,
+    ‘adjust_alignment_strength_figures/figure/unnamed-chunk-12-1.png’,
+    ‘adjust_alignment_strength_figures/figure/unnamed-chunk-14-1.png’,
+    ‘adjust_alignment_strength_figures/figure/unnamed-chunk-3-1.png’,
+    ‘adjust_alignment_strength_figures/figure/unnamed-chunk-3-2.png’,
+    ‘adjust_alignment_strength_figures/figure/unnamed-chunk-4-1.png’,
+    ‘adjust_alignment_strength_figures/figure/unnamed-chunk-6-1.png’,
+    ‘adjust_alignment_strength_figures/figure/unnamed-chunk-8-1.png’,
+    ‘adjust_alignment_strength_figures/unnamed-chunk-10-1.png’,
+    ‘adjust_alignment_strength_figures/unnamed-chunk-12-1.png’,
+    ‘adjust_alignment_strength_figures/unnamed-chunk-14-1.png’,
+    ‘adjust_alignment_strength_figures/unnamed-chunk-3-1.png’,
+    ‘adjust_alignment_strength_figures/unnamed-chunk-3-2.png’,
+    ‘adjust_alignment_strength_figures/unnamed-chunk-4-1.png’,
+    ‘adjust_alignment_strength_figures/unnamed-chunk-6-1.png’,
+    ‘adjust_alignment_strength_figures/unnamed-chunk-8-1.png’,
+    ‘figure/unnamed-chunk-12-1.png’, ‘figure/unnamed-chunk-13-1.png’,
+    ‘figure/unnamed-chunk-14-1.png’, ‘figure/unnamed-chunk-15-1.png’,
+    ‘figure/unnamed-chunk-16-1.png’, ‘figure/unnamed-chunk-17-1.png’,
+    ‘figure/unnamed-chunk-18-1.png’, ‘figure/unnamed-chunk-19-1.png’,
+    ‘figure/unnamed-chunk-20-1.png’, ‘figure/unnamed-chunk-21-1.png’,
+    ‘figure/unnamed-chunk-22-1.png’, ‘figure/unnamed-chunk-23-1.png’,
+    ‘figure/unnamed-chunk-24-1.png’, ‘figure/unnamed-chunk-25-1.png’,
+    ‘figure/unnamed-chunk-26-1.png’, ‘figure/unnamed-chunk-27-1.png’,
+    ‘figure/unnamed-chunk-28-1.png’, ‘figure/unnamed-chunk-29-1.png’,
+    ‘figure/unnamed-chunk-30-1.png’, ‘figure/unnamed-chunk-31-1.png’,
+    ‘figure/unnamed-chunk-32-1.png’, ‘figure/unnamed-chunk-33-1.png’,
+    ‘figure/unnamed-chunk-34-1.png’, ‘figure/unnamed-chunk-35-1.png’,
+    ‘figure/unnamed-chunk-36-1.png’, ‘figure/unnamed-chunk-37-1.png’,
+    ‘figure/unnamed-chunk-37-2.png’, ‘figure/unnamed-chunk-38-1.png’,
+    ‘figure/unnamed-chunk-38-2.png’, ‘figure/unnamed-chunk-41-1.png’,
+    ‘figure/unnamed-chunk-42-1.png’, ‘figure/unnamed-chunk-43-1.png’,
+    ‘figure/unnamed-chunk-44-1.png’, ‘figure/unnamed-chunk-45-1.png’,
+    ‘figure/unnamed-chunk-46-1.png’, ‘figure/unnamed-chunk-52-1.png’,
+    ‘figure/unnamed-chunk-53-1.png’, ‘figure/unnamed-chunk-54-1.png’,
+    ‘scanpy_integration.Rmd’, ‘walkthrough.Rmd’, ‘walkthrough.md’,
+    ‘walkthrough_figures/unnamed-chunk-11-1.png’,
+    ‘walkthrough_figures/unnamed-chunk-13-1.png’,
+    ‘walkthrough_figures/unnamed-chunk-15-1.png’,
+    ‘walkthrough_figures/unnamed-chunk-16-1.png’,
+    ‘walkthrough_figures/unnamed-chunk-17-1.png’,
+    ‘walkthrough_figures/unnamed-chunk-18-1.png’,
+    ‘walkthrough_figures/unnamed-chunk-19-1.png’,
+    ‘walkthrough_figures/unnamed-chunk-20-1.png’,
+    ‘walkthrough_figures/unnamed-chunk-22-1.png’,
+    ‘walkthrough_figures/unnamed-chunk-23-1.png’,
+    ‘walkthrough_figures/unnamed-chunk-25-1.png’,
+    ‘walkthrough_figures/unnamed-chunk-27-1.png’,
+    ‘walkthrough_figures/unnamed-chunk-28-1.png’,
+    ‘walkthrough_figures/unnamed-chunk-30-1.png’,
+    ‘walkthrough_figures/unnamed-chunk-31-1.png’,
+    ‘walkthrough_figures/unnamed-chunk-33-1.png’,
+    ‘walkthrough_figures/unnamed-chunk-35-1.png’,
+    ‘walkthrough_figures/unnamed-chunk-38-1.png’,
+    ‘walkthrough_figures/unnamed-chunk-40-1.png’,
+    ‘walkthrough_figures/unnamed-chunk-40-2.png’,
+    ‘walkthrough_figures/unnamed-chunk-43-1.png’,
+    ‘walkthrough_figures/unnamed-chunk-45-1.png’,
+    ‘walkthrough_figures/unnamed-chunk-46-1.png’,
+    ‘walkthrough_figures/unnamed-chunk-47-1.png’,
+    ‘walkthrough_figures/unnamed-chunk-54-1.png’,
+    ‘walkthrough_figures/unnamed-chunk-55-1.png’
+The following directory looks like a leftover from 'knitr':
+  ‘figure’
+Please remove from your package.
+* checking examples ... OK
+* checking for unstated dependencies in ‘tests’ ... WARNING
+'::' or ':::' import not declared from: ‘testthat’
+* checking tests ...

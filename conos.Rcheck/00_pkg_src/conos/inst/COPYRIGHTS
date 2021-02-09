@@ -1,0 +1,129 @@
+Files: 
+	/src/leidenalg/include 
+	/src/leidenalg/*.cpp
+Copyright: 2015-2020 V.A. Traag
+License: GPL-3 
+
+
+Files: /src/leidenalg/igraph-R/igraph_matching.h
+Copyright: 2012 Tamas Nepusz <ntamas@gmail.com>
+License: https://igraph.org/c/doc/igraph-Licenses.html
+
+
+Files: /src/leidenalg/igraph-R/igraph_microscopic_update.h
+Copyright: 2011 Minh Van Nguyen <nguyenminh2@gmail.com>
+License: https://igraph.org/c/doc/igraph-Licenses.html
+
+
+Files:
+	/src/leidenalg/igraph-R/igraph.h  
+	/src/leidenalg/igraph-R/igraph_error.h
+	/src/leidenalg/igraph-R/igraph_flow.h
+	/src/leidenalg/igraph-R/igraph_interrupt.h
+	/src/leidenalg/igraph-R/igraph_memory.h
+	/src/leidenalg/igraph-R/igraph_random.h
+	/src/leidenalg/igraph-R/igraph_types.h
+Copyright: 
+	2003-2012 Gabor Csardi <csardi.gabor@gmail.com>
+	334 Harvard street, Cambridge, MA 02139 USA
+License: https://igraph.org/c/doc/igraph-Licenses.html
+
+
+Files: /src/leidenalg/igraph-R/igraph_attributes.h
+Copyright: 
+	2005-2012 Gabor Csardi <csardi.gabor@gmail.com>
+	334 Harvard street, Cambridge, MA 02139 USA
+License: https://igraph.org/c/doc/igraph-Licenses.html
+
+
+Files:
+	/src/leidenalg/igraph-R/igraph_arpack.h
+	/src/leidenalg/igraph-R/igraph_array.h
+	/src/leidenalg/igraph-R/igraph_array_pmt.h
+	/src/leidenalg/igraph-R/igraph_blas.h
+	/src/leidenalg/igraph-R/igraph_dqueue_pmt.h
+	/src/leidenalg/igraph-R/igraph_heap_pmt.h
+	/src/leidenalg/igraph-R/igraph_matrix_pmt.h
+	/src/leidenalg/igraph-R/igraph_pmt.h
+	/src/leidenalg/igraph-R/igraph_pmt_off.h
+	/src/leidenalg/igraph-R/igraph_stack_pmt.h
+	/src/leidenalg/igraph-R/igraph_vector_pmt.h
+Copyright:
+	2007-2012  Gabor Csardi <csardi.gabor@gmail.com>
+	334 Harvard street, Cambridge, MA 02139 USA
+License: https://igraph.org/c/doc/igraph-Licenses.html
+
+
+Files:
+	/src/leidenalg/igraph-R/igraph_adjlist.h
+	/src/leidenalg/igraph-R/igraph_bipartite.h
+	/src/leidenalg/igraph-R/igraph_centrality.h
+	/src/leidenalg/igraph-R/igraph_cliques.h
+	/src/leidenalg/igraph-R/igraph_cocitation.h
+	/src/leidenalg/igraph-R/igraph_community.h
+	/src/leidenalg/igraph-R/igraph_components.h
+	/src/leidenalg/igraph-R/igraph_constants.h
+	/src/leidenalg/igraph-R/igraph_constructors.h
+	/src/leidenalg/igraph-R/igraph_conversion.h
+	/src/leidenalg/igraph-R/igraph_datatype.h
+	/src/leidenalg/igraph-R/igraph_dqueue.h
+	/src/leidenalg/igraph-R/igraph_foreign.h
+	/src/leidenalg/igraph-R/igraph_games.h
+	/src/leidenalg/igraph-R/igraph_heap.h
+	/src/leidenalg/igraph-R/igraph_hrg.h
+	/src/leidenalg/igraph-R/igraph_interface.h
+	/src/leidenalg/igraph-R/igraph_iterators.h
+	/src/leidenalg/igraph-R/igraph_layout.h
+	/src/leidenalg/igraph-R/igraph_matrix.h
+	/src/leidenalg/igraph-R/igraph_mixing.h
+	/src/leidenalg/igraph-R/igraph_motifs.h
+	/src/leidenalg/igraph-R/igraph_neighborhood.h
+	/src/leidenalg/igraph-R/igraph_nongraph.h
+	/src/leidenalg/igraph-R/igraph_operators.h
+	/src/leidenalg/igraph-R/igraph_paths.h
+	/src/leidenalg/igraph-R/igraph_progress.h
+	/src/leidenalg/igraph-R/igraph_psumtree.h
+	/src/leidenalg/igraph-R/igraph_revolver.h
+	/src/leidenalg/igraph-R/igraph_sparsemat.h
+	/src/leidenalg/igraph-R/igraph_spmatrix.h
+	/src/leidenalg/igraph-R/igraph_stack.h
+	/src/leidenalg/igraph-R/igraph_structural.h
+	/src/leidenalg/igraph-R/igraph_strvector.h
+	/src/leidenalg/igraph-R/igraph_topology.h
+	/src/leidenalg/igraph-R/igraph_transitivity.h
+	/src/leidenalg/igraph-R/igraph_vector.h
+	/src/leidenalg/igraph-R/igraph_vector_ptr.h
+	/src/leidenalg/igraph-R/igraph_visitor.h
+Copyright: 
+	2009-2012 Gabor Csardi <csardi.gabor@gmail.com>
+	334 Harvard street, Cambridge, MA 02139 USA
+License: https://igraph.org/c/doc/igraph-Licenses.html
+
+
+Files:
+	/src/leidenalg/igraph-R/igraph_cohesive_blocks.h
+	/src/leidenalg/igraph-R/igraph_complex.h
+	/src/leidenalg/igraph-R/igraph_eigen.h
+	/src/leidenalg/igraph-R/igraph_lapack.h
+	/src/leidenalg/igraph-R/igraph_separators.h
+	/src/leidenalg/igraph-R/igraph_statusbar.h
+	/src/leidenalg/igraph-R/igraph_version.h
+Copyright: 
+	2010-2012 Gabor Csardi <csardi.gabor@gmail.com>
+	334 Harvard street, Cambridge, MA 02139 USA
+License: https://igraph.org/c/doc/igraph-Licenses.html
+
+
+Files:
+	/src/leidenalg/igraph-R/igraph_qsort.h
+	/src/leidenalg/igraph-R/igraph_scg.h
+	/src/leidenalg/igraph-R/igraph_threading.h
+Copyright:
+	2011-2012 Gabor Csardi <csardi.gabor@gmail.com>
+	334 Harvard st, Cambridge, MA 02139, USA
+License: https://igraph.org/c/doc/igraph-Licenses.html
+
+
+Files: /src/adjustedRand.c
+Copyright: Weiliang Qiu <weiliang.qiu@gmail.com>
+License: License: GPL (>= 2)
