@@ -9,14 +9,14 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-First load the Conos library and the corresponding data:
+First load the conos library, and the library `conosPanel`:
 
 ```{r}
 library(conos)
-panel <- readRDS(file.path(find.package('conos'), 'extdata', 'panel.rds'))
+panel <- conosPanel::panel
 ```
 
-Run Pagoda2:
+Next, use pagoda2 for pre-processing:
 
 ```{r}
 library(pagoda2)
@@ -24,7 +24,7 @@ panel.preprocessed <- lapply(panel, basicP2proc, n.cores=2, min.cells.per.gene=0
                              get.largevis=FALSE, make.geneknn=FALSE)
 ```
 
-Align the datasets:
+Now align the datasets:
 
 ```{r}
 con <- Conos$new(panel.preprocessed, n.cores=2)
@@ -32,15 +32,14 @@ con$buildGraph(k=15, k.self=5, space='PCA', ncomps=30)
 ```
 
 
-
-Find clusters and create embedding:
+Next find the clusters, and create an embedding:
 
 ```{r}
 con$findCommunities()
 con$embedGraph(method="UMAP")
 ```
 
-Prepare metadata (can be any type of clustering of all the cells):
+Now prepare the metadata (which can be any type of clustering of all the cells):
 
 ```{r}
 metadata <- data.frame(Cluster=con$clusters$leiden$groups)
@@ -50,9 +49,9 @@ Save data (set `exchange_dir` to your path):
 
 
 ```{r}
+## use current directory
 exchange_dir <- "."
 hdf5file = "example.h5"
-dir.create(exchange_dir)
 saveConosForScanPy(con, output.path=exchange_dir, hdf5_filename=hdf5file, verbose=TRUE)
 ```
 

@@ -81,9 +81,9 @@ scaledMatricesSeuratV3 <- function(so.objs, data.type, od.genes, var.scale, neig
 
 #' @keywords internal
 scaledMatrices <- function(samples, data.type, od.genes, var.scale) {
-  if (class(samples[[1]]) == "Pagoda2") {
+  if ("Pagoda2" %in% class(samples[[1]])) {
     return(scaledMatricesP2(samples, data.type = data.type, od.genes, var.scale))
-  } else if (class(samples[[1]]) == "seurat") {
+  } else if ("seurat" %in% class(samples[[1]])) {
     return(scaledMatricesSeurat(samples, data.type = data.type, od.genes, var.scale))
   } else if (inherits(x = samples[[1]], what = 'Seurat')) {
     return(scaledMatricesSeuratV3(

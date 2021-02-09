@@ -6,7 +6,7 @@ library(conos)
 library(dplyr)
 
 ## load the data
-panel <- readRDS(file.path(find.package('conos'),'extdata','panel.rds'))
+panel <- conosPanel::panel
 
 ## pre-processing
 library(pagoda2)

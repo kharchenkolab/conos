@@ -50,12 +50,12 @@ Suggests:
     rmarkdown,
     Seurat,
     shinycssloaders
+Remotes:
+    jokergoo/ComplexHeatmap
 VignetteBuilder: knitr
 Additional_repositories: https://kharchenkolab.github.io/drat/
 RoxygenNote: 7.1.1
 NeedsCompilation: yes
-Remotes:
-    jokergoo/ComplexHeatmap
 LinkingTo: Rcpp, RcppArmadillo, RcppEigen, RcppProgress, igraph
 Author: Nikolas Barkas [aut], Viktor Petukhov [aut], Peter Kharchenko [aut], Evan Biederstedt [aut, cre]
 Maintainer: Evan Biederstedt <evan.biederstedt@gmail.com>

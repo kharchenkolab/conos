@@ -21,8 +21,8 @@ Conos is an R package to wire together large collections of single-cell RNA-seq 
 ![overview](http://pklab.med.harvard.edu/peterk/conos/Figure1_take3.pk.png)
 Conos applies one of many error-prone methods to align each pair of samples in a collection, establishing weighted inter-sample cell-to-cell links. The resulting joint graph can then be analyzed to identify subpopulations across different samples. Cells of the same type will tend to map to each other across many such pairwise comparisons, forming cliques that can be recognized as clusters (graph communities). 
 
-Conos processing can be divided into three phases:
-    * **Phase 1: Filtering and normalization** Each individual dataset in the sample panel is filtered and normalized using standard packages for single-dataset processing: either [pagoda2](https://github.com/kharchenkolab/pagoda2) or [Seurat](https://github.com/satijalab/seurat). Specifically, conos relies on these methods to perform cell filtering, library size normalization, identification of overdispersed genes and, in the case of `pagoda2`, variance normalization. (Conos is robust to variations in the normalization procedures, but it is recommended that all of the datasets be processed uniformly.)
+   Conos processing can be divided into three phases:
+    * **Phase 1: Filtering and normalization** Each individual dataset in the sample panel is filtered and normalized using standard packages for single-dataset processing: either `pagoda2` or `Seurat`. Specifically, Conos relies on these methods to perform cell filtering, library size normalization, identification of overdispersed genes and, in the case of pagoda2, variance normalization. (Conos is robust to variations in the normalization procedures, but it is recommended that all of the datasets be processed uniformly.)
     * **Phase 2: Identify multiple plausible inter-sample mappings** Conos performs pairwise comparisons of the datasets in the panel to establish an initial error-prone mapping between cells of different datasets. 
     * **Phase 3: Joint graph construction** These inter-sample edges from Phase 2 are then combined with lower-weight intra-sample edges during the joint graph construction. The joint graph is then used for downstream analysis, including community detection and label propagation. For a comprehensive description of the algorithm, please refer to our [publication](https://doi.org/10.1038/s41592-019-0466-z).
 
@@ -151,6 +151,13 @@ library(devtools)
 install_github("kharchenkolab/conosPanel")
 ```
 
+**Note:** If you are using [pagoda2](https://github.com/kharchenkolab/pagoda2), you should also install the auxilliary package `p2data`:
+
+```r
+install.packages('p2data', repos='https://kharchenkolab.github.io/drat/', type='source')
+```
+
+
 #### System dependencies
 
 The dependencies are inherited from [pagoda2](https://github.com/kharchenkolab/pagoda2):
@@ -186,7 +193,7 @@ As of version 1.3.1, `conos` should sucessfully install on Mac OS. However, if t
 
 If your system configuration is making it difficult to install `conos` natively, an alternative way to get `conos` running is through a docker container.
 
-**Note:** on OS X, Docker Machine has Memory and CPU limits. To control it, please check instructions either for [CLI](https://stackoverflow.com/questions/32834082/how-to-increase-docker-machine-memory-mac/32834453#32834453) or for [Docker Desktop](https://docs.docker.com/docker-for-mac/#advanced).
+**Note:** On Mac OS X, Docker Machine has Memory and CPU limits. To control it, please check instructions either for [CLI](https://stackoverflow.com/questions/32834082/how-to-increase-docker-machine-memory-mac/32834453#32834453) or for [Docker Desktop](https://docs.docker.com/docker-for-mac/#advanced).
 
 #### Ready-to-run Docker image
 
@@ -196,7 +203,7 @@ The docker distribution has the latest version and also includes the [pagoda2 pa
 docker run -p 8787:8787 -e PASSWORD=pass pkharchenkolab/conos:latest
 ```
 
-The first time you run this command, it will download several large images so make sure that you have fast internet access setup. You can then point your browser to http://localhost:8787/ to get an Rstudio environment with `pagoda2` and `conos` installed (please log in using credentials username=`rstudio`, password=`pass`). Explore the docker [--mount option]([https://docs.docker.com/storage/volumes/) to allow access of the docker image to your local files.
+The first time you run this command, it will download several large images so make sure that you have fast internet access setup. You can then point your browser to http://localhost:8787/ to get an Rstudio environment with `pagoda2` and `conos` installed (please log in using credentials username=`rstudio`, password=`pass`). Explore the [docker --mount option](https://docs.docker.com/storage/volumes/) to allow access of the docker image to your local files.
 
 **Note:** If you already downloaded the docker image and want to update it, please pull the latest image with: 
 ```
@@ -205,11 +212,11 @@ docker pull pkharchenkolab/conos:latest
 
 #### Building Docker image from the Dockerfile
 
-If you want to build image by your own, download the [Dockerfile](https://github.com/kharchenkolab/conos/blob/master/dockers/Dockerfile) (available in this repo under `/dockers`) and run to following command to build it:
+If you want to build image by your own, download the [Dockerfile](https://github.com/kharchenkolab/conos/blob/master/docker/Dockerfile) (available in this repo under `/dockers`) and run to following command to build it:
 ```
 docker build -t conos .
 ```
-This will create a "conos" docker image on your system (please be patient, as the build takes approximately 30-50 minutes).
+This will create a "conos" docker image on your system (please be patient, as the build could take approximately 30-50 minutes to finish).
 You can then run it using the following command:
 ```
 docker run -d -p 8787:8787 -e PASSWORD=pass --name conos -it conos
@@ -228,6 +235,6 @@ The R package can be cited as:
 
 ```
 Viktor Petukhov, Nikolas Barkas, Peter Kharchenko, and Evan
-Biederstedt (2020). conos: Clustering on Network of Samples. R
-package version 1.3.2.
+Biederstedt (2021). conos: Clustering on Network of Samples. R
+package version 1.4.0.
 ```

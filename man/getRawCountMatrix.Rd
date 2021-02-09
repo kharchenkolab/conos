@@ -12,7 +12,7 @@ getRawCountMatrix(sample, transposed = FALSE)
 
 \S4method{getRawCountMatrix}{Pagoda2}(sample, transposed = FALSE)
 
-\S4method{getRawCountMatrix}{seurat}(sample, transposed = F)
+\S4method{getRawCountMatrix}{seurat}(sample, transposed = FALSE)
 
 \S4method{getRawCountMatrix}{Seurat}(sample, transposed = FALSE)
 

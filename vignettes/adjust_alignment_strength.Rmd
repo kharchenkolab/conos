@@ -23,7 +23,7 @@ library(pagoda2)
 library(conos)
 library(magrittr)
 
-panel <- readRDS(file.path(find.package('conos'),'extdata','panel.rds'))
+panel <- conosPanel::panel
 cellannot <- find.package('conos') %>% file.path('extdata', 'cellannot.txt') %>%
   read.table(header=FALSE,sep='\t') %$% setNames(V2, V1)
 ```

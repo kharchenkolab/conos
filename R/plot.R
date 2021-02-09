@@ -108,7 +108,7 @@ plotSamples <- function(samples, groups=NULL, colors=NULL, gene=NULL, embedding.
       'tSNE'
     }
   }
-  if(class(embedding.type)=='matrix') { # actual embedding was passed
+  if ('dgCMatrix' %in% class(embedding.type)) { # actual embedding was passed
     embeddings <- lapply(samples,function(r) embedding.type[rownames(embedding.type) %in% getCellNames(r),,drop=FALSE])
     embeddings <- embeddings[unlist(lapply(embeddings,function(x) nrow(x)>0))]
   } else { # extract embeddings from samples
