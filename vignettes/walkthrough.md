@@ -1,14 +1,3 @@
----
-title: "Conos Walkthrough"
-output: 
-  rmarkdown::html_vignette:
-    toc: true
-vignette: >
-  %\VignetteIndexEntry{"Conos Walkthrough"}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
----
-
 
 - [Loading the Data](#loading-the-data)
   * [Pre-processing with pagoda2](#pre-processing-with-pagoda2)
@@ -166,155 +155,20 @@ conos.
 
 
 ```r
-str(panel.preprocessed, 1)
+typeof(panel.preprocessed)
 ```
 
 ```
-## List of 4
-##  $ MantonBM1_HiSeq_1:Classes 'Pagoda2', 'R6' <Pagoda2>
-##   Public:
-##     adjustVariance: function (gam.k = 5, alpha = 0.05, plot = FALSE, use.raw.variance = FALSE, 
-##     batch: NULL
-##     calculatePcaReduction: function (nPcs = 20, type = "counts", name = "PCA", use.odgenes = TRUE, 
-##     clone: function (deep = FALSE) 
-##     clusters: list
-##     counts: dgCMatrix
-##     depth: 2792 3528 3533 1589 1199 2588 2587 2333 3561 2640 2102 7 ...
-##     diffgenes: list
-##     embeddings: list
-##     expandOdGenes: function (type = "counts", clusterType = NULL, groups = NULL, 
-##     genegraphs: list
-##     geneKnnbyPCA: function () 
-##     getDensityClusters: function (type = "counts", embeddingType = NULL, name = "density", 
-##     getDifferentialGenes: function (type = "counts", clusterType = NULL, groups = NULL, 
-##     getEmbedding: function (type = "counts", embeddingType = "largeVis", name = NULL, 
-##     getHierarchicalDiffExpressionAspects: function (type = "counts", groups = NULL, clusterName = NULL, 
-##     getKnnClusters: function (type = "counts", method = igraph::multilevel.community, 
-##     getNormalizedExpressionMatrix: function (genes = NULL, n.odgenes = NULL) 
-##     getOdGenes: function (n.odgenes = NULL, alpha = 0.05, use.unadjusted.pvals = FALSE) 
-##     getRefinedLibSizes: function (clusterType = NULL, groups = NULL, type = "counts", 
-##     graphs: list
-##     initialize: function (x, modelType = "plain", n.cores = parallel::detectCores(logical = FALSE), 
-##     localPcaKnn: function (nPcs = 5, type = "counts", clusterType = NULL, groups = NULL, 
-##     makeGeneKnnGraph: function (nPcs = 100, center = TRUE, fastpath = TRUE, maxit = 1000, 
-##     makeKnnGraph: function (k = 30, nrand = 1000, type = "counts", weight.type = "1m", 
-##     misc: list
-##     modelType: plain
-##     n.cores: 2
-##     plotDiffGeneHeatmap: function (type = "counts", clusterType = NULL, groups = NULL, 
-##     plotEmbedding: function (type = NULL, embeddingType = NULL, clusterType = NULL, 
-##     plotGeneHeatmap: function (genes, type = "counts", clusterType = NULL, groups = NULL, 
-##     reductions: list
-##     setCountMatrix: function (countMatrix, depthScale = 1000, min.cells.per.gene = 0, 
-##     testPathwayOverdispersion: function (setenv, type = "counts", max.pathway.size = 1000, min.pathway.size = 10,  
-##  $ MantonBM2_HiSeq_1:Classes 'Pagoda2', 'R6' <Pagoda2>
-##   Public:
-##     adjustVariance: function (gam.k = 5, alpha = 0.05, plot = FALSE, use.raw.variance = FALSE, 
-##     batch: NULL
-##     calculatePcaReduction: function (nPcs = 20, type = "counts", name = "PCA", use.odgenes = TRUE, 
-##     clone: function (deep = FALSE) 
-##     clusters: list
-##     counts: dgCMatrix
-##     depth: 1994 3092 4195 1948 1339 2970 1309 3575 1388 13256 2566  ...
-##     diffgenes: list
-##     embeddings: list
-##     expandOdGenes: function (type = "counts", clusterType = NULL, groups = NULL, 
-##     genegraphs: list
-##     geneKnnbyPCA: function () 
-##     getDensityClusters: function (type = "counts", embeddingType = NULL, name = "density", 
-##     getDifferentialGenes: function (type = "counts", clusterType = NULL, groups = NULL, 
-##     getEmbedding: function (type = "counts", embeddingType = "largeVis", name = NULL, 
-##     getHierarchicalDiffExpressionAspects: function (type = "counts", groups = NULL, clusterName = NULL, 
-##     getKnnClusters: function (type = "counts", method = igraph::multilevel.community, 
-##     getNormalizedExpressionMatrix: function (genes = NULL, n.odgenes = NULL) 
-##     getOdGenes: function (n.odgenes = NULL, alpha = 0.05, use.unadjusted.pvals = FALSE) 
-##     getRefinedLibSizes: function (clusterType = NULL, groups = NULL, type = "counts", 
-##     graphs: list
-##     initialize: function (x, modelType = "plain", n.cores = parallel::detectCores(logical = FALSE), 
-##     localPcaKnn: function (nPcs = 5, type = "counts", clusterType = NULL, groups = NULL, 
-##     makeGeneKnnGraph: function (nPcs = 100, center = TRUE, fastpath = TRUE, maxit = 1000, 
-##     makeKnnGraph: function (k = 30, nrand = 1000, type = "counts", weight.type = "1m", 
-##     misc: list
-##     modelType: plain
-##     n.cores: 2
-##     plotDiffGeneHeatmap: function (type = "counts", clusterType = NULL, groups = NULL, 
-##     plotEmbedding: function (type = NULL, embeddingType = NULL, clusterType = NULL, 
-##     plotGeneHeatmap: function (genes, type = "counts", clusterType = NULL, groups = NULL, 
-##     reductions: list
-##     setCountMatrix: function (countMatrix, depthScale = 1000, min.cells.per.gene = 0, 
-##     testPathwayOverdispersion: function (setenv, type = "counts", max.pathway.size = 1000, min.pathway.size = 10,  
-##  $ MantonCB1_HiSeq_1:Classes 'Pagoda2', 'R6' <Pagoda2>
-##   Public:
-##     adjustVariance: function (gam.k = 5, alpha = 0.05, plot = FALSE, use.raw.variance = FALSE, 
-##     batch: NULL
-##     calculatePcaReduction: function (nPcs = 20, type = "counts", name = "PCA", use.odgenes = TRUE, 
-##     clone: function (deep = FALSE) 
-##     clusters: list
-##     counts: dgCMatrix
-##     depth: 5859 2104 2069 410 3480 2439 2575 3574 2647 3206 492 403 ...
-##     diffgenes: list
-##     embeddings: list
-##     expandOdGenes: function (type = "counts", clusterType = NULL, groups = NULL, 
-##     genegraphs: list
-##     geneKnnbyPCA: function () 
-##     getDensityClusters: function (type = "counts", embeddingType = NULL, name = "density", 
-##     getDifferentialGenes: function (type = "counts", clusterType = NULL, groups = NULL, 
-##     getEmbedding: function (type = "counts", embeddingType = "largeVis", name = NULL, 
-##     getHierarchicalDiffExpressionAspects: function (type = "counts", groups = NULL, clusterName = NULL, 
-##     getKnnClusters: function (type = "counts", method = igraph::multilevel.community, 
-##     getNormalizedExpressionMatrix: function (genes = NULL, n.odgenes = NULL) 
-##     getOdGenes: function (n.odgenes = NULL, alpha = 0.05, use.unadjusted.pvals = FALSE) 
-##     getRefinedLibSizes: function (clusterType = NULL, groups = NULL, type = "counts", 
-##     graphs: list
-##     initialize: function (x, modelType = "plain", n.cores = parallel::detectCores(logical = FALSE), 
-##     localPcaKnn: function (nPcs = 5, type = "counts", clusterType = NULL, groups = NULL, 
-##     makeGeneKnnGraph: function (nPcs = 100, center = TRUE, fastpath = TRUE, maxit = 1000, 
-##     makeKnnGraph: function (k = 30, nrand = 1000, type = "counts", weight.type = "1m", 
-##     misc: list
-##     modelType: plain
-##     n.cores: 2
-##     plotDiffGeneHeatmap: function (type = "counts", clusterType = NULL, groups = NULL, 
-##     plotEmbedding: function (type = NULL, embeddingType = NULL, clusterType = NULL, 
-##     plotGeneHeatmap: function (genes, type = "counts", clusterType = NULL, groups = NULL, 
-##     reductions: list
-##     setCountMatrix: function (countMatrix, depthScale = 1000, min.cells.per.gene = 0, 
-##     testPathwayOverdispersion: function (setenv, type = "counts", max.pathway.size = 1000, min.pathway.size = 10,  
-##  $ MantonCB2_HiSeq_1:Classes 'Pagoda2', 'R6' <Pagoda2>
-##   Public:
-##     adjustVariance: function (gam.k = 5, alpha = 0.05, plot = FALSE, use.raw.variance = FALSE, 
-##     batch: NULL
-##     calculatePcaReduction: function (nPcs = 20, type = "counts", name = "PCA", use.odgenes = TRUE, 
-##     clone: function (deep = FALSE) 
-##     clusters: list
-##     counts: dgCMatrix
-##     depth: 3747 2911 501 2834 1786 2680 1099 8455 2976 2170 644 523 ...
-##     diffgenes: list
-##     embeddings: list
-##     expandOdGenes: function (type = "counts", clusterType = NULL, groups = NULL, 
-##     genegraphs: list
-##     geneKnnbyPCA: function () 
-##     getDensityClusters: function (type = "counts", embeddingType = NULL, name = "density", 
-##     getDifferentialGenes: function (type = "counts", clusterType = NULL, groups = NULL, 
-##     getEmbedding: function (type = "counts", embeddingType = "largeVis", name = NULL, 
-##     getHierarchicalDiffExpressionAspects: function (type = "counts", groups = NULL, clusterName = NULL, 
-##     getKnnClusters: function (type = "counts", method = igraph::multilevel.community, 
-##     getNormalizedExpressionMatrix: function (genes = NULL, n.odgenes = NULL) 
-##     getOdGenes: function (n.odgenes = NULL, alpha = 0.05, use.unadjusted.pvals = FALSE) 
-##     getRefinedLibSizes: function (clusterType = NULL, groups = NULL, type = "counts", 
-##     graphs: list
-##     initialize: function (x, modelType = "plain", n.cores = parallel::detectCores(logical = FALSE), 
-##     localPcaKnn: function (nPcs = 5, type = "counts", clusterType = NULL, groups = NULL, 
-##     makeGeneKnnGraph: function (nPcs = 100, center = TRUE, fastpath = TRUE, maxit = 1000, 
-##     makeKnnGraph: function (k = 30, nrand = 1000, type = "counts", weight.type = "1m", 
-##     misc: list
-##     modelType: plain
-##     n.cores: 2
-##     plotDiffGeneHeatmap: function (type = "counts", clusterType = NULL, groups = NULL, 
-##     plotEmbedding: function (type = NULL, embeddingType = NULL, clusterType = NULL, 
-##     plotGeneHeatmap: function (genes, type = "counts", clusterType = NULL, groups = NULL, 
-##     reductions: list
-##     setCountMatrix: function (countMatrix, depthScale = 1000, min.cells.per.gene = 0, 
-##     testPathwayOverdispersion: function (setenv, type = "counts", max.pathway.size = 1000, min.pathway.size = 10,
+## [1] "list"
+```
+
+```r
+names(panel.preprocessed)
+```
+
+```
+## [1] "MantonBM1_HiSeq_1" "MantonBM2_HiSeq_1" "MantonCB1_HiSeq_1"
+## [4] "MantonCB2_HiSeq_1"
 ```
 
 ## Pre-processing with Seurat
@@ -353,161 +207,9 @@ con <- Conos$new(panel.preprocessed, n.cores=1)
 ```
 
 Our original pagoda2 (or Seurat) objects are now saved in the Conos
-object (if you are short of memory you can go ahead and delete the
-originals).
+object.
 
 
-```r
-str(con$samples,1)
-```
-
-```
-## List of 4
-##  $ MantonBM1_HiSeq_1:Classes 'Pagoda2', 'R6' <Pagoda2>
-##   Public:
-##     adjustVariance: function (gam.k = 5, alpha = 0.05, plot = FALSE, use.raw.variance = FALSE, 
-##     batch: NULL
-##     calculatePcaReduction: function (nPcs = 20, type = "counts", name = "PCA", use.odgenes = TRUE, 
-##     clone: function (deep = FALSE) 
-##     clusters: list
-##     counts: dgCMatrix
-##     depth: 2792 3528 3533 1589 1199 2588 2587 2333 3561 2640 2102 7 ...
-##     diffgenes: list
-##     embeddings: list
-##     expandOdGenes: function (type = "counts", clusterType = NULL, groups = NULL, 
-##     genegraphs: list
-##     geneKnnbyPCA: function () 
-##     getDensityClusters: function (type = "counts", embeddingType = NULL, name = "density", 
-##     getDifferentialGenes: function (type = "counts", clusterType = NULL, groups = NULL, 
-##     getEmbedding: function (type = "counts", embeddingType = "largeVis", name = NULL, 
-##     getHierarchicalDiffExpressionAspects: function (type = "counts", groups = NULL, clusterName = NULL, 
-##     getKnnClusters: function (type = "counts", method = igraph::multilevel.community, 
-##     getNormalizedExpressionMatrix: function (genes = NULL, n.odgenes = NULL) 
-##     getOdGenes: function (n.odgenes = NULL, alpha = 0.05, use.unadjusted.pvals = FALSE) 
-##     getRefinedLibSizes: function (clusterType = NULL, groups = NULL, type = "counts", 
-##     graphs: list
-##     initialize: function (x, modelType = "plain", n.cores = parallel::detectCores(logical = FALSE), 
-##     localPcaKnn: function (nPcs = 5, type = "counts", clusterType = NULL, groups = NULL, 
-##     makeGeneKnnGraph: function (nPcs = 100, center = TRUE, fastpath = TRUE, maxit = 1000, 
-##     makeKnnGraph: function (k = 30, nrand = 1000, type = "counts", weight.type = "1m", 
-##     misc: list
-##     modelType: plain
-##     n.cores: 2
-##     plotDiffGeneHeatmap: function (type = "counts", clusterType = NULL, groups = NULL, 
-##     plotEmbedding: function (type = NULL, embeddingType = NULL, clusterType = NULL, 
-##     plotGeneHeatmap: function (genes, type = "counts", clusterType = NULL, groups = NULL, 
-##     reductions: list
-##     setCountMatrix: function (countMatrix, depthScale = 1000, min.cells.per.gene = 0, 
-##     testPathwayOverdispersion: function (setenv, type = "counts", max.pathway.size = 1000, min.pathway.size = 10,  
-##  $ MantonBM2_HiSeq_1:Classes 'Pagoda2', 'R6' <Pagoda2>
-##   Public:
-##     adjustVariance: function (gam.k = 5, alpha = 0.05, plot = FALSE, use.raw.variance = FALSE, 
-##     batch: NULL
-##     calculatePcaReduction: function (nPcs = 20, type = "counts", name = "PCA", use.odgenes = TRUE, 
-##     clone: function (deep = FALSE) 
-##     clusters: list
-##     counts: dgCMatrix
-##     depth: 1994 3092 4195 1948 1339 2970 1309 3575 1388 13256 2566  ...
-##     diffgenes: list
-##     embeddings: list
-##     expandOdGenes: function (type = "counts", clusterType = NULL, groups = NULL, 
-##     genegraphs: list
-##     geneKnnbyPCA: function () 
-##     getDensityClusters: function (type = "counts", embeddingType = NULL, name = "density", 
-##     getDifferentialGenes: function (type = "counts", clusterType = NULL, groups = NULL, 
-##     getEmbedding: function (type = "counts", embeddingType = "largeVis", name = NULL, 
-##     getHierarchicalDiffExpressionAspects: function (type = "counts", groups = NULL, clusterName = NULL, 
-##     getKnnClusters: function (type = "counts", method = igraph::multilevel.community, 
-##     getNormalizedExpressionMatrix: function (genes = NULL, n.odgenes = NULL) 
-##     getOdGenes: function (n.odgenes = NULL, alpha = 0.05, use.unadjusted.pvals = FALSE) 
-##     getRefinedLibSizes: function (clusterType = NULL, groups = NULL, type = "counts", 
-##     graphs: list
-##     initialize: function (x, modelType = "plain", n.cores = parallel::detectCores(logical = FALSE), 
-##     localPcaKnn: function (nPcs = 5, type = "counts", clusterType = NULL, groups = NULL, 
-##     makeGeneKnnGraph: function (nPcs = 100, center = TRUE, fastpath = TRUE, maxit = 1000, 
-##     makeKnnGraph: function (k = 30, nrand = 1000, type = "counts", weight.type = "1m", 
-##     misc: list
-##     modelType: plain
-##     n.cores: 2
-##     plotDiffGeneHeatmap: function (type = "counts", clusterType = NULL, groups = NULL, 
-##     plotEmbedding: function (type = NULL, embeddingType = NULL, clusterType = NULL, 
-##     plotGeneHeatmap: function (genes, type = "counts", clusterType = NULL, groups = NULL, 
-##     reductions: list
-##     setCountMatrix: function (countMatrix, depthScale = 1000, min.cells.per.gene = 0, 
-##     testPathwayOverdispersion: function (setenv, type = "counts", max.pathway.size = 1000, min.pathway.size = 10,  
-##  $ MantonCB1_HiSeq_1:Classes 'Pagoda2', 'R6' <Pagoda2>
-##   Public:
-##     adjustVariance: function (gam.k = 5, alpha = 0.05, plot = FALSE, use.raw.variance = FALSE, 
-##     batch: NULL
-##     calculatePcaReduction: function (nPcs = 20, type = "counts", name = "PCA", use.odgenes = TRUE, 
-##     clone: function (deep = FALSE) 
-##     clusters: list
-##     counts: dgCMatrix
-##     depth: 5859 2104 2069 410 3480 2439 2575 3574 2647 3206 492 403 ...
-##     diffgenes: list
-##     embeddings: list
-##     expandOdGenes: function (type = "counts", clusterType = NULL, groups = NULL, 
-##     genegraphs: list
-##     geneKnnbyPCA: function () 
-##     getDensityClusters: function (type = "counts", embeddingType = NULL, name = "density", 
-##     getDifferentialGenes: function (type = "counts", clusterType = NULL, groups = NULL, 
-##     getEmbedding: function (type = "counts", embeddingType = "largeVis", name = NULL, 
-##     getHierarchicalDiffExpressionAspects: function (type = "counts", groups = NULL, clusterName = NULL, 
-##     getKnnClusters: function (type = "counts", method = igraph::multilevel.community, 
-##     getNormalizedExpressionMatrix: function (genes = NULL, n.odgenes = NULL) 
-##     getOdGenes: function (n.odgenes = NULL, alpha = 0.05, use.unadjusted.pvals = FALSE) 
-##     getRefinedLibSizes: function (clusterType = NULL, groups = NULL, type = "counts", 
-##     graphs: list
-##     initialize: function (x, modelType = "plain", n.cores = parallel::detectCores(logical = FALSE), 
-##     localPcaKnn: function (nPcs = 5, type = "counts", clusterType = NULL, groups = NULL, 
-##     makeGeneKnnGraph: function (nPcs = 100, center = TRUE, fastpath = TRUE, maxit = 1000, 
-##     makeKnnGraph: function (k = 30, nrand = 1000, type = "counts", weight.type = "1m", 
-##     misc: list
-##     modelType: plain
-##     n.cores: 2
-##     plotDiffGeneHeatmap: function (type = "counts", clusterType = NULL, groups = NULL, 
-##     plotEmbedding: function (type = NULL, embeddingType = NULL, clusterType = NULL, 
-##     plotGeneHeatmap: function (genes, type = "counts", clusterType = NULL, groups = NULL, 
-##     reductions: list
-##     setCountMatrix: function (countMatrix, depthScale = 1000, min.cells.per.gene = 0, 
-##     testPathwayOverdispersion: function (setenv, type = "counts", max.pathway.size = 1000, min.pathway.size = 10,  
-##  $ MantonCB2_HiSeq_1:Classes 'Pagoda2', 'R6' <Pagoda2>
-##   Public:
-##     adjustVariance: function (gam.k = 5, alpha = 0.05, plot = FALSE, use.raw.variance = FALSE, 
-##     batch: NULL
-##     calculatePcaReduction: function (nPcs = 20, type = "counts", name = "PCA", use.odgenes = TRUE, 
-##     clone: function (deep = FALSE) 
-##     clusters: list
-##     counts: dgCMatrix
-##     depth: 3747 2911 501 2834 1786 2680 1099 8455 2976 2170 644 523 ...
-##     diffgenes: list
-##     embeddings: list
-##     expandOdGenes: function (type = "counts", clusterType = NULL, groups = NULL, 
-##     genegraphs: list
-##     geneKnnbyPCA: function () 
-##     getDensityClusters: function (type = "counts", embeddingType = NULL, name = "density", 
-##     getDifferentialGenes: function (type = "counts", clusterType = NULL, groups = NULL, 
-##     getEmbedding: function (type = "counts", embeddingType = "largeVis", name = NULL, 
-##     getHierarchicalDiffExpressionAspects: function (type = "counts", groups = NULL, clusterName = NULL, 
-##     getKnnClusters: function (type = "counts", method = igraph::multilevel.community, 
-##     getNormalizedExpressionMatrix: function (genes = NULL, n.odgenes = NULL) 
-##     getOdGenes: function (n.odgenes = NULL, alpha = 0.05, use.unadjusted.pvals = FALSE) 
-##     getRefinedLibSizes: function (clusterType = NULL, groups = NULL, type = "counts", 
-##     graphs: list
-##     initialize: function (x, modelType = "plain", n.cores = parallel::detectCores(logical = FALSE), 
-##     localPcaKnn: function (nPcs = 5, type = "counts", clusterType = NULL, groups = NULL, 
-##     makeGeneKnnGraph: function (nPcs = 100, center = TRUE, fastpath = TRUE, maxit = 1000, 
-##     makeKnnGraph: function (k = 30, nrand = 1000, type = "counts", weight.type = "1m", 
-##     misc: list
-##     modelType: plain
-##     n.cores: 2
-##     plotDiffGeneHeatmap: function (type = "counts", clusterType = NULL, groups = NULL, 
-##     plotEmbedding: function (type = NULL, embeddingType = NULL, clusterType = NULL, 
-##     plotGeneHeatmap: function (genes, type = "counts", clusterType = NULL, groups = NULL, 
-##     reductions: list
-##     setCountMatrix: function (countMatrix, depthScale = 1000, min.cells.per.gene = 0, 
-##     testPathwayOverdispersion: function (setenv, type = "counts", max.pathway.size = 1000, min.pathway.size = 10,
-```
 
 ### Build the Joint Graph
 
@@ -535,60 +237,6 @@ default values, but are included for clarity:
 con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
 ```
 
-```
-## found 0 out of 6 cached PCA space pairs ...
-```
-
-```
-## running 6 additional PCA space pairs
-```
-
-```
-## ......
-```
-
-```
-##  done
-```
-
-```
-## inter-sample links using mNN
-```
-
-```
-## ......
-```
-
-```
-##  done
-```
-
-```
-## local pairs
-```
-
-```
-## .
-## .
-## .
-## .
-```
-
-```
-##  done
-```
-
-```
-## building graph .
-```
-
-```
-## .
-```
-
-```
-## done
-```
 
 
 **Note:** As pairwise comparisons may take a while, conos will cache results
@@ -607,7 +255,7 @@ time). We can visualize the results using:
 plotComponentVariance(con, space='PCA')
 ```
 
-![plot of chunk unnamed-chunk-13](figure/unnamed-chunk-13-1.png)
+![plot of chunk unnamed-chunk-12](figure/unnamed-chunk-12-1.png)
 
 
 When using the ‘angular’ distance measure (default), it is NOT recommended to
@@ -629,7 +277,7 @@ clusters in other samples. For example, notice the presence (and lack thereof) o
 con$plotPanel(clustering="multilevel", use.local.clusters=TRUE, title.size=6)
 ```
 
-![plot of chunk unnamed-chunk-14](figure/unnamed-chunk-14-1.png)
+![plot of chunk unnamed-chunk-13](figure/unnamed-chunk-13-1.png)
 
 We next use the graph we identified to get the global clusters. Here we use the
 Leiden community detection method to obtain clusters. Increasing the
@@ -651,7 +299,7 @@ between different samples now correspond to the same cell type.
 con$plotPanel(font.size=4)
 ```
 
-![plot of chunk unnamed-chunk-16](figure/unnamed-chunk-16-1.png)
+![plot of chunk unnamed-chunk-15](figure/unnamed-chunk-15-1.png)
 
 
 The convenience function `plotClusterBarplots` can be used to examine the composition of the
@@ -663,7 +311,7 @@ clusters in terms of samples (top), sample entropy (middle), and cluster size
 plotClusterBarplots(con, legend.height = 0.1)
 ```
 
-![plot of chunk unnamed-chunk-17](figure/unnamed-chunk-17-1.png)
+![plot of chunk unnamed-chunk-16](figure/unnamed-chunk-16-1.png)
 
 
 Next we can check the expression pattern of a specific gene across all the individual
@@ -674,88 +322,36 @@ embeddings. In this case, we investigate the expression pattern of [GZMK](https:
 con$plotPanel(gene = 'GZMK')
 ```
 
-![plot of chunk unnamed-chunk-18](figure/unnamed-chunk-18-1.png)
+![plot of chunk unnamed-chunk-17](figure/unnamed-chunk-17-1.png)
 
-Note that if there are NA values in your input data, these will be plotted by default as a black `X` as opposed to a dot if `plot.na=TRUE`. Let's see this behavior by setting certain values in the panel sample `MantonCB2_HiSeq_1` to NA:
+**Note:** If there are NA values in your input data, these will be plotted by default as a black "x" as opposed to a round dot if `plot.na=TRUE`. 
+
+Let's see this behavior by setting certain values in the panel sample `MantonCB2_HiSeq_1` to NA:
 
 
 ```r
 ## create new variable for panel.preprocessed
 preprocessed_panel_example <- panel.preprocessed
-## set NAs within MantonCB2_HiSeq_1, on portion of the cells, 1500 out of 3000
-preprocessed_panel_example$MantonCB2_HiSeq_1$clusters$PCA$multilevel[1:1500] <- NA
+
+## set NAs within MantonCB2_HiSeq_1, on portion of the cells, 2000 out of 3000
+preprocessed_panel_example$MantonCB2_HiSeq_1$clusters$PCA$multilevel[1:2000] <- NA
+
 ## create new Conos object
 con_example <- Conos$new(panel.preprocessed, n.cores=1)
+
 ## construct joint graph
 con_example$buildGraph()
-```
 
-```
-## found 0 out of 6 cached PCA space pairs ...
-```
-
-```
-## running 6 additional PCA space pairs
-```
-
-```
-## ......
-```
-
-```
-##  done
-```
-
-```
-## inter-sample links using mNN
-```
-
-```
-## ......
-```
-
-```
-##  done
-```
-
-```
-## local pairs
-```
-
-```
-## .
-## .
-## .
-## .
-```
-
-```
-##  done
-```
-
-```
-## building graph .
-```
-
-```
-## .
-```
-
-```
-## done
-```
-
-```r
 ## now plot the panel with NA values as "X"
 con_example$plotPanel(clustering="multilevel", use.local.clusters=TRUE, title.size=6)
 ```
 
-![plot of chunk unnamed-chunk-19](figure/unnamed-chunk-19-1.png)
+![plot of chunk unnamed-chunk-18](figure/unnamed-chunk-18-1.png)
 
-Notice how the NA values in the sample `MantonCB2_HiSeq_1` are plotted with black `X` symbols.
+Notice how the NA values in the sample `MantonCB2_HiSeq_1` are plotted with black "x" symbols.
 
 
-This behavior is fundamentally controlled by the function `embeddingPlot()` within the R package [sccore](https://github.com/kharchenkolab/sccore). When `plot.na=TRUE` (which is the default behavior), the value of the `shape` parameter in `ggplot2::geom_point` is set to `shape=4`, which creates these black `X` symbols for NA values. For more information, refer to the ggplot2 documentation pages on [shape](https://ggplot2.tidyverse.org/articles/ggplot2-specs.html?q=shape#sec:shape-spec) and [geom_point](https://ggplot2.tidyverse.org/reference/geom_point.html), as well as `?sccore::embeddingPlot`.
+This behavior is fundamentally controlled by the function `embeddingPlot()` within the R package [sccore](https://github.com/kharchenkolab/sccore). When `plot.na=TRUE` (which is the default behavior), the value of the `shape` parameter in `ggplot2::geom_point` is set to `shape=4`, which creates these black `X` symbols for NA values. For more information, please refer to the ggplot2 documentation pages on [shape](https://ggplot2.tidyverse.org/articles/ggplot2-specs.html?q=shape#sec:shape-spec) and [geom_point](https://ggplot2.tidyverse.org/reference/geom_point.html), as well as `?sccore::embeddingPlot`.
  
 
 ### Generate Embedding and Visualize
@@ -777,7 +373,7 @@ And now we can create the visualization:
 con$plotGraph(alpha=0.1)
 ```
 
-![plot of chunk unnamed-chunk-21](figure/unnamed-chunk-21-1.png)
+![plot of chunk unnamed-chunk-20](figure/unnamed-chunk-20-1.png)
 
 Both functions `$plotGraph` and `$plotPanel` are constructed off of the
 main function `sccore::embeddingPlot` and will pass all visualization parameters
@@ -796,7 +392,7 @@ of the sample of origin for each cell:
 con$plotGraph(color.by='sample', mark.groups=FALSE, alpha=0.1, show.legend=TRUE)
 ```
 
-![plot of chunk unnamed-chunk-22](figure/unnamed-chunk-22-1.png)
+![plot of chunk unnamed-chunk-21](figure/unnamed-chunk-21-1.png)
 
 
 
@@ -807,7 +403,7 @@ We can also visualize gene expression on this joint graph embedding, again using
 con$plotGraph(gene='GZMK', title='GZMK expression')
 ```
 
-![plot of chunk unnamed-chunk-23](figure/unnamed-chunk-23-1.png)
+![plot of chunk unnamed-chunk-22](figure/unnamed-chunk-22-1.png)
 
 
 
@@ -832,7 +428,7 @@ Now let's visualize these new clusters:
 con$plotPanel(clustering='walktrap', font.size=4)
 ```
 
-![plot of chunk unnamed-chunk-25](figure/unnamed-chunk-25-1.png)
+![plot of chunk unnamed-chunk-24](figure/unnamed-chunk-24-1.png)
 
 And here is the new clustering, as viewed on a joint graph:
 
@@ -841,7 +437,7 @@ And here is the new clustering, as viewed on a joint graph:
 con$plotGraph(clustering='walktrap')
 ```
 
-![plot of chunk unnamed-chunk-26](figure/unnamed-chunk-26-1.png)
+![plot of chunk unnamed-chunk-25](figure/unnamed-chunk-25-1.png)
 
 
 
@@ -875,7 +471,7 @@ Note that we are specifically naming this embedding with the parameter `embeddin
 con$plotGraph(clustering='walktrap', size=0.1)
 ```
 
-![plot of chunk unnamed-chunk-28](figure/unnamed-chunk-28-1.png)
+![plot of chunk unnamed-chunk-27](figure/unnamed-chunk-27-1.png)
 
 ### UMAP
 
@@ -905,15 +501,15 @@ con$embedGraph(method="UMAP", min.dist=0.01, spread=15, n.cores=2, min.prob.lowe
 ```
 
 ```
-## Estimating hitting distances: 22:12:07.
+## Estimating hitting distances: 22:41:39.
 ## Done.
-## Estimating commute distances: 22:12:12.
-## Hashing adjacency list: 22:12:12.
+## Estimating commute distances: 22:41:44.
+## Hashing adjacency list: 22:41:44.
 ## Done.
-## Estimating distances: 22:12:14.
+## Estimating distances: 22:41:45.
 ## Done
 ## Done.
-## All done!: 22:12:20.
+## All done!: 22:41:49.
 ```
 
 
@@ -922,7 +518,7 @@ con$embedGraph(method="UMAP", min.dist=0.01, spread=15, n.cores=2, min.prob.lowe
 con$plotGraph(clustering='walktrap', size=0.1)
 ```
 
-![plot of chunk unnamed-chunk-30](figure/unnamed-chunk-30-1.png)
+![plot of chunk unnamed-chunk-29](figure/unnamed-chunk-29-1.png)
 
 
 In the example above, the UMAP layout distinguishes many of the very small
@@ -938,7 +534,7 @@ con$plotPanel(clustering='walktrap', size=0.1, use.common.embedding=TRUE)
 ```
 
 ```
-## Error in sample$embeddings$PCA[[type]]: invalid negative subscript in get1index <real>
+## Error in sample$embeddings$PCA[[type]]: no such index at level 1
 ```
 
 
@@ -960,7 +556,7 @@ dataset on its leafs:
 con$plotGraph(groups=fc$groups, size=0.1)
 ```
 
-![plot of chunk unnamed-chunk-33](figure/unnamed-chunk-33-1.png)
+![plot of chunk unnamed-chunk-32](figure/unnamed-chunk-32-1.png)
 
 
 Let’s look at the hierarchical structure of these
@@ -973,7 +569,7 @@ dend <- as.dendrogram(fc$hc)
 plot(dend)
 ```
 
-![plot of chunk unnamed-chunk-34](figure/unnamed-chunk-34-1.png)
+![plot of chunk unnamed-chunk-33](figure/unnamed-chunk-33-1.png)
 
 
 ### Using Shiny Application
@@ -1009,7 +605,7 @@ other samples are unlabelled.
 con$plotPanel(groups = cellannot)
 ```
 
-![plot of chunk unnamed-chunk-36](figure/unnamed-chunk-36-1.png)
+![plot of chunk unnamed-chunk-35](figure/unnamed-chunk-35-1.png)
 
 Next let’s propagate the labels from the one annotated sample to the
 other samples.
@@ -1020,7 +616,7 @@ new.label.info <- con$propagateLabels(labels = cellannot, verbose=TRUE)
 ```
 
 ```
-## Stop after 23 iterations. Norm: 0.0240662
+## Stop after 23 iterations. Norm: 0.0240649
 ## Min weight: 1.67017e-05, max weight: 0.367879, fading: (10, 0.1)
 ```
 
@@ -1033,13 +629,13 @@ group:
 con$plotPanel(colors=new.label.info$uncertainty, show.legend=TRUE, legend.title="Uncertainty", legend.pos=c(1, 0))
 ```
 
-![plot of chunk unnamed-chunk-38](figure/unnamed-chunk-38-1.png)
+![plot of chunk unnamed-chunk-37](figure/unnamed-chunk-37-1.png)
 
 ```r
 con$plotPanel(groups=new.label.info$labels, show.legend=FALSE)
 ```
 
-![plot of chunk unnamed-chunk-38](figure/unnamed-chunk-38-2.png)
+![plot of chunk unnamed-chunk-37](figure/unnamed-chunk-37-2.png)
 
 
 
@@ -1049,37 +645,37 @@ head(new.label.info$label.distribution)
 ```
 
 ```
-##                                        T CD4-CD8-  progenitors      B cells
-## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.000000e+00 0.000000e+00 0.000000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 2.537206e-06 3.334723e-09 8.607302e-11
-## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.000000e+00 0.000000e+00 0.000000e+00
-## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 0.000000e+00 0.000000e+00 0.000000e+00
-## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.000000e+00 0.000000e+00 0.000000e+00
-## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.000000e+00 0.000000e+00 0.000000e+00
+##                                        T CD4-CD8-  progenitors     B cells
+## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.000000e+00 0.000000e+00 0.00000e+00
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 2.537272e-06 3.334758e-09 8.60705e-11
+## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.000000e+00 0.000000e+00 0.00000e+00
+## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 0.000000e+00 0.000000e+00 0.00000e+00
+## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.000000e+00 0.000000e+00 0.00000e+00
+## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.000000e+00 0.000000e+00 0.00000e+00
 ##                                                NK    T cyto    monocytes
 ## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.0000000000 1.0000000 0.000000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 0.0003790041 0.9996182 6.742059e-14
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 0.0003790031 0.9996182 6.742176e-14
 ## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.0000000000 1.0000000 0.000000e+00
 ## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 1.0000000000 0.0000000 0.000000e+00
 ## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.0000000000 1.0000000 0.000000e+00
 ## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.0000000000 1.0000000 0.000000e+00
 ##                                      monomyelocytes plasma cells  dying cells
 ## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1   0.000000e+00 0.000000e+00 0.000000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1   4.608424e-08 2.171222e-11 1.738263e-07
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1   4.608426e-08 2.171258e-11 1.738301e-07
 ## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1   0.000000e+00 0.000000e+00 0.000000e+00
 ## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1   0.000000e+00 0.000000e+00 0.000000e+00
 ## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1   0.000000e+00 0.000000e+00 0.000000e+00
 ## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1   0.000000e+00 0.000000e+00 0.000000e+00
-##                                        erythroid        HSC          pDC
-## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.00000e+00 0.0000e+00 0.000000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 5.06962e-10 1.1271e-10 1.093006e-12
-## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.00000e+00 0.0000e+00 0.000000e+00
-## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 0.00000e+00 0.0000e+00 0.000000e+00
-## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.00000e+00 0.0000e+00 0.000000e+00
-## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.00000e+00 0.0000e+00 0.000000e+00
+##                                        erythroid          HSC          pDC
+## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.00000e+00 0.000000e+00 0.000000e+00
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 5.06978e-10 1.127113e-10 1.092964e-12
+## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.00000e+00 0.000000e+00 0.000000e+00
+## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 0.00000e+00 0.000000e+00 0.000000e+00
+## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.00000e+00 0.000000e+00 0.000000e+00
+## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.00000e+00 0.000000e+00 0.000000e+00
 ##                                                DC
 ## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.000000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 1.865518e-14
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 1.865463e-14
 ## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.000000e+00
 ## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 0.000000e+00
 ## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.000000e+00
@@ -1148,7 +744,7 @@ head(de.info$`B cells`)
 cowplot::plot_grid(con$plotGraph(groups=new.annot), con$plotGraph(gene="CD74"))
 ```
 
-![plot of chunk unnamed-chunk-42](figure/unnamed-chunk-42-1.png)
+![plot of chunk unnamed-chunk-41](figure/unnamed-chunk-41-1.png)
 
 
 
@@ -1191,7 +787,7 @@ de.info$monocytes %>% filter(AUC > 0.75) %>% arrange(-Precision) %>% head()
 con$plotGraph(gene="CD14")
 ```
 
-![plot of chunk unnamed-chunk-44](figure/unnamed-chunk-44-1.png)
+![plot of chunk unnamed-chunk-43](figure/unnamed-chunk-43-1.png)
 
 
 Or we can plot a heatmap of the top genes (top by AUC, by
@@ -1202,7 +798,7 @@ default)
 plotDEheatmap(con,as.factor(new.annot),de.info, n.genes.per.cluster = 5, column.metadata=list(samples=con$getDatasetPerCell()), row.label.font.size = 7)
 ```
 
-![plot of chunk unnamed-chunk-45](figure/unnamed-chunk-45-1.png)
+![plot of chunk unnamed-chunk-44](figure/unnamed-chunk-44-1.png)
 
 
 
@@ -1216,7 +812,7 @@ gns <- c("GZMB","IL32","CD3E","LYZ","HLA-DRA","IGHD","GNLY","IGHM","GZMK")
 plotDEheatmap(con,new.annot,de.info[-c(3,10)], n.genes.per.cluster = 30, column.metadata=list(samples=con$getDatasetPerCell()), row.label.font.size = 7, labeled.gene.subset = gns)
 ```
 
-![plot of chunk unnamed-chunk-46](figure/unnamed-chunk-46-1.png)
+![plot of chunk unnamed-chunk-45](figure/unnamed-chunk-45-1.png)
 
 
 
@@ -1244,13 +840,13 @@ str(con$getClusterCountMatrices(), 1)
 
 ```
 ## List of 4
-##  $ MantonBM1_HiSeq_1: num [1:33694, 1:12] 0 0 0 1 0 0 0 0 44 5 ...
+##  $ MantonBM1_HiSeq_1: num [1:33694, 1:12] 0 0 0 1 0 0 0 0 37 5 ...
 ##   ..- attr(*, "dimnames")=List of 2
-##  $ MantonBM2_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 65 4 ...
+##  $ MantonBM2_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 57 4 ...
 ##   ..- attr(*, "dimnames")=List of 2
-##  $ MantonCB1_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 75 7 ...
+##  $ MantonCB1_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 62 6 ...
 ##   ..- attr(*, "dimnames")=List of 2
-##  $ MantonCB2_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 152 18 ...
+##  $ MantonCB2_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 147 16 ...
 ##   ..- attr(*, "dimnames")=List of 2
 ```
 
@@ -1345,50 +941,7 @@ con$buildGraph(k=15, k.self=5, alignment.strength=0.3, space='PCA', ncomps=30, n
 ```
 
 ```
-## found 6 out of 6 cached PCA space pairs ...
-```
-
-```
-##  done
-```
-
-```
-## inter-sample links using mNN
-```
-
-```
-## ......
-```
-
-```
-##  done
-```
-
-```
-## local pairs
-```
-
-```
-## .
-## .
-## .
-## .
-```
-
-```
-##  done
-```
-
-```
-## building graph .
-```
-
-```
-## .
-```
-
-```
-## done
+## .......
 ```
 
 
@@ -1401,7 +954,7 @@ con$embedGraph(embedding.name="new_embedding")
 con$plotGraph(color.by='sample', mark.groups=FALSE, alpha=0.1, show.legend=TRUE)
 ```
 
-![plot of chunk unnamed-chunk-53](figure/unnamed-chunk-53-1.png)
+![plot of chunk unnamed-chunk-52](figure/unnamed-chunk-52-1.png)
 
 
 We can also check the entropy, as described above:
@@ -1412,7 +965,7 @@ con$findCommunities()
 plotClusterBarplots(con, legend.height = 0.1)
 ```
 
-![plot of chunk unnamed-chunk-54](figure/unnamed-chunk-54-1.png)
+![plot of chunk unnamed-chunk-53](figure/unnamed-chunk-53-1.png)
 
 For more details on this topic, please see the tutorial [Adjustment of Alignment Strength with conos](https://github.com/kharchenkolab/conos/blob/master/vignettes/adjust_alignment_strength.md).
 

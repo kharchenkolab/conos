@@ -118,7 +118,8 @@ pagoda2 objects, which is the starting point for the analysis with
 conos.
 
 ```{r}
-str(panel.preprocessed, 1)
+typeof(panel.preprocessed)
+names(panel.preprocessed)
 ```
 
 ## Pre-processing with Seurat
@@ -155,12 +156,9 @@ con <- Conos$new(panel.preprocessed, n.cores=1)
 ```
 
 Our original pagoda2 (or Seurat) objects are now saved in the Conos
-object (if you are short of memory you can go ahead and delete the
-originals).
+object.
 
-```{r}
-str(con$samples,1)
-```
+
 
 ### Build the Joint Graph
 
@@ -183,7 +181,7 @@ are included in the graph:
 The other parameters passed to the `buildGraph()` function below are all
 default values, but are included for clarity:
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
 ```
 
@@ -257,13 +255,15 @@ embeddings. In this case, we investigate the expression pattern of [GZMK](https:
 con$plotPanel(gene = 'GZMK')
 ```
 
-Note that if there are NA values in your input data, these will be plotted by default as a black `X` as opposed to a dot if `plot.na=TRUE`. Let's see this behavior by setting certain values in the panel sample `MantonCB2_HiSeq_1` to NA:
+**Note:** If there are NA values in your input data, these will be plotted by default as a black "x" as opposed to a round dot if `plot.na=TRUE`. 
 
-```{r, fig.height=8, fig.width=8}
+Let's see this behavior by setting certain values in the panel sample `MantonCB2_HiSeq_1` to NA:
+
+```{r, fig.height=8, fig.width=8, message=FALSE, warning=FALSE}
 ## create new variable for panel.preprocessed
 preprocessed_panel_example <- panel.preprocessed
-## set NAs within MantonCB2_HiSeq_1, on portion of the cells, 1500 out of 3000
-preprocessed_panel_example$MantonCB2_HiSeq_1$clusters$PCA$multilevel[1:1500] <- NA
+## set NAs within MantonCB2_HiSeq_1, on portion of the cells, 2000 out of 3000
+preprocessed_panel_example$MantonCB2_HiSeq_1$clusters$PCA$multilevel[1:2000] <- NA
 ## create new Conos object
 con_example <- Conos$new(panel.preprocessed, n.cores=1)
 ## construct joint graph
@@ -272,10 +272,10 @@ con_example$buildGraph()
 con_example$plotPanel(clustering="multilevel", use.local.clusters=TRUE, title.size=6)
 ```
 
-Notice how the NA values in the sample `MantonCB2_HiSeq_1` are plotted with black `X` symbols.
+Notice how the NA values in the sample `MantonCB2_HiSeq_1` are plotted with black "x" symbols.
 
 
-This behavior is fundamentally controlled by the function `embeddingPlot()` within the R package [sccore](https://github.com/kharchenkolab/sccore). When `plot.na=TRUE` (which is the default behavior), the value of the `shape` parameter in `ggplot2::geom_point` is set to `shape=4`, which creates these black `X` symbols for NA values. For more information, refer to the ggplot2 documentation pages on [shape](https://ggplot2.tidyverse.org/articles/ggplot2-specs.html?q=shape#sec:shape-spec) and [geom_point](https://ggplot2.tidyverse.org/reference/geom_point.html), as well as `?sccore::embeddingPlot`.
+This behavior is fundamentally controlled by the function `embeddingPlot()` within the R package [sccore](https://github.com/kharchenkolab/sccore). When `plot.na=TRUE` (which is the default behavior), the value of the `shape` parameter in `ggplot2::geom_point` is set to `shape=4`, which creates these black `X` symbols for NA values. For more information, please refer to the ggplot2 documentation pages on [shape](https://ggplot2.tidyverse.org/articles/ggplot2-specs.html?q=shape#sec:shape-spec) and [geom_point](https://ggplot2.tidyverse.org/reference/geom_point.html), as well as `?sccore::embeddingPlot`.
  
 
 ### Generate Embedding and Visualize
@@ -630,7 +630,7 @@ specific factor (e.g. tissue to which the cell belongs) using the
 parameter.
 
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 con$buildGraph(k=15, k.self=5, alignment.strength=0.3, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
 ```
 
