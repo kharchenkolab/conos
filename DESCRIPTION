@@ -32,11 +32,9 @@ Imports:
     rlang,
     Rtsne,
     sccore (>= 0.1.1),
-    shiny,
     stats,
     tools,
-    utils,
-    viridis
+    utils
 Suggests:
     conosPanel,
     DESeq2,
@@ -50,7 +48,8 @@ Suggests:
     rhdf5,
     rmarkdown,
     Seurat,
-    shinycssloaders
+    shinycssloaders, 
+    testthat
 Remotes:
     jokergoo/ComplexHeatmap
 VignetteBuilder: knitr

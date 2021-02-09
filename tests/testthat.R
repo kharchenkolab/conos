@@ -1,4 +1,3 @@
 library(conos)
-library(testthat)
 
-test_check("conos")
+testthat::test_check("conos")
