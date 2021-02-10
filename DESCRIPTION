@@ -56,6 +56,6 @@ VignetteBuilder: knitr
 Additional_repositories: https://kharchenkolab.github.io/drat/
 RoxygenNote: 7.1.1
 NeedsCompilation: yes
-LinkingTo: Rcpp, RcppArmadillo, RcppEigen, RcppProgress, igraph
+LinkingTo: Rcpp, RcppArmadillo, RcppEigen, RcppProgress
 Author: Viktor Petukhov [aut], Nikolas Barkas [aut], Peter Kharchenko [aut], Evan Biederstedt [aut, cre]
 Maintainer: Evan Biederstedt <evan.biederstedt@gmail.com>
