@@ -1,3 +1,8 @@
+#include <RcppArmadillo.h>
+#define NDEBUG 1
+#include <RcppEigen.h>
+#include <Rcpp.h>
+
 // [[Rcpp::plugins(cpp11)]]
 // [[Rcpp::depends(RcppProgress)]]
 // [[Rcpp::depends(RcppEigen)]]
@@ -10,10 +15,6 @@
 #endif
 
 // copied from https://github.com/elbamos/largeVis
-
-//#define DEBUG
-#define NDEBUG 1
-#define BOOST_DISABLE_ASSERTS
 
 using namespace Rcpp;
 using namespace std;

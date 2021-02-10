@@ -219,10 +219,10 @@ con$plotPanel(clustering="multilevel", use.local.clusters=TRUE, title.size=6)
 We next use the graph we identified to get the global clusters. Here we use the
 Leiden community detection method to obtain clusters. Increasing the
 value of the resolution parameter will result in more fine-grained
-clusters, while decreasing it will return coarser clustering.
+clusters, while decreasing it will return coarser clustering. Here we use `leiden.community` from the package [leidenAlg](https://github.com/kharchenkolab/leidenAlg):
 
 ```{r}
-con$findCommunities(method=leiden.community, resolution=1)
+con$findCommunities(method=leidengAlg::leiden.community, resolution=1)
 ```
 
 ### Plot Clusters
