@@ -814,9 +814,9 @@ getNeighborMatrix <- function(p1, p2, k, k1=k, matching='mNN', metric='angular',
   adj.mtx@x[adj.mtx@x < min.similarity] <- 0
   adj.mtx <- drop0(adj.mtx);
 
-#  if(k1 > k) { # downsample edges
-#    adj.mtx <- reduceEdgesInGraphIteratively(adj.mtx,k)
-#  }
+   if(k1 > k) { # downsample edges
+      adj.mtx <- reduceEdgesInGraphIteratively(adj.mtx,k)
+    }
 
   return(as(drop0(adj.mtx),'dgTMatrix'))
 }
@@ -828,7 +828,7 @@ getCellsFromList <- function(mat, list.cells, k){
     #closest.cell <- names(which.min(mat[, i][mat[, i] != 0]))
     closest.cell <- names(which.max(mat[, i]))
     mat[,i][!(names(mat[,i]) %in% names(list.cells[[closest.cell]]))] <- 0
-   #mat[,i][order(mat[,i], decreasing = T)[(k+1):nrow(mat)]] <- 0
+    #mat[,i][order(mat[,i], decreasing = T)[(k+1):nrow(mat)]] <- 0
   }
   return(mat)
 }
