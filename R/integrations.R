@@ -100,7 +100,7 @@ seuratProcV3 <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, n.pcs
 #' @param n.dims numeric Number of dimensions for calculating PCA and/or pseudoPCA (default=100).
 #' @param alignment.graph boolean Whether to include graph of connectivities and distances (default=TRUE).
 #' @param verbose boolean Whether to use verbose mode (default=FALSE)
-#' @seealso The \pkg{\link{rhdf5}} package documentation \href{https://www.bioconductor.org/packages/release/bioc/html/rhdf5.html}{here}
+#' @seealso The rhdf5 package documentation here: <https://www.bioconductor.org/packages/release/bioc/html/rhdf5.html>
 #' @return AnnData object for ScanPy, saved to disk
 #' @export
 saveConosForScanPy <- function(con, output.path, hdf5_filename, metadata.df=NULL, cm.norm=FALSE, pseudo.pca=FALSE, 

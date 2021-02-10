@@ -49,5 +49,5 @@ AnnData object for ScanPy, saved to disk
 Save Conos object on disk to read it from ScanPy
 }
 \seealso{
-The \pkg{\link{rhdf5}} package documentation \href{https://www.bioconductor.org/packages/release/bioc/html/rhdf5.html}{here}
+The rhdf5 package documentation here: <https://www.bioconductor.org/packages/release/bioc/html/rhdf5.html>
 }

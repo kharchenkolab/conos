@@ -388,7 +388,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
     #' @description Find cell clusters (as communities on the joint graph)
     #'
-    #' @param method community detection method (igraph syntax) (default=leiden.community)
+    #' @param method community detection method (igraph syntax) (default=leidenAlg::leiden.community)
     #' @param min.group.size numeric Minimal allowed community size (default=0)
     #' @param name character Optional name of the clustering result (will default to the algorithm name) (default=NULL will try to obtain the name from the community detection method, or will use 'community' as a default)
     #' @param test.stability boolean Whether to test stability of community detection (default=FALSE)
@@ -398,7 +398,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @param sr optional pre-calculated subsampled community results (useful for stability testing) (default: NULL)
     #' @param ... extra parameters are passed to the specified community detection method
     #' @return invisible list containing identified communities (groups) and the full community detection result (result); The results are stored in $clusters$name slot in the conos object. Each such slot contains an object with elements: $results which stores the raw output of the community detection method, and $groups which is a factor on cells describing the resulting clustering. The later can be used, for instance, in plotting: con$plotGraph(groups=con$clusters$leiden$groups). If test.stability==TRUE, then the result object will also contain a $stability slot.
-    findCommunities=function(method=leiden.community, min.group.size=0, name=NULL, test.stability=FALSE, stability.subsampling.fraction=0.95, stability.subsamples=100, verbose=TRUE, cls=NULL, sr=NULL, ...) {
+    findCommunities=function(method=leidenAlg::leiden.community, min.group.size=0, name=NULL, test.stability=FALSE, stability.subsampling.fraction=0.95, stability.subsamples=100, verbose=TRUE, cls=NULL, sr=NULL, ...) {
 
       if (is.null(cls)) {
         cls <- method(self$graph, ...)
