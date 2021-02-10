@@ -7,6 +7,10 @@
 #' @importFrom magrittr %$%
 NULL
 
+## exporting to inherit parameters below, leiden.community
+#' @export
+leidenAlg::leiden.community
+
 #' @keywords internal
 scaledMatricesP2 <- function(p2.objs, data.type, od.genes, var.scale) {
   ## Common variance scaling
@@ -99,7 +103,7 @@ scaledMatrices <- function(samples, data.type, od.genes, var.scale) {
 #' @keywords internal
 commonOverdispersedGenes <- function(samples, n.odgenes, verbose) {
   od.genes <- sort(table(unlist(lapply(samples, getOverdispersedGenes, n.odgenes))),decreasing=TRUE)
-  common.genes <- Reduce(intersect, lapply(samples, getGenes));
+  common.genes <- Reduce(intersect, lapply(samples, getGenes))
   if(length(common.genes)==0) { warning(paste("samples",paste(names(samples),collapse=' and '),'do not share any common genes!')) }
   if(length(common.genes)<n.odgenes) { warning(paste("samples",paste(names(samples),collapse=' and '),'do not share enoguh common genes!')) }
   od.genes <- od.genes[names(od.genes) %in% common.genes]
@@ -124,7 +128,7 @@ quickNULL <- function(p2.objs, data.type='counts', n.odgenes = NULL, var.scale =
 
 ## Perform pairwise JNMF
 #' @keywords internal
-quickJNMF <- function(p2.objs, data.type='counts', n.comps = 30, n.odgenes=NULL, var.scale=TRUE, verbose =TRUE, max.iter=1000) {
+quickJNMF <- function(p2.objs, data.type='counts', n.comps = 30, n.odgenes=NULL, var.scale=TRUE, verbose=TRUE, max.iter=1000) {
   ## Stop if more than 2 samples
   if (length(p2.objs) != 2) stop('quickJNMF only supports pairwise alignment');
 
@@ -296,9 +300,9 @@ quickCCA <- function(r.n, data.type='counts', ncomps=100, n.odgenes=NULL, var.sc
   ncomps <- min(ncomps, length(od.genes) - 1)
   sm <- scaledMatrices(r.n, data.type=data.type, od.genes=od.genes, var.scale=var.scale)
   sm <- lapply(sm,function(m) m[rowSums(m)>0,])
-  sm <- lapply(sm,scale,scale=F) # center
+  sm <- lapply(sm,scale, scale=FALSE) # center
   if(PMA) {
-    if (!requireNamespace("PMA", quietly=T))
+    if (!requireNamespace("PMA", quietly=TRUE))
       stop("You need to install package 'PMA' to use the PMA flag.")
 
     res <- PMA::CCA(t(sm[[1]]),t(sm[[2]]),K=ncomps,trace=FALSE,standardize=FALSE)
@@ -462,20 +466,22 @@ getOdGenesUniformly <- function(samples, n.genes) {
 
 #' @keywords internal
 projectSamplesOnGlobalAxes <- function(samples, cms.clust, data.type, verbose, n.cores) {
-  if(verbose) message('calculating global projections ');
+  if(verbose) message('calculating global projections ')
 
   # calculate global eigenvectors
 
   gns <- Reduce(intersect,lapply(cms.clust,rownames))
-  if(verbose) message('.');
-  if(length(gns) < length(cms.clust)) stop("insufficient number of common genes")
+  if(verbose) message('.')
+  if(length(gns) < length(cms.clust)){
+    stop("Insufficient number of common genes")
+  } 
   tcc <- Reduce('+',lapply(cms.clust,function(x) x[gns,]))
-  tcc <- t(tcc)/colSums(tcc)*1e6;
-  gv <- apply(tcc,2,var);
+  tcc <- t(tcc)/colSums(tcc)*1e6
+  gv <- apply(tcc,2,var)
   gns <- gns[is.finite(gv) & gv>0]
-  tcc <- tcc[,gns,drop=F];
+  tcc <- tcc[,gns,drop=FALSE]
 
-  if(verbose) message('.');
+  if(verbose) message('.')
   global.pca <- prcomp(log10(tcc+1),center=TRUE,scale=TRUE,retx=FALSE)
   # project samples onto the global axes
   global.proj <- papply(samples,function(s) {
@@ -483,7 +489,8 @@ projectSamplesOnGlobalAxes <- function(samples, cms.clust, data.type, verbose, n
     if(verbose) message('.')
     #smat <- as.matrix(conos:::getRawCountMatrix(s,transposed=TRUE)[,gns])
     #smat <- log10(smat/rowSums(smat)*1e3+1)
-    smat <- scale(smat,scale=TRUE,center=TRUE); smat[is.nan(smat)] <- 0;
+    smat <- scale(smat,scale=TRUE,center=TRUE)
+    smat[is.nan(smat)] <- 0
     sproj <- smat %*% global.pca$rotation
   },n.cores=n.cores)
   if(verbose) message('. done\n')
@@ -507,14 +514,14 @@ getDecoyProjections <- function(samples, samf, data.type, var.scale, cproj, base
       if(length(decoy.cells)>0) {
         # get the matrices
         do.call(rbind,lapply(samples[unique(samf[decoy.cells])],function(s) {
-          gn <- intersect(getGenes(s),colnames(d));
+          gn <- intersect(getGenes(s),colnames(d))
           m <- scaledMatrices(list(s),data.type=data.type, od.genes=gn, var.scale=var.scale)[[1]]
-          m <- m[rownames(m) %in% decoy.cells,,drop=F]
+          m <- m[rownames(m) %in% decoy.cells,,drop=FALSE]
           # append missing genes
           gd <- setdiff(colnames(d),gn)
           if(length(gd)>0) {
             m <- cbind(m,Matrix(0,nrow=nrow(m),ncol=length(gd),dimnames=list(rownames(m),gd),sparse=T))
-            m <- m[,colnames(d),drop=F] # fix gene order
+            m <- m[,colnames(d),drop=FALSE] # fix gene order
           }
           m
         }))
@@ -552,7 +559,7 @@ getLocalNeighbors <- function(samples, k.self, k.self.weight, metric, l2.sigma, 
 #' @keywords internal
 getLocalEdges <- function(local.neighbors) {
   do.call(rbind,lapply(local.neighbors,function(xk) {
-    data.frame(mA.lab=rownames(xk)[xk@i+1], mB.lab=colnames(xk)[xk@j+1],w=xk@x, type=0, stringsAsFactors=F)
+    data.frame(mA.lab=rownames(xk)[xk@i+1], mB.lab=colnames(xk)[xk@j+1],w=xk@x, type=0, stringsAsFactors=FALSE)
   }))
 }
 
@@ -576,10 +583,10 @@ bestClusterThresholds <- function(res, clusters, clmerges=NULL) {
   res$merges <- igraph:::complete.dend(res,FALSE)
   #x <- conos:::findBestClusterThreshold(res$merges-1L,matrix(cl-1L,nrow=1),clT)
   if(is.null(clmerges)) {
-    x <- conos:::treeJaccard(res$merges-1L,matrix(cl-1L,nrow=1),clT)
+    x <- treeJaccard(res$merges-1L,matrix(cl-1L,nrow=1),clT)
     names(x$threshold) <- levels(clusters);
   } else {
-    x <- conos:::treeJaccard(res$merges-1L,matrix(cl-1L,nrow=1),clT,clmerges-1L)
+    x <- treeJaccard(res$merges-1L,matrix(cl-1L,nrow=1),clT,clmerges-1L)
   }
   x
 }
@@ -606,10 +613,10 @@ bestClusterTreeThresholds <- function(res, leaf.factor, clusters, clmerges=NULL)
   merges <- igraph:::complete.dend(res,FALSE)
   #x <- conos:::findBestClusterThreshold(res$merges-1L,as.matrix(mt),clT)
   if(is.null(clmerges)) {
-    x <- conos:::treeJaccard(res$merges-1L,as.matrix(mt),clT)
+    x <- treeJaccard(res$merges-1L,as.matrix(mt),clT)
     names(x$threshold) <- levels(clusters);
   } else {
-    x <- conos:::treeJaccard(res$merges-1L,as.matrix(mt),clT,clmerges-1L)
+    x <- treeJaccard(res$merges-1L,as.matrix(mt),clT,clmerges-1L)
   }
 
   invisible(x)
@@ -906,7 +913,7 @@ scanKModularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.in
   n.cores <- con$n.cores
   con$n.cores <- 1
   if(verbose) message(paste0(ifelse(scan.k.self,'k.self=(','k=('),min,', ',max,') ['))
-  xl <- conos:::papply(k.seq,function(kv) {
+  xl <- papply(k.seq,function(kv) {
     if(scan.k.self) {
       x <- con$buildGraph(k.self=kv, ..., verbose=FALSE)
     } else {

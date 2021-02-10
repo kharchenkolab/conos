@@ -283,7 +283,7 @@ list of DE results; each is a data frame with rows corresponding to the differen
 Find cell clusters (as communities on the joint graph)
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Conos$findCommunities(
-  method = leidenAlg::leiden.community,
+  method = leiden.community,
   min.group.size = 0,
   name = NULL,
   test.stability = FALSE,
@@ -299,7 +299,7 @@ Find cell clusters (as communities on the joint graph)
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{method}}{community detection method (igraph syntax) (default=leidenAlg::leiden.community)}
+\item{\code{method}}{community detection method (igraph syntax) (default=leiden.community)}
 
 \item{\code{min.group.size}}{numeric Minimal allowed community size (default=0)}
 

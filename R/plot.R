@@ -420,15 +420,15 @@ plotDEheatmap <- function(con, groups, de=NULL, min.auc=NULL, min.specificity=NU
 
   gns <- lapply(de,function(x) as.character(x$Gene)) %>% unlist
   sn <- function(x) setNames(x,x)
-  expl <- lapply(de,function(d) do.call(rbind,lapply(sn(as.character(d$Gene)),function(gene) conos:::getGeneExpression(con,gene))))
+  expl <- lapply(de,function(d) do.call(rbind,lapply(sn(as.character(d$Gene)),function(gene) getGeneExpression(con,gene))))
 
   # place additional genes
   if(!is.null(additional.genes)) {
     genes.to.add <- setdiff(additional.genes,unlist(lapply(expl,rownames)))
     if(length(genes.to.add)>0) {
-      x <- setdiff(genes.to.add,conos:::getGenes(con)); if(length(x)>0) warning('the following genes are not found in the dataset: ',paste(x,collapse=' '))
+      x <- setdiff(genes.to.add, getGenes(con)); if(length(x)>0) warning('the following genes are not found in the dataset: ',paste(x,collapse=' '))
       
-      age <- do.call(rbind,lapply(sn(genes.to.add),function(gene) conos:::getGeneExpression(con,gene)))
+      age <- do.call(rbind,lapply(sn(genes.to.add),function(gene) getGeneExpression(con,gene)))
       
       # for each gene, measure average correlation with genes of each cluster
       acc <- do.call(rbind,lapply(expl,function(og) rowMeans(cor(t(age),t(og)),na.rm=TRUE)))

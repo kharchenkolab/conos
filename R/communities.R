@@ -46,7 +46,7 @@ multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=FAL
   chwt <- walktrap.community(cgraph,steps=8)
   d <- as.dendrogram(chwt);
 
-  wtl <- conos:::papply(sn(unique(mem)), function(cluster) {
+  wtl <- papply(sn(unique(mem)), function(cluster) {
     cn <- names(mem)[which(mem==cluster)]
     sg <- induced.subgraph(graph,cn)
     walktrap.community(induced.subgraph(graph,cn))
@@ -151,7 +151,7 @@ multimulti.community <- function(graph, n.cores=parallel::detectCores(logical=FA
   d <- as.dendrogram(chwt);
 
 
-  wtl <- conos:::papply(sn(unique(mem)), function(cluster) {
+  wtl <- papply(sn(unique(mem)), function(cluster) {
     cn <- names(mem)[which(mem==cluster)]
     sg <- induced.subgraph(graph,cn)
     multilevel.community(induced.subgraph(graph,cn))

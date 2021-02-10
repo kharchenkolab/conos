@@ -409,7 +409,7 @@ con$plotGraph(color.by='sample', mark.groups=FALSE, alpha=0.1, show.legend=TRUE)
 
 
 
-We can also visualize gene expression on this joint graph embedding, again using "GMZK" as an example:
+We can also visualize gene expression on this joint graph embedding, again using ["GMZK"](https://www.genecards.org/cgi-bin/carddisp.pl?gene=GZMK) as an example:
 
 
 ```r
