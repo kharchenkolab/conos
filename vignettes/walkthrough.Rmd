@@ -86,7 +86,7 @@ any(duplicated(unlist(lapply(panel,colnames))))
 
 
 Conos is focused on integration, and relies on either
-[pagoda2](https://github.com/hms-dbmi/pagoda2) or
+[pagoda2](https://github.com/kharchenkolab/pagoda2) or
 [Seurat](https://satijalab.org/seurat/) to perform dataset
 pre-processing.
 
