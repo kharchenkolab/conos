@@ -1,3 +1,19 @@
+#' @importFrom stats qnorm
+NULL
+
+#' Get a vector of the names of an object named by the names themselves. 
+#' This is useful with lapply when passing names of objects as it ensures that the output list
+#' is also named
+#' 
+#' @param g an objects on which we can call names()
+#' @keywords internal
+namedNames <- function(g) {
+  n <- names(g)
+  names(n) <- n
+  n
+}
+
+
 #' @keywords internal
 validatePerCellTypeParams <- function(con.obj, groups, sample.groups, ref.level, cluster.sep.chr) {
   if (!requireNamespace("DESeq2", quietly = TRUE)) {

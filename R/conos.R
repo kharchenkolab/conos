@@ -7,9 +7,10 @@
 #' @importFrom magrittr %$%
 NULL
 
-## exporting to inherit parameters below, leiden.community
-#' @export
-leidenAlg::leiden.community
+## for magrittr and dplyr functions below
+if(getRversion() >= "2.15.1"){
+  utils::globalVariables(c(".", "x", "y"))
+}
 
 
 #' @keywords internal
@@ -1079,6 +1080,10 @@ propagateLabelsSolver <- function(graph, labels, solver="mumps") {
   rownames(res) <- unlabeled.cbs
   return(rbind(res, type.scores))
 }
+
+## exporting to inherit parameters below, leiden.community
+#' @export
+leidenAlg::leiden.community
 
 #' Increase resolution for a specific set of clusters
 #'

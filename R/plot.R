@@ -2,11 +2,26 @@
 #' @importFrom ComplexHeatmap ht_opt
 #' @importFrom ComplexHeatmap Heatmap
 #' @importFrom ComplexHeatmap HeatmapAnnotation
+#' @importFrom stats d.norm p.adjust setNames
 NULL
 
 ## exporting to inherit parameters below, plotEmbeddings()
 #' @export
 sccore::embeddingPlot
+
+#' Get a vector with the levels of a factor named with their
+#' own name. Useful for lapply loops over factor levels
+#' @param f a factor
+#' @return named character vector of factor levels
+#' @keywords internal
+namedLevels <- function(f) {
+  if(!is.factor(f)) {
+    stop('f is not a factor')
+  }
+  r <- levels(f)
+  names(r) <- r
+  r
+}
 
 #' Extract specified clustering from list of conos clusterings
 #'
@@ -170,16 +185,18 @@ plotClusterBarplots <- function(conos.obj=NULL, clustering=NULL, groups=NULL, sa
     ggplot2::geom_bar(stat='identity') + ggplot2::xlab('cluster') + ggplot2::ylab('fraction of cells') + ggplot2::theme_bw() +
     ggplot2::scale_y_continuous(expand=c(0, 0))
 
-  if(!show.size && !show.entropy)
-    return(clp);
+  if (!show.size && !show.entropy){
+    return(clp)
+  }
 
   # extract legend
   leg <- cowplot::get_legend(clp + ggplot2::theme(legend.position="bottom"))
   pl <- list(clp + ggplot2::theme(legend.position="none"));
 
   if(show.entropy) {
-    if (!requireNamespace("entropy", quietly=TRUE))
+    if (!requireNamespace("entropy", quietly=TRUE)){
       stop("You need to install 'entropy' package to use 'show.entropy=TRUE'")
+    }
 
     n.samples <- nrow(xt);
     ne <- 1-apply(xt, 2, entropy::KL.empirical, y2=rowSums(xt), unit=c('log2')) / log2(n.samples) # relative entropy

@@ -20,7 +20,7 @@ buildWijMatrix <- function(x, threads=NULL, perplexity=50) UseMethod("buildWijMa
 
 #' @rdname buildWijMatrix
 buildWijMatrix.TsparseMatrix <- function(x, threads = NULL, perplexity = 50) {
-  wij <- referenceWij(x@j, x@i, x@x^2, as.integer(threads), perplexity);
+  wij <- referenceWij(x@j, x@i, x@x^2, as.integer(threads), perplexity)
   return(wij)
 }
 

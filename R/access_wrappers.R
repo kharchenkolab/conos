@@ -51,7 +51,7 @@ setMethod(
 )
 
 #' @rdname getOverdispersedGenes
-setMethod("getOverdispersedGenes", signature("Conos"), function(sample, n.odgenes=NULL) commonOverdispersedGene(sample$samples,n.odgenes, verbose=FALSE))
+setMethod("getOverdispersedGenes", signature("Conos"), function(sample, n.odgenes=NULL) commonOverdispersedGenes(sample$samples,n.odgenes, verbose=FALSE))
 
 
 #' Access cell names from sample

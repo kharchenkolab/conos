@@ -1,4 +1,8 @@
+#' @import ggrepel
+#' @import gridExtra
 #' @import leidenAlg 
+#' @import R6
+#' @import Rtsne
 NULL
 
 ## exporting to inherit parameters below, leiden.community
