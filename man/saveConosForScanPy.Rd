@@ -23,7 +23,7 @@ saveConosForScanPy(
 
 \item{output.path}{path to a folder, where intermediate files will be saved}
 
-\item{hdf5_filename}{name of HDF5 written with ScanPy files. Note: the \pkg{\link{rhdf5}} package is required}
+\item{hdf5_filename}{name of HDF5 written with ScanPy files. Note: the rhdf5 package is required}
 
 \item{metadata.df}{data.frame with additional metadata with rownames corresponding to cell ids, which should be passed to ScanPy (default=NULL)
 If NULL, only information about cell ids and origin dataset will be saved.}

@@ -22,8 +22,7 @@ basicSeuratProc(
 
 \item{verbose}{boolean Verbose mode (default=TRUE)}
 
-\item{do.par}{boolean Use parallel processing for regressing out variables faster, for
-Seurat v3, use \code{\link[future]{plan}} instead (default=TRUE)}
+\item{do.par}{boolean Use parallel processing for regressing out variables faster (default=TRUE)}
 
 \item{n.pcs}{numeric Number of principal components (default=100)}
 

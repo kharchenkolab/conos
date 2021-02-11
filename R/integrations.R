@@ -90,7 +90,7 @@ seuratProcV3 <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, n.pcs
 #'
 #' @param con conos object
 #' @param output.path path to a folder, where intermediate files will be saved
-#' @param hdf5_filename name of HDF5 written with ScanPy files. Note: the \pkg{\link{rhdf5}} package is required
+#' @param hdf5_filename name of HDF5 written with ScanPy files. Note: the rhdf5 package is required
 #' @param metadata.df data.frame with additional metadata with rownames corresponding to cell ids, which should be passed to ScanPy (default=NULL)
 #'     If NULL, only information about cell ids and origin dataset will be saved.
 #' @param cm.norm boolean Whether to include the matrix of normalised counts (default=FALSE).
@@ -235,8 +235,7 @@ saveConosForScanPy <- function(con, output.path, hdf5_filename, metadata.df=NULL
 #' @param count.matrix gene count matrix
 #' @param vars.to.regress variables to regress with Seurat (default=NULL)
 #' @param verbose boolean Verbose mode (default=TRUE)
-#' @param do.par boolean Use parallel processing for regressing out variables faster, for
-#'     Seurat v3, use \code{\link[future]{plan}} instead (default=TRUE)
+#' @param do.par boolean Use parallel processing for regressing out variables faster (default=TRUE)
 #' @param n.pcs numeric Number of principal components (default=100)
 #' @param cluster boolean Whether to perform clustering (default=TRUE)
 #' @param tsne boolean Whether to construct tSNE embedding (default=TRUE)
@@ -262,69 +261,6 @@ basicSeuratProc <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do
     tsne = tsne,
     umap = umap
   )
-}
-
-#' RNA velocity analysis on samples integrated with conos
-#' Create a list of objects to pass into gene.relative.velocity.estimates function from the velocyto.R package
-#'
-#' @param cms.list list of velocity files written out as cell.counts.matrices.rds files by running dropest with -V option
-#' @param con conos object (after creating an embedding and running leiden clustering)
-#' @param clustering name of clustering in the conos object to use (default=NULL). Either 'clustering' or 'groups' must be provided. 
-#' @param groups set of clusters to use (default=NULL). Ignored if 'clustering' is not NULL. 
-#' @param n.odgenes numeric Number of overdispersed genes to use for PCA (default=2000).
-#' @param verbose boolean Whether to use verbose mode (default=TRUE)
-#' @return List with cell distances, combined spliced expression matrix, combined unspliced expression matrix, combined matrix of spanning reads, cell colors for clusters and embedding (taken from conos)
-#' @export
-velocityInfoConos <- function(cms.list, con, clustering=NULL, groups=NULL, n.odgenes=2e3, verbose=TRUE, min.max.cluster.average.emat=0.2, min.max.cluster.average.nmat=0.05, min.max.cluster.average.smat=0.01) {
-  if (!requireNamespace("velocyto.R")) {
-    stop("You need to install 'velocyto.R' package to be able to use this function")
-  }
-
-  groups <- parseCellGroups(con, clustering, groups)
-  cell.colors <- fac2col(groups)
-
-  if (!is.null(con$embedding)){
-    emb <- con$embedding
-  } else {
-    stop("No embedding found in the conos object. Run 'con$embedGraph()' before running this function.")
-  }
-
-  if (verbose) message("Merging raw count matrices...\n")
-  # Merge samples to get names of relevant cells and genes
-  raw.count.matrix.merged <- con$getJointCountMatrix(raw=TRUE)
-
-  if (verbose) message("Merging velocity files...\n")
-  # Intersect genes and cells between the conos object and all the velocity files
-  cms.list <- lapply(cms.list, prepareVelocity, genes=colnames(raw.count.matrix.merged), cells=rownames(raw.count.matrix.merged))
-  # Keep only genes present in velocity files from all the samples
-  common.genes <-  Reduce(intersect, lapply(cms.list, function(x) {rownames(x[[1]])}))
-  cms.list <- lapply(cms.list, function(x) {lapply(x, function(y) {y[row.names(y) %in% common.genes,]} )} )
-
-  # Merge velocity files from different samples
-  emat <- do.call(cbind, lapply(cms.list, function(x) {x[[1]]}))
-  nmat <- do.call(cbind, lapply(cms.list, function(x) {x[[2]]}))
-  smat <- do.call(cbind, lapply(cms.list, function(x) {x[[3]]}))
-
-  # Keep the order of cells consistent between velocity matrices and the embedding (not really sure whether it's necessary...)
-  emat <- emat[,order(match(colnames(emat), rownames(emb)))]
-  nmat <- nmat[,order(match(colnames(nmat), rownames(emb)))]
-  smat <- smat[,order(match(colnames(smat), rownames(emb)))]
-
-  if (verbose) message("Calculating cell distances...\n")
-  # Get PCA results for all the samples from the conos object
-  pcs <- pcaFromConos(con$samples, n.odgenes=n.odgenes)
-  # Again, keep the order of cells consistent
-  pcs <- pcs[order(match(rownames(pcs), rownames(emb))),]
-  # Calculate the cell distances based on correlation
-  cell.dist <- as.dist(1 - velocyto.R::armaCor(t(pcs)))
-
-  if (verbose) message("Filtering velocity...\n")
-  emat %<>% velocyto.R::filter.genes.by.cluster.expression(groups, min.max.cluster.average=min.max.cluster.average.emat)
-  nmat %<>% velocyto.R::filter.genes.by.cluster.expression(groups, min.max.cluster.average=min.max.cluster.average.nmat)
-  smat %<>% velocyto.R::filter.genes.by.cluster.expression(groups, min.max.cluster.average=min.max.cluster.average.smat)
-
-  if (verbose) message("All Done!")
-  return(list(cell.dist=cell.dist, emat=emat, nmat=nmat, smat=smat, cell.colors=cell.colors, emb=emb))
 }
 
 # Intersect genes and cells between all the velocity files and the conos object

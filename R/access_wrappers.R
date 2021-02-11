@@ -98,17 +98,17 @@ setMethod("getGenes", signature("Conos"), function(sample) unique(unlist(lapply(
 #' 
 #' @param sample sample from which to set edge matrix edgeMat with certain values
 #' @param value values to set with edgeMat<-
-#' @rdname edgeMat<-
+#' @rdname edgeMat
 #' @export 
 setGeneric("edgeMat<-", function(sample, value) standardGeneric("edgeMat<-"))
 
-#' @rdname edgeMat<-
+#' @rdname edgeMat
 setMethod("edgeMat<-", signature("Pagoda2"), function(sample, value) {sample$misc$edgeMat <- value; sample})
 
-#' @rdname edgeMat<-
+#' @rdname edgeMat
 setMethod("edgeMat<-", signature("seurat"), function(sample, value) {sample@misc$edgeMat <- value; sample})
 
-#' @rdname edgeMat<-
+#' @rdname edgeMat
 setMethod(
   f = 'edgeMat<-',
   signature = signature('Seurat'),
