@@ -1,0 +1,38 @@
+* using log directory ‘/Users/evanbiederstedt/conos/conos.Rcheck’
+* using R version 4.0.3 (2020-10-10)
+* using platform: x86_64-apple-darwin17.0 (64-bit)
+* using session charset: UTF-8
+* using option ‘--as-cran’
+* checking for file ‘conos/DESCRIPTION’ ... OK
+* this is package ‘conos’ version ‘1.4.0’
+* package encoding: UTF-8
+* checking CRAN incoming feasibility ... NOTE
+Maintainer: ‘Evan Biederstedt <evan.biederstedt@gmail.com>’
+
+New submission
+
+Unknown, possibly mis-spelled, fields in DESCRIPTION:
+  ‘Remotes’
+
+Suggests or Enhances not in mainstream repositories:
+  conosPanel, p2data
+Availability using Additional_repositories specification:
+  conosPanel   yes   https://kharchenkolab.github.io/drat/
+  p2data       yes   https://kharchenkolab.github.io/drat/
+
+Package has a VignetteBuilder field but no prebuilt vignette index.
+
+Size of tarball: 11861220 bytes
+* checking package namespace information ... OK
+* checking package dependencies ... OK
+* checking if this is a source package ... OK
+* checking if there is a namespace ... OK
+* checking for executable files ... OK
+* checking for hidden files and directories ... OK
+* checking for portable file names ... OK
+* checking for sufficient/correct file permissions ... OK
+* checking whether package ‘conos’ can be installed ... ERROR
+Installation failed.
+See ‘/Users/evanbiederstedt/conos/conos.Rcheck/00install.out’ for details.
+* DONE
+Status: 1 ERROR, 1 NOTE

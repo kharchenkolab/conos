@@ -328,6 +328,7 @@ RcppExport void adjustedRand(void *, void *, void *, void *, void *, void *, voi
 
 static const R_CallMethodDef CallEntries[] = {
     {"_conos_RjnmfC", (DL_FUNC) &_conos_RjnmfC, 8},
+    {"_conos_RjnmfGRC", (DL_FUNC) &_conos_RjnmfGRC, 10},
     {"_conos_checkBits", (DL_FUNC) &_conos_checkBits, 0},
     {"_conos_checkOpenMP", (DL_FUNC) &_conos_checkOpenMP, 0},
     {"_conos_cpcaF", (DL_FUNC) &_conos_cpcaF, 7},

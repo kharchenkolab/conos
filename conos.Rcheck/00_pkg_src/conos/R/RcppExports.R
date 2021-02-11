@@ -5,6 +5,10 @@ RjnmfC <- function(Xs, Xu, k, alpha, lambda, epsilon, maxiter, verbose) {
     .Call('_conos_RjnmfC', PACKAGE = 'conos', Xs, Xu, k, alpha, lambda, epsilon, maxiter, verbose)
 }
 
+RjnmfGRC <- function(Xs, Xu, A, k, alpha, beta, lambda, epsilon, maxiter, verbose) {
+    .Call('_conos_RjnmfGRC', PACKAGE = 'conos', Xs, Xu, A, k, alpha, beta, lambda, epsilon, maxiter, verbose)
+}
+
 checkBits <- function() {
     .Call('_conos_checkBits', PACKAGE = 'conos')
 }
