@@ -11,6 +11,7 @@ NULL
 #' @export
 leidenAlg::leiden.community
 
+
 #' @keywords internal
 scaledMatricesP2 <- function(p2.objs, data.type, od.genes, var.scale) {
   ## Common variance scaling
@@ -126,26 +127,41 @@ quickNULL <- function(p2.objs, data.type='counts', n.odgenes = NULL, var.scale =
   return(list(genespace1=cproj[[1]], genespace2=cproj[[2]]))
 }
 
+
+## Performs Joint NMF for two matrices
+#' @keywords internal
+Rjnmf <- function(Xs, Xu, k, alpha, lambda, epsilon, maxiter, verbose, seed = 42) {
+  set.seed(seed)
+
+  ret <- RjnmfC(Xs, Xu, k, alpha, lambda, epsilon, maxiter, verbose)
+  names(ret) <- c('Hs','Hu','W')
+  ret
+}
+
 ## Perform pairwise JNMF
 #' @keywords internal
-quickJNMF <- function(p2.objs, data.type='counts', n.comps = 30, n.odgenes=NULL, var.scale=TRUE, verbose=TRUE, max.iter=1000) {
+quickJNMF <- function(p2.objs, data.type='counts', n.comps=30, n.odgenes=NULL, var.scale=TRUE, verbose=TRUE, max.iter=1000) {
+
   ## Stop if more than 2 samples
-  if (length(p2.objs) != 2) stop('quickJNMF only supports pairwise alignment');
+  if (length(p2.objs) != 2){
+    stop('quickJNMF only supports pairwise alignment')
+  } 
 
   od.genes <- commonOverdispersedGenes(p2.objs, n.odgenes, verbose=verbose)
-  if(length(od.genes)<5) return(NULL);
+  if (length(od.genes)<5){
+    return(NULL)
+  }
 
   cproj <- scaledMatrices(p2.objs, data.type=data.type, od.genes=od.genes, var.scale=var.scale) %>%
     lapply(as.matrix)
 
   rjnmf.seed <- 12345
   ## Do JNMF
-  z <- Rjnmf::Rjnmf(Xs=t(cproj[[1]]), Xu=t(cproj[[2]]), k=n.comps, alpha=0.5, lambda = 0.5, epsilon = 0.001, maxiter= max.iter, verbose=FALSE, seed=rjnmf.seed)
+  z <- Rjnmf(Xs=t(cproj[[1]]), Xu=t(cproj[[2]]), k=n.comps, alpha=0.5, lambda = 0.5, epsilon = 0.001, maxiter= max.iter, verbose=FALSE, seed=rjnmf.seed)
   rot1 <- cproj[[1]] %*% z$W
   rot2 <- cproj[[2]] %*% z$W
 
-  res <- list(rot1=rot1, rot2=rot2,z=z);
-
+  res <- list(rot1=rot1, rot2=rot2,z=z)
 
   return(res)
 }
@@ -331,11 +347,30 @@ quickCCA <- function(r.n, data.type='counts', ncomps=100, n.odgenes=NULL, var.sc
   res$u <- res$u %*% diag(cw)
   res$v <- res$v %*% diag(cw)
 
-  return(res);
+  return(res)
 }
 
 
-# other functions
+#### other functions
+
+## complete.dend from igraph:::complete.dend
+#' @keywords internal
+complete.dend <- function(comm, use.modularity) {
+  merges <- comm$merges
+  if (nrow(merges) < comm$vcount-1) {
+    if (use.modularity) {
+      stop(paste("`use.modularity' requires a full dendrogram,",
+                 "i.e. a connected graph"))
+    }
+    miss <- seq_len(comm$vcount + nrow(merges))[-as.vector(merges)]
+    miss <- c(miss, seq_len(length(miss)-2) + comm$vcount+nrow(merges))
+    miss <- matrix(miss, byrow=TRUE, ncol=2)
+    merges <- rbind(merges, miss)
+  }
+  storage.mode(merges) <- "integer"
+
+  merges
+}
 
 # use mclapply if available, fall back on BiocParallel, but use regular
 # lapply() when only one core is specified
@@ -450,6 +485,10 @@ factorBreakdown <- function(f) {tapply(names(f),f, identity) }
 #' @param n.genes number of overdispersed genes to extract
 #' @keywords internal
 getOdGenesUniformly <- function(samples, n.genes) {
+  if (!requireNamespace("tibble", quietly = TRUE)) {
+    stop("Package \"tibble\" is needed for this function to work. Please install it.", call. = FALSE)
+  }
+
   if (!("Pagoda2" %in% class(samples[[1]]))){
     stop("This function is currently supported only for Pagoda2 objects")
   }
@@ -545,10 +584,10 @@ getLocalNeighbors <- function(samples, k.self, k.self.weight, metric, l2.sigma, 
     }
     
     xk <- N2R::Knn(pca, k.self + 1, 1, verbose=FALSE, indexType=metric) # +1 accounts for self-edges that will be removed in the next line
-    diag(xk) <- 0; # no self-edges
+    diag(xk) <- 0 # no self-edges
     xk <- as(drop0(xk),'dgTMatrix')
     xk@x <- convertDistanceToSimilarity(xk@x, metric=metric, l2.sigma=l2.sigma) * k.self.weight
-    rownames(xk) <- colnames(xk) <- rownames(pca);
+    rownames(xk) <- colnames(xk) <- rownames(pca)
     if(verbose) message(".")
     xk
   }, n.cores=n.cores, mc.preschedule=TRUE)
@@ -575,12 +614,12 @@ getLocalEdges <- function(local.neighbors) {
 #' @return a list of $thresholds - per cluster optimal detectability values, and $node - internal node id (merge row) where the optimum was found
 #' @export
 bestClusterThresholds <- function(res, clusters, clmerges=NULL) {
-  clusters <- as.factor(clusters);
+  clusters <- as.factor(clusters)
   # prepare cluster vectors
-  cl <- as.integer(clusters[res$names]);
+  cl <- as.integer(clusters[res$names])
   clT <- tabulate(cl,nbins=length(levels(clusters)))
   # run
-  res$merges <- igraph:::complete.dend(res,FALSE)
+  res$merges <- complete.dend(res,FALSE)
   #x <- conos:::findBestClusterThreshold(res$merges-1L,matrix(cl-1L,nrow=1),clT)
   if(is.null(clmerges)) {
     x <- treeJaccard(res$merges-1L,matrix(cl-1L,nrow=1),clT)
@@ -603,18 +642,18 @@ bestClusterThresholds <- function(res, clusters, clmerges=NULL) {
 #' @return a list of $thresholds - per cluster optimal detectability values, and $node - internal node id (merge row) where the optimum was found
 #' @export
 bestClusterTreeThresholds <- function(res, leaf.factor, clusters, clmerges=NULL) {
-  clusters <- as.factor(clusters);
+  clusters <- as.factor(clusters)
   # prepare cluster vectors
-  cl <- as.integer(clusters[names(leaf.factor)]);
+  cl <- as.integer(clusters[names(leaf.factor)])
   clT <- tabulate(cl,nbins=length(levels(clusters)))
   # prepare clusters matrix: cluster (rows) counts per leaf of the merge tree (column)
   mt <- table(cl,leaf.factor)
   # run
-  merges <- igraph:::complete.dend(res,FALSE)
+  merges <- complete.dend(res,FALSE)
   #x <- conos:::findBestClusterThreshold(res$merges-1L,as.matrix(mt),clT)
   if(is.null(clmerges)) {
     x <- treeJaccard(res$merges-1L,as.matrix(mt),clT)
-    names(x$threshold) <- levels(clusters);
+    names(x$threshold) <- levels(clusters)
   } else {
     x <- treeJaccard(res$merges-1L,as.matrix(mt),clT,clmerges-1L)
   }
@@ -635,17 +674,17 @@ bestClusterTreeThresholds <- function(res, leaf.factor, clusters, clmerges=NULL)
 #' @export
 greedyModularityCut <- function(wt, N, leaf.labels=NULL, minsize=0, minbreadth=0, flat.cut=TRUE) {
   # prepare labels
-  nleafs <- nrow(wt$merges)+1;
+  nleafs <- nrow(wt$merges)+1
   if(is.null(leaf.labels)) {
-    ll <- integer(nleafs);
+    ll <- integer(nleafs)
   } else {
     if(is.null(wt$names)) {
       # assume that leaf.labels are provided in the correct order
       if(length(leaf.labels)!=nleafs) stop("leaf.labels is of incorrct length and wt$names is NULL")
-      ll <- as.integer(as.factor(leaf.labels))-1L;
+      ll <- as.integer(as.factor(leaf.labels))-1L
     } else {
       if(!all(wt$names %in% names(leaf.labels))) { stop("leaf.labels do not cover all wt$names")}
-      ll <- as.integer(as.factor(leaf.labels[wt$names]))-1L;
+      ll <- as.integer(as.factor(leaf.labels[wt$names]))-1L
     }
   }
   x <- greedyModularityCutC(wt$merges-1L,-1*diff(wt$modularity),N,minsize,ll,minbreadth,flat.cut)
@@ -676,8 +715,8 @@ greedyModularityCut <- function(wt, N, leaf.labels=NULL, minsize=0, minbreadth=0
 stableTreeClusters <- function(refwt, tests, min.threshold=0.8, min.size=10, n.cores=30, average.thresholds=FALSE) {
   # calculate detectability thresholds for each node against entire list of tests
   #i<- 0;
-  refwt$merges <- igraph:::complete.dend(refwt,FALSE)
-  for(i in 1:length(tests)) tests[[i]]$merges <- igraph:::complete.dend(tests[[i]],FALSE)
+  refwt$merges <- complete.dend(refwt,FALSE)
+  for(i in 1:length(tests)) tests[[i]]$merges <- complete.dend(tests[[i]],FALSE)
   thrs <- papply(tests,function(testwt) {
     #i<<- i+1; cat("i=",i,'\n');
     idmap <- match(refwt$names,testwt$names)-1L;
@@ -1010,7 +1049,7 @@ propagateLabelsSolver <- function(graph, labels, solver="mumps") {
   }
 
   if (!requireNamespace("rmumps", quietly=TRUE)) {
-    warning("Package 'rmumps' is required to use 'mumps' solver. Fall back to 'Matrix'")
+    warning("Package 'rmumps' is required to use 'mumps' solver, which is the default option. Falliing back to solver='Matrix'")
     solver <- "Matrix"
   }
 

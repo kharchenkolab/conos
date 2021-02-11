@@ -249,14 +249,17 @@ saveDEasCSV <- function(de.results=NULL,saveprefix=NULL,gene.metadata=NULL) {
 #' @return JSON with DE results
 #' @export 
 saveDEasJSON <- function(de.results = NULL, saveprefix = NULL, gene.metadata = NULL, cluster.sep.chr='<!!>') {
-    ## ### DEVEL
-    ## de.results <- all.percl.TvsW
-    ## saveprefix <- 'json/'
-    ## rm(de.results, saveprefix)
-    ## ##
+
+    if (!requireNamespace("jsonlite", quietly = TRUE)) {
+      stop("Package \"jsonlite\" is needed for this function to work. Please install it.", call. = FALSE)
+    }
     ## Check input
-    if(is.null(de.results)) stop('de.results have not been specified')
-    if(is.null(saveprefix)) stop('saveprefix has not been specified')
+    if(is.null(de.results)){
+      stop('The argument "de.results" has not been specified')
+    }
+    if(is.null(saveprefix)){
+      stop('The argument "saveprefix" has not been specified')
+    }
     ## Find de instances that didn't work (usually because cell type is absent from one or more sample types)
     n.error <- sum(unlist(lapply(de.results, is.error)))
     if(n.error > 0) {
@@ -424,6 +427,13 @@ generateDEMatrixMetadata <- function(mtx, refgroup, altgroup, cluster.sep.chr) {
 #' @export
 getBetweenCellTypeCorrectedDE <- function(con.obj, sample.groups =  NULL, groups=NULL, cooks.cutoff = FALSE, refgroup = NULL, altgroup = NULL, min.cell.count = 10,
                                           independent.filtering = FALSE, cluster.sep.chr = '<!!>',return.details=TRUE, only.paired=TRUE, correction = NULL, ref.level=NULL) {
+
+  if (!requireNamespace("SummarizedExperiment", quietly = TRUE)) {
+    stop("Package \"SummarizedExperiment\" is needed for this function to work. Please install it from Bioconductor.", call. = FALSE)
+  }
+  if (!requireNamespace("plyr", quietly = TRUE)) {
+    stop("Package \"plyr\" is needed for this function to work. Please install it.", call. = FALSE)
+  }
   validateBetweenCellTypeParams(con.obj, groups, sample.groups, refgroup, altgroup, cluster.sep.chr)
   ## Get the samples from the panel to use in this comparison
   aggr2 <- rawMatricesWithCommonGenes(con.obj, sample.groups) %>%

@@ -8,6 +8,24 @@
 
 using namespace Rcpp;
 
+// RjnmfC
+arma::field<arma::mat> RjnmfC(arma::mat Xs, arma::mat Xu, int k, double alpha, double lambda, double epsilon, int maxiter, bool verbose);
+RcppExport SEXP _conos_RjnmfC(SEXP XsSEXP, SEXP XuSEXP, SEXP kSEXP, SEXP alphaSEXP, SEXP lambdaSEXP, SEXP epsilonSEXP, SEXP maxiterSEXP, SEXP verboseSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type Xs(XsSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Xu(XuSEXP);
+    Rcpp::traits::input_parameter< int >::type k(kSEXP);
+    Rcpp::traits::input_parameter< double >::type alpha(alphaSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< double >::type epsilon(epsilonSEXP);
+    Rcpp::traits::input_parameter< int >::type maxiter(maxiterSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    rcpp_result_gen = Rcpp::wrap(RjnmfC(Xs, Xu, k, alpha, lambda, epsilon, maxiter, verbose));
+    return rcpp_result_gen;
+END_RCPP
+}
 // checkBits
 bool checkBits();
 RcppExport SEXP _conos_checkBits() {
@@ -309,6 +327,8 @@ END_RCPP
 RcppExport void adjustedRand(void *, void *, void *, void *, void *, void *, void *, void *, void *);
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_conos_RjnmfC", (DL_FUNC) &_conos_RjnmfC, 8},
+    {"_conos_RjnmfGRC", (DL_FUNC) &_conos_RjnmfGRC, 10},
     {"_conos_checkBits", (DL_FUNC) &_conos_checkBits, 0},
     {"_conos_checkOpenMP", (DL_FUNC) &_conos_checkOpenMP, 0},
     {"_conos_cpcaF", (DL_FUNC) &_conos_cpcaF, 7},

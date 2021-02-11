@@ -32,7 +32,7 @@ checkSeuratV3 <- function() {
 #' @keywords internal
 seuratProcV2 <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do.par=TRUE, n.pcs=100, cluster=TRUE, tsne=TRUE, umap=FALSE) {
   if (!requireNamespace("Seurat", quietly = TRUE)) {
-    stop("Package \"Seurat\" needed for this function to work. Please install it, as described here: <https://satijalab.org/seurat/articles/install.html>.", call. = FALSE)
+    stop("Package \"Seurat\" is needed for this function to work. Please install it, as described here: <https://satijalab.org/seurat/articles/install.html>.", call. = FALSE)
   }
   if (verbose) {
     message("Running Seurat v2 workflow")
@@ -42,7 +42,7 @@ seuratProcV2 <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do.pa
   so <- Seurat::CreateSeuratObject(count.matrix, display.progress=verbose) %>%
     Seurat::NormalizeData(display.progress=verbose) %>%
     Seurat::ScaleData(vars.to.regress=vars.to.regress, display.progress=verbose, do.par=do.par) %>%
-    Seurat::FindVariableGenes(do.plot = FALSE, display.progress=verbose) %>%
+    Seurat::FindVariableFeatures(do.plot = FALSE, display.progress=verbose) %>%
     Seurat::RunPCA(pcs.compute=max.n.pcs, do.print=FALSE)
   if (cluster) {
     so <- Seurat::FindClusters(so, n.iter=500, n.start=10, dims.use=1:n.pcs, print.output = F)
@@ -106,9 +106,11 @@ seuratProcV3 <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, n.pcs
 saveConosForScanPy <- function(con, output.path, hdf5_filename, metadata.df=NULL, cm.norm=FALSE, pseudo.pca=FALSE, 
   pca=FALSE, n.dims=100, embedding=TRUE, alignment.graph=TRUE, verbose=FALSE) {
   if (!requireNamespace("rhdf5", quietly = TRUE)) {
-    stop("The package rhdf5 is required for saveConosForScanPy(). Please install.")
+    stop("The package \"rhdf5\" is required for saveConosForScanPy(). Please install.")
   }
-
+  if (!requireNamespace("tibble", quietly = TRUE)) {
+    stop("The package \"tibble\" is required for saveConosForScanPy(). Please install.")
+  }
   if (!dir.exists(output.path)){
     stop("Path", output.path, "doesn't exist")
   }
@@ -243,7 +245,7 @@ saveConosForScanPy <- function(con, output.path, hdf5_filename, metadata.df=NULL
 #' @export
 basicSeuratProc <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do.par=TRUE, n.pcs=100, cluster=TRUE, tsne=TRUE, umap=FALSE) {
   if (!requireNamespace("Seurat", quietly = TRUE)) {
-    stop("Package \"Seurat\" needed for this function to work. Please install it, as described here: <https://satijalab.org/seurat/articles/install.html>.", call. = FALSE)
+    stop("Package \"Seurat\" is needed for this function to work. Please install it, as described here: <https://satijalab.org/seurat/articles/install.html>.", call. = FALSE)
   }
   proc.fxn <- ifelse(
     test = packageVersion('Seurat') < package_version(x = '3.0.0'),

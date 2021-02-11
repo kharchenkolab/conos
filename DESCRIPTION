@@ -36,9 +36,11 @@ Imports:
     tools,
     utils
 Suggests:
+    BiocParallel,
     conosPanel,
     DESeq2,
     ggrastr,
+    jsonlite,
     knitr,
     p2data,
     pagoda2,
@@ -47,9 +49,13 @@ Suggests:
     pROC,
     rhdf5,
     rmarkdown,
+    rmumps,
     Seurat,
-    shinycssloaders, 
-    testthat
+    shinycssloaders,
+    SummarizedExperiment, 
+    testthat, 
+    tibble, 
+    zoo
 Remotes:
     jokergoo/ComplexHeatmap
 VignetteBuilder: knitr

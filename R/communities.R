@@ -178,8 +178,8 @@ multimulti.community <- function(graph, n.cores=parallel::detectCores(logical=FA
 
   # enclose in a masquerading class
   res <- list(membership=fv, dendrogram=NULL, algorithm='multimulti', names=names(fv));
-  class(res) <- rev("fakeCommunities");
-  return(res);
+  class(res) <- rev("fakeCommunities")
+  return(res)
 
 }
 

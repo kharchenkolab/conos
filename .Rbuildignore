@@ -8,4 +8,5 @@ CHANGELOG.md
 ^Meta$
 ^vignettes\*.md$
 ^vignettes\figure$
+docker
 CONTRIBUTING.md

@@ -28,6 +28,9 @@ graphToAdjList <- function(graph) {
 
 #' @keywords internal
 embedKnnGraph <- function(commute.times, n.neighbors, names=NULL, verbose=TRUE, target.dims=2, ...) {
+  if (!requireNamespace("uwot", quietly = TRUE)) {
+    stop("Package \"uwot\" needed for this function to work. Please install it.", call. = FALSE)
+  }
   min.n.neighbors <- sapply(commute.times$idx, length) %>% min()
   if (min.n.neighbors < n.neighbors) {
     n.neighbors <- min.n.neighbors

@@ -530,7 +530,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           # hierarchical to hierarchical stability analysis - cut reference
           # determine hierarchy of clusters (above the cut)
           t.get.walktrap.upper.merges <- function(res,n=length(unique(membership(res)))) {
-            clm <- igraph:::complete.dend(res,FALSE)
+            clm <- complete.dend(res,FALSE)
             x <- tail(clm,n-1)
             x <- x - 2*nrow(res$merges) + nrow(x)-1
             # now all >=0 ids are cut leafs and need to be reassigned ids according to their rank
@@ -551,7 +551,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           if(verbose) message("upper clustering ... ")
           cgraph <- getClusterGraph(self$graph,cls.groups,plot=FALSE,normalize=FALSE)
           chwt <- walktrap.community(cgraph,steps=9)
-          clm <- igraph:::complete.dend(chwt,FALSE)
+          clm <- complete.dend(chwt,FALSE)
 
           if(verbose) message("clusterTree Jaccard ... ")
           jc.hstats <- do.call(rbind, papply(sr,function(st1) {
@@ -669,7 +669,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       } else {
         ## method == 'UMAP'
         if (!requireNamespace("uwot", quietly=TRUE)){
-          stop("You need to install package 'uwot' to be able to use UMAP embedding.")
+          stop("You need to install package 'uwot' to be able to use UMAP embedding. Please install it.")
         }
 
         self$embedding <- embedGraphUmap(self$graph, verbose=verbose, return.all=FALSE, n.cores=n.cores, target.dims=target.dims, ...)
