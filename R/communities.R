@@ -1,17 +1,14 @@
-#' @import parallel
-#' @importFrom igraph E
-#' @importFrom igraph V
-#' @importFrom igraph membership
-#' @importFrom igraph walktrap.community
-#' @importFrom igraph induced.subgraph
-#' @import sccore
 #' @importFrom graphics par
-#' @importFrom grDevices adjustcolor
-#' @importFrom stats as.dendrogram is.leaf dendrapply as.hclust
+#' @importFrom grDevices adjustcolor colorRampPalette dev.size rainbow
+#' @importFrom igraph E induced.subgraph membership V walktrap.community
 #' @import Matrix.utils
 #' @import Matrix
+#' @import parallel
+#' @import sccore
+#' @importFrom stats as.dendrogram as.dist as.hclust cor dendrapply dnorm hclust is.leaf median 
+#' @importFrom stats na.omit order.dendrogram p.adjust prcomp qnorm quantile relevel sd setNames var
+#' @importFrom utils combn packageVersion write.table
 NULL
-
 
 #' Constructs a two-step clustering, first running multilevel.communities, and then walktrap.communities within each
 #' These are combined into an overall hierarchy

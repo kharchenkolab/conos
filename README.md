@@ -228,7 +228,9 @@ docker run -d -p 8787:8787 -e PASSWORD=pass --name conos -it conos
 If you find this software useful for your research, please cite the corresponding [paper](https://doi.org/10.1038/s41592-019-0466-z):
 
 ```
-Barkas N., Petukhov V., Nikolaeva D., Lozinsky Y., Demharter S., Khodosevich K. & Kharchenko P.V. Joint analysis of heterogeneous single-cell RNA-seq dataset collections. Nat. Methods, (2019). doi:10.1038/s41592-019-0466-z
+Barkas N., Petukhov V., Nikolaeva D., Lozinsky Y., Demharter S., Khodosevich K., & Kharchenko P.V. 
+Joint analysis of heterogeneous single-cell RNA-seq dataset collections. 
+Nature Methods, (2019). doi:10.1038/s41592-019-0466-z
 ```
 
 The R package can be cited as:
