@@ -96,4 +96,5 @@ suppressWarnings(vis <- largeVis(t(co), K = 20, sgd_batches = 1, threads = 2))
 suppressWarnings(coords <- projectKNNs(vis$wij, threads = 2))
 plot(t(coords))
 }
+
 }
