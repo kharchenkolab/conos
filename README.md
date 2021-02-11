@@ -7,7 +7,7 @@
 - [Tutorials](#tutorials)
   * [Usage: Alignment of Datasets](#usage-alignment-of-datasets)
   * [Integration with ScanPy](#integration-with-scanpy)
-  * [Running RNA velocity on a conos object](#running-rna-velocity-on-a-conos-object)
+  * [Running RNA velocity on a Conos object](#running-rna-velocity-on-a-conos-object)
 - [Installation](#installation)
   * [Running conos via Docker](#running-conos-via-docker)
 - [Reference](#reference)
