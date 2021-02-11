@@ -2,7 +2,7 @@
 #' @importFrom ComplexHeatmap ht_opt
 #' @importFrom ComplexHeatmap Heatmap
 #' @importFrom ComplexHeatmap HeatmapAnnotation
-#' @importFrom stats d.norm p.adjust setNames
+#' @importFrom stats setNames
 NULL
 
 ## exporting to inherit parameters below, plotEmbeddings()
