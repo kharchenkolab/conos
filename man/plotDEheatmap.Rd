@@ -91,9 +91,9 @@ plotDEheatmap(
 
 \item{averaging.window}{numeric Optional window averaging between neighboring cells within each group (turned off by default) - useful when very large number of cells shown (requires zoo package) (default=0)}
 
-\item{...}{extra parameters are passed to ComplexHeatmap::Heatmap() call}
+\item{max.cells}{numeric Maximum cells to include in any given group (default: Inf)}
 
-\item{max}{cells to include in any given group (default: Inf)}
+\item{...}{extra parameters are passed to ComplexHeatmap::Heatmap() call}
 }
 \value{
 ComplexHeatmap::Heatmap object (see return.details param for other output)

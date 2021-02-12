@@ -29,6 +29,12 @@ scanKModularity(
 
 \item{scan.k.self}{boolean Whether to test dependency on scan.k.self (default=FALSE)}
 
+\item{omit.internal.edges}{boolean Whether to omit internal edges of the graph (default=TRUE)}
+
+\item{verbose}{boolean Whether to provide verbose output (default=TRUE)}
+
+\item{plot}{boolean Whether to plot the output (default=TRUE)}
+
 \item{...}{other parameters will be passed to con$buildGraph()}
 }
 \value{

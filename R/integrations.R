@@ -1,3 +1,4 @@
+#' @importFrom rlang .data
 #' @importFrom utils packageVersion
 NULL
 
@@ -334,7 +335,7 @@ convertToPagoda2 <- function(con, n.pcs=100, n.odgenes=2000, verbose=TRUE, ...) 
   }
 
   p2 <- con$getJointCountMatrix(raw=TRUE) %>% Matrix::t() %>%
-    Pagoda2$new(n.cores=con$n.cores, verbose=verbose, ...)
+    pagoda2::Pagoda2$new(n.cores=con$n.cores, verbose=verbose, ...)
 
   if (n.pcs > 0) {
     if (verbose) message("Estimating PCA... ")
@@ -393,6 +394,9 @@ p2app4conos <- function(conos, cdl=NULL, metadata=NULL, filename='conos_app.bin'
   if (!requireNamespace("org.Mm.eg.db", quietly = TRUE)) {
     stop("Package \"org.Mm.eg.db\" is needed for this function to work. Please install it from Bioconductor.", call. = FALSE)
   }
+  if (!requireNamespace("AnnotationDbi", quietly = TRUE)) {
+    stop("Package \"AnnotationDbi\" is needed for this function to work. Please install it from Bioconductor.", call. = FALSE)
+  }
   if (is.null(cdl)) {
     #cdl <- lapply(conos$samples,function(p) t(p$misc$rawCounts))
     cdl <- lapply(rawMatricesWithCommonGenes(conos),t)
@@ -446,7 +450,7 @@ p2app4conos <- function(conos, cdl=NULL, metadata=NULL, filename='conos_app.bin'
     #cp2$getHierarchicalDiffExpressionAspects(type='PCA',clusterName='community',z.threshold=3)
     # here we test for pathway overdispersion, but recursive diff expression, as shown above will work just as well
     cp2$testPathwayOverdispersion(go.env,verbose=TRUE,correlation.distance.threshold=0.95,recalculate.pca=FALSE,top.aspects=15)
-    termDescriptions <- Term(GO.db::GOTERM[names(go.env)]) # saves a good minute or so compared to individual lookups
+    termDescriptions <- AnnotationDbi::Term(GO.db::GOTERM[names(go.env)]) # saves a good minute or so compared to individual lookups
     geneSets <- lapply(sn(names(go.env)),function(x) {
       list(properties=list(locked=TRUE,genesetname=x,shortdescription=as.character(termDescriptions[x])),genes=c(go.env[[x]]))
     })

@@ -5,6 +5,7 @@
 #' @importFrom dplyr %>%
 #' @importFrom magrittr %<>%
 #' @importFrom magrittr %$%
+#' @importFrom rlang .data
 NULL
 
 ## for magrittr and dplyr functions below
@@ -23,19 +24,19 @@ scaledMatricesP2 <- function(p2.objs, data.type, od.genes, var.scale) {
   ## Prepare the matrices
   cproj <- lapply(p2.objs, function(r) {
     if (data.type == 'counts') {
-      x <- r$counts[,od.genes];
+      x <- r$counts[,od.genes]
     } else if (data.type %in% names(r$reductions)){
       if (!all(od.genes %in% colnames(r$reductions[[data.type]]))) {
         stop("Reduction '", data.type, "' should have columns indexed by gene, with all overdispersed genes presented")
       }
-      x <- r$reductions[[data.type]][,od.genes];
+      x <- r$reductions[[data.type]][,od.genes]
     } else {
       stop("No reduction named '", data.type, "' in pagoda2")
     }
 
     if(var.scale) {
       cgsf <- sqrt(cqv/exp(r$misc$varinfo[od.genes,]$v))
-      cgsf[is.na(cgsf) | !is.finite(cgsf)] <- 0;
+      cgsf[is.na(cgsf) | !is.finite(cgsf)] <- 0
       x@x <- x@x*rep(cgsf,diff(x@p))
     }
     return(x)
@@ -496,12 +497,12 @@ getOdGenesUniformly <- function(samples, n.genes) {
 
   gene.info <- lapply(samples, function(s)
     tibble::rownames_to_column(s$misc[['varinfo']], "gene") %>%
-      dplyr::mutate(rank=rank(lpa, ties.method="first"))
+      dplyr::mutate(rank=rank(.data$lpa, ties.method="first"))
   )
-  genes <- gene.info %>% dplyr::bind_rows() %>% dplyr::group_by(gene) %>%
+  genes <- gene.info %>% dplyr::bind_rows() %>% dplyr::group_by(.data$gene) %>%
     dplyr::summarise(rank=min(rank)) %>% dplyr::arrange(rank) %>% .$gene
 
-  return(genes[1:min(n.genes, length(genes))])
+  return(genes[1:min(n.genes, length(.data$genes))])
 }
 
 #' @keywords internal
@@ -612,6 +613,7 @@ getLocalEdges <- function(local.neighbors) {
 #'
 #' @param res walktrap result object (igraph)
 #' @param clusters cluster factor
+#' @param clmerges integer matrix of cluster merges (default=NULL). If NULL, the function treeJaccard() performs calculation without it. 
 #' @return a list of $thresholds - per cluster optimal detectability values, and $node - internal node id (merge row) where the optimum was found
 #' @export
 bestClusterThresholds <- function(res, clusters, clmerges=NULL) {
@@ -624,7 +626,7 @@ bestClusterThresholds <- function(res, clusters, clmerges=NULL) {
   #x <- conos:::findBestClusterThreshold(res$merges-1L,matrix(cl-1L,nrow=1),clT)
   if(is.null(clmerges)) {
     x <- treeJaccard(res$merges-1L,matrix(cl-1L,nrow=1),clT)
-    names(x$threshold) <- levels(clusters);
+    names(x$threshold) <- levels(clusters)
   } else {
     x <- treeJaccard(res$merges-1L,matrix(cl-1L,nrow=1),clT,clmerges-1L)
   }
@@ -945,12 +947,15 @@ adjustWeightsByCellBalancing <- function(adj.mtx, factor.per.cell, balance.weigh
 #' @param max numeric Value of k to test (default=50)
 #' @param by numeric Scan step (default=1)
 #' @param scan.k.self boolean Whether to test dependency on scan.k.self (default=FALSE)
+#' @param omit.internal.edges boolean Whether to omit internal edges of the graph (default=TRUE)
+#' @param verbose boolean Whether to provide verbose output (default=TRUE)
+#' @param plot boolean Whether to plot the output (default=TRUE)
 #' @param ... other parameters will be passed to con$buildGraph()
 #' @return a data frame with $k $m columns giving k and the corresponding modularity
 #' @export
 scanKModularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.internal.edges=TRUE, verbose=TRUE, plot=TRUE, ... ) {
   k.seq <- seq(min,max, by=by)
-  n.cores <- con$n.cores
+  ncores <- con$n.cores
   con$n.cores <- 1
   if(verbose) message(paste0(ifelse(scan.k.self,'k.self=(','k=('),min,', ',max,') ['))
   xl <- papply(k.seq,function(kv) {
@@ -970,13 +975,13 @@ scanKModularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.in
     }
     xc <- multilevel.community(x)
     modularity(xc)
-  },n.cores=30)
+  },n.cores=ncores)
   if(verbose) message(']\n')
-  con$n.cores <- n.cores;
+  con$n.cores <- ncores
 
   k.sens <- data.frame(k=k.seq,m=as.numeric(unlist(xl)))
   if(plot) {
-    ggplot2::ggplot(k.sens,aes(x=k,y=m))+ggplot2::theme_bw()+ggplot2::geom_point()+ggplot2::geom_smooth()+ggplot2::xlab('modularity')+ggplot2::ylab('k')
+    ggplot2::ggplot(k.sens,ggplot2::aes(x=.data$k,y=.data$m))+ggplot2::theme_bw()+ggplot2::geom_point()+ggplot2::geom_smooth()+ggplot2::xlab('modularity')+ggplot2::ylab('k')
   }
 
   return(k.sens)

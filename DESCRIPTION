@@ -35,6 +35,7 @@ Imports:
     tools,
     utils
 Suggests:
+    AnnotationDbi,
     BiocParallel,
     conosPanel,
     DESeq2,

@@ -37,13 +37,25 @@ Conos is robust to heterogeneity of samples within a collection, as well as nois
 
 ## Tutorials
 
-### Usage: Alignment of Datasets
 
-Please see the [conos tutorial walkthrough](vignettes/walkthrough.md) for a detailed example of how to use conos. The overall runtime of the tutorial should be approximately 5 minutes.
+Please see the conos tutorials for detailed examples of how to use conos: 
 
-Additional tutorials for conos include: 
-* [Adjustment of Alignment Strength with conos](vignettes/adjust_alignment_strength.md)
-* [Integrating RNA-seq and ATAC-seq](http://pklab.med.harvard.edu/peterk/conos/atac_rna/example.html)
+**Walkthrough:**
+* [HTML version](https://htmlpreview.github.io/?https://raw.githubusercontent.com/kharchenkolab/conos/master/doc/walkthrough.html)
+* [Markdown version](https://github.com/kharchenkolab/conos/blob/master/vignettes/walkthrough.md)
+
+**Adjustment of Alignment Strength with conos:**
+* [HTML version](https://htmlpreview.github.io/?https://raw.githubusercontent.com/kharchenkolab/conos/master/doc/adjust_alignment_strength.html)
+* [Markdown version](https://github.com/kharchenkolab/conos/blob/master/vignettes/adjust_alignment_strength.md)
+
+**Convert Conos Object to ScanPy:**
+* [HTML version](https://htmlpreview.github.io/?https://raw.githubusercontent.com/kharchenkolab/conos/master/doc/scanpy_integration.html)
+* [Markdown version](https://github.com/kharchenkolab/conos/blob/master/vignettes/scanpy_integration.md)
+
+**Integrating RNA-seq and ATAC-seq:**
+* [URL](http://pklab.med.harvard.edu/peterk/conos/atac_rna/example.html)
+
+### Basic Usage
 
 Given a list of individual processed samples (`pl`), conos processing can be as simple as this:
 ```r

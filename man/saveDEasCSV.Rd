@@ -2,17 +2,17 @@
 % Please edit documentation in R/de_functions.R
 \name{saveDEasCSV}
 \alias{saveDEasCSV}
-\title{Save differential expression as CSV table}
+\title{Save differential expression as table in *csv format}
 \usage{
-saveDEasCSV(de.results = NULL, saveprefix = NULL, gene.metadata = NULL)
+saveDEasCSV(de.results, saveprefix, gene.metadata = NULL)
 }
 \arguments{
-\item{de.results}{output of differential expression results, corrected or uncorrected (default=NULL)}
+\item{de.results}{output of differential expression results, corrected or uncorrected}
 
-\item{saveprefix}{prefix for output file (default=NULL)}
+\item{saveprefix}{character prefix for output file}
 
-\item{data.frame}{for gene metadata (default=NULL)}
+\item{gene.metadata}{gene metadta to include (default=NULL)}
 }
 \description{
-Save differential expression as CSV table
+Save differential expression as table in *csv format
 }

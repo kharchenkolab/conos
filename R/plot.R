@@ -2,6 +2,7 @@
 #' @importFrom ComplexHeatmap ht_opt
 #' @importFrom ComplexHeatmap Heatmap
 #' @importFrom ComplexHeatmap HeatmapAnnotation
+#' @importFrom rlang .data
 #' @importFrom stats setNames
 NULL
 
@@ -85,7 +86,7 @@ plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow
       emb <- emb[rownames(emb) %in% subset,,drop=FALSE]
     }
     embeddingPlot(emb, groups=groups, colors=colors, raster=raster, raster.dpi=raster.dpi, ...) +
-      ggplot2::geom_label(data=data.frame(x=-Inf, y=Inf, label=n), mapping=ggplot2::aes(x=x, y=y, label=label),
+      ggplot2::geom_label(data=data.frame(x=-Inf, y=Inf, label=n), mapping=ggplot2::aes(x=x, y=y, label=.data$label),
                           fill=ggplot2::alpha("white", 0.6), hjust=0, vjust=1, size=title.size,
                           label.padding=ggplot2::unit(title.size / 4, "pt"), label.size = NA)
   })
@@ -178,10 +179,13 @@ plotClusterBarplots <- function(conos.obj=NULL, clustering=NULL, groups=NULL, sa
   }
 
   xt <- table(sample.factor[match(names(groups),names(sample.factor))],groups)
-  xt <- xt[rowSums(xt)>0,]; xt <- xt[,colSums(xt)>0]
+  xt <- xt[rowSums(xt)>0, ]
+  xt <- xt[ ,colSums(xt)>0]
 
-  df <- reshape2::melt(xt); colnames(df) <- c("sample","cluster","f");  df$f <- df$f/colSums(xt)[as.character(df$cluster)]
-  clp <- ggplot2::ggplot(df, ggplot2::aes(x=factor(cluster, levels=levels(groups)),y=f,fill=sample)) +
+  df <- reshape2::melt(xt)
+  colnames(df) <- c("sample","cluster","f")
+  df$f <- df$f/colSums(xt)[as.character(df$cluster)]
+  clp <- ggplot2::ggplot(df, ggplot2::aes(x=factor(.data$cluster, levels=levels(groups)),y=.data$f,fill=.data$sample)) +
     ggplot2::geom_bar(stat='identity') + ggplot2::xlab('cluster') + ggplot2::ylab('fraction of cells') + ggplot2::theme_bw() +
     ggplot2::scale_y_continuous(expand=c(0, 0))
 
@@ -198,22 +202,22 @@ plotClusterBarplots <- function(conos.obj=NULL, clustering=NULL, groups=NULL, sa
       stop("You need to install 'entropy' package to use 'show.entropy=TRUE'")
     }
 
-    n.samples <- nrow(xt);
+    n.samples <- nrow(xt)
     ne <- 1-apply(xt, 2, entropy::KL.empirical, y2=rowSums(xt), unit=c('log2')) / log2(n.samples) # relative entropy
-    enp <- ggplot2::ggplot(data.frame(cluster=factor(colnames(xt),levels=levels(groups)),entropy=ne), ggplot2::aes(cluster, entropy)) +
+    enp <- ggplot2::ggplot(data.frame(cluster=factor(colnames(xt),levels=levels(groups)),entropy=ne), ggplot2::aes(.data$cluster, .data$entropy)) +
       ggplot2::geom_bar(stat='identity',fill='grey65') + ggplot2::ylim(0,1) +
       ggplot2::geom_hline(yintercept=1, linetype="dashed", color = "grey30") + ggplot2::theme_bw()
     pl <- c(pl,list(enp))
   }
 
   if(show.size) {
-    szp <- ggplot2::ggplot(data.frame(cluster=factor(colnames(xt),levels=levels(groups)), cells=colSums(xt)), ggplot2::aes(cluster,cells)) +
+    szp <- ggplot2::ggplot(data.frame(cluster=factor(colnames(xt),levels=levels(groups)), cells=colSums(xt)), ggplot2::aes(.data$cluster, .data$cells)) +
       ggplot2::geom_bar(stat='identity') + ggplot2::scale_y_continuous(trans='log10') + ggplot2::theme_bw() + ggplot2::ylab('number of cells')
-    pl <- c(pl,list(szp))
+    pl <- c(pl, list(szp))
   }
 
-  pp <- cowplot::plot_grid(plotlist=pl,ncol=1,rel_heights=c(1,rep(0.3,length(pl)-1)))
-  pp2 <- cowplot::plot_grid(leg,pp,ncol=1,rel_heights=c(legend.height,1))
+  pp <- cowplot::plot_grid(plotlist=pl ,ncol=1, rel_heights=c(1,rep(0.3,length(pl)-1)))
+  pp2 <- cowplot::plot_grid(leg, pp, ncol=1, rel_heights=c(legend.height,1))
 
   return(pp2)
 }
@@ -256,7 +260,7 @@ plotClusterBoxPlotsByAppType <- function(conos.obj, clustering=NULL, apptypes=NU
     ## append app type
     plot.df$apptype <- apptypes[plot.df$sample]
     ## Make the plot
-    gg <- ggplot2::ggplot(plot.df, ggplot2::aes(x=apptype,y=val,fill=clname)) + ggplot2::facet_wrap(~clname) + ggplot2::geom_boxplot()
+    gg <- ggplot2::ggplot(plot.df, ggplot2::aes(x=.data$apptype,y=.data$val,fill=.data$clname)) + ggplot2::facet_wrap(~.data$clname) + ggplot2::geom_boxplot()
     if (type == 'counts') {
         gg <- gg + ggplot2::scale_y_continuous(name='counts')
     } else {
@@ -264,8 +268,9 @@ plotClusterBoxPlotsByAppType <- function(conos.obj, clustering=NULL, apptypes=NU
     }
     gg <- gg + ggplot2::scale_x_discrete(name='cluster')
     ## return
-    if(return.details)
+    if(return.details){
         return(list(plot=gg,data=plot.df))
+    }
 
     return(gg)
 }
@@ -336,9 +341,9 @@ plotComponentVariance <- function(conos.obj, space='PCA', plot.theme=ggplot2::th
   colnames(df) <- c('component','dataset','var')
   df$component <- factor(df$component,levels=sort(unique(df$component)))
 
-  ggplot2::ggplot(df, ggplot2::aes(x=component,y=var)) +
-    ggplot2::geom_point(shape=16, ggplot2::aes(color=dataset), position = ggplot2::position_jitter(), alpha=0.3) +
-    ggplot2::geom_line(ggplot2::aes(group=dataset,color=dataset), alpha=0.2)+
+  ggplot2::ggplot(df, ggplot2::aes(x=.data$component,y=var)) +
+    ggplot2::geom_point(shape=16, ggplot2::aes(color=.data$dataset), position = ggplot2::position_jitter(), alpha=0.3) +
+    ggplot2::geom_line(ggplot2::aes(group=.data$dataset,color=.data$dataset), alpha=0.2)+
     ggplot2::ylab('fraction of variance explained') + ggplot2::xlab('component number') +
     ggplot2::geom_boxplot(notch=FALSE,outlier.shape=NA,fill=NA) + plot.theme + ggplot2::theme(legend.position='none')
 
@@ -373,11 +378,15 @@ plotComponentVariance <- function(conos.obj, space='PCA', plot.theme=ggplot2::th
 #' @param split.gap numeric Value of millimeters "mm" to use for 'row_gap' and 'column_gap' (default=0). If split is FALSE, this argument is ignored.
 #' @param cell.order explicitly supply cell order (default=NULL)
 #' @param averaging.window numeric Optional window averaging between neighboring cells within each group (turned off by default) - useful when very large number of cells shown (requires zoo package) (default=0)
-#' @param max cells to include in any given group (default: Inf)
+#' @param max.cells numeric Maximum cells to include in any given group (default: Inf)
 #' @param ... extra parameters are passed to ComplexHeatmap::Heatmap() call
 #' @return ComplexHeatmap::Heatmap object (see return.details param for other output)
 #' @export
-plotDEheatmap <- function(con, groups, de=NULL, min.auc=NULL, min.specificity=NULL, min.precision=NULL, n.genes.per.cluster=10, additional.genes=NULL, exclude.genes=NULL, labeled.gene.subset=NULL, expression.quantile=0.99, pal=colorRampPalette(c('dodgerblue1','grey95','indianred1'))(1024), ordering='-AUC', column.metadata=NULL, show.gene.clusters=TRUE, remove.duplicates=TRUE, column.metadata.colors=NULL, show.cluster.legend=TRUE, show_heatmap_legend=FALSE, border=TRUE, return.details=FALSE, row.label.font.size=10, order.clusters=FALSE, split=FALSE, split.gap=0, cell.order=NULL, averaging.window=0, max.cells=Inf, ...) {
+plotDEheatmap <- function(con, groups, de=NULL, min.auc=NULL, min.specificity=NULL, min.precision=NULL, 
+  n.genes.per.cluster=10, additional.genes=NULL, exclude.genes=NULL, labeled.gene.subset=NULL, expression.quantile=0.99, 
+  pal=colorRampPalette(c('dodgerblue1','grey95','indianred1'))(1024), ordering='-AUC', column.metadata=NULL, show.gene.clusters=TRUE, 
+  remove.duplicates=TRUE, column.metadata.colors=NULL, show.cluster.legend=TRUE, show_heatmap_legend=FALSE, border=TRUE, return.details=FALSE, 
+  row.label.font.size=10, order.clusters=FALSE, split=FALSE, split.gap=0, cell.order=NULL, averaging.window=0, max.cells=Inf, ...) {
 
   if (!requireNamespace("ComplexHeatmap", quietly = TRUE) || packageVersion("ComplexHeatmap") < "2.4") {
     stop("ComplexHeatmap >= 2.4 package needs to be installed to use plotDEheatmap. Please run \"devtools::install_github('jokergoo/ComplexHeatmap')\".")
@@ -402,14 +411,14 @@ plotDEheatmap <- function(con, groups, de=NULL, min.auc=NULL, min.specificity=NU
   # apply filters
   if(!is.null(min.auc)) {
     if(!is.null(de[[1]]$AUC)) {
-      de <- lapply(de,function(x) x %>% dplyr::filter(AUC>min.auc))
+      de <- lapply(de,function(x) x %>% dplyr::filter(.data$AUC>min.auc))
     } else {
       warning("AUC column lacking in the DE results - recalculate with append.auc=TRUE")
     }
   }
   if(!is.null(min.specificity)) {
     if(!is.null(de[[1]]$Specificity)) {
-      de <- lapply(de,function(x) x %>% dplyr::filter(Specificity>min.specificity))
+      de <- lapply(de,function(x) x %>% dplyr::filter(.data$Specificity>min.specificity))
     } else {
       warning("Specificity column lacking in the DE results - recalculate append.specificity.metrics=TRUE")
     }
@@ -417,7 +426,7 @@ plotDEheatmap <- function(con, groups, de=NULL, min.auc=NULL, min.specificity=NU
 
   if(!is.null(min.precision)) {
     if(!is.null(de[[1]]$Precision)) {
-      de <- lapply(de,function(x) x %>% dplyr::filter(Precision>min.precision))
+      de <- lapply(de,function(x) x %>% dplyr::filter(.data$Precision>min.precision))
     } else {
       warning("Precision column lacking in the DE results - recalculate append.specificity.metrics=TRUE")
     }
@@ -425,11 +434,13 @@ plotDEheatmap <- function(con, groups, de=NULL, min.auc=NULL, min.specificity=NU
 
   #de <- lapply(de,function(x) x%>%arrange(-Precision)%>%head(n.genes.per.cluster))
   if(n.genes.per.cluster==0) { # want to show only expliclty specified genes
-    if(is.null(additional.genes)) stop("if n.genes.per.cluster is 0, additional.genes must be specified")
-    additional.genes.only <- TRUE;
-    n.genes.per.cluster <- 30; # leave some genes to establish cluster association for the additional genes
+    if (is.null(additional.genes)){
+      stop("if n.genes.per.cluster is 0, additional.genes must be specified")
+    }
+    additional.genes.only <- TRUE
+    n.genes.per.cluster <- 30 # leave some genes to establish cluster association for the additional genes
   } else {
-    additional.genes.only <- FALSE;
+    additional.genes.only <- FALSE
   }
 
   de <- lapply(de,function(x) x%>%dplyr::arrange(!!rlang::parse_expr(ordering))%>%head(n.genes.per.cluster))
@@ -440,10 +451,13 @@ plotDEheatmap <- function(con, groups, de=NULL, min.auc=NULL, min.specificity=NU
   expl <- lapply(de,function(d) do.call(rbind,lapply(sn(as.character(d$Gene)),function(gene) getGeneExpression(con,gene))))
 
   # place additional genes
-  if(!is.null(additional.genes)) {
+  if (!is.null(additional.genes)) {
     genes.to.add <- setdiff(additional.genes,unlist(lapply(expl,rownames)))
-    if(length(genes.to.add)>0) {
-      x <- setdiff(genes.to.add, getGenes(con)); if(length(x)>0) warning('the following genes are not found in the dataset: ',paste(x,collapse=' '))
+    if (length(genes.to.add)>0) {
+      x <- setdiff(genes.to.add, getGenes(con))
+      if (length(x)>0) {
+        warning('the following genes are not found in the dataset: ',paste(x,collapse=' '))
+      }
       
       age <- do.call(rbind,lapply(sn(genes.to.add),function(gene) getGeneExpression(con,gene)))
       
@@ -452,11 +466,11 @@ plotDEheatmap <- function(con, groups, de=NULL, min.auc=NULL, min.specificity=NU
       acc <- acc[,apply(acc,2,function(x) any(is.finite(x))),drop=FALSE]
       acc.best <- na.omit(apply(acc,2,which.max))
       
-      for(i in 1:length(acc.best)) {
+      for (i in 1:length(acc.best)) {
         gn <- names(acc.best)[i];
         expl[[acc.best[i]]] <- rbind(expl[[acc.best[i]]],age[gn,,drop=FALSE])
       }
-      if(additional.genes.only) { # leave only genes that were explictly specified
+      if (additional.genes.only) { # leave only genes that were explictly specified
         expl <- lapply(expl,function(d) d[rownames(d) %in% additional.genes,,drop=FALSE])
         expl <- expl[unlist(lapply(expl,nrow))>0]
         
@@ -476,7 +490,7 @@ plotDEheatmap <- function(con, groups, de=NULL, min.auc=NULL, min.specificity=NU
   # limit to cells that were participating in the de
   exp <- na.omit(exp[,colnames(exp) %in% names(na.omit(groups))])
 
-  if(order.clusters) {
+  if (order.clusters) {
     # group clusters based on expression similarity (of the genes shown)
     xc <- do.call(cbind,tapply(1:ncol(exp),groups[colnames(exp)],function(ii) rowMeans(exp[,ii,drop=FALSE])))
     hc <- hclust(as.dist(2-cor(xc)),method='ward.D2')
@@ -487,7 +501,7 @@ plotDEheatmap <- function(con, groups, de=NULL, min.auc=NULL, min.specificity=NU
     exp <- na.omit(exp[,colnames(exp) %in% names(na.omit(groups))])
   }
 
-  if(is.finite(max.cells)) {
+  if (is.finite(max.cells)) {
     exp <- do.call(cbind,tapply(1:ncol(exp),as.factor(groups[colnames(exp)]),function(ii) {
       if(length(ii)>max.cells) { ii <- sample(ii,max.cells) }
       exp[,ii,drop=F]
@@ -597,7 +611,7 @@ plotDEheatmap <- function(con, groups, de=NULL, min.auc=NULL, min.specificity=NU
 
   #ComplexHeatmap::Heatmap(x, col=pal, cluster_rows=FALSE, cluster_columns=FALSE, show_column_names=FALSE, top_annotation=ha , left_annotation=ra, column_split=groups[colnames(x)], row_split=rannot[,1], row_gap = unit(0, "mm"), column_gap = unit(0, "mm"), border=TRUE,  ...);
   if(split) {
-    ha <- ComplexHeatmap::Heatmap(x, name='expression', col=pal, cluster_rows=FALSE, cluster_columns=FALSE, show_row_names=is.null(labeled.gene.subset), show_column_names=FALSE, top_annotation=ha , left_annotation=ra, border=border,  show_heatmap_legend=show_heatmap_legend, row_names_gp = grid::gpar(fontsize = row.label.font.size), column_split=groups[colnames(x)], row_split=rannot[,1], row_gap = unit(split.gap, "mm"), column_gap = unit(split.gap, "mm"), ...);
+    ha <- ComplexHeatmap::Heatmap(x, name='expression', col=pal, cluster_rows=FALSE, cluster_columns=FALSE, show_row_names=is.null(labeled.gene.subset), show_column_names=FALSE, top_annotation=ha , left_annotation=ra, border=border,  show_heatmap_legend=show_heatmap_legend, row_names_gp = grid::gpar(fontsize = row.label.font.size), column_split=groups[colnames(x)], row_split=rannot[,1], row_gap = grid::unit(split.gap, "mm"), column_gap = grid::unit(split.gap, "mm"), ...);
   } else {
     ha <- ComplexHeatmap::Heatmap(x, name='expression', col=pal, cluster_rows=FALSE, cluster_columns=FALSE, show_row_names=is.null(labeled.gene.subset), show_column_names=FALSE, top_annotation=ha , left_annotation=ra, border=border,  show_heatmap_legend=show_heatmap_legend, row_names_gp = grid::gpar(fontsize = row.label.font.size), ...);
   }
@@ -607,7 +621,7 @@ plotDEheatmap <- function(con, groups, de=NULL, min.auc=NULL, min.specificity=NU
       labeled.gene.subset <- unique(unlist(lapply(de,function(x) x$Gene[1:min(labeled.gene.subset,nrow(x))])))
     }
     gene.subset <- which(rownames(x) %in% labeled.gene.subset)
-    labels <- rownames(x)[gene.subset];
+    labels <- rownames(x)[gene.subset]
     ha <- ha + ComplexHeatmap::rowAnnotation(link = ComplexHeatmap::anno_mark(at = gene.subset, labels = labels, labels_gp = grid::gpar(fontsize = row.label.font.size)))
 
   }

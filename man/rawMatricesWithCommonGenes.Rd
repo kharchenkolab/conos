@@ -7,9 +7,9 @@
 rawMatricesWithCommonGenes(con.obj, sample.groups = NULL)
 }
 \arguments{
-\item{sample.groups}{list of samples to select from Conos object, con.obj$samples (default=NULL)}
+\item{con.obj}{Conos object}
 
-\item{con.object}{Conos object}
+\item{sample.groups}{list of samples to select from Conos object, con.obj$samples (default=NULL)}
 }
 \value{
 raw matrices subset with common genes

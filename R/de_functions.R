@@ -23,10 +23,10 @@ validatePerCellTypeParams <- function(con.obj, groups, sample.groups, ref.level,
   if (!('Conos' %in% class(con.obj))) stop('con.obj must be a conos object')
   if (is.null(groups)) stop('groups must be specified');
   if (is.null(sample.groups)) stop('sample.groups must be specified')
-  if (!('list' %in% class(sample.groups))) stop('sample.groups must be a list');
-  if (length(sample.groups) != 2) stop('sample.groups must be of length 2');
+  if (!('list' %in% class(sample.groups))) stop('sample.groups must be a list')
+  if (length(sample.groups) != 2) stop('sample.groups must be of length 2')
   if (!all(unlist(lapply(sample.groups, function(x) 'character' %in% class(x)))))
-    stop('sample.groups must be a list of character vectors');
+    stop('sample.groups must be a list of character vectors')
   if (!all(sapply(sample.groups, length) > 0))
     stop('sample.groups entries must be on length greater or equal to 1')
   if (!all(unlist(lapply(sample.groups, function(x) {all(x %in% names(con.obj$samples))}))))
@@ -71,7 +71,7 @@ validateBetweenCellTypeParams <- function(con.obj, groups, sample.groups, refgro
 
 #' Get raw matrices with common genes
 #' 
-#' @param con.object Conos object
+#' @param con.obj Conos object
 #' @param sample.groups list of samples to select from Conos object, con.obj$samples (default=NULL)
 #' @return raw matrices subset with common genes
 #' @export 
@@ -209,15 +209,13 @@ getPerCellTypeDE <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cut
 }
 
 
-#' Save differential expression as CSV table
+#' Save differential expression as table in *csv format
 #'
-#' @param de.results output of differential expression results, corrected or uncorrected (default=NULL)
-#' @param saveprefix prefix for output file (default=NULL)
-#' @param data.frame for gene metadata (default=NULL)
+#' @param de.results output of differential expression results, corrected or uncorrected
+#' @param saveprefix character prefix for output file
+#' @param gene.metadata gene metadta to include (default=NULL)
 #' @export
-saveDEasCSV <- function(de.results=NULL,saveprefix=NULL,gene.metadata=NULL) {
-    if(is.null(de.results)) stop('de.results has not been specified')
-    if(is.null(saveprefix)) stop('saveprefix has not bee specified')
+saveDEasCSV <- function(de.results, saveprefix, gene.metadata=NULL) {
     ## find errors
     n.error <- sum(unlist(lapply(de.results,is.error)))
     if(n.error > 0) {
@@ -420,7 +418,7 @@ generateDEMatrixMetadata <- function(mtx, refgroup, altgroup, cluster.sep.chr) {
     celltype = strpart(colnames(mtx), cluster.sep.chr, 2, fixed=TRUE)
   )
 
-  return(subset(meta, celltype %in% c(refgroup, altgroup)))
+  return(subset(meta, .data$celltype %in% c(refgroup, altgroup)))
 }
 
 #' Compare two cell types across the entire panel
