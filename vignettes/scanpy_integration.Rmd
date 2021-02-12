@@ -11,14 +11,14 @@ vignette: >
 
 First load the conos library, and the R package `conosPanel` for the example data `panel`:
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 library(conos)
 panel <- conosPanel::panel
 ```
 
 Next, use pagoda2 for pre-processing:
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 library(pagoda2)
 panel.preprocessed <- lapply(panel, basicP2proc, n.cores=2, min.cells.per.gene=0, n.odgenes=2e3, 
                              get.largevis=FALSE, make.geneknn=FALSE)
@@ -26,7 +26,7 @@ panel.preprocessed <- lapply(panel, basicP2proc, n.cores=2, min.cells.per.gene=0
 
 Now align the datasets:
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 con <- Conos$new(panel.preprocessed, n.cores=2)
 con$buildGraph(k=15, k.self=5, space='PCA', ncomps=30)
 ```
@@ -34,21 +34,21 @@ con$buildGraph(k=15, k.self=5, space='PCA', ncomps=30)
 
 Next find the clusters, and create an embedding:
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 con$findCommunities()
 con$embedGraph(method="UMAP")
 ```
 
 Now prepare the metadata (which can be any type of clustering of all the cells):
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 metadata <- data.frame(Cluster=con$clusters$leiden$groups)
 ```
 
 Save data (set `exchange_dir` to your path):
 
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 ## use current directory
 exchange_dir <- "."
 hdf5file = "example.h5"
@@ -58,7 +58,7 @@ saveConosForScanPy(con, output.path=exchange_dir, hdf5_filename=hdf5file, verbos
 Users can then access the data saved to the HDF5 file, e.g. to access metadata, run:
 
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 library(rhdf5)
 metadata = h5read(paste0(exchange_dir, "/example.h5"), 'metadata/metadata.df')
 head(metadata, 4)
@@ -97,7 +97,7 @@ All possible fields included in the output HDF5 file are:
 In order to read in the `dcGMatrix` again, simply use the `Matrix` package as follows:
 
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 library(rhdf5)
 library(Matrix)
 rawcountMat = h5read(paste0(exchange_dir, "/example.h5"), 'raw_count_matrix')

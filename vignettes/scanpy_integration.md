@@ -1,47 +1,10 @@
----
-title: "Convert Conos Object to ScanPy"
-output: 
-  rmarkdown::html_vignette:
-    toc: true
-vignette: >
-  %\VignetteIndexEntry{"Convert Conos Object to ScanPy"}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
----
+# Convert Conos Object to ScanPy
 
 First load the conos library, and the R package `conosPanel` for the example data `panel`:
 
 
 ```r
 library(conos)
-```
-
-```
-## Loading required package: Matrix
-```
-
-```
-## Loading required package: igraph
-```
-
-```
-## 
-## Attaching package: 'igraph'
-```
-
-```
-## The following objects are masked from 'package:stats':
-## 
-##     decompose, spectrum
-```
-
-```
-## The following object is masked from 'package:base':
-## 
-##     union
-```
-
-```r
 panel <- conosPanel::panel
 ```
 
@@ -50,282 +13,27 @@ Next, use pagoda2 for pre-processing:
 
 ```r
 library(pagoda2)
-```
-
-```
-## 
-## Attaching package: 'pagoda2'
-```
-
-```
-## The following objects are masked from 'package:conos':
-## 
-##     buildWijMatrix, projectKNNs, sgdBatches
-```
-
-```r
 panel.preprocessed <- lapply(panel, basicP2proc, n.cores=2, min.cells.per.gene=0, n.odgenes=2e3, 
                              get.largevis=FALSE, make.geneknn=FALSE)
 ```
 
 ```
-## 3000 cells, 33694 genes; normalizing ...
-```
-
-```
-## Using plain model
-```
-
-```
-## Winsorizing ...
-```
-
-```
-## log scale ...
-```
-
-```
-## done.
-```
-
-```
-## calculating variance fit ...
-```
-
-```
-##  using gam
-```
-
-```
-## 172 overdispersed genes ... 172
-```
-
-```
-## persisting ...
-```
-
-```
-## done.
-```
-
-```
-## running PCA using 2000 OD genes .
-```
-
-```
-## .
-## .
-## .
-```
-
-```
-##  done
-```
-
-```
 ## creating space of type angular done
 ## adding data ... done
 ## building index ... done
 ## querying ... done
-```
-
-```
-## running tSNE using 2 cores:
-```
-
-```
-## 3000 cells, 33694 genes; normalizing ...
-```
-
-```
-## Using plain model
-```
-
-```
-## Winsorizing ...
-```
-
-```
-## log scale ...
-```
-
-```
-## done.
-```
-
-```
-## calculating variance fit ...
-```
-
-```
-##  using gam
-```
-
-```
-## 159 overdispersed genes ... 159
-```
-
-```
-## persisting ...
-```
-
-```
-## done.
-```
-
-```
-## running PCA using 2000 OD genes .
-```
-
-```
-## .
-## .
-## .
-```
-
-```
-##  done
-```
-
-```
 ## creating space of type angular done
 ## adding data ... done
 ## building index ... done
 ## querying ... done
-```
-
-```
-## running tSNE using 2 cores:
-```
-
-```
-## 3000 cells, 33694 genes; normalizing ...
-```
-
-```
-## Using plain model
-```
-
-```
-## Winsorizing ...
-```
-
-```
-## log scale ...
-```
-
-```
-## done.
-```
-
-```
-## calculating variance fit ...
-```
-
-```
-##  using gam
-```
-
-```
-## 251 overdispersed genes ... 251
-```
-
-```
-## persisting ...
-```
-
-```
-## done.
-```
-
-```
-## running PCA using 2000 OD genes .
-```
-
-```
-## .
-## .
-## .
-```
-
-```
-##  done
-```
-
-```
 ## creating space of type angular done
 ## adding data ... done
 ## building index ... done
 ## querying ... done
-```
-
-```
-## running tSNE using 2 cores:
-```
-
-```
-## 3000 cells, 33694 genes; normalizing ...
-```
-
-```
-## Using plain model
-```
-
-```
-## Winsorizing ...
-```
-
-```
-## log scale ...
-```
-
-```
-## done.
-```
-
-```
-## calculating variance fit ...
-```
-
-```
-##  using gam
-```
-
-```
-## 168 overdispersed genes ... 168
-```
-
-```
-## persisting ...
-```
-
-```
-## done.
-```
-
-```
-## running PCA using 2000 OD genes .
-```
-
-```
-## .
-## .
-## .
-```
-
-```
-##  done
-```
-
-```
 ## creating space of type angular done
 ## adding data ... done
 ## building index ... done
 ## querying ... done
-```
-
-```
-## running tSNE using 2 cores:
 ```
 
 Now align the datasets:
@@ -336,45 +44,6 @@ con <- Conos$new(panel.preprocessed, n.cores=2)
 con$buildGraph(k=15, k.self=5, space='PCA', ncomps=30)
 ```
 
-```
-## found 0 out of 6 cached PCA space pairs ...
-```
-
-```
-## running 6 additional PCA space pairs
-```
-
-```
-##  done
-```
-
-```
-## inter-sample links using mNN
-```
-
-```
-##  done
-```
-
-```
-## local pairs
-```
-
-```
-##  done
-```
-
-```
-## building graph .
-```
-
-```
-## .
-```
-
-```
-## done
-```
 
 
 Next find the clusters, and create an embedding:
@@ -386,63 +55,15 @@ con$embedGraph(method="UMAP")
 ```
 
 ```
-## Convert graph to adjacency list...
-```
-
-```
-## Done
-```
-
-```
-## Estimate nearest neighbors and commute times...
-```
-
-```
-## Estimating hitting distances: 23:20:29.
+## Estimating hitting distances: 00:51:19.
 ## Done.
-## Estimating commute distances: 23:21:01.
-## Hashing adjacency list: 23:21:01.
+## Estimating commute distances: 00:51:49.
+## Hashing adjacency list: 00:51:49.
 ## Done.
-## Estimating distances: 23:21:02.
+## Estimating distances: 00:51:50.
 ## Done
 ## Done.
-## All done!: 23:21:07.
-```
-
-```
-## Done
-```
-
-```
-## Estimate UMAP embedding...
-```
-
-```
-## 23:21:08 UMAP embedding parameters a = 0.0267 b = 0.7906
-```
-
-```
-## 23:21:08 Read 12000 rows and found 1 numeric columns
-```
-
-```
-## 23:21:08 Commencing smooth kNN distance calibration using 2 threads
-```
-
-```
-## 23:21:09 Initializing from normalized Laplacian + noise
-```
-
-```
-## 23:21:09 Commencing optimization for 1000 epochs, with 332022 positive edges using 2 threads
-```
-
-```
-## 23:21:27 Optimization finished
-```
-
-```
-## Done
+## All done!: 00:51:57.
 ```
 
 Now prepare the metadata (which can be any type of clustering of all the cells):
@@ -461,47 +82,6 @@ Save data (set `exchange_dir` to your path):
 exchange_dir <- "."
 hdf5file = "example.h5"
 saveConosForScanPy(con, output.path=exchange_dir, hdf5_filename=hdf5file, verbose=TRUE)
-```
-
-```
-## Merge raw count matrices...	
-```
-
-```
-## Done.
-```
-
-```
-## Save the embedding...		
-```
-
-```
-## Done.
-```
-
-```
-## Save graph matrices...		
-```
-
-```
-## Done.
-```
-
-```
-## Write data to disk...		
-```
-
-```
-## You created a large dataset with compression and chunking.
-## The chunk size is equal to the dataset dimensions.
-## If you want to read subsets of the dataset, you should testsmaller chunk sizes to improve read times.
-## You created a large dataset with compression and chunking.
-## The chunk size is equal to the dataset dimensions.
-## If you want to read subsets of the dataset, you should testsmaller chunk sizes to improve read times.
-```
-
-```
-## All Done!
 ```
 
 Users can then access the data saved to the HDF5 file, e.g. to access metadata, run:
@@ -553,7 +133,6 @@ All possible fields included in the output HDF5 file are:
 
 
 In order to read in the `dcGMatrix` again, simply use the `Matrix` package as follows:
-
 
 
 ```r

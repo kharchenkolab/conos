@@ -30,12 +30,12 @@ cellannot <- find.package('conos') %>% file.path('extdata', 'cellannot.txt') %>%
 
 Then we can preprocess the samples with [pagoda2](https://github.com/kharchenkolab/pagoda2) and perform alignment:
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 panel.preprocessed <- lapply(panel, basicP2proc, n.cores=4, min.cells.per.gene=0, 
                              n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
 ```
 
-```{r, fig.width=6, fig.height=6}
+```{r, message=FALSE, warning=FALSE, fig.width=6, fig.height=6}
 con <- Conos$new(panel.preprocessed, n.cores=4)
 con$buildGraph(k=20, k.self=5, space='PCA', ncomps=30)
 con$embedGraph()
@@ -50,7 +50,7 @@ con$plotGraph(groups=cellannot, alpha=0.1, size=0.2)
 
 In this dataset our samples are grouped by tissue (BM vs CB), so we can color by this factor:
 
-```{r, fig.width=6, fig.height=6}
+```{r, message=FALSE, warning=FALSE, fig.width=6, fig.height=6}
 tissue_per_cb <- con$getDatasetPerCell() %>% substr(7, 8) %>% 
   setNames(names(con$getDatasetPerCell()))
 
@@ -65,7 +65,7 @@ force a more aggressive alignment.
 
 Let's first define the function `plotConosSummary` to show changes in the Conos graph:
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 plotConosSummary <- function(con, cell.type.annot, tissue.annot, size=0.2, alpha=0.1, legend.pos=c(1, 0)) {
   cowplot::plot_grid(
     con$plotGraph(color.by='sample', alpha=alpha, size=size, mark.groups=FALSE, 
@@ -78,7 +78,7 @@ plotConosSummary <- function(con, cell.type.annot, tissue.annot, size=0.2, alpha
 }
 ```
 
-```{r, fig.width=18, fig.height=6, warning=FALSE}
+```{r, fig.width=18, fig.height=6, message=FALSE, warning=FALSE}
 plotConosSummary(con, cellannot, tissue_per_cb)
 ```
 
@@ -91,36 +91,36 @@ possible neighbors to these distant cells and simultaneously tries to hold numbe
 the dense regions on the same level. This can be done through `alignment.strength` parameter,
 which can be varied in [0; 1] range (default: 0).
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 con$buildGraph(k=20, k.self=5, space='PCA', ncomps=30, alignment.strength=0.3)
 con$embedGraph()
 ```
 
 
-```{r, fig.width=18, fig.height=6, warning=FALSE}
+```{r, fig.width=18, fig.height=6, warning=FALSE, message=FALSE}
 plotConosSummary(con, cellannot, tissue_per_cb)
 ```
 
 Though, be aware that larger values of `alignment.strength` lead to worse cluster separation:
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 con$buildGraph(k=20, k.self=5, space='PCA', ncomps=30, alignment.strength=0.6)
 con$embedGraph()
 ```
 
 
-```{r, fig.width=18, fig.height=6, warning=FALSE}
+```{r, fig.width=18, fig.height=6, warning=FALSE, message=FALSE}
 plotConosSummary(con, cellannot, tissue_per_cb)
 ```
 
 And the most extreme case actually "aligns" all clusters and datasets together:
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 con$buildGraph(k=20, k.self=5, space='PCA', ncomps=30, alignment.strength=1.0)
 con$embedGraph()
 ```
 
-```{r, fig.width=18, fig.height=6, warning=FALSE}
+```{r, fig.width=18, fig.height=6, message=FALSE, warning=FALSE}
 plotConosSummary(con, cellannot, tissue_per_cb)
 ```
 
@@ -136,12 +136,12 @@ to `balancing.factor.per.cell`. Please keep in mind that downweighting of within
 edges doesn't help if there are no between-tissue edges. So it's recommended to use the
 `same.factor.downweight` parameter together with `alignment.strength`.
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 con$buildGraph(k=20, k.self=5, space='PCA', ncomps=30, same.factor.downweight=0.1, 
                balancing.factor.per.cell=tissue_per_cb, alignment.strength=0.3)
 con$embedGraph()
 ```
 
-```{r, fig.width=18, fig.height=6, warning=FALSE}
+```{r, fig.width=18, fig.height=6, message=FALSE, warning=FALSE}
 plotConosSummary(con, cellannot, tissue_per_cb)
 ```

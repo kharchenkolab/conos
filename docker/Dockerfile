@@ -41,5 +41,4 @@ RUN R -e "install.packages('pagoda2',dependencies=TRUE, repos='http://cran.rstud
 
 RUN R -e "install.packages('conosPanel',dependencies=TRUE, repos='https://kharchenkolab.github.io/drat/', type='source')"
 
-
 RUN R -e 'devtools::install_github("kharchenkolab/conos")'

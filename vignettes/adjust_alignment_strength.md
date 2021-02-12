@@ -1,14 +1,4 @@
----
-title: "Adjustment of Alignment Strength with Conos"
-output: 
-  rmarkdown::html_vignette:
-    toc: true
-vignette: >
-  %\VignetteIndexEntry{"Adjustment of Alignment Strength with conos"}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
----
-
+# Adjustment of Alignment Strength with Conos
 
 This tutorial uses the same data as the main [Walkthrough](https://github.com/kharchenkolab/conos/blob/master/vignettes/walkthrough.md) to demonstrate different options 
 for forcing alignment. It can be especially useful if the samples are grouped by some external 
@@ -38,263 +28,22 @@ panel.preprocessed <- lapply(panel, basicP2proc, n.cores=4, min.cells.per.gene=0
 ```
 
 ```
-## 3000 cells, 33694 genes; normalizing ...
-```
-
-```
-## Using plain model
-```
-
-```
-## Winsorizing ...
-```
-
-```
-## log scale ...
-```
-
-```
-## done.
-```
-
-```
-## calculating variance fit ...
-```
-
-```
-##  using gam
-```
-
-```
-## 172 overdispersed genes ... 172
-```
-
-```
-## persisting ...
-```
-
-```
-## done.
-```
-
-```
-## running PCA using 2000 OD genes .
-```
-
-```
-## .
-## .
-## .
-```
-
-```
-##  done
-```
-
-```
 ## creating space of type angular done
 ## adding data ... done
 ## building index ... done
 ## querying ... done
-```
-
-```
-## running tSNE using 4 cores:
-```
-
-```
-## 3000 cells, 33694 genes; normalizing ...
-```
-
-```
-## Using plain model
-```
-
-```
-## Winsorizing ...
-```
-
-```
-## log scale ...
-```
-
-```
-## done.
-```
-
-```
-## calculating variance fit ...
-```
-
-```
-##  using gam
-```
-
-```
-## 159 overdispersed genes ... 159
-```
-
-```
-## persisting ...
-```
-
-```
-## done.
-```
-
-```
-## running PCA using 2000 OD genes .
-```
-
-```
-## .
-## .
-## .
-```
-
-```
-##  done
-```
-
-```
 ## creating space of type angular done
 ## adding data ... done
 ## building index ... done
 ## querying ... done
-```
-
-```
-## running tSNE using 4 cores:
-```
-
-```
-## 3000 cells, 33694 genes; normalizing ...
-```
-
-```
-## Using plain model
-```
-
-```
-## Winsorizing ...
-```
-
-```
-## log scale ...
-```
-
-```
-## done.
-```
-
-```
-## calculating variance fit ...
-```
-
-```
-##  using gam
-```
-
-```
-## 251 overdispersed genes ... 251
-```
-
-```
-## persisting ...
-```
-
-```
-## done.
-```
-
-```
-## running PCA using 2000 OD genes .
-```
-
-```
-## .
-## .
-## .
-```
-
-```
-##  done
-```
-
-```
 ## creating space of type angular done
 ## adding data ... done
 ## building index ... done
 ## querying ... done
-```
-
-```
-## running tSNE using 4 cores:
-```
-
-```
-## 3000 cells, 33694 genes; normalizing ...
-```
-
-```
-## Using plain model
-```
-
-```
-## Winsorizing ...
-```
-
-```
-## log scale ...
-```
-
-```
-## done.
-```
-
-```
-## calculating variance fit ...
-```
-
-```
-##  using gam
-```
-
-```
-## 168 overdispersed genes ... 168
-```
-
-```
-## persisting ...
-```
-
-```
-## done.
-```
-
-```
-## running PCA using 2000 OD genes .
-```
-
-```
-## .
-## .
-## .
-```
-
-```
-##  done
-```
-
-```
 ## creating space of type angular done
 ## adding data ... done
 ## building index ... done
 ## querying ... done
-```
-
-```
-## running tSNE using 4 cores:
 ```
 
 
@@ -303,55 +52,10 @@ con <- Conos$new(panel.preprocessed, n.cores=4)
 con$buildGraph(k=20, k.self=5, space='PCA', ncomps=30)
 ```
 
-```
-## found 0 out of 6 cached PCA space pairs ...
-```
-
-```
-## running 6 additional PCA space pairs
-```
-
-```
-##  done
-```
-
-```
-## inter-sample links using mNN
-```
-
-```
-##  done
-```
-
-```
-## local pairs
-```
-
-```
-##  done
-```
-
-```
-## building graph .
-```
-
-```
-## .
-```
-
-```
-## done
-```
 
 ```r
 con$embedGraph()
-```
 
-```
-## Estimating embeddings.
-```
-
-```r
 con$plotGraph(color.by='sample', alpha=0.1, size=0.2, mark.groups=FALSE, 
               show.legend=TRUE, legend.pos=c(1, 0))
 ```
@@ -422,52 +126,11 @@ con$buildGraph(k=20, k.self=5, space='PCA', ncomps=30, alignment.strength=0.3)
 ```
 
 ```
-## found 6 out of 6 cached PCA space pairs ...
-```
-
-```
-##  done
-```
-
-```
-## inter-sample links using mNN
-```
-
-```
-##  done
-```
-
-```
-## local pairs
-```
-
-```
-##  done
-```
-
-```
-## building graph .
-```
-
-```
 ## .
-```
-
-```
-## done
 ```
 
 ```r
 con$embedGraph()
-```
-
-```
-## Warning in con$embedGraph(): Already created an embedding: largeVis.
-## Overwriting.
-```
-
-```
-## Estimating embeddings.
 ```
 
 
@@ -486,52 +149,11 @@ con$buildGraph(k=20, k.self=5, space='PCA', ncomps=30, alignment.strength=0.6)
 ```
 
 ```
-## found 6 out of 6 cached PCA space pairs ...
-```
-
-```
-##  done
-```
-
-```
-## inter-sample links using mNN
-```
-
-```
-##  done
-```
-
-```
-## local pairs
-```
-
-```
-##  done
-```
-
-```
-## building graph .
-```
-
-```
 ## .
-```
-
-```
-## done
 ```
 
 ```r
 con$embedGraph()
-```
-
-```
-## Warning in con$embedGraph(): Already created an embedding: largeVis.
-## Overwriting.
-```
-
-```
-## Estimating embeddings.
 ```
 
 
@@ -550,52 +172,11 @@ con$buildGraph(k=20, k.self=5, space='PCA', ncomps=30, alignment.strength=1.0)
 ```
 
 ```
-## found 6 out of 6 cached PCA space pairs ...
-```
-
-```
-##  done
-```
-
-```
-## inter-sample links using mNN
-```
-
-```
-##  done
-```
-
-```
-## local pairs
-```
-
-```
-##  done
-```
-
-```
-## building graph .
-```
-
-```
 ## .
-```
-
-```
-## done
 ```
 
 ```r
 con$embedGraph()
-```
-
-```
-## Warning in con$embedGraph(): Already created an embedding: largeVis.
-## Overwriting.
-```
-
-```
-## Estimating embeddings.
 ```
 
 
@@ -624,60 +205,11 @@ con$buildGraph(k=20, k.self=5, space='PCA', ncomps=30, same.factor.downweight=0.
 ```
 
 ```
-## found 6 out of 6 cached PCA space pairs ...
-```
-
-```
-##  done
-```
-
-```
-## inter-sample links using mNN
-```
-
-```
-##  done
-```
-
-```
-## local pairs
-```
-
-```
-##  done
-```
-
-```
-## building graph .
-```
-
-```
 ## .
-```
-
-```
-## done
-```
-
-```
-## balancing edge weights
-```
-
-```
-## done
 ```
 
 ```r
 con$embedGraph()
-```
-
-```
-## Warning in con$embedGraph(): Already created an embedding: largeVis.
-## Overwriting.
-```
-
-```
-## Estimating embeddings.
 ```
 
 
