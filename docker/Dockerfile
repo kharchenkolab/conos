@@ -1,4 +1,10 @@
-FROM rocker/tidyverse:4.0.0
+FROM rocker/tidyverse:4.0.1
+
+LABEL authors="Viktor Petukhov <viktor.s.petuhov@ya.ru>, Evan Biederstedt <evan.biederstedt@gmail.com>" \
+    version.image="1.4.0" \
+    version.pagoda2="1.4.0" \
+    description="tidyverse image R 4.0.1 to run pagoda2 with Rstudio"
+
 
 RUN apt-get update --yes && apt-get install --no-install-recommends --yes \
   build-essential \
@@ -22,11 +28,18 @@ RUN apt-get update --yes && apt-get install --no-install-recommends --yes \
   libz-dev \
   libhdf5-dev
 
-RUN \
-  R -e 'chooseCRANmirror(ind=52); install.packages(c("Rcpp", "RcppEigen", "urltools", "Rtsne","BiocManager", "igraph"))' && \
-  R -e 'install.packages("Seurat")'
 
-RUN \
-  R -e 'devtools::install_github("kharchenkolab/pagoda2")' && \
-  R -e 'BiocManager::install(c("GO.db", "org.Hs.eg.db","org.Mm.eg.db", "pcaMethods","DESeq2","BiocGenerics"), suppressUpdates=TRUE);' && \
-  R -e 'devtools::install_github("kharchenkolab/conos")'
+RUN R -e 'chooseCRANmirror(ind=52); install.packages("BiocManager")'
+RUN R -e 'BiocManager::install(c("AnnotationDbi", "BiocGenerics", "GO.db", "pcaMethods", "org.Dr.eg.db", "org.Hs.eg.db", "org.Mm.eg.db", "scde", "BiocParallel"))'
+
+RUN R -e "install.packages('Seurat',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+
+
+RUN R -e "install.packages('p2data',dependencies=TRUE, repos='https://kharchenkolab.github.io/drat/', type='source')"
+
+RUN R -e "install.packages('pagoda2',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+
+RUN R -e "install.packages('conosPanel',dependencies=TRUE, repos='https://kharchenkolab.github.io/drat/', type='source')"
+
+
+RUN R -e 'devtools::install_github("kharchenkolab/conos")'
