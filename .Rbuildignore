@@ -10,3 +10,4 @@ CHANGELOG.md
 ^vignettes\figure$
 docker
 CONTRIBUTING.md
+data-raw

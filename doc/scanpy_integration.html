@@ -141,148 +141,49 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(pagoda2)</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>panel.preprocessed <span class="ot">&lt;-</span> <span class="fu">lapply</span>(panel, basicP2proc, <span class="at">n.cores=</span><span class="dv">2</span>, <span class="at">min.cells.per.gene=</span><span class="dv">0</span>, <span class="at">n.odgenes=</span><span class="fl">2e3</span>, </span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>                             <span class="at">get.largevis=</span><span class="cn">FALSE</span>, <span class="at">make.geneknn=</span><span class="cn">FALSE</span>)</span></code></pre></div>
-<pre><code>## 3000 cells, 33694 genes; normalizing ...</code></pre>
-<pre><code>## Using plain model</code></pre>
-<pre><code>## Winsorizing ...</code></pre>
-<pre><code>## log scale ...</code></pre>
-<pre><code>## done.</code></pre>
-<pre><code>## calculating variance fit ...</code></pre>
-<pre><code>##  using gam</code></pre>
-<pre><code>## 172 overdispersed genes ... 172</code></pre>
-<pre><code>## persisting ...</code></pre>
-<pre><code>## done.</code></pre>
-<pre><code>## running PCA using 2000 OD genes .</code></pre>
-<pre><code>## .
-## .
-## .</code></pre>
-<pre><code>##  done</code></pre>
 <pre><code>## creating space of type angular done
 ## adding data ... done
 ## building index ... done
-## querying ... done</code></pre>
-<pre><code>## running tSNE using 2 cores:</code></pre>
-<pre><code>## 3000 cells, 33694 genes; normalizing ...</code></pre>
-<pre><code>## Using plain model</code></pre>
-<pre><code>## Winsorizing ...</code></pre>
-<pre><code>## log scale ...</code></pre>
-<pre><code>## done.</code></pre>
-<pre><code>## calculating variance fit ...</code></pre>
-<pre><code>##  using gam</code></pre>
-<pre><code>## 159 overdispersed genes ... 159</code></pre>
-<pre><code>## persisting ...</code></pre>
-<pre><code>## done.</code></pre>
-<pre><code>## running PCA using 2000 OD genes .</code></pre>
-<pre><code>## .
-## .
-## .</code></pre>
-<pre><code>##  done</code></pre>
-<pre><code>## creating space of type angular done
+## querying ... done
+## creating space of type angular done
+## adding data ... done
+## building index ... done
+## querying ... done
+## creating space of type angular done
+## adding data ... done
+## building index ... done
+## querying ... done
+## creating space of type angular done
 ## adding data ... done
 ## building index ... done
 ## querying ... done</code></pre>
-<pre><code>## running tSNE using 2 cores:</code></pre>
-<pre><code>## 3000 cells, 33694 genes; normalizing ...</code></pre>
-<pre><code>## Using plain model</code></pre>
-<pre><code>## Winsorizing ...</code></pre>
-<pre><code>## log scale ...</code></pre>
-<pre><code>## done.</code></pre>
-<pre><code>## calculating variance fit ...</code></pre>
-<pre><code>##  using gam</code></pre>
-<pre><code>## 251 overdispersed genes ... 251</code></pre>
-<pre><code>## persisting ...</code></pre>
-<pre><code>## done.</code></pre>
-<pre><code>## running PCA using 2000 OD genes .</code></pre>
-<pre><code>## .
-## .
-## .</code></pre>
-<pre><code>##  done</code></pre>
-<pre><code>## creating space of type angular done
-## adding data ... done
-## building index ... done
-## querying ... done</code></pre>
-<pre><code>## running tSNE using 2 cores:</code></pre>
-<pre><code>## 3000 cells, 33694 genes; normalizing ...</code></pre>
-<pre><code>## Using plain model</code></pre>
-<pre><code>## Winsorizing ...</code></pre>
-<pre><code>## log scale ...</code></pre>
-<pre><code>## done.</code></pre>
-<pre><code>## calculating variance fit ...</code></pre>
-<pre><code>##  using gam</code></pre>
-<pre><code>## 168 overdispersed genes ... 168</code></pre>
-<pre><code>## persisting ...</code></pre>
-<pre><code>## done.</code></pre>
-<pre><code>## running PCA using 2000 OD genes .</code></pre>
-<pre><code>## .
-## .
-## .</code></pre>
-<pre><code>##  done</code></pre>
-<pre><code>## creating space of type angular done
-## adding data ... done
-## building index ... done
-## querying ... done</code></pre>
-<pre><code>## running tSNE using 2 cores:</code></pre>
 <p>Now align the datasets:</p>
-<div class="sourceCode" id="cb63"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>con <span class="ot">&lt;-</span> Conos<span class="sc">$</span><span class="fu">new</span>(panel.preprocessed, <span class="at">n.cores=</span><span class="dv">2</span>)</span>
-<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">buildGraph</span>(<span class="at">k=</span><span class="dv">15</span>, <span class="at">k.self=</span><span class="dv">5</span>, <span class="at">space=</span><span class="st">&#39;PCA&#39;</span>, <span class="at">ncomps=</span><span class="dv">30</span>)</span></code></pre></div>
-<pre><code>## found 0 out of 6 cached PCA space pairs ...</code></pre>
-<pre><code>## running 6 additional PCA space pairs</code></pre>
-<pre><code>##  done</code></pre>
-<pre><code>## inter-sample links using mNN</code></pre>
-<pre><code>##  done</code></pre>
-<pre><code>## local pairs</code></pre>
-<pre><code>##  done</code></pre>
-<pre><code>## building graph .</code></pre>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>con <span class="ot">&lt;-</span> Conos<span class="sc">$</span><span class="fu">new</span>(panel.preprocessed, <span class="at">n.cores=</span><span class="dv">2</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">buildGraph</span>(<span class="at">k=</span><span class="dv">15</span>, <span class="at">k.self=</span><span class="dv">5</span>, <span class="at">space=</span><span class="st">&#39;PCA&#39;</span>, <span class="at">ncomps=</span><span class="dv">30</span>)</span></code></pre></div>
 <pre><code>## .</code></pre>
-<pre><code>## done</code></pre>
 <p>Next find the clusters, and create an embedding:</p>
-<div class="sourceCode" id="cb74"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">findCommunities</span>()</span>
-<span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">embedGraph</span>(<span class="at">method=</span><span class="st">&quot;UMAP&quot;</span>)</span></code></pre></div>
-<pre><code>## Convert graph to adjacency list...</code></pre>
-<pre><code>## Done</code></pre>
-<pre><code>## Estimate nearest neighbors and commute times...</code></pre>
-<pre><code>## Estimating hitting distances: 22:52:27.
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">findCommunities</span>()</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">embedGraph</span>(<span class="at">method=</span><span class="st">&quot;UMAP&quot;</span>)</span></code></pre></div>
+<pre><code>## Estimating hitting distances: 17:39:07.
 ## Done.
-## Estimating commute distances: 22:52:53.
-## Hashing adjacency list: 22:52:53.
+## Estimating commute distances: 17:39:34.
+## Hashing adjacency list: 17:39:34.
 ## Done.
-## Estimating distances: 22:52:54.
+## Estimating distances: 17:39:35.
 ## Done
 ## Done.
-## All done!: 22:52:58.</code></pre>
-<pre><code>## Done</code></pre>
-<pre><code>## Estimate UMAP embedding...</code></pre>
-<pre><code>## 22:52:58 UMAP embedding parameters a = 0.0267 b = 0.7906</code></pre>
-<pre><code>## 22:52:58 Read 12000 rows and found 1 numeric columns</code></pre>
-<pre><code>## 22:52:58 Commencing smooth kNN distance calibration using 2 threads</code></pre>
-<pre><code>## 22:52:59 Initializing from normalized Laplacian + noise</code></pre>
-<pre><code>## 22:53:00 Commencing optimization for 1000 epochs, with 332074 positive edges using 2 threads</code></pre>
-<pre><code>## 22:53:16 Optimization finished</code></pre>
-<pre><code>## Done</code></pre>
+## All done!: 17:39:39.</code></pre>
 <p>Now prepare the metadata (which can be any type of clustering of all the cells):</p>
-<div class="sourceCode" id="cb88"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb88-1"><a href="#cb88-1" aria-hidden="true" tabindex="-1"></a>metadata <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">Cluster=</span>con<span class="sc">$</span>clusters<span class="sc">$</span>leiden<span class="sc">$</span>groups)</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>metadata <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">Cluster=</span>con<span class="sc">$</span>clusters<span class="sc">$</span>leiden<span class="sc">$</span>groups)</span></code></pre></div>
 <p>Save data (set <code>exchange_dir</code> to your path):</p>
-<div class="sourceCode" id="cb89"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a><span class="do">## use current directory</span></span>
-<span id="cb89-2"><a href="#cb89-2" aria-hidden="true" tabindex="-1"></a>exchange_dir <span class="ot">&lt;-</span> <span class="st">&quot;.&quot;</span></span>
-<span id="cb89-3"><a href="#cb89-3" aria-hidden="true" tabindex="-1"></a>hdf5file <span class="ot">=</span> <span class="st">&quot;example.h5&quot;</span></span>
-<span id="cb89-4"><a href="#cb89-4" aria-hidden="true" tabindex="-1"></a><span class="fu">saveConosForScanPy</span>(con, <span class="at">output.path=</span>exchange_dir, <span class="at">hdf5_filename=</span>hdf5file, <span class="at">verbose=</span><span class="cn">TRUE</span>)</span></code></pre></div>
-<pre><code>## Merge raw count matrices...  </code></pre>
-<pre><code>## Done.</code></pre>
-<pre><code>## Save the embedding...        </code></pre>
-<pre><code>## Done.</code></pre>
-<pre><code>## Save graph matrices...       </code></pre>
-<pre><code>## Done.</code></pre>
-<pre><code>## Write data to disk...        </code></pre>
-<pre><code>## You created a large dataset with compression and chunking.
-## The chunk size is equal to the dataset dimensions.
-## If you want to read subsets of the dataset, you should testsmaller chunk sizes to improve read times.
-## You created a large dataset with compression and chunking.
-## The chunk size is equal to the dataset dimensions.
-## If you want to read subsets of the dataset, you should testsmaller chunk sizes to improve read times.</code></pre>
-<pre><code>## All Done!</code></pre>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="do">## use current directory</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>exchange_dir <span class="ot">&lt;-</span> <span class="st">&quot;.&quot;</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>hdf5file <span class="ot">=</span> <span class="st">&quot;example.h5&quot;</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="fu">saveConosForScanPy</span>(con, <span class="at">output.path=</span>exchange_dir, <span class="at">hdf5_filename=</span>hdf5file, <span class="at">verbose=</span><span class="cn">TRUE</span>)</span></code></pre></div>
 <p>Users can then access the data saved to the HDF5 file, e.g. to access metadata, run:</p>
-<div class="sourceCode" id="cb99"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb99-1"><a href="#cb99-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rhdf5)</span>
-<span id="cb99-2"><a href="#cb99-2" aria-hidden="true" tabindex="-1"></a>metadata <span class="ot">=</span> <span class="fu">h5read</span>(<span class="fu">paste0</span>(exchange_dir, <span class="st">&quot;/example.h5&quot;</span>), <span class="st">&#39;metadata/metadata.df&#39;</span>)</span>
-<span id="cb99-3"><a href="#cb99-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(metadata, <span class="dv">4</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rhdf5)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>metadata <span class="ot">=</span> <span class="fu">h5read</span>(<span class="fu">paste0</span>(exchange_dir, <span class="st">&quot;/example.h5&quot;</span>), <span class="st">&#39;metadata/metadata.df&#39;</span>)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(metadata, <span class="dv">4</span>)</span></code></pre></div>
 <pre><code>##                                 CellId           Dataset
 ## 1 MantonBM1_HiSeq_1-TCTATTGGTCTCTCGT-1 MantonBM1_HiSeq_1
 ## 2 MantonBM1_HiSeq_1-GAATAAGTCACGCATA-1 MantonBM1_HiSeq_1
@@ -325,13 +226,13 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </ul></li>
 </ul>
 <p>In order to read in the <code>dcGMatrix</code> again, simply use the <code>Matrix</code> package as follows:</p>
-<div class="sourceCode" id="cb101"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb101-1"><a href="#cb101-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rhdf5)</span>
-<span id="cb101-2"><a href="#cb101-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(Matrix)</span>
-<span id="cb101-3"><a href="#cb101-3" aria-hidden="true" tabindex="-1"></a>rawcountMat <span class="ot">=</span> <span class="fu">h5read</span>(<span class="fu">paste0</span>(exchange_dir, <span class="st">&quot;/example.h5&quot;</span>), <span class="st">&#39;raw_count_matrix&#39;</span>)</span>
-<span id="cb101-4"><a href="#cb101-4" aria-hidden="true" tabindex="-1"></a>raw_count_matrix <span class="ot">=</span> <span class="fu">sparseMatrix</span>(<span class="at">x =</span> <span class="fu">as.numeric</span>(rawcountMat<span class="sc">$</span>data),  </span>
-<span id="cb101-5"><a href="#cb101-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">dims =</span> <span class="fu">as.numeric</span>(<span class="fu">c</span>(rawcountMat<span class="sc">$</span>shape[<span class="dv">1</span>], rawcountMat<span class="sc">$</span>shape[<span class="dv">2</span>])), </span>
-<span id="cb101-6"><a href="#cb101-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">p =</span> <span class="fu">as.numeric</span>(rawcountMat<span class="sc">$</span>indptr), </span>
-<span id="cb101-7"><a href="#cb101-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">i =</span> rawcountMat<span class="sc">$</span>indices, <span class="at">index1=</span><span class="cn">FALSE</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rhdf5)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(Matrix)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>rawcountMat <span class="ot">=</span> <span class="fu">h5read</span>(<span class="fu">paste0</span>(exchange_dir, <span class="st">&quot;/example.h5&quot;</span>), <span class="st">&#39;raw_count_matrix&#39;</span>)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>raw_count_matrix <span class="ot">=</span> <span class="fu">sparseMatrix</span>(<span class="at">x =</span> <span class="fu">as.numeric</span>(rawcountMat<span class="sc">$</span>data),  </span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">dims =</span> <span class="fu">as.numeric</span>(<span class="fu">c</span>(rawcountMat<span class="sc">$</span>shape[<span class="dv">1</span>], rawcountMat<span class="sc">$</span>shape[<span class="dv">2</span>])), </span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">p =</span> <span class="fu">as.numeric</span>(rawcountMat<span class="sc">$</span>indptr), </span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">i =</span> rawcountMat<span class="sc">$</span>indices, <span class="at">index1=</span><span class="cn">FALSE</span>)</span></code></pre></div>
 <p><strong>Note:</strong> Please set <code>index1=FALSE</code> as the index vectors are 0-based. For more details, see the documentation for <a href="https://www.rdocumentation.org/packages/Matrix/versions/1.2-18/topics/sparseMatrix">Matrix::sparseMatrix()</a></p>
 
 

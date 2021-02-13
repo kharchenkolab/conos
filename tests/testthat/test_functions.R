@@ -6,14 +6,22 @@ library(conos)
 library(dplyr)
 library(pagoda2)
 
-## load the data
-panel <- conosPanel::panel
+## warnings due to small panel
 
-## pre-processing
-panel.preprocessed <- lapply(panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+options(warn=-1)
 
-con <- Conos$new(panel.preprocessed, n.cores=1)
+con <- Conos$new(small_panel.preprocessed, n.cores=1)
 
 test_that("check Conos object, samples", {
-	expect_equal(length(con$samples), 4)
+	expect_equal(length(con$samples), 2)
+})
+
+con$buildGraph(ncomps=25)
+con$findCommunities(method = igraph::walktrap.community, steps=7)
+con$embedGraph(alpha=0.001, sgd_batched=1e8)  
+
+
+test_that("check Conos object, number of clusters", {
+	expect_equal(length(con$clusters$walktrap$groups), 59)
+	expect_equal(length(con$clusters$walktrap$result), 2)
 })

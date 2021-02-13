@@ -1,6 +1,17 @@
 # Convert Conos Object to ScanPy
 
-First load the conos library, and the R package `conosPanel` for the example data `panel`:
+## Install Auxilliary Data Packages
+
+First install the auxilliary packages for pagoda2 and conos, [p2data](https://github.com/kharchenkolab/p2data) and [conosPanel](https://github.com/kharchenkolab/conosPanel):
+
+
+```r
+install.packages('p2data', repos='https://kharchenkolab.github.io/drat/', type='source')
+install.packages('conosPanel', repos='https://kharchenkolab.github.io/drat/', type='source')
+```
+
+
+Now load the conos library, and the R package `conosPanel` for the example data `panel`:
 
 
 ```r
@@ -44,6 +55,9 @@ con <- Conos$new(panel.preprocessed, n.cores=2)
 con$buildGraph(k=15, k.self=5, space='PCA', ncomps=30)
 ```
 
+```
+## .
+```
 
 
 Next find the clusters, and create an embedding:
@@ -55,15 +69,15 @@ con$embedGraph(method="UMAP")
 ```
 
 ```
-## Estimating hitting distances: 00:51:19.
+## Estimating hitting distances: 19:15:01.
 ## Done.
-## Estimating commute distances: 00:51:49.
-## Hashing adjacency list: 00:51:49.
+## Estimating commute distances: 19:15:41.
+## Hashing adjacency list: 19:15:41.
 ## Done.
-## Estimating distances: 00:51:50.
+## Estimating distances: 19:15:43.
 ## Done
 ## Done.
-## All done!: 00:51:57.
+## All done!: 19:15:50.
 ```
 
 Now prepare the metadata (which can be any type of clustering of all the cells):
@@ -133,6 +147,7 @@ All possible fields included in the output HDF5 file are:
 
 
 In order to read in the `dcGMatrix` again, simply use the `Matrix` package as follows:
+
 
 
 ```r

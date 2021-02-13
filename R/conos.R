@@ -108,7 +108,7 @@ commonOverdispersedGenes <- function(samples, n.odgenes, verbose) {
   od.genes <- sort(table(unlist(lapply(samples, getOverdispersedGenes, n.odgenes))),decreasing=TRUE)
   common.genes <- Reduce(intersect, lapply(samples, getGenes))
   if(length(common.genes)==0) { warning(paste("samples",paste(names(samples),collapse=' and '),'do not share any common genes!')) }
-  if(length(common.genes)<n.odgenes) { warning(paste("samples",paste(names(samples),collapse=' and '),'do not share enoguh common genes!')) }
+  if(length(common.genes)<n.odgenes) { warning(paste("samples",paste(names(samples),collapse=' and '),'do not share enough common genes!')) }
   od.genes <- od.genes[names(od.genes) %in% common.genes]
 
   if(verbose) message("using ",length(od.genes)," od genes\n")

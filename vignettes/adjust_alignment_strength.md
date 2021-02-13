@@ -4,6 +4,22 @@ This tutorial uses the same data as the main [Walkthrough](https://github.com/kh
 for forcing alignment. It can be especially useful if the samples are grouped by some external 
 condition (e.g. sequencing protocol or disease vs control).
 
+## Install Auxilliary Data Packages
+
+Please install the auxilliary packages for conos, [conosPanel](https://github.com/kharchenkolab/conosPanel):
+
+
+```r
+install.packages('conosPanel', repos='https://kharchenkolab.github.io/drat/', type='source')
+```
+
+Given we'll primarily use pagoda2 for this walkthrough, please install the auxilliary package [p2data](https://github.com/kharchenkolab/p2data):
+
+
+```r
+install.packages('p2data', repos='https://kharchenkolab.github.io/drat/', type='source')
+```
+
 ## Load and align data
 
 First, let's load the conos library and corresponding data:
@@ -52,6 +68,9 @@ con <- Conos$new(panel.preprocessed, n.cores=4)
 con$buildGraph(k=20, k.self=5, space='PCA', ncomps=30)
 ```
 
+```
+## .
+```
 
 ```r
 con$embedGraph()
@@ -60,13 +79,13 @@ con$plotGraph(color.by='sample', alpha=0.1, size=0.2, mark.groups=FALSE,
               show.legend=TRUE, legend.pos=c(1, 0))
 ```
 
-![plot of chunk unnamed-chunk-3](figure_adjust_alignment_strength/unnamed-chunk-3-1.png)
+![plot of chunk unnamed-chunk-5](figure_adjust_alignment_strength/unnamed-chunk-5-1.png)
 
 ```r
 con$plotGraph(groups=cellannot, alpha=0.1, size=0.2)
 ```
 
-![plot of chunk unnamed-chunk-3](figure_adjust_alignment_strength/unnamed-chunk-3-2.png)
+![plot of chunk unnamed-chunk-5](figure_adjust_alignment_strength/unnamed-chunk-5-2.png)
 
 ## Force alignment
 
@@ -81,7 +100,7 @@ con$plotGraph(groups=tissue_per_cb, alpha=0.1, size=0.2, mark.groups=FALSE,
               show.legend=TRUE, legend.pos=c(1, 0))
 ```
 
-![plot of chunk unnamed-chunk-4](figure_adjust_alignment_strength/unnamed-chunk-4-1.png)
+![plot of chunk unnamed-chunk-6](figure_adjust_alignment_strength/unnamed-chunk-6-1.png)
 
 So we now can see a clear separation. Indeed, it depends on the research question whether different 
 tissues must be aligned completely, or they should form close, but separate clusters. And
@@ -109,7 +128,7 @@ plotConosSummary <- function(con, cell.type.annot, tissue.annot, size=0.2, alpha
 plotConosSummary(con, cellannot, tissue_per_cb)
 ```
 
-![plot of chunk unnamed-chunk-6](figure_adjust_alignment_strength/unnamed-chunk-6-1.png)
+![plot of chunk unnamed-chunk-8](figure_adjust_alignment_strength/unnamed-chunk-8-1.png)
 
 
 ### Adjustment of the `alignment.strength` parameter
@@ -139,7 +158,7 @@ con$embedGraph()
 plotConosSummary(con, cellannot, tissue_per_cb)
 ```
 
-![plot of chunk unnamed-chunk-8](figure_adjust_alignment_strength/unnamed-chunk-8-1.png)
+![plot of chunk unnamed-chunk-10](figure_adjust_alignment_strength/unnamed-chunk-10-1.png)
 
 Though, be aware that larger values of `alignment.strength` lead to worse cluster separation:
 
@@ -162,7 +181,7 @@ con$embedGraph()
 plotConosSummary(con, cellannot, tissue_per_cb)
 ```
 
-![plot of chunk unnamed-chunk-10](figure_adjust_alignment_strength/unnamed-chunk-10-1.png)
+![plot of chunk unnamed-chunk-12](figure_adjust_alignment_strength/unnamed-chunk-12-1.png)
 
 And the most extreme case actually "aligns" all clusters and datasets together:
 
@@ -184,7 +203,7 @@ con$embedGraph()
 plotConosSummary(con, cellannot, tissue_per_cb)
 ```
 
-![plot of chunk unnamed-chunk-12](figure_adjust_alignment_strength/unnamed-chunk-12-1.png)
+![plot of chunk unnamed-chunk-14](figure_adjust_alignment_strength/unnamed-chunk-14-1.png)
 
 Still, this procedure isn't explicitly aware about conditions which cause differences in datasets.
 And sometimes the above procedure allows datasets to group together, even with the most "aggressive" alignment.
@@ -217,4 +236,4 @@ con$embedGraph()
 plotConosSummary(con, cellannot, tissue_per_cb)
 ```
 
-![plot of chunk unnamed-chunk-14](figure_adjust_alignment_strength/unnamed-chunk-14-1.png)
+![plot of chunk unnamed-chunk-16](figure_adjust_alignment_strength/unnamed-chunk-16-1.png)
