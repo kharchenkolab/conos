@@ -163,7 +163,7 @@ library(devtools)
 install_github("kharchenkolab/conosPanel")
 ```
 
-**Note:** If you are using [pagoda2](https://github.com/kharchenkolab/pagoda2), you should also install the auxilliary package `p2data`:
+**Note:** If you are using [pagoda2](https://github.com/kharchenkolab/pagoda2), you should also install the auxiliary package `p2data`:
 
 ```r
 install.packages('p2data', repos='https://kharchenkolab.github.io/drat/', type='source')
@@ -199,7 +199,7 @@ brew install openssl curl-openssl
 ```
 (You may need to run `brew uninstall curl` in order for `brew install curl-openssl` to be successful.)
 
-As of version 1.3.1, `conos` should sucessfully install on Mac OS. However, if there are issues, please refer to the following wiki page for further instructions on installing `conos` with Mac OS: [Installing conos for Mac OS](https://github.com/kharchenkolab/conos/wiki/Installing-conos-for-Mac-OS)
+As of version 1.3.1, `conos` should successfully install on Mac OS. However, if there are issues, please refer to the following wiki page for further instructions on installing `conos` with Mac OS: [Installing conos for Mac OS](https://github.com/kharchenkolab/conos/wiki/Installing-conos-for-Mac-OS)
 
 ### Running conos via Docker
 
