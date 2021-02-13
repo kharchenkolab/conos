@@ -1,4 +1,13 @@
-# Conos Walkthrough
+---
+title: "Conos Walkthrough"
+output: 
+  rmarkdown::html_vignette:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{"Conos Walkthrough"}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
 
 - [Loading the Data](#loading-the-data)
   * [Pre-processing with pagoda2](#pre-processing-with-pagoda2)
@@ -130,7 +139,7 @@ We use `lapply()` here as `panel` is a list with 4 elements (i.e. a panel of fou
 
 ```r
 library(pagoda2)
-panel.preprocessed <- lapply(panel, basicP2proc, n.cores=2, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+panel.preprocessed <- lapply(panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
 ```
 
 ```
@@ -507,19 +516,19 @@ and accuracy:
 > - **min.prob.lower:** minimal probability of hitting a neighbor, after which the random walk stops. Default: 1e-7.
 
 ```r
-con$embedGraph(method="UMAP", min.dist=0.01, spread=15, n.cores=2, min.prob.lower=1e-3)
+con$embedGraph(method="UMAP", min.dist=0.01, spread=15, n.cores=1, min.prob.lower=1e-3)
 ```
 
 ```
-## Estimating hitting distances: 19:23:54.
+## Estimating hitting distances: 18:40:28.
 ## Done.
-## Estimating commute distances: 19:24:00.
-## Hashing adjacency list: 19:24:00.
+## Estimating commute distances: 18:40:39.
+## Hashing adjacency list: 18:40:39.
 ## Done.
-## Estimating distances: 19:24:01.
+## Estimating distances: 18:40:41.
 ## Done
 ## Done.
-## All done!: 19:24:06.
+## All done!: 18:40:47.
 ```
 
 
@@ -624,7 +633,7 @@ new.label.info <- con$propagateLabels(labels = cellannot, verbose=TRUE)
 ```
 
 ```
-## Stop after 23 iterations. Norm: 0.0240649
+## Stop after 23 iterations. Norm: 0.0240648
 ## Min weight: 1.67017e-05, max weight: 0.367879, fading: (10, 0.1)
 ```
 
@@ -655,35 +664,35 @@ head(new.label.info$label.distribution)
 ```
 ##                                        T CD4-CD8-  progenitors      B cells
 ## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.000000e+00 0.000000e+00 0.000000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 2.537143e-06 3.334652e-09 8.607006e-11
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 2.537271e-06 3.334795e-09 8.607068e-11
 ## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.000000e+00 0.000000e+00 0.000000e+00
 ## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 0.000000e+00 0.000000e+00 0.000000e+00
 ## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.000000e+00 0.000000e+00 0.000000e+00
 ## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.000000e+00 0.000000e+00 0.000000e+00
 ##                                                NK    T cyto    monocytes
 ## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.0000000000 1.0000000 0.000000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 0.0003790047 0.9996182 6.742326e-14
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 0.0003790055 0.9996182 6.740966e-14
 ## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.0000000000 1.0000000 0.000000e+00
 ## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 1.0000000000 0.0000000 0.000000e+00
 ## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.0000000000 1.0000000 0.000000e+00
 ## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.0000000000 1.0000000 0.000000e+00
-##                                      monomyelocytes plasma cells  dying cells
-## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1   0.000000e+00 0.000000e+00 0.000000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1   4.608507e-08 2.171176e-11 1.738246e-07
-## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1   0.000000e+00 0.000000e+00 0.000000e+00
-## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1   0.000000e+00 0.000000e+00 0.000000e+00
-## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1   0.000000e+00 0.000000e+00 0.000000e+00
-## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1   0.000000e+00 0.000000e+00 0.000000e+00
+##                                      monomyelocytes plasma cells dying cells
+## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1   0.000000e+00 0.000000e+00  0.0000e+00
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1   4.607725e-08 2.171289e-11  1.7383e-07
+## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1   0.000000e+00 0.000000e+00  0.0000e+00
+## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1   0.000000e+00 0.000000e+00  0.0000e+00
+## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1   0.000000e+00 0.000000e+00  0.0000e+00
+## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1   0.000000e+00 0.000000e+00  0.0000e+00
 ##                                         erythroid          HSC          pDC
 ## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.000000e+00 0.000000e+00 0.000000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 5.069647e-10 1.127107e-10 1.092952e-12
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 5.069784e-10 1.127089e-10 1.092942e-12
 ## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.000000e+00 0.000000e+00 0.000000e+00
 ## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 0.000000e+00 0.000000e+00 0.000000e+00
 ## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.000000e+00 0.000000e+00 0.000000e+00
 ## MantonBM1_HiSeq_1-GATCGCGGTTGATTCG-1 0.000000e+00 0.000000e+00 0.000000e+00
 ##                                                DC
 ## MantonBM1_HiSeq_1-GGAACTTCACTGTCGG-1 0.000000e+00
-## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 1.865412e-14
+## MantonBM2_HiSeq_1-CTGATAGAGCGTTCCG-1 1.865348e-14
 ## MantonBM1_HiSeq_1-ACTGATGGTGGTGTAG-1 0.000000e+00
 ## MantonBM1_HiSeq_1-GGACATTTCCAAACTG-1 0.000000e+00
 ## MantonBM1_HiSeq_1-TCATTACAGACAAAGG-1 0.000000e+00
@@ -700,7 +709,7 @@ at the cluster cell markers:
 
 ```r
 new.annot <- new.label.info$labels
-de.info <- con$getDifferentialGenes(groups=new.annot, n.cores=2, append.auc=TRUE)
+de.info <- con$getDifferentialGenes(groups=new.annot, n.cores=1, append.auc=TRUE)
 ```
 
 ```
@@ -843,13 +852,13 @@ str(con$getClusterCountMatrices(), 1)
 
 ```
 ## List of 4
-##  $ MantonBM1_HiSeq_1: num [1:33694, 1:12] 0 0 0 1 0 0 0 0 38 5 ...
+##  $ MantonBM1_HiSeq_1: num [1:33694, 1:12] 0 0 0 1 0 0 0 0 44 5 ...
 ##   ..- attr(*, "dimnames")=List of 2
-##  $ MantonBM2_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 57 4 ...
+##  $ MantonBM2_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 66 4 ...
 ##   ..- attr(*, "dimnames")=List of 2
-##  $ MantonCB1_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 66 6 ...
+##  $ MantonCB1_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 77 6 ...
 ##   ..- attr(*, "dimnames")=List of 2
-##  $ MantonCB2_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 148 16 ...
+##  $ MantonCB2_HiSeq_1: num [1:33694, 1:12] 0 0 0 0 0 0 0 0 153 18 ...
 ##   ..- attr(*, "dimnames")=List of 2
 ```
 
@@ -875,7 +884,332 @@ groups:
 
 
 ```r
-de.info <- getPerCellTypeDE(con, groups=as.factor(new.annot), sample.groups = samplegroups, ref.level='bm', n.cores=2)
+de.info <- getPerCellTypeDE(con, groups=as.factor(new.annot), sample.groups = samplegroups, ref.level='bm', n.cores=1)
+```
+
+```
+## converting counts to integer mode
+```
+
+```
+## estimating size factors
+```
+
+```
+## estimating dispersions
+```
+
+```
+## gene-wise dispersion estimates
+```
+
+```
+## mean-dispersion relationship
+```
+
+```
+## final dispersion estimates
+```
+
+```
+## fitting model and testing
+```
+
+```
+## converting counts to integer mode
+```
+
+```
+## estimating size factors
+```
+
+```
+## estimating dispersions
+```
+
+```
+## Warning in value[[3L]](cond): Error for level DC: 
+## 
+##   The design matrix has the same number of samples and coefficients to fit,
+##   so estimation of dispersion is not possible. Treating samples
+##   as replicates was deprecated in v1.20 and no longer supported since v1.22.
+```
+
+```
+## converting counts to integer mode
+```
+
+```
+## estimating size factors
+```
+
+```
+## estimating dispersions
+```
+
+```
+## gene-wise dispersion estimates
+```
+
+```
+## mean-dispersion relationship
+```
+
+```
+## final dispersion estimates
+```
+
+```
+## fitting model and testing
+```
+
+```
+## converting counts to integer mode
+```
+
+```
+## estimating size factors
+```
+
+```
+## estimating dispersions
+```
+
+```
+## gene-wise dispersion estimates
+```
+
+```
+## mean-dispersion relationship
+```
+
+```
+## final dispersion estimates
+```
+
+```
+## fitting model and testing
+```
+
+```
+## converting counts to integer mode
+```
+
+```
+## estimating size factors
+```
+
+```
+## estimating dispersions
+```
+
+```
+## gene-wise dispersion estimates
+```
+
+```
+## mean-dispersion relationship
+```
+
+```
+## final dispersion estimates
+```
+
+```
+## fitting model and testing
+```
+
+```
+## converting counts to integer mode
+```
+
+```
+## estimating size factors
+```
+
+```
+## estimating dispersions
+```
+
+```
+## gene-wise dispersion estimates
+```
+
+```
+## mean-dispersion relationship
+```
+
+```
+## final dispersion estimates
+```
+
+```
+## fitting model and testing
+```
+
+```
+## converting counts to integer mode
+```
+
+```
+## estimating size factors
+```
+
+```
+## estimating dispersions
+```
+
+```
+## gene-wise dispersion estimates
+```
+
+```
+## mean-dispersion relationship
+```
+
+```
+## final dispersion estimates
+```
+
+```
+## fitting model and testing
+```
+
+```
+## converting counts to integer mode
+```
+
+```
+## estimating size factors
+```
+
+```
+## estimating dispersions
+```
+
+```
+## gene-wise dispersion estimates
+```
+
+```
+## mean-dispersion relationship
+```
+
+```
+## final dispersion estimates
+```
+
+```
+## fitting model and testing
+```
+
+```
+## converting counts to integer mode
+```
+
+```
+## estimating size factors
+```
+
+```
+## estimating dispersions
+```
+
+```
+## Warning in value[[3L]](cond): Error for level pDC: 
+## 
+##   The design matrix has the same number of samples and coefficients to fit,
+##   so estimation of dispersion is not possible. Treating samples
+##   as replicates was deprecated in v1.20 and no longer supported since v1.22.
+```
+
+```
+## Warning in value[[3L]](cond): Error for level plasma cells: The cluster is not
+## present in both conditions
+```
+
+```
+## converting counts to integer mode
+```
+
+```
+## estimating size factors
+```
+
+```
+## estimating dispersions
+```
+
+```
+## gene-wise dispersion estimates
+```
+
+```
+## mean-dispersion relationship
+```
+
+```
+## final dispersion estimates
+```
+
+```
+## fitting model and testing
+```
+
+```
+## converting counts to integer mode
+```
+
+```
+## estimating size factors
+```
+
+```
+## estimating dispersions
+```
+
+```
+## gene-wise dispersion estimates
+```
+
+```
+## mean-dispersion relationship
+```
+
+```
+## final dispersion estimates
+```
+
+```
+## fitting model and testing
+```
+
+```
+## converting counts to integer mode
+```
+
+```
+## estimating size factors
+```
+
+```
+## estimating dispersions
+```
+
+```
+## gene-wise dispersion estimates
+```
+
+```
+## mean-dispersion relationship
+```
+
+```
+## final dispersion estimates
+```
+
+```
+## fitting model and testing
 ```
 
 …and examine the output:

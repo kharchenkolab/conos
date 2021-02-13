@@ -133,14 +133,24 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <h1 class="title toc-ignore">Convert Conos Object to ScanPy</h1>
 
 
+<div id="TOC">
+<ul>
+<li><a href="#install-auxilliary-data-packages">Install Auxilliary Data Packages</a></li>
+</ul>
+</div>
 
-<p>First load the conos library, and the R package <code>conosPanel</code> for the example data <code>panel</code>:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(conos)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>panel <span class="ot">&lt;-</span> conosPanel<span class="sc">::</span>panel</span></code></pre></div>
+<div id="install-auxilliary-data-packages" class="section level2">
+<h2>Install Auxilliary Data Packages</h2>
+<p>First install the auxilliary packages for pagoda2 and conos, <a href="https://github.com/kharchenkolab/p2data">p2data</a> and <a href="https://github.com/kharchenkolab/conosPanel">conosPanel</a>:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">&#39;p2data&#39;</span>, <span class="at">repos=</span><span class="st">&#39;https://kharchenkolab.github.io/drat/&#39;</span>, <span class="at">type=</span><span class="st">&#39;source&#39;</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">&#39;conosPanel&#39;</span>, <span class="at">repos=</span><span class="st">&#39;https://kharchenkolab.github.io/drat/&#39;</span>, <span class="at">type=</span><span class="st">&#39;source&#39;</span>)</span></code></pre></div>
+<p>Now load the conos library, and the R package <code>conosPanel</code> for the example data <code>panel</code>:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(conos)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>panel <span class="ot">&lt;-</span> conosPanel<span class="sc">::</span>panel</span></code></pre></div>
 <p>Next, use pagoda2 for pre-processing:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(pagoda2)</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>panel.preprocessed <span class="ot">&lt;-</span> <span class="fu">lapply</span>(panel, basicP2proc, <span class="at">n.cores=</span><span class="dv">2</span>, <span class="at">min.cells.per.gene=</span><span class="dv">0</span>, <span class="at">n.odgenes=</span><span class="fl">2e3</span>, </span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>                             <span class="at">get.largevis=</span><span class="cn">FALSE</span>, <span class="at">make.geneknn=</span><span class="cn">FALSE</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(pagoda2)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>panel.preprocessed <span class="ot">&lt;-</span> <span class="fu">lapply</span>(panel, basicP2proc, <span class="at">n.cores=</span><span class="dv">1</span>, <span class="at">min.cells.per.gene=</span><span class="dv">0</span>, <span class="at">n.odgenes=</span><span class="fl">2e3</span>, </span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>                             <span class="at">get.largevis=</span><span class="cn">FALSE</span>, <span class="at">make.geneknn=</span><span class="cn">FALSE</span>)</span></code></pre></div>
 <pre><code>## creating space of type angular done
 ## adding data ... done
 ## building index ... done
@@ -158,32 +168,32 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 ## building index ... done
 ## querying ... done</code></pre>
 <p>Now align the datasets:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>con <span class="ot">&lt;-</span> Conos<span class="sc">$</span><span class="fu">new</span>(panel.preprocessed, <span class="at">n.cores=</span><span class="dv">2</span>)</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">buildGraph</span>(<span class="at">k=</span><span class="dv">15</span>, <span class="at">k.self=</span><span class="dv">5</span>, <span class="at">space=</span><span class="st">&#39;PCA&#39;</span>, <span class="at">ncomps=</span><span class="dv">30</span>)</span></code></pre></div>
-<pre><code>## .</code></pre>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>con <span class="ot">&lt;-</span> Conos<span class="sc">$</span><span class="fu">new</span>(panel.preprocessed, <span class="at">n.cores=</span><span class="dv">1</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">buildGraph</span>(<span class="at">k=</span><span class="dv">15</span>, <span class="at">k.self=</span><span class="dv">5</span>, <span class="at">space=</span><span class="st">&#39;PCA&#39;</span>, <span class="at">ncomps=</span><span class="dv">30</span>)</span></code></pre></div>
+<pre><code>## .............</code></pre>
 <p>Next find the clusters, and create an embedding:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">findCommunities</span>()</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">embedGraph</span>(<span class="at">method=</span><span class="st">&quot;UMAP&quot;</span>)</span></code></pre></div>
-<pre><code>## Estimating hitting distances: 17:39:07.
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">findCommunities</span>()</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">embedGraph</span>(<span class="at">method=</span><span class="st">&quot;UMAP&quot;</span>)</span></code></pre></div>
+<pre><code>## Estimating hitting distances: 16:14:14.
 ## Done.
-## Estimating commute distances: 17:39:34.
-## Hashing adjacency list: 17:39:34.
+## Estimating commute distances: 17:37:15.
+## Hashing adjacency list: 17:37:15.
 ## Done.
-## Estimating distances: 17:39:35.
+## Estimating distances: 17:37:20.
 ## Done
 ## Done.
-## All done!: 17:39:39.</code></pre>
+## All done!: 17:37:28.</code></pre>
 <p>Now prepare the metadata (which can be any type of clustering of all the cells):</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>metadata <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">Cluster=</span>con<span class="sc">$</span>clusters<span class="sc">$</span>leiden<span class="sc">$</span>groups)</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>metadata <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">Cluster=</span>con<span class="sc">$</span>clusters<span class="sc">$</span>leiden<span class="sc">$</span>groups)</span></code></pre></div>
 <p>Save data (set <code>exchange_dir</code> to your path):</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="do">## use current directory</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>exchange_dir <span class="ot">&lt;-</span> <span class="st">&quot;.&quot;</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>hdf5file <span class="ot">=</span> <span class="st">&quot;example.h5&quot;</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="fu">saveConosForScanPy</span>(con, <span class="at">output.path=</span>exchange_dir, <span class="at">hdf5_filename=</span>hdf5file, <span class="at">verbose=</span><span class="cn">TRUE</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="do">## use current directory</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>exchange_dir <span class="ot">&lt;-</span> <span class="st">&quot;.&quot;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>hdf5file <span class="ot">=</span> <span class="st">&quot;example.h5&quot;</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="fu">saveConosForScanPy</span>(con, <span class="at">output.path=</span>exchange_dir, <span class="at">hdf5_filename=</span>hdf5file, <span class="at">verbose=</span><span class="cn">TRUE</span>)</span></code></pre></div>
 <p>Users can then access the data saved to the HDF5 file, e.g. to access metadata, run:</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rhdf5)</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>metadata <span class="ot">=</span> <span class="fu">h5read</span>(<span class="fu">paste0</span>(exchange_dir, <span class="st">&quot;/example.h5&quot;</span>), <span class="st">&#39;metadata/metadata.df&#39;</span>)</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(metadata, <span class="dv">4</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rhdf5)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>metadata <span class="ot">=</span> <span class="fu">h5read</span>(<span class="fu">paste0</span>(exchange_dir, <span class="st">&quot;/example.h5&quot;</span>), <span class="st">&#39;metadata/metadata.df&#39;</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(metadata, <span class="dv">4</span>)</span></code></pre></div>
 <pre><code>##                                 CellId           Dataset
 ## 1 MantonBM1_HiSeq_1-TCTATTGGTCTCTCGT-1 MantonBM1_HiSeq_1
 ## 2 MantonBM1_HiSeq_1-GAATAAGTCACGCATA-1 MantonBM1_HiSeq_1
@@ -226,14 +236,15 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </ul></li>
 </ul>
 <p>In order to read in the <code>dcGMatrix</code> again, simply use the <code>Matrix</code> package as follows:</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rhdf5)</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(Matrix)</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>rawcountMat <span class="ot">=</span> <span class="fu">h5read</span>(<span class="fu">paste0</span>(exchange_dir, <span class="st">&quot;/example.h5&quot;</span>), <span class="st">&#39;raw_count_matrix&#39;</span>)</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>raw_count_matrix <span class="ot">=</span> <span class="fu">sparseMatrix</span>(<span class="at">x =</span> <span class="fu">as.numeric</span>(rawcountMat<span class="sc">$</span>data),  </span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">dims =</span> <span class="fu">as.numeric</span>(<span class="fu">c</span>(rawcountMat<span class="sc">$</span>shape[<span class="dv">1</span>], rawcountMat<span class="sc">$</span>shape[<span class="dv">2</span>])), </span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">p =</span> <span class="fu">as.numeric</span>(rawcountMat<span class="sc">$</span>indptr), </span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">i =</span> rawcountMat<span class="sc">$</span>indices, <span class="at">index1=</span><span class="cn">FALSE</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rhdf5)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(Matrix)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>rawcountMat <span class="ot">=</span> <span class="fu">h5read</span>(<span class="fu">paste0</span>(exchange_dir, <span class="st">&quot;/example.h5&quot;</span>), <span class="st">&#39;raw_count_matrix&#39;</span>)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>raw_count_matrix <span class="ot">=</span> <span class="fu">sparseMatrix</span>(<span class="at">x =</span> <span class="fu">as.numeric</span>(rawcountMat<span class="sc">$</span>data),  </span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">dims =</span> <span class="fu">as.numeric</span>(<span class="fu">c</span>(rawcountMat<span class="sc">$</span>shape[<span class="dv">1</span>], rawcountMat<span class="sc">$</span>shape[<span class="dv">2</span>])), </span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">p =</span> <span class="fu">as.numeric</span>(rawcountMat<span class="sc">$</span>indptr), </span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">i =</span> rawcountMat<span class="sc">$</span>indices, <span class="at">index1=</span><span class="cn">FALSE</span>)</span></code></pre></div>
 <p><strong>Note:</strong> Please set <code>index1=FALSE</code> as the index vectors are 0-based. For more details, see the documentation for <a href="https://www.rdocumentation.org/packages/Matrix/versions/1.2-18/topics/sparseMatrix">Matrix::sparseMatrix()</a></p>
+</div>
 
 
 

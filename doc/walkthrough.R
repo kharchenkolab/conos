@@ -19,7 +19,7 @@ any(duplicated(unlist(lapply(panel,colnames))))
 
 ## ---- message=FALSE, warning=FALSE--------------------------------------------
 library(pagoda2)
-panel.preprocessed <- lapply(panel, basicP2proc, n.cores=2, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+panel.preprocessed <- lapply(panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
 
 ## -----------------------------------------------------------------------------
 typeof(panel.preprocessed)
@@ -93,7 +93,7 @@ con$embedGraph(alpha=0.001, embedding.name="example_embedding", sgd_batched=1e8)
 con$plotGraph(clustering='walktrap', size=0.1)
 
 ## ---- message=FALSE, warning=FALSE--------------------------------------------
-con$embedGraph(method="UMAP", min.dist=0.01, spread=15, n.cores=2, min.prob.lower=1e-3)
+con$embedGraph(method="UMAP", min.dist=0.01, spread=15, n.cores=1, min.prob.lower=1e-3)
 
 ## ---- fig.width=6, fig.height=6-----------------------------------------------
 con$plotGraph(clustering='walktrap', size=0.1)
@@ -131,7 +131,7 @@ head(new.label.info$label.distribution)
 
 ## -----------------------------------------------------------------------------
 new.annot <- new.label.info$labels
-de.info <- con$getDifferentialGenes(groups=new.annot, n.cores=2, append.auc=TRUE)
+de.info <- con$getDifferentialGenes(groups=new.annot, n.cores=1, append.auc=TRUE)
 
 ## -----------------------------------------------------------------------------
 head(de.info$`B cells`)
@@ -162,7 +162,7 @@ samplegroups <- list(
 )
 
 ## -----------------------------------------------------------------------------
-de.info <- getPerCellTypeDE(con, groups=as.factor(new.annot), sample.groups = samplegroups, ref.level='bm', n.cores=2)
+de.info <- getPerCellTypeDE(con, groups=as.factor(new.annot), sample.groups = samplegroups, ref.level='bm', n.cores=1)
 
 ## -----------------------------------------------------------------------------
 str(de.info[1:3], 2)

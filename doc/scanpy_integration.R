@@ -1,14 +1,18 @@
 ## ---- message=FALSE, warning=FALSE--------------------------------------------
+install.packages('p2data', repos='https://kharchenkolab.github.io/drat/', type='source')
+install.packages('conosPanel', repos='https://kharchenkolab.github.io/drat/', type='source')
+
+## ---- message=FALSE, warning=FALSE--------------------------------------------
 library(conos)
 panel <- conosPanel::panel
 
 ## ---- message=FALSE, warning=FALSE--------------------------------------------
 library(pagoda2)
-panel.preprocessed <- lapply(panel, basicP2proc, n.cores=2, min.cells.per.gene=0, n.odgenes=2e3, 
+panel.preprocessed <- lapply(panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, 
                              get.largevis=FALSE, make.geneknn=FALSE)
 
 ## ---- message=FALSE, warning=FALSE--------------------------------------------
-con <- Conos$new(panel.preprocessed, n.cores=2)
+con <- Conos$new(panel.preprocessed, n.cores=1)
 con$buildGraph(k=15, k.self=5, space='PCA', ncomps=30)
 
 ## ---- message=FALSE, warning=FALSE--------------------------------------------

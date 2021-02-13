@@ -170,7 +170,7 @@ quickJNMF <- function(p2.objs, data.type='counts', n.comps=30, n.odgenes=NULL, v
 
 #' @keywords internal
 cpcaFast <- function(covl,ncells,ncomp=10,maxit=1000,tol=1e-6,use.irlba=TRUE,verbose=FALSE) {
-  ncomp <- min(c(nrow(covl)-1,ncol(covl)-1,ncomp));
+  ncomp <- min(c(nrow(covl)-1,ncol(covl)-1,ncomp))
   if(use.irlba) {
     # irlba initialization
     p <- nrow(covl[[1]]);
@@ -230,7 +230,7 @@ quickCPCA <- function(r.n, data.type='counts', ncomps=100, n.odgenes=NULL, var.s
   ncells <- unlist(lapply(sm,nrow))
   if(verbose) message('common PCs ...')
   #xcp <- cpca(covl,ncells,ncomp=ncomps)
-  res <- cpcaFast(covl,ncells,ncomp=ncomps,verbose=verbose,maxit=500,tol=1e-5);
+  res <- cpcaFast(covl,ncells,ncomp=ncomps,verbose=verbose,maxit=500,tol=1e-5)
   #system.time(res <- cpca:::cpca_stepwise_base(covl,ncells,k=ncomps))
   #res <- cpc(abind(covl,along=3),k=ncomps)
   rownames(res$CPC) <- od.genes;

@@ -1,4 +1,14 @@
-# Adjustment of Alignment Strength with Conos
+---
+title: "Adjustment of Alignment Strength with conos"
+output: 
+  rmarkdown::html_vignette:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{"Adjustment of Alignment Strength with conos"}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
 
 This tutorial uses the same data as the main [Walkthrough](https://github.com/kharchenkolab/conos/blob/master/vignettes/walkthrough.md) to demonstrate different options 
 for forcing alignment. It can be especially useful if the samples are grouped by some external 
@@ -39,7 +49,7 @@ Then we can preprocess the samples with [pagoda2](https://github.com/kharchenkol
 
 
 ```r
-panel.preprocessed <- lapply(panel, basicP2proc, n.cores=4, min.cells.per.gene=0, 
+panel.preprocessed <- lapply(panel, basicP2proc, n.cores=1, min.cells.per.gene=0, 
                              n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
 ```
 
@@ -64,16 +74,16 @@ panel.preprocessed <- lapply(panel, basicP2proc, n.cores=4, min.cells.per.gene=0
 
 
 ```r
-con <- Conos$new(panel.preprocessed, n.cores=4)
+con <- Conos$new(panel.preprocessed, n.cores=1)
 con$buildGraph(k=20, k.self=5, space='PCA', ncomps=30)
 ```
 
 ```
-## .
+## .............
 ```
 
 ```r
-con$embedGraph()
+con$embedGraph(embedding.name="first_embedding")
 
 con$plotGraph(color.by='sample', alpha=0.1, size=0.2, mark.groups=FALSE, 
               show.legend=TRUE, legend.pos=c(1, 0))
@@ -145,11 +155,11 @@ con$buildGraph(k=20, k.self=5, space='PCA', ncomps=30, alignment.strength=0.3)
 ```
 
 ```
-## .
+## .......
 ```
 
 ```r
-con$embedGraph()
+con$embedGraph(embedding.name="second_embedding")
 ```
 
 
@@ -168,11 +178,11 @@ con$buildGraph(k=20, k.self=5, space='PCA', ncomps=30, alignment.strength=0.6)
 ```
 
 ```
-## .
+## .......
 ```
 
 ```r
-con$embedGraph()
+con$embedGraph(embedding.name="third_embedding")
 ```
 
 
@@ -191,11 +201,11 @@ con$buildGraph(k=20, k.self=5, space='PCA', ncomps=30, alignment.strength=1.0)
 ```
 
 ```
-## .
+## .......
 ```
 
 ```r
-con$embedGraph()
+con$embedGraph(embedding.name="fourth_embedding")
 ```
 
 
@@ -224,11 +234,11 @@ con$buildGraph(k=20, k.self=5, space='PCA', ncomps=30, same.factor.downweight=0.
 ```
 
 ```
-## .
+## .......
 ```
 
 ```r
-con$embedGraph()
+con$embedGraph(embedding.name="fifth_embedding")
 ```
 
 

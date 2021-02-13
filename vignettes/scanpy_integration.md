@@ -1,4 +1,14 @@
-# Convert Conos Object to ScanPy
+---
+title: "Convert Conos Object to ScanPy"
+output: 
+  rmarkdown::html_vignette:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{"Convert Conos Object to ScanPy"}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
 
 ## Install Auxilliary Data Packages
 
@@ -24,7 +34,7 @@ Next, use pagoda2 for pre-processing:
 
 ```r
 library(pagoda2)
-panel.preprocessed <- lapply(panel, basicP2proc, n.cores=2, min.cells.per.gene=0, n.odgenes=2e3, 
+panel.preprocessed <- lapply(panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, 
                              get.largevis=FALSE, make.geneknn=FALSE)
 ```
 
@@ -51,12 +61,12 @@ Now align the datasets:
 
 
 ```r
-con <- Conos$new(panel.preprocessed, n.cores=2)
+con <- Conos$new(panel.preprocessed, n.cores=1)
 con$buildGraph(k=15, k.self=5, space='PCA', ncomps=30)
 ```
 
 ```
-## .
+## .............
 ```
 
 
@@ -69,15 +79,15 @@ con$embedGraph(method="UMAP")
 ```
 
 ```
-## Estimating hitting distances: 19:15:01.
+## Estimating hitting distances: 18:03:38.
 ## Done.
-## Estimating commute distances: 19:15:41.
-## Hashing adjacency list: 19:15:41.
+## Estimating commute distances: 18:04:30.
+## Hashing adjacency list: 18:04:30.
 ## Done.
-## Estimating distances: 19:15:43.
+## Estimating distances: 18:04:33.
 ## Done
 ## Done.
-## All done!: 19:15:50.
+## All done!: 18:04:39.
 ```
 
 Now prepare the metadata (which can be any type of clustering of all the cells):
