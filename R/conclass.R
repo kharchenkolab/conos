@@ -666,7 +666,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         if(!is.na(perplexity)) {
           wij <- buildWijMatrix(wij,perplexity=perplexity, threads=self$n.cores)
         }
-        coords <- projectKNNs(wij = wij, dim=target.dims, verbose = verbose,sgd_batches = sgd_batches,gamma=gamma, M=M, seed=seed, alpha=alpha, rho=1, threads=n.cores)
+        coords <- projectKNNs(wij = wij, dim=target.dims, verbose = verbose,sgd_batches = sgd_batches,gamma=gamma, M=M, seed=seed, alpha=alpha, rho=1, threads=self$n.cores)
         colnames(coords) <- V(self$graph)$name
         self$embedding <- t(coords)
         embedding.result <- self$embedding
