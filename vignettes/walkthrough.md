@@ -709,7 +709,7 @@ at the cluster cell markers:
 
 ```r
 new.annot <- new.label.info$labels
-de.info <- con$getDifferentialGenes(groups=new.annot, 1, append.auc=TRUE)
+de.info <- con$getDifferentialGenes(groups=new.annot, append.auc=TRUE)
 ```
 
 ```
