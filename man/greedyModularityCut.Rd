@@ -16,7 +16,7 @@ greedyModularityCut(
 \arguments{
 \item{wt}{walktrap result}
 
-\item{N}{number of top greedy splits to take}
+\item{N}{numeric Number of top greedy splits to take}
 
 \item{leaf.labels}{leaf sample label factor, for breadth calculations - must be a named factor containing all wt$names, or if wt$names is null, a factor listing cells in the same order as wt leafs (default=NULL)}
 

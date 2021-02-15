@@ -73,7 +73,7 @@ initialize Conos class
 
 \item{\code{...}}{additional parameters upon initializing Conos}
 
-\item{\code{n.cores}}{numeric Number of cores (default=parallel::detectCores(logical=FALSE))}
+\item{\code{n.cores}}{numeric Number of cores to use (default=parallel::detectCores(logical=FALSE))}
 
 \item{\code{verbose}}{boolean Whether to provide verbose output (default=TRUE)}
 
@@ -246,8 +246,7 @@ Calculate genes differentially expressed between cell clusters. Estimates base m
   upregulated.only = FALSE,
   verbose = TRUE,
   append.specificity.metrics = TRUE,
-  append.auc = TRUE,
-  n.cores = self$n.cores
+  append.auc = TRUE
 )}\if{html}{\out{</div>}}
 }
 
@@ -267,8 +266,6 @@ Calculate genes differentially expressed between cell clusters. Estimates base m
 \item{\code{append.specificity.metrics}}{boolean Whether to append specificity metrics (default=TRUE)}
 
 \item{\code{append.auc}}{boolean Whether to append AUC scores (default=TRUE)}
-
-\item{\code{n.cores}}{numeric Number of cores (default=parallel::detectCores(logical=FALSE))}
 }
 \if{html}{\out{</div>}}
 }
@@ -392,7 +389,6 @@ Generate an embedding of a joint graph
   seed = 1,
   verbose = TRUE,
   target.dims = 2,
-  n.cores = self$n.cores,
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -423,8 +419,6 @@ between \code{0} and \code{1}, the default value will be multiplied by the param
 \item{\code{verbose}}{boolean Whether to provide verbose output (default=TRUE)}
 
 \item{\code{target.dims}}{numeric Number of dimensions for the reduction (default=2). Higher dimensions can be used to generate embeddings for subsequent reductions by other methods, such as tSNE}
-
-\item{\code{n.cores}}{numeric Number of cores (default=parallel::detectCores(logical=FALSE))}
 
 \item{\code{...}}{additional arguments, passed to UMAP embedding (run ?conos:::embedGraphUmap for more info)}
 }

@@ -249,7 +249,6 @@ quickCPCA <- function(r.n, data.type='counts', ncomps=100, n.odgenes=NULL, var.s
   return(res)
 }
 
-
 #' Use space of combined sample-specific PCAs as a space
 #'
 #' @param r.n list of pagoda2 objects
@@ -259,10 +258,10 @@ quickCPCA <- function(r.n, data.type='counts', ncomps=100, n.odgenes=NULL, var.s
 #' @param var.scale boolean Whether to scale variance (default=TRUE)
 #' @param verbose boolean Whether to be verbose (default=TRUE)
 #' @param score.component.variance boolean Whether to score component variance (default=FALSE)
-#' @param n.cores numeric Number of cores to use (default=30)
+#' @param n.cores numeric Number of cores to use (default=1)
 #' @return PCA projection, using space of combined sample-specific PCAs
 #' @keywords internal
-quickPlainPCA <- function(r.n, data.type='counts', ncomps=30, n.odgenes=NULL, var.scale=TRUE, verbose=TRUE, score.component.variance=FALSE, n.cores=30) {
+quickPlainPCA <- function(r.n, data.type='counts', ncomps=30, n.odgenes=NULL, var.scale=TRUE, verbose=TRUE, score.component.variance=FALSE, n.cores=1) {
   od.genes <- commonOverdispersedGenes(r.n, n.odgenes, verbose=verbose)
   if(length(od.genes)<5) return(NULL);
 
@@ -304,11 +303,12 @@ quickPlainPCA <- function(r.n, data.type='counts', ncomps=30, n.odgenes=NULL, va
 
 #' Perform CCA (using PMA package or otherwise) on two samples
 #' @param r.n list of pagoda2 objects
+#' @param data.type character Type of data type in the input pagoda2 objects within r.n (default='counts')
 #' @param ncomps numeric Number of components to calculate (default=100)
 #' @param n.odgenes numeric Number of overdispersed genes to take from each dataset
-#' @param var.scale whether to scale variance (default=TRUE)
-#' @param verbose whether to be verbose
-#' @param n.cores number of cores to use
+#' @param var.scale boolean Whether to scale variance (default=TRUE)
+#' @param verbose boolean Whether to be verbose (default=TRUE)
+#' @param score.component.variance boolean Whether to score component variance (default=FALSE)
 #' @keywords internal
 quickCCA <- function(r.n, data.type='counts', ncomps=100, n.odgenes=NULL, var.scale=TRUE, verbose=TRUE, PMA=FALSE, score.component.variance=FALSE) {
 
@@ -641,7 +641,7 @@ bestClusterThresholds <- function(res, clusters, clmerges=NULL) {
 #' @param res walktrap result object (igraph) where the nodes were clusters
 #' @param leaf.factor a named factor describing cell assignments to the leaf nodes (in the same order as res$names)
 #' @param clusters cluster factor
-#' @param clmerges (default=NULL)
+#' @param clmerges integer matrix of cluster merges (default=NULL). If NULL, the function treeJaccard() performs calculation without it. 
 #' @return a list of $thresholds - per cluster optimal detectability values, and $node - internal node id (merge row) where the optimum was found
 #' @export
 bestClusterTreeThresholds <- function(res, leaf.factor, clusters, clmerges=NULL) {
@@ -668,7 +668,7 @@ bestClusterTreeThresholds <- function(res, leaf.factor, clusters, clmerges=NULL)
 #' Performs a greedy top-down selective cut to optmize modularity
 #'
 #' @param wt walktrap result
-#' @param N number of top greedy splits to take
+#' @param N numeric Number of top greedy splits to take
 #' @param leaf.labels leaf sample label factor, for breadth calculations - must be a named factor containing all wt$names, or if wt$names is null, a factor listing cells in the same order as wt leafs (default=NULL)
 #' @param minsize numeric Minimum size of the branch (in number of leafs) (default=0)
 #' @param minbreadth numeric Minimum allowed breadth of a branch (measured as normalized entropy) (default=0)
@@ -691,13 +691,21 @@ greedyModularityCut <- function(wt, N, leaf.labels=NULL, minsize=0, minbreadth=0
     }
   }
   x <- greedyModularityCutC(wt$merges-1L,-1*diff(wt$modularity),N,minsize,ll,minbreadth,flat.cut)
-  if(length(x$splitsequence)<1) {
+  if (length(x$splitsequence)<1) {
     stop("unable to make a single split using specified size/breadth restrictions")
   }
   # transfer cell names for the leaf content
-  if(!is.null(wt$names)) { rownames(x$leafContent) <- wt$names; } else { rownames(x$leafContent) <- c(1:nrow(x$leafContent)) }
-  m <- x$merges+1; nleafs <- nrow(m)+1; m[m<=nleafs] <- -1*m[m<=nleafs]; m[m>0] <- m[m>0]-nleafs;
-  hc <- list(merge=m,height=1:nrow(m),labels=c(1:nleafs),order=c(1:nleafs)); class(hc) <- 'hclust'
+  if (!is.null(wt$names)) { 
+    rownames(x$leafContent) <- wt$names
+  } else { 
+    rownames(x$leafContent) <- c(1:nrow(x$leafContent)) 
+  }
+  m <- x$merges+1
+  nleafs <- nrow(m)+1
+  m[m<=nleafs] <- -1*m[m<=nleafs]
+  m[m>0] <- m[m>0]-nleafs
+  hc <- list(merge=m,height=1:nrow(m),labels=c(1:nleafs),order=c(1:nleafs))
+  class(hc) <- 'hclust'
   # fix the ordering so that edges don't intersects
   hc$order <- order.dendrogram(as.dendrogram(hc))
   leafContentCollapsed <- apply(x$leafContent,2,function(z)rownames(x$leafContent)[which(z>0)])
@@ -817,7 +825,7 @@ getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, k1=k, data.
 #' @param p2 projection of sample 2
 #' @param k neighborhood radius
 #' @param k1 neighborhood radius
-#' @param matching string mNN (default) or NN
+#' @param matching string mNN (default) or NN (default='mNN')
 #' @param metric string Distance type (default: "angular", can also be 'L2')
 #' @param l2.sigma numeric L2 distances get transformed as exp(-d/sigma) using this value (default=1e5)
 #' @param cor.base numeric (default=1)

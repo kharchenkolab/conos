@@ -12,7 +12,7 @@ quickPlainPCA(
   var.scale = TRUE,
   verbose = TRUE,
   score.component.variance = FALSE,
-  n.cores = 30
+  n.cores = 1
 )
 }
 \arguments{
@@ -30,7 +30,7 @@ quickPlainPCA(
 
 \item{score.component.variance}{boolean Whether to score component variance (default=FALSE)}
 
-\item{n.cores}{numeric Number of cores to use (default=30)}
+\item{n.cores}{numeric Number of cores to use (default=1)}
 }
 \value{
 PCA projection, using space of combined sample-specific PCAs

@@ -14,7 +14,7 @@ leidenAlg::leiden.community
 #' @description The class encompasses sample collections, providing methods for calculating and visualizing joint graph and communities.
 #' @import methods
 #' @param x a named list of pagoda2 or Seurat objects (one per sample)
-#' @param n.cores numeric Number of cores (default=parallel::detectCores(logical=FALSE))
+#' @param n.cores numeric Number of cores to use (default=parallel::detectCores(logical=FALSE))
 #' @param verbose boolean Whether to provide verbose output (default=TRUE)
 #' @param clustering string Name of the clustering to use
 #' @param groups a factor on cells to use for coloring
@@ -364,7 +364,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @param append.specificity.metrics boolean Whether to append specificity metrics (default=TRUE)
     #' @param append.auc boolean Whether to append AUC scores (default=TRUE)
     #' @return list of DE results; each is a data frame with rows corresponding to the differentially expressed genes, and columns listing log2 fold change (M), signed Z scores (both raw and adjusted for mulitple hypothesis using BH correction), optional specificty/sensitivity and AUC metrics.
-    getDifferentialGenes=function(clustering=NULL, groups=NULL, z.threshold=3.0, upregulated.only=FALSE, verbose=TRUE, append.specificity.metrics=TRUE, append.auc=TRUE, n.cores=self$n.cores) {
+    getDifferentialGenes=function(clustering=NULL, groups=NULL, z.threshold=3.0, upregulated.only=FALSE, verbose=TRUE, append.specificity.metrics=TRUE, append.auc=TRUE) {
 
       groups <- parseCellGroups(self, clustering, groups)
 
@@ -375,7 +375,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         stop("Only Pagoda2 objects are supported for marker genes")
       }
 
-      de.genes <- getDifferentialGenesP2(self$samples, groups=groups, z.threshold=z.threshold, upregulated.only=upregulated.only, verbose=verbose, n.cores=n.cores)
+      de.genes <- getDifferentialGenesP2(self$samples, groups=groups, z.threshold=z.threshold, upregulated.only=upregulated.only, verbose=verbose, n.cores=self$n.cores)
       de.genes <- de.genes[levels(groups)]
 
       if (append.specificity.metrics) {
@@ -386,7 +386,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
         de.genes %<>% lapply(function(x) if ((length(x) > 0) && (nrow(x) > 0)) subset(x, complete.cases(x)) else x)
         de.genes %<>% names() %>% setNames(., .) %>%
-          sccore::plapply(function(n) appendSpecificityMetricsToDE(de.genes[[n]], groups.clean, n, p2.counts=cm.merged, append.auc=append.auc), n.cores=n.cores)
+          sccore::plapply(function(n) appendSpecificityMetricsToDE(de.genes[[n]], groups.clean, n, p2.counts=cm.merged, append.auc=append.auc), n.cores=self$n.cores)
       }
 
       if (verbose) message("All done!")
@@ -646,7 +646,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @param target.dims numeric Number of dimensions for the reduction (default=2). Higher dimensions can be used to generate embeddings for subsequent reductions by other methods, such as tSNE
     #' @param ... additional arguments, passed to UMAP embedding (run ?conos:::embedGraphUmap for more info)
     #' @return joint graph embedding
-    embedGraph=function(method='largeVis', embedding.name=method, M=1, gamma=1, alpha=0.1, perplexity=NA, sgd_batches=1e8, seed=1, verbose=TRUE, target.dims=2, n.cores=self$n.cores, ...) {
+    embedGraph=function(method='largeVis', embedding.name=method, M=1, gamma=1, alpha=0.1, perplexity=NA, sgd_batches=1e8, seed=1, verbose=TRUE, target.dims=2, ...) {
       supported.methods <- c('largeVis', 'UMAP')
       if(!method %in% supported.methods) { 
         stop(paste0("Currently, only the following embeddings are supported: ",paste(supported.methods,collapse=' '))) 
@@ -664,7 +664,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       if (method == 'largeVis') {
         wij <- as_adj(self$graph,attr='weight')
         if(!is.na(perplexity)) {
-          wij <- buildWijMatrix(wij,perplexity=perplexity,threads=n.cores)
+          wij <- buildWijMatrix(wij,perplexity=perplexity, threads=self$n.cores)
         }
         coords <- projectKNNs(wij = wij, dim=target.dims, verbose = verbose,sgd_batches = sgd_batches,gamma=gamma, M=M, seed=seed, alpha=alpha, rho=1, threads=n.cores)
         colnames(coords) <- V(self$graph)$name
@@ -676,7 +676,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           stop("You need to install package 'uwot' to be able to use UMAP embedding. Please install it.")
         }
 
-        self$embedding <- embedGraphUmap(self$graph, verbose=verbose, return.all=FALSE, n.cores=n.cores, target.dims=target.dims, ...)
+        self$embedding <- embedGraphUmap(self$graph, verbose=verbose, return.all=FALSE, n.cores=self$n.cores, target.dims=target.dims, ...)
         embedding.result <- self$embedding
       }
 

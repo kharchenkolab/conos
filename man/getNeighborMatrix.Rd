@@ -25,7 +25,7 @@ getNeighborMatrix(
 
 \item{k1}{neighborhood radius}
 
-\item{matching}{string mNN (default) or NN}
+\item{matching}{string mNN (default) or NN (default='mNN')}
 
 \item{metric}{string Distance type (default: "angular", can also be 'L2')}
 

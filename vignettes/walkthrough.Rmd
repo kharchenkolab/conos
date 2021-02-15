@@ -397,7 +397,7 @@ and accuracy:
 
 > - **min.prob.lower:** minimal probability of hitting a neighbor, after which the random walk stops. Default: 1e-7.
 ```{r, message=FALSE, warning=FALSE}
-con$embedGraph(method="UMAP", min.dist=0.01, spread=15, n.cores=1, min.prob.lower=1e-3)
+con$embedGraph(method="UMAP", min.dist=0.01, spread=15, min.prob.lower=1e-3)
 ```
 
 
@@ -602,7 +602,7 @@ samplegroups <- list(
 We can then run differential expression between cells in these sample
 groups:
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 de.info <- getPerCellTypeDE(con, groups=as.factor(new.annot), sample.groups = samplegroups, ref.level='bm', n.cores=1)
 ```
 

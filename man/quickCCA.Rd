@@ -18,15 +18,17 @@ quickCCA(
 \arguments{
 \item{r.n}{list of pagoda2 objects}
 
+\item{data.type}{character Type of data type in the input pagoda2 objects within r.n (default='counts')}
+
 \item{ncomps}{numeric Number of components to calculate (default=100)}
 
 \item{n.odgenes}{numeric Number of overdispersed genes to take from each dataset}
 
-\item{var.scale}{whether to scale variance (default=TRUE)}
+\item{var.scale}{boolean Whether to scale variance (default=TRUE)}
 
-\item{verbose}{whether to be verbose}
+\item{verbose}{boolean Whether to be verbose (default=TRUE)}
 
-\item{n.cores}{number of cores to use}
+\item{score.component.variance}{boolean Whether to score component variance (default=FALSE)}
 }
 \description{
 Perform CCA (using PMA package or otherwise) on two samples
