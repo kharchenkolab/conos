@@ -94,7 +94,7 @@ pre-processing.
 
 Given we'll primarily use pagoda2 for this walkthrough, please install the auxilliary package [p2data](https://github.com/kharchenkolab/p2data):
 
-```r
+```{r}
 install.packages('p2data', repos='https://kharchenkolab.github.io/drat/', type='source')
 ```
 
