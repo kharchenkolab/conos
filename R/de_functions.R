@@ -547,12 +547,12 @@ getDifferentialGenesP2 <- function(p2.samples, groups, z.threshold=3.0, upregula
         p2$getDifferentialGenes(groups=groups, z.threshold=0)
       }
     }
-  })
+  }, progress=verbose, n.cores=n.cores)
 
   if (verbose) message("Aggregating marker genes\n")
   markers.per.type <- unique(groups) %>% setNames(., .) %>%
     lapply(function(id) lapply(markers.per.sample, `[[`, id) %>% .[!sapply(., is.null)])
-  markers.per.type = sccore::plapply(markers.per.type, aggregateDEMarkersAcrossDatasets, z.threshold=z.threshold, upregulated.only=upregulated.only)
+  markers.per.type = sccore::plapply(markers.per.type, aggregateDEMarkersAcrossDatasets, z.threshold=z.threshold, upregulated.only=upregulated.only, progress=verbose, n.cores=n.cores)
 
 
   return(markers.per.type)
