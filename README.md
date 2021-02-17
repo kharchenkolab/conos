@@ -10,7 +10,7 @@
   * [Conos walkthrough](#conos-walkthrough)
   * [Adjustment of alignment strength with conos](#adjustment-of-alignment-strength-with-conos)
   * [Integration with ScanPy](#integration-with-scanpy)
-  * [Integrating RNA-seq and ATAC-seq](#integrating-rna-seq-and-atac-seq)
+  * [Integrating RNA-seq and ATAC-seq with conos](#integrating-rna-seq-and-atac-seq-with-conos)
   * [Running RNA velocity on a Conos object](#running-rna-velocity-on-a-conos-object)
 - [Installation](#installation)
   * [Running conos via Docker](#running-conos-via-docker)
@@ -77,20 +77,20 @@ Please see the following tutorials for detailed examples of how to use conos:
 * [HTML version](https://htmlpreview.github.io/?https://raw.githubusercontent.com/kharchenkolab/conos/master/doc/adjust_alignment_strength.html)
 * [Markdown version](doc/adjust_alignment_strength.md)
 
-### Integration with ScanPy:
+### Integration with Scanpy:
 
-Note that for integration with [ScanPy](https://scanpy.readthedocs.io/en/stable/), users need to save conos files to disk from an R session, and then load these files into Python.
+Note that for integration with [Scanpy](https://scanpy.readthedocs.io/en/stable/), users need to save conos files to disk from an R session, and then load these files into Python.
 
-**Save conos for ScanPy:**
+**Save conos for Scanpy:**
 * [HTML version](https://htmlpreview.github.io/?https://raw.githubusercontent.com/kharchenkolab/conos/master/doc/scanpy_integration.html)
 * [Markdown version](doc/scanpy_integration.md)
 
-**Load conos files into ScanPy:**
+**Load conos files into Scanpy:**
 * [Jupyter Notebook](inst/scanpy_integration.ipynb)
 
 
 ### Integrating RNA-seq and ATAC-seq with conos:
-* [HTML version](doc/integrating_rnaseq_atacseq.html)
+* [HTML version](https://htmlpreview.github.io/?https://raw.githubusercontent.com/kharchenkolab/conos/master/doc/integrating_rnaseq_atacseq.html)
 * [Markdown version](doc/integrating_rnaseq_atacseq.md)
 
 ### Running RNA velocity on a Conos object

@@ -1,13 +1,4 @@
----
-title: "Integrating RNA-seq and ATAC-seq with conos"
-output: 
-  rmarkdown::html_vignette:
-    toc: true
-vignette: >
-  %\VignetteIndexEntry{"Integrating RNA-seq and ATAC-seq with conos"}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
----
+# Integrating RNA-seq and ATAC-seq with conos
 
 This tutorial walks through an example of RNA-ATAC-seq integration based on the gene activity scores.
 
@@ -95,7 +86,13 @@ con <- Conos$new(p2l, n.cores=1)
 
 ## build joint graph
 con$buildGraph(k=15, k.self=5, k.self.weigh=0.01, ncomps=30, n.odgenes=5e3, space='PCA') 
+```
 
+```
+## .....................
+```
+
+```r
 ## find communities
 con$findCommunities(resolution=1.5)
 
@@ -120,6 +117,5 @@ print(pp)
 ```
 
 ![plot of chunk unnamed-chunk-7](figure_integrating_rnaseq_atacseq/unnamed-chunk-7-1.png)
-
 
 

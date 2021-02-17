@@ -1,4 +1,4 @@
-# Convert Conos Object to ScanPy
+# Convert Conos Object to Scanpy
 
 ## Install Auxilliary Data Packages
 
