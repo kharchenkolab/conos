@@ -4,13 +4,17 @@
 
 # conos
 
+- [Introduction](#conos-clustering-on-network-of-samples)
+- [Basics of using conos](#basics-of-using-conos)
 - [Tutorials](#tutorials)
-  * [Usage: Alignment of Datasets](#usage-alignment-of-datasets)
+  * [Conos walkthrough](#conos-walkthrough)
+  * [Adjustment of alignment strength with conos](#adjustment-of-alignment-strength-with-conos)
   * [Integration with ScanPy](#integration-with-scanpy)
+  * [Integrating RNA-seq and ATAC-seq](#integrating-rna-seq-and-atac-seq)
   * [Running RNA velocity on a Conos object](#running-rna-velocity-on-a-conos-object)
 - [Installation](#installation)
   * [Running conos via Docker](#running-conos-via-docker)
-- [Reference](#reference)
+- [References](#references)
   
 ## Conos: Clustering On Network Of Samples
 
@@ -34,28 +38,7 @@ In essence, conos will take a large, potentially heterogeneous panel of samples 
 Conos is robust to heterogeneity of samples within a collection, as well as noise. The ability to resolve finer subpopulation structure improves as the size of the panel increases.
 
 
-
-## Tutorials
-
-
-Please see the conos tutorials for detailed examples of how to use conos: 
-
-**Walkthrough:**
-* [HTML version](https://htmlpreview.github.io/?https://raw.githubusercontent.com/kharchenkolab/conos/master/doc/walkthrough.html)
-* [Markdown version](https://github.com/kharchenkolab/conos/blob/master/vignettes/walkthrough.md)
-
-**Adjustment of Alignment Strength with conos:**
-* [HTML version](https://htmlpreview.github.io/?https://raw.githubusercontent.com/kharchenkolab/conos/master/doc/adjust_alignment_strength.html)
-* [Markdown version](doc/adjust_alignment_strength.md)
-
-**Convert Conos Object to ScanPy:**
-* [HTML version](https://htmlpreview.github.io/?https://raw.githubusercontent.com/kharchenkolab/conos/master/doc/scanpy_integration.html)
-* [Markdown version](doc/scanpy_integration.md)
-
-**Integrating RNA-seq and ATAC-seq:**
-* [URL](http://pklab.med.harvard.edu/peterk/conos/atac_rna/example.html)
-
-### Basic Usage
+## Basics of using conos
 
 Given a list of individual processed samples (`pl`), conos processing can be as simple as this:
 ```r
@@ -78,12 +61,34 @@ con$plotPanel()
 To see more documentation on the class `Conos`, run `?Conos`.
 
 
-### Integration with ScanPy
+## Tutorials
 
-For integration with [ScanPy](https://scanpy.readthedocs.io/en/stable/), you need to save conos files on disk from your R session, and 
-then upload these files from Python. See the following tutorials:
-- [Save conos for ScanPy](doc/scanpy_integration.md)
-- [Load ScanPy from conos](inst/scanpy_integration.ipynb)
+
+Please see the following tutorials for detailed examples of how to use conos: 
+
+### Conos walkthrough:
+* [HTML version](https://htmlpreview.github.io/?https://raw.githubusercontent.com/kharchenkolab/conos/master/doc/walkthrough.html)
+* [Markdown version](https://github.com/kharchenkolab/conos/blob/master/vignettes/walkthrough.md)
+
+### Adjustment of alignment strength with conos:
+* [HTML version](https://htmlpreview.github.io/?https://raw.githubusercontent.com/kharchenkolab/conos/master/doc/adjust_alignment_strength.html)
+* [Markdown version](doc/adjust_alignment_strength.md)
+
+### Integration with ScanPy:
+
+Note that for integration with [ScanPy](https://scanpy.readthedocs.io/en/stable/), user need to save conos files to disk from an R session, and then load these files into Python.
+
+**Save conos for ScanPy:**
+* [HTML version](https://htmlpreview.github.io/?https://raw.githubusercontent.com/kharchenkolab/conos/master/doc/scanpy_integration.html)
+* [Markdown version](doc/scanpy_integration.md)
+
+**Load ScanPy from conos:**
+* [Jupyter Notebook](inst/scanpy_integration.ipynb)
+
+
+### Integrating RNA-seq and ATAC-seq:
+* [URL](http://pklab.med.harvard.edu/peterk/conos/atac_rna/example.html)
+
 
 ### Running RNA velocity on a Conos object
 
@@ -235,7 +240,7 @@ docker run -d -p 8787:8787 -e PASSWORD=pass --name conos -it conos
 ```
 
 
-## Reference
+## References
 
 If you find this software useful for your research, please cite the corresponding [paper](https://doi.org/10.1038/s41592-019-0466-z):
 
