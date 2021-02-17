@@ -9,7 +9,7 @@
 - [Tutorials](#tutorials)
   * [Conos walkthrough](#conos-walkthrough)
   * [Adjustment of alignment strength with conos](#adjustment-of-alignment-strength-with-conos)
-  * [Integration with ScanPy](#integration-with-scanpy)
+  * [Integration with Scanpy](#integration-with-scanpy)
   * [Integrating RNA-seq and ATAC-seq with conos](#integrating-rna-seq-and-atac-seq-with-conos)
   * [Running RNA velocity on a Conos object](#running-rna-velocity-on-a-conos-object)
 - [Installation](#installation)
