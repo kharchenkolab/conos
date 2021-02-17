@@ -42,19 +42,22 @@ Conos is robust to heterogeneity of samples within a collection, as well as nois
 
 Given a list of individual processed samples (`pl`), conos processing can be as simple as this:
 ```r
-# construct Conos object, where pl is a list of pagoda2 objects 
+# Construct Conos object, where pl is a list of pagoda2 objects 
 con <- Conos$new(pl)
 
-# build graph
+# Build joint graph
 con$buildGraph()
 
-# find communities
+# Find communities
 con$findCommunities()
 
-# plot joint graph
+# Generate embedding
+con$embedGraph()
+
+# Plot joint graph
 con$plotGraph()
 
-# plot panel with joint clustering results
+# Plot panel with joint clustering results
 con$plotPanel()
 ```
 
@@ -76,19 +79,19 @@ Please see the following tutorials for detailed examples of how to use conos:
 
 ### Integration with ScanPy:
 
-Note that for integration with [ScanPy](https://scanpy.readthedocs.io/en/stable/), user need to save conos files to disk from an R session, and then load these files into Python.
+Note that for integration with [ScanPy](https://scanpy.readthedocs.io/en/stable/), users need to save conos files to disk from an R session, and then load these files into Python.
 
 **Save conos for ScanPy:**
 * [HTML version](https://htmlpreview.github.io/?https://raw.githubusercontent.com/kharchenkolab/conos/master/doc/scanpy_integration.html)
 * [Markdown version](doc/scanpy_integration.md)
 
-**Load ScanPy from conos:**
+**Load conos files into ScanPy:**
 * [Jupyter Notebook](inst/scanpy_integration.ipynb)
 
 
-### Integrating RNA-seq and ATAC-seq:
-* [URL](http://pklab.med.harvard.edu/peterk/conos/atac_rna/example.html)
-
+### Integrating RNA-seq and ATAC-seq with conos:
+* [HTML version](doc/integrating_rnaseq_atacseq.html)
+* [Markdown version](doc/integrating_rnaseq_atacseq.md)
 
 ### Running RNA velocity on a Conos object
 
