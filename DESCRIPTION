@@ -34,6 +34,7 @@ Imports:
     stats,
     tools,
     utils
+RoxygenNote: 7.1.1
 Suggests:
     AnnotationDbi,
     BiocParallel,
@@ -64,7 +65,8 @@ Suggests:
     zoo
 VignetteBuilder: knitr
 Additional_repositories: https://kharchenkolab.github.io/drat/
-RoxygenNote: 7.1.1
+URL: https://github.com/kharchenkolab/conos
+BugReports: https://github.com/kharchenkolab/conos/issues
 NeedsCompilation: yes
 LinkingTo: Rcpp, RcppArmadillo, RcppEigen, RcppProgress
 Author: Viktor Petukhov [aut], Nikolas Barkas [aut], Peter Kharchenko [aut], Evan Biederstedt [aut, cre]

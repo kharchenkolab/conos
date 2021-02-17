@@ -1,13 +1,4 @@
----
-title: "Conos Walkthrough"
-output: 
-  rmarkdown::html_vignette:
-    toc: true
-vignette: >
-  %\VignetteIndexEntry{"Conos Walkthrough"}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
----
+# Conos Walkthrough
 
 - [Loading the Data](#loading-the-data)
   * [Pre-processing with pagoda2](#pre-processing-with-pagoda2)
@@ -331,7 +322,7 @@ plotClusterBarplots(con, legend.height = 0.1)
 
 
 Next we can check the expression pattern of a specific gene across all the individual
-embeddings. In this case, we investigate the expression pattern of [GZMK](https://www.genecards.org/cgi-bin/carddisp.pl?gene=GZMK):
+embeddings. In this case, we investigate the expression pattern of [GZMK](https://www.ncbi.nlm.nih.gov/gene/3003):
 
 
 ```r
@@ -415,7 +406,7 @@ con$plotGraph(color.by='sample', mark.groups=FALSE, alpha=0.1, show.legend=TRUE)
 
 
 
-We can also visualize gene expression on this joint graph embedding, again using ["GMZK"](https://www.genecards.org/cgi-bin/carddisp.pl?gene=GZMK) as an example:
+We can also visualize gene expression on this joint graph embedding, again using [GZMK](https://www.ncbi.nlm.nih.gov/gene/3003) as an example:
 
 
 ```r
