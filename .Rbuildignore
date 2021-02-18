@@ -5,7 +5,9 @@ CHANGELOG.md
 ^LICENSE\.md$
 ^docker$
 ^doc$
-^doc\*.md$
+doc/*.md
+doc/*.html
+doc/figure_*
 ^Meta$
 ^vignettes\*.md$
 ^vignettes\figure$

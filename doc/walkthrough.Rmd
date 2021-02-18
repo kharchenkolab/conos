@@ -94,7 +94,7 @@ pre-processing.
 
 Given we'll primarily use pagoda2 for this walkthrough, please install the auxilliary package [p2data](https://github.com/kharchenkolab/p2data):
 
-```r
+```{r}
 install.packages('p2data', repos='https://kharchenkolab.github.io/drat/', type='source')
 ```
 
@@ -106,7 +106,7 @@ and lower the numbers of local principal components (PCs) estimated for faster p
 
 We use `lapply()` here as `panel` is a list with 4 elements (i.e. a panel of four samples).
 
-(Note: You could run the outer loop in parallel using `mclapply()`, however if executed within RStudio this sometimes causes multithreading problems. Also, multiprocessing must be disabled in order to obtain exactly the same individual sample embeddings from one run to another: this can be done by using set.seed(1) and specifying n.cores=1 in the command below.)
+(Note: You could run the outer loop in parallel using `mclapply()`, however if executed within RStudio this sometimes causes multithreading problems. Also, multiprocessing must be disabled in order to obtain exactly the same individual sample embeddings from one run to another: this can be done by using `set.seed(1)` and specifying `n.cores=1` in the command below.)
 
 
 ```{r, message=FALSE, warning=FALSE}
@@ -251,7 +251,7 @@ plotClusterBarplots(con, legend.height = 0.1)
 
 
 Next we can check the expression pattern of a specific gene across all the individual
-embeddings. In this case, we investigate the expression pattern of [GZMK](https://www.genecards.org/cgi-bin/carddisp.pl?gene=GZMK):
+embeddings. In this case, we investigate the expression pattern of [GZMK](https://www.ncbi.nlm.nih.gov/gene/3003):
 
 ```{r, fig.height=8, fig.width=8}
 con$plotPanel(gene = 'GZMK')
@@ -311,7 +311,7 @@ con$plotGraph(color.by='sample', mark.groups=FALSE, alpha=0.1, show.legend=TRUE)
 
 
 
-We can also visualize gene expression on this joint graph embedding, again using ["GMZK"](https://www.genecards.org/cgi-bin/carddisp.pl?gene=GZMK) as an example:
+We can also visualize gene expression on this joint graph embedding, again using [GZMK](https://www.ncbi.nlm.nih.gov/gene/3003) as an example:
 
 ```{r, fig.height=6, fig.width=6}
 con$plotGraph(gene='GZMK', title='GZMK expression')
@@ -397,7 +397,7 @@ and accuracy:
 
 > - **min.prob.lower:** minimal probability of hitting a neighbor, after which the random walk stops. Default: 1e-7.
 ```{r, message=FALSE, warning=FALSE}
-con$embedGraph(method="UMAP", min.dist=0.01, spread=15, n.cores=1, min.prob.lower=1e-3)
+con$embedGraph(method="UMAP", min.dist=0.01, spread=15, min.prob.lower=1e-3)
 ```
 
 
@@ -507,7 +507,7 @@ at the cluster cell markers:
 
 ```{r}
 new.annot <- new.label.info$labels
-de.info <- con$getDifferentialGenes(groups=new.annot, n.cores=1, append.auc=TRUE)
+de.info <- con$getDifferentialGenes(groups=new.annot, append.auc=TRUE)
 ```
 
 ```{r}
@@ -602,7 +602,7 @@ samplegroups <- list(
 We can then run differential expression between cells in these sample
 groups:
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 de.info <- getPerCellTypeDE(con, groups=as.factor(new.annot), sample.groups = samplegroups, ref.level='bm', n.cores=1)
 ```
 
