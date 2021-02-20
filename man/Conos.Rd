@@ -6,6 +6,141 @@
 \description{
 The class encompasses sample collections, providing methods for calculating and visualizing joint graph and communities.
 }
+\examples{
+
+## ------------------------------------------------
+## Method `Conos$new`
+## ------------------------------------------------
+
+con <- Conos$new(small_panel.preprocessed, n.cores=1)
+
+
+## ------------------------------------------------
+## Method `Conos$buildGraph`
+## ------------------------------------------------
+
+\donttest{ 
+library(pagoda2)
+panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+con <- Conos$new(panel.preprocessed, n.cores=1)
+con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+}
+
+
+
+## ------------------------------------------------
+## Method `Conos$getDifferentialGenes`
+## ------------------------------------------------
+
+\donttest{ 
+library(pagoda2)
+panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+con <- Conos$new(panel.preprocessed, n.cores=1)
+con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+con$findCommunities(method=leiden.community, resolution=2)
+con$getDifferentialGenes()
+}
+
+
+## ------------------------------------------------
+## Method `Conos$findCommunities`
+## ------------------------------------------------
+
+\donttest{ 
+library(pagoda2)
+panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+con <- Conos$new(panel.preprocessed, n.cores=1)
+con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+con$findCommunities(method = igraph::walktrap.community, steps=5)
+}
+
+
+## ------------------------------------------------
+## Method `Conos$plotPanel`
+## ------------------------------------------------
+
+library(pagoda2)
+panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+con <- Conos$new(panel.preprocessed, n.cores=1)
+
+
+
+## ------------------------------------------------
+## Method `Conos$embedGraph`
+## ------------------------------------------------
+
+\donttest{ 
+library(pagoda2)
+panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+con <- Conos$new(panel.preprocessed, n.cores=1)
+con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+con$findCommunities(method = igraph::walktrap.community, steps=8)
+con$embedGraph(alpha=0.001, sgd_batched=1e8)  
+}
+
+
+## ------------------------------------------------
+## Method `Conos$plotGraph`
+## ------------------------------------------------
+
+\donttest{ 
+library(pagoda2)
+panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+con <- Conos$new(panel.preprocessed, n.cores=1)
+con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+con$findCommunities(method=leiden.community, resolution=1)
+con$embedGraph(alpha=0.001, sgd_batched=1e8)  
+con$plotGraph(alpha=0.1)
+}
+
+
+## ------------------------------------------------
+## Method `Conos$propagateLabels`
+## ------------------------------------------------
+
+\donttest{ 
+library(pagoda2)
+panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+con <- Conos$new(panel.preprocessed, n.cores=1)
+con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+con$findCommunities(method=leiden.community, resolution=1)
+con$embedGraph(alpha=0.001, sgd_batched=1e8)  
+cellannot <- read.table(file.path(find.package('conos'),'extdata','cellannot.txt'),header=FALSE,sep='\t')
+cellannot <- setNames(cellannot[,2], cellannot[,1])
+new.label.info <- con$propagateLabels(labels = cellannot, verbose=TRUE)    
+}
+
+
+## ------------------------------------------------
+## Method `Conos$getClusterCountMatrices`
+## ------------------------------------------------
+
+\donttest{ 
+library(pagoda2)
+panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+con <- Conos$new(panel.preprocessed, n.cores=1)
+con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+con$findCommunities(method=leiden.community, resolution=1)
+con$getClusterCountMatrices() 
+}
+
+
+## ------------------------------------------------
+## Method `Conos$getDatasetPerCell`
+## ------------------------------------------------
+
+con <- Conos$new(small_panel.preprocessed, n.cores=1)
+con$getDatasetPerCell()
+
+
+## ------------------------------------------------
+## Method `Conos$getJointCountMatrix`
+## ------------------------------------------------
+
+con <- Conos$new(small_panel.preprocessed, n.cores=1)
+con$getJointCountMatrix()
+
+}
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
@@ -84,6 +219,15 @@ initialize Conos class
 \subsection{Returns}{
 a new 'Conos' object
 }
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{con <- Conos$new(small_panel.preprocessed, n.cores=1)
+
+}
+\if{html}{\out{</div>}}
+
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-addSamples"></a>}}
@@ -232,6 +376,21 @@ Build the joint graph that encompasses all the samples, establishing weighted in
 \subsection{Returns}{
 joint graph to be used for downstream analysis
 }
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{\donttest{ 
+library(pagoda2)
+panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+con <- Conos$new(panel.preprocessed, n.cores=1)
+con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+}
+
+
+}
+\if{html}{\out{</div>}}
+
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-getDifferentialGenes"></a>}}
@@ -272,6 +431,22 @@ Calculate genes differentially expressed between cell clusters. Estimates base m
 \subsection{Returns}{
 list of DE results; each is a data frame with rows corresponding to the differentially expressed genes, and columns listing log2 fold change (M), signed Z scores (both raw and adjusted for mulitple hypothesis using BH correction), optional specificty/sensitivity and AUC metrics.
 }
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{\donttest{ 
+library(pagoda2)
+panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+con <- Conos$new(panel.preprocessed, n.cores=1)
+con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+con$findCommunities(method=leiden.community, resolution=2)
+con$getDifferentialGenes()
+}
+
+}
+\if{html}{\out{</div>}}
+
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-findCommunities"></a>}}
@@ -321,6 +496,21 @@ Find cell clusters (as communities on the joint graph)
 \subsection{Returns}{
 invisible list containing identified communities (groups) and the full community detection result (result); The results are stored in $clusters$name slot in the conos object. Each such slot contains an object with elements: $results which stores the raw output of the community detection method, and $groups which is a factor on cells describing the resulting clustering. The later can be used, for instance, in plotting: con$plotGraph(groups=con$clusters$leiden$groups). If test.stability==TRUE, then the result object will also contain a $stability slot.
 }
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{\donttest{ 
+library(pagoda2)
+panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+con <- Conos$new(panel.preprocessed, n.cores=1)
+con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+con$findCommunities(method = igraph::walktrap.community, steps=5)
+}
+
+}
+\if{html}{\out{</div>}}
+
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-plotPanel"></a>}}
@@ -371,6 +561,18 @@ If a matrix is passed, it is interpreted as an actual embedding (then first two 
 \subsection{Returns}{
 cowplot grid object with the panel of plots
 }
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{library(pagoda2)
+panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+con <- Conos$new(panel.preprocessed, n.cores=1)
+
+
+}
+\if{html}{\out{</div>}}
+
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-embedGraph"></a>}}
@@ -427,6 +629,22 @@ between \code{0} and \code{1}, the default value will be multiplied by the param
 \subsection{Returns}{
 joint graph embedding
 }
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{\donttest{ 
+library(pagoda2)
+panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+con <- Conos$new(panel.preprocessed, n.cores=1)
+con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+con$findCommunities(method = igraph::walktrap.community, steps=8)
+con$embedGraph(alpha=0.001, sgd_batched=1e8)  
+}
+
+}
+\if{html}{\out{</div>}}
+
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-plotClusterStability"></a>}}
@@ -495,6 +713,23 @@ Plot joint graph
 \subsection{Returns}{
 ggplot2 plot of joint graph
 }
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{\donttest{ 
+library(pagoda2)
+panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+con <- Conos$new(panel.preprocessed, n.cores=1)
+con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+con$findCommunities(method=leiden.community, resolution=1)
+con$embedGraph(alpha=0.001, sgd_batched=1e8)  
+con$plotGraph(alpha=0.1)
+}
+
+}
+\if{html}{\out{</div>}}
+
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-correctGenes"></a>}}
@@ -577,6 +812,25 @@ list with three fields:
 * uncertainty = 1 - confidence values 
 * label.distribution = the distribution of labels calculated using either the methods "diffusion" or "solver"
 }
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{\donttest{ 
+library(pagoda2)
+panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+con <- Conos$new(panel.preprocessed, n.cores=1)
+con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+con$findCommunities(method=leiden.community, resolution=1)
+con$embedGraph(alpha=0.001, sgd_batched=1e8)  
+cellannot <- read.table(file.path(find.package('conos'),'extdata','cellannot.txt'),header=FALSE,sep='\t')
+cellannot <- setNames(cellannot[,2], cellannot[,1])
+new.label.info <- con$propagateLabels(labels = cellannot, verbose=TRUE)    
+}
+
+}
+\if{html}{\out{</div>}}
+
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-getClusterCountMatrices"></a>}}
@@ -608,6 +862,22 @@ Calculate pseudo-bulk expression matrices for clusters (by adding up, for each g
 \subsection{Returns}{
 a list of per-sample uniform dense matrices with rows being genes, and columns being clusters
 }
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{\donttest{ 
+library(pagoda2)
+panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+con <- Conos$new(panel.preprocessed, n.cores=1)
+con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+con$findCommunities(method=leiden.community, resolution=1)
+con$getClusterCountMatrices() 
+}
+
+}
+\if{html}{\out{</div>}}
+
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-getDatasetPerCell"></a>}}
@@ -621,12 +891,22 @@ applies 'getCellNames()' on all samples
 \subsection{Returns}{
 list of cellnames for all samples
 }
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{con <- Conos$new(small_panel.preprocessed, n.cores=1)
+con$getDatasetPerCell()
+
+}
+\if{html}{\out{</div>}}
+
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-getJointCountMatrix"></a>}}
 \if{latex}{\out{\hypertarget{method-getJointCountMatrix}{}}}
 \subsection{Method \code{getJointCountMatrix()}}{
-something
+Retrieve joint count matrices
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Conos$getJointCountMatrix(raw = FALSE)}\if{html}{\out{</div>}}
 }
@@ -634,13 +914,23 @@ something
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{raw}}{boolean If TRUE, return merged "raw" count matrices. Otherwise, return the merged count matrices. (default=FALSE)}
+\item{\code{raw}}{boolean If TRUE, return merged "raw" count matrices, using function getRawCountMatrix(). Otherwise, return the merged count matrices, using getCountMatrix(). (default=FALSE)}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
 list of merged count matrices
 }
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{con <- Conos$new(small_panel.preprocessed, n.cores=1)
+con$getJointCountMatrix()
+
+}
+\if{html}{\out{</div>}}
+
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-clone"></a>}}

@@ -11,6 +11,7 @@ getSampleNamePerCell(samples)
 }
 \value{
 list of sample names
+getSampleNamePerCell(small_panel.preprocessed)
 }
 \description{
 Retrieve sample names per cell

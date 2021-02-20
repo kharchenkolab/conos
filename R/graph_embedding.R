@@ -20,8 +20,9 @@ graphToAdjList <- function(graph) {
     lapply(unlist) %>%
     lapply(function(x) x / sum(x))
 
-  if (any(sapply(probs, function(x) sum(is.na(x)))))
+  if (any(sapply(probs, function(x) sum(is.na(x))))){
     stop("NAs in transition probabilities")
+  }
 
   return(list(idx=adj.list, probabilities=probs, names=edge.list.fact$levels))
 }
@@ -79,8 +80,9 @@ embedGraphUmap <- function(graph, verbose=TRUE, min.prob=1e-3, min.visited.verts
                         n_epochs=n.epochs, spread=spread, min_dist=min.dist, verbose=verbose, n_sgd_threads=n.sgd.cores, ...)
   if (verbose) message("Done\n")
 
-  if (return.all)
+  if (return.all){
     return(list(adj.info=adj.info, commute.times=commute.times, umap=umap))
+  }
 
   return(umap)
 }

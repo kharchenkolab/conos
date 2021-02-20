@@ -2,10 +2,13 @@
 
 ### Changed
 
-- vignettes edits, detailing `p2app4conos()` for rendering Conos to pagoda2 application
 - extensive revisions for CRAN upload, including roxygen2 documentation
+- replaced relevant C++ code and Rcpp functions with 
+N2R and leidenAlg
+- vignettes edits, detailing `p2app4conos()` for rendering Conos to pagoda2 application
 - updated Dockerfile
 - extensively revised vignettes and moved them, due to on CRAN build + check duration limits
+- README revisions for clarity
 
 ### Added 
 

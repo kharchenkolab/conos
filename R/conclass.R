@@ -58,6 +58,9 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @param override.conos.plot.theme boolean Whether to reset plot settings to the ggplot2 default (default=FALSE)
     #' @param ... additional parameters upon initializing Conos
     #' @return a new 'Conos' object
+    #' @examples
+    #' con <- Conos$new(small_panel.preprocessed, n.cores=1)
+    #' 
     initialize=function(x, ..., n.cores=parallel::detectCores(logical=FALSE), verbose=TRUE, override.conos.plot.theme=FALSE) {
       self$n.cores <- n.cores
       self$override.conos.plot.theme <- override.conos.plot.theme
@@ -149,6 +152,15 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @param same.factor.downweight numeric Optional weighting factor for edges connecting cells with the same cell factor level per cell balancing (default=1.0) 
     #' @param k.same.factor integer An neighborhood size that should be used when aligning samples of the same balancing.factor.per.sample level. Setting a value smaller than k will lead to reduction of alingment strenth within the sample batches (default=k)
     #' @return joint graph to be used for downstream analysis
+    #' @examples
+    #' \donttest{ 
+    #' library(pagoda2)
+    #' panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+    #' con <- Conos$new(panel.preprocessed, n.cores=1)
+    #' con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+    #' }
+    #'
+    #' 
     buildGraph=function(k=15, k.self=10, k.self.weight=0.1, alignment.strength=NULL, space='PCA', matching.method='mNN', metric='angular', k1=k, data.type='counts', l2.sigma=1e5, var.scale=TRUE, ncomps=40,
                         n.odgenes=2000, matching.mask=NULL, exclude.samples=NULL, common.centering=TRUE, verbose=TRUE,
                         base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, score.component.variance=FALSE,
@@ -364,6 +376,16 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @param append.specificity.metrics boolean Whether to append specificity metrics (default=TRUE)
     #' @param append.auc boolean Whether to append AUC scores (default=TRUE)
     #' @return list of DE results; each is a data frame with rows corresponding to the differentially expressed genes, and columns listing log2 fold change (M), signed Z scores (both raw and adjusted for mulitple hypothesis using BH correction), optional specificty/sensitivity and AUC metrics.
+    #' @examples
+    #' \donttest{ 
+    #' library(pagoda2)
+    #' panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+    #' con <- Conos$new(panel.preprocessed, n.cores=1)
+    #' con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+    #' con$findCommunities(method=leiden.community, resolution=2)
+    #' con$getDifferentialGenes()
+    #' }
+    #' 
     getDifferentialGenes=function(clustering=NULL, groups=NULL, z.threshold=3.0, upregulated.only=FALSE, verbose=TRUE, append.specificity.metrics=TRUE, append.auc=TRUE) {
 
       groups <- parseCellGroups(self, clustering, groups)
@@ -406,6 +428,15 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @param sr optional pre-calculated subsampled community results (useful for stability testing) (default: NULL)
     #' @param ... extra parameters are passed to the specified community detection method
     #' @return invisible list containing identified communities (groups) and the full community detection result (result); The results are stored in $clusters$name slot in the conos object. Each such slot contains an object with elements: $results which stores the raw output of the community detection method, and $groups which is a factor on cells describing the resulting clustering. The later can be used, for instance, in plotting: con$plotGraph(groups=con$clusters$leiden$groups). If test.stability==TRUE, then the result object will also contain a $stability slot.
+    #' @examples
+    #' \donttest{ 
+    #' library(pagoda2)
+    #' panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+    #' con <- Conos$new(panel.preprocessed, n.cores=1)
+    #' con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+    #' con$findCommunities(method = igraph::walktrap.community, steps=5)
+    #' }
+    #'
     findCommunities=function(method=leiden.community, min.group.size=0, name=NULL, test.stability=FALSE, stability.subsampling.fraction=0.95, stability.subsamples=100, verbose=TRUE, cls=NULL, sr=NULL, ...) {
 
       if (is.null(cls)) {
@@ -603,6 +634,12 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @param adj.list an optional list of additional ggplot2 directions to apply (default=NULL)
     #' @param ... Additional parameters passed to plotSamples(), plotEmbeddings(), sccore::embeddingPlot().
     #' @return cowplot grid object with the panel of plots
+    #' @examples
+    #' library(pagoda2)
+    #' panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+    #' con <- Conos$new(panel.preprocessed, n.cores=1)
+    #' 
+    #' 
     plotPanel=function(clustering=NULL, groups=NULL, colors=NULL, gene=NULL, use.local.clusters=FALSE, plot.theme=NULL, use.common.embedding=FALSE, embedding=NULL, adj.list=NULL, ...) {
 
       if (use.local.clusters) {
@@ -646,6 +683,16 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @param target.dims numeric Number of dimensions for the reduction (default=2). Higher dimensions can be used to generate embeddings for subsequent reductions by other methods, such as tSNE
     #' @param ... additional arguments, passed to UMAP embedding (run ?conos:::embedGraphUmap for more info)
     #' @return joint graph embedding
+    #' @examples
+    #' \donttest{ 
+    #' library(pagoda2)
+    #' panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+    #' con <- Conos$new(panel.preprocessed, n.cores=1)
+    #' con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+    #' con$findCommunities(method = igraph::walktrap.community, steps=8)
+    #' con$embedGraph(alpha=0.001, sgd_batched=1e8)  
+    #' }
+    #'
     embedGraph=function(method='largeVis', embedding.name=method, M=1, gamma=1, alpha=0.1, perplexity=NA, sgd_batches=1e8, seed=1, verbose=TRUE, target.dims=2, ...) {
       supported.methods <- c('largeVis', 'UMAP')
       if(!method %in% supported.methods) { 
@@ -794,6 +841,17 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @param subset A subset of cells to show (default: NULL - shows all the cells)
     #' @param ... Additional parameters passed to sccore::embeddingPlot()
     #' @return ggplot2 plot of joint graph
+    #' @examples
+    #' \donttest{ 
+    #' library(pagoda2)
+    #' panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+    #' con <- Conos$new(panel.preprocessed, n.cores=1)
+    #' con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+    #' con$findCommunities(method=leiden.community, resolution=1)
+    #' con$embedGraph(alpha=0.001, sgd_batched=1e8)  
+    #' con$plotGraph(alpha=0.1)
+    #' }
+    #'
     plotGraph=function(color.by='cluster', clustering=NULL, embedding=NULL, groups=NULL, colors=NULL, gene=NULL, plot.theme=NULL, subset=NULL, ...) {
       embedding <- private$getEmbedding(embedding)
 
@@ -880,6 +938,19 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' * labels = matrix with distribution of label probabilities for each vertex by rows.
     #' * uncertainty = 1 - confidence values 
     #' * label.distribution = the distribution of labels calculated using either the methods "diffusion" or "solver" 
+    #' @examples
+    #' \donttest{ 
+    #' library(pagoda2)
+    #' panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+    #' con <- Conos$new(panel.preprocessed, n.cores=1)
+    #' con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+    #' con$findCommunities(method=leiden.community, resolution=1)
+    #' con$embedGraph(alpha=0.001, sgd_batched=1e8)  
+    #' cellannot <- read.table(file.path(find.package('conos'),'extdata','cellannot.txt'),header=FALSE,sep='\t')
+    #' cellannot <- setNames(cellannot[,2], cellannot[,1])
+    #' new.label.info <- con$propagateLabels(labels = cellannot, verbose=TRUE)    
+    #' }
+    #'
     propagateLabels=function(labels, method="diffusion", ...) {
       if (method == "solver") {
         label.dist <- propagateLabelsSolver(self$graph, labels, ...)
@@ -902,6 +973,16 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @param common.genes boolean Whether to bring individual sample matrices to a common gene list (default=TRUE)
     #' @param omit.na.cells boolean If set to FALSE, the resulting matrices will include a first column named 'NA' that will report total molecule counts for all of the cells that were not covered by the provided factor. (default=TRUE)
     #' @return a list of per-sample uniform dense matrices with rows being genes, and columns being clusters
+    #' @examples
+    #' \donttest{ 
+    #' library(pagoda2)
+    #' panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+    #' con <- Conos$new(panel.preprocessed, n.cores=1)
+    #' con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+    #' con$findCommunities(method=leiden.community, resolution=1)
+    #' con$getClusterCountMatrices() 
+    #' }
+    #'
     getClusterCountMatrices=function(clustering=NULL, groups=NULL, common.genes=TRUE, omit.na.cells=TRUE) {
       if(is.null(groups)) {
         groups <- getClusteringGroups(self$clusters, clustering)
@@ -933,14 +1014,22 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
     #' @description applies 'getCellNames()' on all samples
     #' @return list of cellnames for all samples
+    #' @examples
+    #' con <- Conos$new(small_panel.preprocessed, n.cores=1)
+    #' con$getDatasetPerCell()
+    #'
     getDatasetPerCell=function() {
       getSampleNamePerCell(self$samples)
     },
 
-    #' @description something
+    #' @description Retrieve joint count matrices
     #'
-    #' @param raw boolean If TRUE, return merged "raw" count matrices. Otherwise, return the merged count matrices. (default=FALSE)
+    #' @param raw boolean If TRUE, return merged "raw" count matrices, using function getRawCountMatrix(). Otherwise, return the merged count matrices, using getCountMatrix(). (default=FALSE)
     #' @return list of merged count matrices
+    #' @examples
+    #' con <- Conos$new(small_panel.preprocessed, n.cores=1)
+    #' con$getJointCountMatrix()
+    #'
     getJointCountMatrix=function(raw=FALSE) {
       lapply(self$samples, (if (raw) getRawCountMatrix else getCountMatrix), transposed=TRUE) %>%
         mergeCountMatrices(transposed=TRUE)

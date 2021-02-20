@@ -979,6 +979,14 @@ adjustWeightsByCellBalancing <- function(adj.mtx, factor.per.cell, balance.weigh
 #' @param plot boolean Whether to plot the output (default=TRUE)
 #' @param ... other parameters will be passed to con$buildGraph()
 #' @return a data frame with $k $m columns giving k and the corresponding modularity
+#' @examples
+#' \donttest{ 
+#' library(pagoda2)
+#' panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+#' con <- Conos$new(panel.preprocessed, n.cores=1)
+#' scanKModularity(con)
+#' }
+#' 
 #' @export
 scanKModularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.internal.edges=TRUE, verbose=TRUE, plot=TRUE, ... ) {
   k.seq <- seq(min,max, by=by)
@@ -1042,6 +1050,8 @@ mergeCountMatrices <- function(cms, transposed=FALSE) {
 #'
 #' @param samples list of samples
 #' @return list of sample names
+#' getSampleNamePerCell(small_panel.preprocessed)
+#' 
 #' @export
 getSampleNamePerCell=function(samples) {
   cl <- lapply(samples, getCellNames)
@@ -1190,7 +1200,7 @@ parseCellGroups <- function(con, clustering, groups, parse.clusters=TRUE) {
 #' @param factor.per.cell some factor, which group cells, such as sample or a specific condition
 #' @return entropy of edge weights per cell
 #' @export
-estimteWeightEntropyPerCell <- function(con, factor.per.cell) {
+estimateWeightEntropyPerCell <- function(con, factor.per.cell) {
   adj.mat <- igraph::as_adjacency_matrix(con$graph, attr="weight") %>% as("dgTMatrix")
   factor.per.cell %<>% as.factor() %>% .[rownames(adj.mat)]
   weight.sum.per.fac.cell <- getSumWeightMatrix(adj.mat@x, adj.mat@i, adj.mat@j, as.integer(factor.per.cell)) %>%

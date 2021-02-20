@@ -38,3 +38,10 @@ Seurat object
 \description{
 Create and preprocess a Seurat object
 }
+\examples{
+\donttest{ 
+library(Seurat)
+panel.preprocessed <- lapply(conosPanel::panel, basicSeuratProc)
+}
+
+}

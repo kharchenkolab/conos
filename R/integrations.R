@@ -244,6 +244,12 @@ saveConosForScanPy <- function(con, output.path, hdf5_filename, metadata.df=NULL
 #' @param tsne boolean Whether to construct tSNE embedding (default=TRUE)
 #' @param umap boolean Whether to construct UMAP embedding, works only for Seurat v2.3.1 or higher (default=FALSE)
 #' @return Seurat object
+#' @examples
+#' \donttest{ 
+#' library(Seurat)
+#' panel.preprocessed <- lapply(conosPanel::panel, basicSeuratProc)
+#' }
+#'
 #' @export
 basicSeuratProc <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do.par=TRUE, n.pcs=100, cluster=TRUE, tsne=TRUE, umap=FALSE) {
   if (!requireNamespace("Seurat", quietly = TRUE)) {
@@ -340,9 +346,6 @@ pcaFromConos <- function(p2.list, data.type='counts', k=30, ncomps=100, n.odgene
 convertToPagoda2 <- function(con, n.pcs=100, n.odgenes=2000, verbose=TRUE, ...) {
   if (!requireNamespace('pagoda2', quietly=TRUE)) {
     stop("'pagoda2' must be installed to convert a Conos object to a Pagoda2 object. Please refer to <https://github.com/kharchenkolab/pagoda2>.")
-  }
-  if (!requireNamespace('conosPanel', quietly=TRUE)) {
-    stop("'conosPanel' must be installed for the function 'convertToPagoda2()' to work. his can be installed via a drat repository, using \"install.packages('p2data', repos='https://kharchenkolab.github.io/drat/', type='source')\". Please read the details provided within the README at https://github.com/kharchenkolab/conos.", call. = FALSE)
   }
   p2 <- con$getJointCountMatrix(raw=TRUE) %>% Matrix::t() %>%
     pagoda2::Pagoda2$new(n.cores=con$n.cores, verbose=verbose, ...)
