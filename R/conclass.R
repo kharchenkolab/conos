@@ -646,7 +646,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, 
     #'     n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
     #' con <- Conos$new(panel.preprocessed, n.cores=1)
-    #' con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', 
+    #' con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN',
     #'     metric='angular', score.component.variance=TRUE, verbose=TRUE)
     #' con$plotPanel(clustering="multilevel", use.local.clusters=TRUE)
     #' }

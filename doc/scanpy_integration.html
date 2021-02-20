@@ -174,15 +174,15 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>Next find the clusters, and create an embedding:</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">findCommunities</span>()</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">embedGraph</span>(<span class="at">method=</span><span class="st">&quot;UMAP&quot;</span>)</span></code></pre></div>
-<pre><code>## Estimating hitting distances: 16:14:14.
+<pre><code>## Estimating hitting distances: 01:30:55.
 ## Done.
-## Estimating commute distances: 17:37:15.
-## Hashing adjacency list: 17:37:15.
+## Estimating commute distances: 01:31:52.
+## Hashing adjacency list: 01:31:52.
 ## Done.
-## Estimating distances: 17:37:20.
+## Estimating distances: 01:31:54.
 ## Done
 ## Done.
-## All done!: 17:37:28.</code></pre>
+## All done!: 01:32:01.</code></pre>
 <p>Now prepare the metadata (which can be any type of clustering of all the cells):</p>
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>metadata <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">Cluster=</span>con<span class="sc">$</span>clusters<span class="sc">$</span>leiden<span class="sc">$</span>groups)</span></code></pre></div>
 <p>Save data (set <code>exchange_dir</code> to your path):</p>

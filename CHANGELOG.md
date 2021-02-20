@@ -1,5 +1,11 @@
 ## Upcoming
 
+### Added
+- added travis config
+- added `getGeneExpression()` for Seurat v2 and v3 (January 2021)
+
+## [1.3.1] - 2020-24-09
+
 ### Changed
 
 - extensive revisions for CRAN upload, including roxygen2 documentation
