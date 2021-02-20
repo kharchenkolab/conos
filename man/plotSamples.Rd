@@ -68,9 +68,11 @@ Defaults to 10000.}
     \item{\code{max.overlaps}}{Exclude text labels that overlap too many things.
 Defaults to 10.}
     \item{\code{nudge_x}}{Horizontal and vertical adjustments to nudge the
-starting position of each text label.}
+starting position of each text label. The units for \code{nudge_x} and
+\code{nudge_y} are the same as for the data units on the x-axis and y-axis.}
     \item{\code{nudge_y}}{Horizontal and vertical adjustments to nudge the
-starting position of each text label.}
+starting position of each text label. The units for \code{nudge_x} and
+\code{nudge_y} are the same as for the data units on the x-axis and y-axis.}
     \item{\code{xlim}}{Limits for the x and y axes. Text labels will be constrained
 to these limits. By default, text labels are constrained to the entire plot
 area.}

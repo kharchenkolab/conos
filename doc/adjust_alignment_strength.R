@@ -17,7 +17,7 @@ cellannot <- find.package('conos') %>% file.path('extdata', 'cellannot.txt') %>%
 panel.preprocessed <- lapply(panel, basicP2proc, n.cores=1, min.cells.per.gene=0, 
                              n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
 
-## ---- message=FALSE, warning=FALSE, fig.width=6, fig.height=6-----------------
+## ---- message=FALSE, warning=FALSE, fig.width=4, fig.height=4-----------------
 con <- Conos$new(panel.preprocessed, n.cores=1)
 con$buildGraph(k=20, k.self=5, space='PCA', ncomps=30)
 con$embedGraph(embedding.name="first_embedding")
@@ -27,7 +27,7 @@ con$plotGraph(color.by='sample', alpha=0.1, size=0.2, mark.groups=FALSE,
 
 con$plotGraph(groups=cellannot, alpha=0.1, size=0.2)
 
-## ---- message=FALSE, warning=FALSE, fig.width=6, fig.height=6-----------------
+## ---- message=FALSE, warning=FALSE, fig.width=4, fig.height=4-----------------
 tissue_per_cb <- con$getDatasetPerCell() %>% substr(7, 8) %>% 
   setNames(names(con$getDatasetPerCell()))
 
@@ -46,28 +46,28 @@ plotConosSummary <- function(con, cell.type.annot, tissue.annot, size=0.2, alpha
     )
 }
 
-## ---- fig.width=18, fig.height=6, message=FALSE, warning=FALSE----------------
+## ---- fig.width=12, fig.height=4, message=FALSE, warning=FALSE----------------
 plotConosSummary(con, cellannot, tissue_per_cb)
 
 ## ---- message=FALSE, warning=FALSE--------------------------------------------
 con$buildGraph(k=20, k.self=5, space='PCA', ncomps=30, alignment.strength=0.3)
 con$embedGraph(embedding.name="second_embedding")
 
-## ---- fig.width=18, fig.height=6, warning=FALSE, message=FALSE----------------
+## ---- fig.width=12, fig.height=4, warning=FALSE, message=FALSE----------------
 plotConosSummary(con, cellannot, tissue_per_cb)
 
 ## ---- message=FALSE, warning=FALSE--------------------------------------------
 con$buildGraph(k=20, k.self=5, space='PCA', ncomps=30, alignment.strength=0.6)
 con$embedGraph(embedding.name="third_embedding")
 
-## ---- fig.width=18, fig.height=6, warning=FALSE, message=FALSE----------------
+## ---- fig.width=12, fig.height=4, warning=FALSE, message=FALSE----------------
 plotConosSummary(con, cellannot, tissue_per_cb)
 
 ## ---- message=FALSE, warning=FALSE--------------------------------------------
 con$buildGraph(k=20, k.self=5, space='PCA', ncomps=30, alignment.strength=1.0)
 con$embedGraph(embedding.name="fourth_embedding")
 
-## ---- fig.width=18, fig.height=6, message=FALSE, warning=FALSE----------------
+## ---- fig.width=12, fig.height=4, message=FALSE, warning=FALSE----------------
 plotConosSummary(con, cellannot, tissue_per_cb)
 
 ## ---- message=FALSE, warning=FALSE--------------------------------------------
@@ -75,6 +75,6 @@ con$buildGraph(k=20, k.self=5, space='PCA', ncomps=30, same.factor.downweight=0.
                balancing.factor.per.cell=tissue_per_cb, alignment.strength=0.3)
 con$embedGraph(embedding.name="fifth_embedding")
 
-## ---- fig.width=18, fig.height=6, message=FALSE, warning=FALSE----------------
+## ---- fig.width=12, fig.height=4, message=FALSE, warning=FALSE----------------
 plotConosSummary(con, cellannot, tissue_per_cb)
 

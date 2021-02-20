@@ -30,7 +30,7 @@ con$findCommunities(resolution=1.5)
 ## generate embedding
 con$embedGraph(alpha=1/2)
 
-## ---- fig.height=10, fig.width=10, message=FALSE, warning=FALSE---------------
+## ---- fig.height=8, fig.width=8, message=FALSE, warning=FALSE-----------------
 p1 <- con$plotGraph(font.size=c(3,5),title='conos clusters',alpha=0.2) #+ annotate("text", x=-Inf, y = Inf, label = "clusters", vjust=1, hjust=0)
 
 p2 <- con$plotGraph(groups=rna.annotation,mark.groups=TRUE,alpha=0.2,plot.na=FALSE,title='annotation: RNA',font.size=c(3,5))+xlim(range(con$embedding[,1]))+ylim(range(con$embedding[,2]))

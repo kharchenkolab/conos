@@ -2,7 +2,6 @@
 title: "Conos Walkthrough"
 output: 
   rmarkdown::html_vignette:
-    toc: true
 vignette: >
   %\VignetteIndexEntry{"Conos Walkthrough"}
   %\VignetteEngine{knitr::rmarkdown}
@@ -199,7 +198,7 @@ In the `$buildGraph()` invocation above, we specified
 explained by successive PCs (by default this option is off to save
 time). We can visualize the results using:
 
-```{r, fig.height=6, fig.width=8}
+```{r, fig.height=4, fig.width=6}
 plotComponentVariance(con, space='PCA')
 ```
 
@@ -218,7 +217,7 @@ has an independent set of clusters that bears no relation to
 clusters in other samples. For example, notice the presence (and lack thereof) of cluster
 9.
 
-```{r, fig.height=8, fig.width=8}
+```{r, fig.height=6, fig.width=6}
 con$plotPanel(clustering="multilevel", use.local.clusters=TRUE, title.size=6)
 ```
 
@@ -236,7 +235,7 @@ con$findCommunities(method=leiden.community, resolution=1)
 We can now plot the clusters we obtained. Note that the number of clusters
 between different samples now correspond to the same cell type. 
 
-```{r, fig.height=8, fig.width=8}
+```{r, fig.height=6, fig.width=6}
 con$plotPanel(font.size=4)
 ```
 
@@ -245,7 +244,7 @@ The convenience function `plotClusterBarplots` can be used to examine the compos
 clusters in terms of samples (top), sample entropy (middle), and cluster size
 (bottom):
 
-```{r, fig.height=8, fig.width=8}
+```{r, fig.height=6, fig.width=6}
 plotClusterBarplots(con, legend.height = 0.1)
 ```
 
@@ -253,7 +252,7 @@ plotClusterBarplots(con, legend.height = 0.1)
 Next we can check the expression pattern of a specific gene across all the individual
 embeddings. In this case, we investigate the expression pattern of [GZMK](https://www.ncbi.nlm.nih.gov/gene/3003):
 
-```{r, fig.height=8, fig.width=8}
+```{r, fig.height=6, fig.width=6}
 con$plotPanel(gene = 'GZMK')
 ```
 
@@ -261,7 +260,7 @@ con$plotPanel(gene = 'GZMK')
 
 Let's see this behavior by setting values in the panel sample `MantonCB2_HiSeq_1` to `NA`:
 
-```{r, fig.height=8, fig.width=8, message=FALSE, warning=FALSE}
+```{r, fig.height=6, fig.width=6, message=FALSE, warning=FALSE}
 ## create new variable for panel.preprocessed
 preprocessed_panel_example <- panel.preprocessed
 ## set NAs within all cell sin MantonCB2_HiSeq_1
@@ -305,7 +304,7 @@ to this main function. So, to get full list of the possible parameters please re
 Observe that the graph captures the population structure irrespective
 of the sample of origin for each cell:
 
-```{r, fig.height=6, fig.width=8}
+```{r, fig.height=4, fig.width=6}
 con$plotGraph(color.by='sample', mark.groups=FALSE, alpha=0.1, show.legend=TRUE)
 ```
 
@@ -413,7 +412,7 @@ subpopulations called by walktrap apparent.
 
 Now we can use this common embedding in `plotPanel` as well:
 
-```{r, fig.width=8, fig.height=8, message=FALSE, warning=FALSE}
+```{r, fig.width=6, fig.height=6, message=FALSE, warning=FALSE}
 con$plotPanel(clustering='walktrap', size=0.1, use.common.embedding=TRUE)
 ```
 
@@ -438,7 +437,7 @@ con$plotGraph(groups=fc$groups, size=0.1)
 Let’s look at the hierarchical structure of these
 clusters:
 
-```{r, fig.width=8, fig.height=6}
+```{r, fig.width=6, fig.height=4}
 # fc$hc is an hclust structure ... here we will convert it to a dendrogram
 dend <- as.dendrogram(fc$hc)
 plot(dend)
@@ -472,7 +471,7 @@ that the annotated cells are indeed in only one sample and that the
 other samples are unlabelled.
 
 
-```{r, fig.width=8, fig.height=8}
+```{r, fig.width=6, fig.height=6}
 con$plotPanel(groups = cellannot)
 ```
 
@@ -487,7 +486,7 @@ This function returns probabilities, uncertainty scores, and final labels
 in the dataset of each cell belonging to each
 group:
 
-```{r, fig.width=8, fig.height=8}
+```{r, fig.width=6, fig.height=6}
 con$plotPanel(colors=new.label.info$uncertainty, show.legend=TRUE, legend.title="Uncertainty", legend.pos=c(1, 0))
 con$plotPanel(groups=new.label.info$labels, show.legend=FALSE)
 ```
@@ -505,7 +504,7 @@ head(new.label.info$label.distribution)
 The first step we can do to understand meaning of the dataset is to look
 at the cluster cell markers:
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 new.annot <- new.label.info$labels
 de.info <- con$getDifferentialGenes(groups=new.annot, append.auc=TRUE)
 ```
@@ -515,7 +514,7 @@ head(de.info$`B cells`)
 ```
 
 
-```{r, fig.width=8, fig.height=6}
+```{r, fig.width=6, fig.height=4}
 cowplot::plot_grid(con$plotGraph(groups=new.annot), con$plotGraph(gene="CD74"))
 ```
 
@@ -545,7 +544,7 @@ con$plotGraph(gene="CD14")
 Or we can plot a heatmap of the top genes (top by AUC, by
 default)
 
-```{r fig.width=8, fig.height=8}
+```{r fig.width=6, fig.height=6}
 plotDEheatmap(con,as.factor(new.annot),de.info, n.genes.per.cluster = 5, column.metadata=list(samples=con$getDatasetPerCell()), row.label.font.size = 7)
 ```
 
@@ -555,7 +554,7 @@ Here we make a smaller heatmap, selecting a subset of cell types and showing
 only a hand-picked set of
 genes:
 
-```{r fig.width=8, fig.height=8}
+```{r fig.width=6, fig.height=6}
 gns <- c("GZMB","IL32","CD3E","LYZ","HLA-DRA","IGHD","GNLY","IGHM","GZMK")
 plotDEheatmap(con,new.annot,de.info[-c(3,10)], n.genes.per.cluster = 30, column.metadata=list(samples=con$getDatasetPerCell()), row.label.font.size = 7, labeled.gene.subset = gns)
 ```
@@ -640,7 +639,7 @@ con$buildGraph(k=15, k.self=5, alignment.strength=0.3, space='PCA', ncomps=30, n
 We can re-generate the embedding and visualize the sample distribution
 again:
 
-```{r, fig.height=6, fig.width=8, message=FALSE, warning=FALSE}
+```{r, fig.height=4, fig.width=6, message=FALSE, warning=FALSE}
 con$embedGraph(embedding.name="new_embedding")
 con$plotGraph(color.by='sample', mark.groups=FALSE, alpha=0.1, show.legend=TRUE)
 ```
@@ -648,7 +647,7 @@ con$plotGraph(color.by='sample', mark.groups=FALSE, alpha=0.1, show.legend=TRUE)
 
 We can also check the entropy, as described above:
 
-```{r, fig.height=8, fig.width=8}
+```{r, fig.height=6, fig.width=6}
 con$findCommunities()
 plotClusterBarplots(con, legend.height = 0.1)
 ```

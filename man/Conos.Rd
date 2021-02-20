@@ -122,7 +122,8 @@ con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.
     metric='angular', score.component.variance=TRUE, verbose=TRUE)
 con$findCommunities(method=leiden.community, resolution=1)
 con$embedGraph(alpha=0.001, sgd_batched=1e8)  
-cellannot <- read.table(file.path(find.package('conos'),'extdata','cellannot.txt'),header=FALSE,sep='\t')
+cellannot <- read.table(file.path(find.package('conos'),'extdata','cellannot.txt'),
+    header=FALSE,sep='\t')
 cellannot <- setNames(cellannot[,2], cellannot[,1])
 new.label.info <- con$propagateLabels(labels = cellannot, verbose=TRUE)    
 }
@@ -857,7 +858,8 @@ con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.
     metric='angular', score.component.variance=TRUE, verbose=TRUE)
 con$findCommunities(method=leiden.community, resolution=1)
 con$embedGraph(alpha=0.001, sgd_batched=1e8)  
-cellannot <- read.table(file.path(find.package('conos'),'extdata','cellannot.txt'),header=FALSE,sep='\t')
+cellannot <- read.table(file.path(find.package('conos'),'extdata','cellannot.txt'),
+    header=FALSE,sep='\t')
 cellannot <- setNames(cellannot[,2], cellannot[,1])
 new.label.info <- con$propagateLabels(labels = cellannot, verbose=TRUE)    
 }
