@@ -1,4 +1,20 @@
+#' @importFrom stats qnorm
+NULL
 
+#' Get a vector of the names of an object named by the names themselves. 
+#' This is useful with lapply when passing names of objects as it ensures that the output list
+#' is also named
+#' 
+#' @param g an objects on which we can call names()
+#' @keywords internal
+namedNames <- function(g) {
+  n <- names(g)
+  names(n) <- n
+  n
+}
+
+
+#' @keywords internal
 validatePerCellTypeParams <- function(con.obj, groups, sample.groups, ref.level, cluster.sep.chr) {
   if (!requireNamespace("DESeq2", quietly = TRUE)) {
     stop("You have to install DESeq2 package to use differential expression")
@@ -7,10 +23,10 @@ validatePerCellTypeParams <- function(con.obj, groups, sample.groups, ref.level,
   if (!('Conos' %in% class(con.obj))) stop('con.obj must be a conos object')
   if (is.null(groups)) stop('groups must be specified');
   if (is.null(sample.groups)) stop('sample.groups must be specified')
-  if (!('list' %in% class(sample.groups))) stop('sample.groups must be a list');
-  if (length(sample.groups) != 2) stop('sample.groups must be of length 2');
+  if (!('list' %in% class(sample.groups))) stop('sample.groups must be a list')
+  if (length(sample.groups) != 2) stop('sample.groups must be of length 2')
   if (!all(unlist(lapply(sample.groups, function(x) 'character' %in% class(x)))))
-    stop('sample.groups must be a list of character vectors');
+    stop('sample.groups must be a list of character vectors')
   if (!all(sapply(sample.groups, length) > 0))
     stop('sample.groups entries must be on length greater or equal to 1')
   if (!all(unlist(lapply(sample.groups, function(x) {all(x %in% names(con.obj$samples))}))))
@@ -25,6 +41,7 @@ validatePerCellTypeParams <- function(con.obj, groups, sample.groups, ref.level,
     stop('cluster.sep.chr must not be part of any cluster name')
 }
 
+#' @keywords internal
 validateBetweenCellTypeParams <- function(con.obj, groups, sample.groups, refgroup, altgroup, cluster.sep.chr) {
   if (!requireNamespace("DESeq2", quietly = TRUE)) {
     stop("You have to install DESeq2 package to use differential expression")
@@ -52,6 +69,12 @@ validateBetweenCellTypeParams <- function(con.obj, groups, sample.groups, refgro
     stop('cluster.sep.chr must not be part of any cluster name')
 }
 
+#' Get raw matrices with common genes
+#' 
+#' @param con.obj Conos object
+#' @param sample.groups list of samples to select from Conos object, con.obj$samples (default=NULL)
+#' @return raw matrices subset with common genes
+#' @export 
 rawMatricesWithCommonGenes <- function(con.obj, sample.groups=NULL) {
   samples <- con.obj$samples
   if (!is.null(sample.groups)) {
@@ -64,6 +87,14 @@ rawMatricesWithCommonGenes <- function(con.obj, sample.groups=NULL) {
   return(lapply(raw.mats, function(x) {x[,common.genes]}))
 }
 
+#' Collapse count matrices by cell type, given min/max number of cells 
+#'
+#' @param cm count matrix
+#' @param groups factor specifying cell types
+#' @param min.cell.count numeric Minimum number of cells to include (default=10)
+#' @param max.cell.count numeric Maximum number of cells to include (default=Inf). If Inf, there is no maximum.
+#' @return Subsetted factor of collapsed cells by type, with NA cells omitted
+#' @export 
 collapseCellsByType <- function(cm, groups, min.cell.count=10, max.cell.count=Inf) {
   groups <- as.factor(groups);
   cl <- setNames(factor(groups[match(rownames(cm),names(groups))],levels=levels(groups)),rownames(cm));
@@ -81,7 +112,10 @@ collapseCellsByType <- function(cm, groups, min.cell.count=10, max.cell.count=In
   tc[table(cl)>=min.cell.count,,drop=FALSE]
 }
 
+#' @keywords internal
 adjustMatrixRownames <- function(name, cm, cluster.sep.chr) {rownames(cm) <- paste0(name, cluster.sep.chr, rownames(cm)); return(cm)}
+
+#' @keywords internal
 rbindDEMatrices <- function(mats, cluster.sep.chr) {
   mats <- lapply(names(mats), function(n) {
     rownames(mats[[n]]) <- paste0(n, cluster.sep.chr, rownames(mats[[n]]));
@@ -91,32 +125,36 @@ rbindDEMatrices <- function(mats, cluster.sep.chr) {
   return(t(do.call(rbind, mats)))
 }
 
+#' @keywords internal
 strpart <- function (x, split, n, fixed = FALSE) {
   sapply(strsplit(as.character(x), split, fixed = fixed), "[", n)
 }
 
+#' @keywords internal
 is.error <- function (x) {
   inherits(x, c("try-error", "error"))
 }
 
 
 #' Do differential expression for each cell type in a conos object between the specified subsets of apps
+#' 
 #' @param con.obj conos object
-#' @param groups factor specifying cell types
-#' @param sample.groups a list of two character vector specifying the app groups to compare
-#' @param cooks.cutoff cooksCutoff for DESeq2
-#' @param ref.level the reference level of the sample.groups against which the comparison should be made (default, NULL, will pick the first one)
-#' @param min.cell.count minimal number of cells per cluster for a sample to be taken into account in a comparison
+#' @param groups factor specifying cell types (default=NULL)
+#' @param sample.groups a list of two character vector specifying the app groups to compare (default=NULL)
+#' @param cooks.cutoff boolean cooksCutoff for DESeq2 (default=FALSE)
+#' @param ref.level the reference level of the sample.groups against which the comparison should be made (default=NULL). If NULL, will pick the first one.
+#' @param min.cell.count integer Minimal number of cells per cluster for a sample to be taken into account in a comparison (default=10)
 #' @param remove.na boolean If TRUE, remove NAs from DESeq calculations, which often arise as comparisons not possible (default=TRUE)
-#' @param max.cell.count maximal number of cells per cluster per sample to include in a comparison (useful for comparing the number of DE genes between cell types)
-#' @param test which DESeq2 test to use (options: "LRT" (default), "Wald")
-#' @param independent.filtering independentFiltering for DESeq2
-#' @param n.cores number of cores
-#' @param cluster.sep.chr character string of length 1 specifying a delimiter to separate cluster and app names
-#' @param return.details return details
+#' @param max.cell.count maximal number of cells per cluster per sample to include in a comparison (useful for comparing the number of DE genes between cell types) (default=Inf)
+#' @param test which DESeq2 test to use (options: "LRT" or "Wald") (default="LRT")
+#' @param independent.filtering boolean independentFiltering for DESeq2 (default=FALSE)
+#' @param n.cores numeric Number of cores (default=1)
+#' @param cluster.sep.chr character string of length 1 specifying a delimiter to separate cluster and app names (default='<!!>')
+#' @param return.details boolean Whether to return verbose details (default=TRUE)
+#' @return A list of differential expression results for every cell type
 #' @export getPerCellTypeDE
-getPerCellTypeDE <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cutoff = FALSE, ref.level = NULL, min.cell.count = 10, remove.na=TRUE, max.cell.count=Inf, test="LRT",
-                             independent.filtering = FALSE, n.cores=1, cluster.sep.chr = '<!!>',return.details=TRUE) {
+getPerCellTypeDE <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cutoff=FALSE, ref.level=NULL, min.cell.count=10, 
+  remove.na=TRUE, max.cell.count=Inf, test="LRT", independent.filtering=FALSE, n.cores=1, cluster.sep.chr = '<!!>', return.details=TRUE) {
   validatePerCellTypeParams(con.obj, groups, sample.groups, ref.level, cluster.sep.chr)
 
   ## Generate a summary dataset collapsing the cells of the same type in each sample
@@ -171,14 +209,13 @@ getPerCellTypeDE <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cut
 }
 
 
-#' Save differential expression as CSV table
+#' Save differential expression as table in *csv format
+#'
 #' @param de.results output of differential expression results, corrected or uncorrected
-#' @param saveprefix prefix for output file
-#' @param data.frame for gene metadata
-#' @export saveDEasCSV
-saveDEasCSV <- function(de.results=NULL,saveprefix=NULL,gene.metadata=NULL) {
-    if(is.null(de.results)) stop('de.results has not been specified')
-    if(is.null(saveprefix)) stop('saveprefix has not bee specified')
+#' @param saveprefix character prefix for output file
+#' @param gene.metadata gene metadta to include (default=NULL)
+#' @export
+saveDEasCSV <- function(de.results, saveprefix, gene.metadata=NULL) {
     ## find errors
     n.error <- sum(unlist(lapply(de.results,is.error)))
     if(n.error > 0) {
@@ -218,20 +255,25 @@ saveDEasCSV <- function(de.results=NULL,saveprefix=NULL,gene.metadata=NULL) {
 }
 
 #' Save differential expression results as JSON
-#' @param de.results differential expression results
-#' @param saveprefix prefix for the differential expression output
-#' @param gene.metadata data.frame with gene metadata
-#' @param cluster.sep.chr character string of length 1 specifying a delimiter to separate cluster and app names
-#' @export saveDEasJSON
+#'
+#' @param de.results differential expression results (default=NULL)
+#' @param saveprefix prefix for the differential expression output (default=NULL)
+#' @param gene.metadata data.frame with gene metadata (default=NULL)
+#' @param cluster.sep.chr character string of length 1 specifying a delimiter to separate cluster and app names (default='<!!>')
+#' @return JSON with DE results
+#' @export 
 saveDEasJSON <- function(de.results = NULL, saveprefix = NULL, gene.metadata = NULL, cluster.sep.chr='<!!>') {
-    ## ### DEVEL
-    ## de.results <- all.percl.TvsW
-    ## saveprefix <- 'json/'
-    ## rm(de.results, saveprefix)
-    ## ##
+
+    if (!requireNamespace("jsonlite", quietly = TRUE)) {
+      stop("Package \"jsonlite\" is needed for this function to work. Please install it.", call. = FALSE)
+    }
     ## Check input
-    if(is.null(de.results)) stop('de.results have not been specified')
-    if(is.null(saveprefix)) stop('saveprefix has not been specified')
+    if(is.null(de.results)){
+      stop('The argument "de.results" has not been specified')
+    }
+    if(is.null(saveprefix)){
+      stop('The argument "saveprefix" has not been specified')
+    }
     ## Find de instances that didn't work (usually because cell type is absent from one or more sample types)
     n.error <- sum(unlist(lapply(de.results, is.error)))
     if(n.error > 0) {
@@ -313,20 +355,23 @@ saveDEasJSON <- function(de.results = NULL, saveprefix = NULL, gene.metadata = N
 }
 
 #' Compare two cell types across the entire panel
+#'
 #' @param con.obj conos object
-#' @param groups factor describing cell grouping
-#' @param sample.groups a named list of two character vectors specifying the app groups to compare
-#' @param cooks.cutoff cooksCutoff parameter for DESeq2
-#' @param refgroup cell type to compare to be used as reference
-#' @param altgroup cell type to compare to
-#' @param min.cell.count minimum number of cells per celltype/sample combination to keep
-#' @param independent.filtering independentFiltering parameter for DESeq2
-#' @param cluster.sep.chr character string of length 1 specifying a delimiter to separate cluster and app names
-#' @param return.details logical, return detailed results
-#' @param only.paired only keep samples that that both cell types above the min.cell.count threshold
+#' @param groups factor describing cell grouping (default=NULL)
+#' @param sample.groups a named list of two character vectors specifying the app groups to compare (default=NULL)
+#' @param cooks.cutoff boolean cooksCutoff parameter for DESeq2 (default=FALSE)
+#' @param refgroup cell type to compare to be used as reference (default=NULL)
+#' @param altgroup cell type to compare to be used as ALT against refgroup (default=NULL)
+#' @param min.cell.count numeric Minimum number of cells per celltype/sample combination to keep (default=10)
+#' @param independent.filtering boolean Whether to use independentFiltering parameter for DESeq2 (default=FALSE)
+#' @param cluster.sep.chr character string of length 1 specifying a delimiter to separate cluster and app names (default='<!!>')
+#' @param return.details boolean Return detailed results (default=TRUE)
+#' @param only.paired boolean Only keep samples that that both cell types above the min.cell.count threshold (default=TRUE)
 #' @param remove.na boolean If TRUE, remove NAs from DESeq calculations (default=TRUE)
-#' @export getBetweenCellTypeDE
-getBetweenCellTypeDE <- function(con.obj, sample.groups =  NULL, groups=NULL, cooks.cutoff = FALSE, refgroup = NULL, altgroup = NULL, min.cell.count = 10,
+#' @return Returns either a DESeq2::results() object, or if return.details=TRUE, 
+#'    returns a list of the DESeq2::results(), the samples from the panel to use in this comparison, refgroups, altgroup, and samplegroups
+#' @export 
+getBetweenCellTypeDE <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cutoff = FALSE, refgroup = NULL, altgroup = NULL, min.cell.count = 10,
                                  independent.filtering = FALSE, cluster.sep.chr = '<!!>',return.details=TRUE, only.paired=TRUE, remove.na=TRUE) {
   # TODO: do we really need sample.groups here? They are used in the corrected version for some unknown reason.
   validateBetweenCellTypeParams(con.obj, groups, sample.groups, refgroup, altgroup, cluster.sep.chr)
@@ -364,6 +409,7 @@ getBetweenCellTypeDE <- function(con.obj, sample.groups =  NULL, groups=NULL, co
   }
 }
 
+#' @keywords internal
 generateDEMatrixMetadata <- function(mtx, refgroup, altgroup, cluster.sep.chr) {
   meta <- data.frame(
     row.names = colnames(mtx),
@@ -372,10 +418,11 @@ generateDEMatrixMetadata <- function(mtx, refgroup, altgroup, cluster.sep.chr) {
     celltype = strpart(colnames(mtx), cluster.sep.chr, 2, fixed=TRUE)
   )
 
-  return(subset(meta, celltype %in% c(refgroup, altgroup)))
+  return(subset(meta, .data$celltype %in% c(refgroup, altgroup)))
 }
 
 #' Compare two cell types across the entire panel
+#'
 #' @param con.obj conos object
 #' @param sample.groups a named list of two character vectors specifying the app groups to compare
 #' @param groups factor describing cell grouping
@@ -389,9 +436,18 @@ generateDEMatrixMetadata <- function(mtx, refgroup, altgroup, cluster.sep.chr) {
 #' @param only.paired only keep samples that that both cell types above the min.cell.count threshold
 #' @param correction fold change corrections per genes
 #' @param ref.level reference level on the basis of which the correction was calculated
-#' @export getBetweenCellTypeCorrectedDE
+#' @return Returns either a DESeq2::results() object, or if return.details=TRUE, 
+#'    returns a list of the DESeq2::results(), the samples from the panel to use in this comparison, refgroups, altgroup, and samplegroups
+#' @export
 getBetweenCellTypeCorrectedDE <- function(con.obj, sample.groups =  NULL, groups=NULL, cooks.cutoff = FALSE, refgroup = NULL, altgroup = NULL, min.cell.count = 10,
                                           independent.filtering = FALSE, cluster.sep.chr = '<!!>',return.details=TRUE, only.paired=TRUE, correction = NULL, ref.level=NULL) {
+
+  if (!requireNamespace("SummarizedExperiment", quietly = TRUE)) {
+    stop("Package \"SummarizedExperiment\" is needed for this function to work. Please install it from Bioconductor.", call. = FALSE)
+  }
+  if (!requireNamespace("plyr", quietly = TRUE)) {
+    stop("Package \"plyr\" is needed for this function to work. Please install it.", call. = FALSE)
+  }
   validateBetweenCellTypeParams(con.obj, groups, sample.groups, refgroup, altgroup, cluster.sep.chr)
   ## Get the samples from the panel to use in this comparison
   aggr2 <- rawMatricesWithCommonGenes(con.obj, sample.groups) %>%
@@ -454,8 +510,9 @@ getBetweenCellTypeCorrectedDE <- function(con.obj, sample.groups =  NULL, groups
 
 ## Marker genes
 
-#' Takes data.frames with info about DE genes for single cell type and many samples and
-#' returns data.frame with aggregated info for this cell type
+## Takes data.frames with info about DE genes for single cell type and many samples and
+## returns data.frame with aggregated info for this cell type
+#' @keywords internal
 aggregateDEMarkersAcrossDatasets <- function(marker.dfs, z.threshold, upregulated.only) {
   if (length(marker.dfs) == 0){
     return(data.frame())
@@ -474,7 +531,7 @@ aggregateDEMarkersAcrossDatasets <- function(marker.dfs, z.threshold, upregulate
   return(res[z.filter > z.threshold,])
 }
 
-
+#' @keywords internal
 getDifferentialGenesP2 <- function(p2.samples, groups, z.threshold=3.0, upregulated.only=FALSE, verbose=TRUE, n.cores=1) {
 
   groups %<>% as.character() %>% setNames(names(groups))
@@ -490,12 +547,12 @@ getDifferentialGenesP2 <- function(p2.samples, groups, z.threshold=3.0, upregula
         p2$getDifferentialGenes(groups=groups, z.threshold=0)
       }
     }
-  })
+  }, progress=verbose, n.cores=n.cores)
 
   if (verbose) message("Aggregating marker genes\n")
   markers.per.type <- unique(groups) %>% setNames(., .) %>%
     lapply(function(id) lapply(markers.per.sample, `[[`, id) %>% .[!sapply(., is.null)])
-  markers.per.type = sccore::plapply(markers.per.type, aggregateDEMarkersAcrossDatasets, z.threshold=z.threshold, upregulated.only=upregulated.only)
+  markers.per.type = sccore::plapply(markers.per.type, aggregateDEMarkersAcrossDatasets, z.threshold=z.threshold, upregulated.only=upregulated.only, progress=verbose, n.cores=n.cores)
 
 
   return(markers.per.type)
@@ -505,7 +562,7 @@ getDifferentialGenesP2 <- function(p2.samples, groups, z.threshold=3.0, upregula
 #'
 #' @param aggregated.samples the count data from aggreaged samples input to DESeq
 #' @return if non-integer counts are found, an error is returned
-#' @keyword internal
+#' @keywords internal
 checkCountsWholeNumbers <- function(input.matrix){
   ## check all non-zero values whole numbers
   if (!(all(input.matrix == floor(input.matrix)))){

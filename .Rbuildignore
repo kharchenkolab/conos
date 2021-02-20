@@ -1,2 +1,16 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
+.travis.yml
+CHANGELOG.md
+^LICENSE\.md$
+^docker$
+^doc$
+doc/*.md
+doc/*.html
+doc/figure_*
+^Meta$
+^vignettes\*.md$
+^vignettes\figure$
+docker
+CONTRIBUTING.md
+data-raw

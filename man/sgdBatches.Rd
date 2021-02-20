@@ -2,31 +2,31 @@
 % Please edit documentation in R/largeVis.R
 \name{sgdBatches}
 \alias{sgdBatches}
-\title{sgdBatches}
+\title{Calculate the default number of batches for a given number of vertices and edges.
+The formula used is the one used by the 'largeVis' reference implementation.  This is substantially less than the recommendation \eqn{E * 10000} in the original paper.}
 \usage{
 sgdBatches(N, E = 150 * N/2)
 }
 \arguments{
-\item{N}{Number of vertices.}
+\item{N}{Number of vertices}
 
-\item{E}{Number of edges (default = 150 * N / 2)}
+\item{E}{Number of edges (default = 150*N/2)}
 }
 \value{
 The recommended number of sgd batches.
 }
 \description{
 Calculate the default number of batches for a given number of vertices and edges.
-}
-\details{
-The formula used is the one used by the \code{LargeVis} reference implementation.  This is substantially less than the recommendation \eqn{E * 10000} in the original paper.
+The formula used is the one used by the 'largeVis' reference implementation.  This is substantially less than the recommendation \eqn{E * 10000} in the original paper.
 }
 \examples{
 # Observe that increasing K has no effect on processing time
 N <- 70000 # MNIST
 K <- 10:250
-plot(K, conos:::sgdBatches(rep(N, length(K)), N * K / 2))
+plot(K, sgdBatches(rep(N, length(K)), N * K / 2))
 
 # Observe that processing time scales linarly with N
 N <- c(seq(from = 1, to = 10000, by = 100), seq(from = 10000, to = 10000000, by = 1000))
-plot(N, conos:::sgdBatches(N))
+plot(N, sgdBatches(N))
+
 }

@@ -2,7 +2,8 @@
 % Please edit documentation in R/communities.R
 \name{multitrap.community}
 \alias{multitrap.community}
-\title{mutlilevel+walktrap communities}
+\title{Constructs a two-step clustering, first running multilevel.communities, and then walktrap.communities within each
+These are combined into an overall hierarchy}
 \usage{
 multitrap.community(
   graph,
@@ -33,6 +34,7 @@ multitrap.community(
 a fakeCommunities object that has methods membership() and as.dendrogram() to mimic regular igraph returns
 }
 \description{
-Constructrs a two-step clustering, first running multilevel.communities, and then walktrap.communities within each
+Constructs a two-step clustering, first running multilevel.communities, and then walktrap.communities within each
 These are combined into an overall hierarchy
 }
+\keyword{internal}

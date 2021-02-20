@@ -194,7 +194,9 @@ std::pair<std::vector<std::vector<int>>, std::vector<std::vector<double>>>
 
   Progress p(n_verts, verbose);
 
+#ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)
+#endif
   for (int v1 = 0; v1 < n_verts; ++v1) {
     if (Progress::check_abort())
       continue;
@@ -203,7 +205,9 @@ std::pair<std::vector<std::vector<int>>, std::vector<std::vector<double>>>
                                                    min_prob, min_visited_verts, min_prob_lower, max_adj_num);
     p.increment();
 
+#ifdef _OPENMP
 #pragma omp critical
+#endif
 {
   res_times.at(v1) = cur_res.first;
   res_idx.at(v1) = cur_res.second;
@@ -237,7 +241,9 @@ Rcpp::List commute_time_per_node(const std::vector<std::vector<int>> &adjacency_
   {
     Progress p_hash(adjacency_list.size(), verbose);
 
+#ifdef _OPENMP
 #pragma omp parallel for schedule(static)
+#endif
     for (int v1 = 0; v1 < adjacency_list.size(); ++v1) {
       if (Progress::check_abort())
         continue;
@@ -264,7 +270,9 @@ Rcpp::List commute_time_per_node(const std::vector<std::vector<int>> &adjacency_
       trace_time("Estimating distances");
     }
 
+#ifdef _OPENMP
 #pragma omp parallel for schedule(static)
+#endif
     for (int v1 = 0; v1 < hitting_times_map.size(); ++v1) {
       if (Progress::check_abort())
         continue;
@@ -297,7 +305,9 @@ Rcpp::List commute_time_per_node(const std::vector<std::vector<int>> &adjacency_
     Rcpp::Rcout << "Done" << std::endl;
   }
 
+#ifdef _OPENMP
 #pragma omp barrier
+#endif
 
   return Rcpp::List::create(Rcpp::_["idx"]=Rcpp::wrap(commute_time_idx),
                             Rcpp::_["dist"]=Rcpp::wrap(commute_times));

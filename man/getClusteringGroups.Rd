@@ -17,3 +17,4 @@ vector of clusters, named with cell names
 \description{
 Extract specified clustering from list of conos clusterings
 }
+\keyword{internal}

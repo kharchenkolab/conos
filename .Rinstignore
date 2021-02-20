@@ -1,0 +1,4 @@
+doc/.*[.]png$
+doc/figure/.*[.]png$
+doc/walkthrough_figures/.*[.]png$
+doc/adjust_alignment_strength_figures/.*[.]png$

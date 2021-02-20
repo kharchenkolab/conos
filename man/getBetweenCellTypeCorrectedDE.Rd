@@ -47,6 +47,10 @@ getBetweenCellTypeCorrectedDE(
 
 \item{ref.level}{reference level on the basis of which the correction was calculated}
 }
+\value{
+Returns either a DESeq2::results() object, or if return.details=TRUE, 
+   returns a list of the DESeq2::results(), the samples from the panel to use in this comparison, refgroups, altgroup, and samplegroups
+}
 \description{
 Compare two cell types across the entire panel
 }

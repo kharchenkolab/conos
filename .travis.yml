@@ -7,6 +7,10 @@ language: r
 ## no tests, coverage
 ## check as CRAN
 
+before_install:
+  - sudo apt-get update
+  - sudo apt-get -y install libharfbuzz-dev libfribidi-dev  ## strange 'textshaping' errors
+
 script:
-  - R CMD build . --compact-vignettes=gs+qpdf
-  - R CMD check *tar.gz ## without CRAN check, --as-cran
+  - R CMD build . --no-build-vignettes ## save time by not building vignettes
+ ## takes too long - travis_wait 30 R CMD check *tar.gz ## without CRAN check, --as-cran

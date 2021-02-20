@@ -1,14 +1,20 @@
-// [[Rcpp::plugins(openmp)]]
+#include <RcppArmadillo.h>
+#define NDEBUG 1
+#include <RcppEigen.h>
+#include <Rcpp.h>
+
 // [[Rcpp::plugins(cpp11)]]
 // [[Rcpp::depends(RcppProgress)]]
 // [[Rcpp::depends(RcppEigen)]]
 // [[Rcpp::depends(RcppArmadillo)]]
-#include "largeVis.h"
+#include "include/largeVis.h"
 #include <vector>
 
-// copied from https://github.com/elbamos/largeVis
+#ifdef _OPENMP
+  #include <omp.h>
+#endif
 
-//#define DEBUG
+// copied from https://github.com/elbamos/largeVis
 
 using namespace Rcpp;
 using namespace std;

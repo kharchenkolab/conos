@@ -23,28 +23,31 @@ saveConosForScanPy(
 
 \item{output.path}{path to a folder, where intermediate files will be saved}
 
-\item{hdf5_filename}{name of HDF5 written with ScanPy files. Note: the \pkg{\link{rhdf5}} package is required}
+\item{hdf5_filename}{name of HDF5 written with ScanPy files. Note: the rhdf5 package is required}
 
-\item{metadata.df}{data.frame with additional metadata with rownames corresponding to cell ids, which should be passed to ScanPy.
+\item{metadata.df}{data.frame with additional metadata with rownames corresponding to cell ids, which should be passed to ScanPy (default=NULL)
 If NULL, only information about cell ids and origin dataset will be saved.}
 
-\item{cm.norm}{logical, include the matrix of normalised counts. Default: FALSE}
+\item{cm.norm}{boolean Whether to include the matrix of normalised counts (default=FALSE).}
 
-\item{pseudo.pca}{logical, produce an emulated PCA by embedding the graph to a space with `n.dims` dimensions and save it as a pseudoPCA. Default: FALSE}
+\item{pseudo.pca}{boolean Whether to produce an emulated PCA by embedding the graph to a space with `n.dims` dimensions and save it as a pseudoPCA (default=FALSE).}
 
-\item{pca}{logical, include PCA of all the samples (not batch corrected). Default: FALSE}
+\item{pca}{boolean Whether to include PCA of all the samples (not batch corrected) (default=FALSE).}
 
-\item{n.dims}{number of dimensions for calculating PCA and/or pseudoPCA}
+\item{n.dims}{numeric Number of dimensions for calculating PCA and/or pseudoPCA (default=100).}
 
-\item{embedding}{logical, include the current conos embedding. Default: TRUE}
+\item{embedding}{boolean Whether to include the current conos embedding (default=TRUE).}
 
-\item{alignment.graph}{logical, include graph of connectivities and distances. Default: TRUE}
+\item{alignment.graph}{boolean Whether to include graph of connectivities and distances (default=TRUE).}
 
-\item{verbose}{verbose mode. Default: FALSE}
+\item{verbose}{boolean Whether to use verbose mode (default=FALSE)}
+}
+\value{
+AnnData object for ScanPy, saved to disk
 }
 \description{
 Save Conos object on disk to read it from ScanPy
 }
 \seealso{
-The \pkg{\link{rhdf5}} package documentation \href{https://www.bioconductor.org/packages/release/bioc/html/rhdf5.html}{here}
+The rhdf5 package documentation here: <https://www.bioconductor.org/packages/release/bioc/html/rhdf5.html>
 }

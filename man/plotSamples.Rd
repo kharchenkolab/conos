@@ -20,9 +20,9 @@ plotSamples(
 
 \item{colors}{vector of numbers, which must be shown with point colors, names contain cell names (default=NULL). This argument is ignored if groups are provided.}
 
-\item{gene}{gene name. If this parameter is provided, points are colored by expression of this gene.}
+\item{gene}{gene name (default=NULL). If this parameter is provided, points are colored by expression of this gene.}
 
-\item{embedding.type}{type of embedding. Default: tSNE. If a numeric matrix is passed, interpreted as an actual embedding.}
+\item{embedding.type}{type of embedding (default=NULL). If embedding.type is NULL, this defaults to 'tSNE'. If a matrix is passed, it is interpreted as an actual embedding (then first two columns are interpreted as x/y coordinates, row names must be cell names).}
 
 \item{...}{
   Arguments passed on to \code{\link[ggrepel:geom_text_repel]{ggrepel::geom_label_repel}}
@@ -53,24 +53,20 @@ specified by passing \code{unit(x, "units")}).}
 to 0.15. (Default unit is lines, but other units can be specified by
 passing \code{unit(x, "units")}).}
     \item{\code{label.size}}{Size of label border, in mm.}
-    \item{\code{segment.colour}}{Colour of the line segment. Defaults to the same colour
-as the text. In the unlikely event you specify both US and UK spellings of colour, the
-US spelling will take precedence.}
-    \item{\code{segment.color}}{Colour of the line segment. Defaults to the same colour
-as the text. In the unlikely event you specify both US and UK spellings of colour, the
-US spelling will take precedence.}
-    \item{\code{segment.size}}{Width of line segment connecting the data point to
-the text label, in mm.}
-    \item{\code{segment.alpha}}{Transparency of the line segment. Defaults to the same
-transparency as the text.}
     \item{\code{min.segment.length}}{Skip drawing segments shorter than this, as unit or
 number. Defaults to 0.5. (Default unit is lines, but other units can be
 specified by passing \code{unit(x, "units")}).}
     \item{\code{arrow}}{specification for arrow heads, as created by \code{\link[grid]{arrow}}}
     \item{\code{force}}{Force of repulsion between overlapping text labels. Defaults
 to 1.}
+    \item{\code{force_pull}}{Force of attraction between a text label and its
+corresponding data point. Defaults to 1.}
+    \item{\code{max.time}}{Maximum number of seconds to try to resolve overlaps.
+Defaults to 0.5.}
     \item{\code{max.iter}}{Maximum number of iterations to try to resolve overlaps.
-Defaults to 2000.}
+Defaults to 10000.}
+    \item{\code{max.overlaps}}{Exclude text labels that overlap too many things.
+Defaults to 10.}
     \item{\code{nudge_x}}{Horizontal and vertical adjustments to nudge the
 starting position of each text label.}
     \item{\code{nudge_y}}{Horizontal and vertical adjustments to nudge the
@@ -86,6 +82,7 @@ a warning.  If \code{TRUE} silently removes missing values.}
     \item{\code{direction}}{"both", "x", or "y" -- direction in which to adjust position of labels}
     \item{\code{seed}}{Random seed passed to \code{\link[base]{set.seed}}. Defaults to
 \code{NA}, which means that \code{set.seed} will not be called.}
+    \item{\code{verbose}}{If \code{TRUE}, some diagnostics of the repel algorithm are printed}
     \item{\code{inherit.aes}}{If \code{FALSE}, overrides the default aesthetics,
 rather than combining with them. This is most useful for helper functions
 that define both data and aesthetics and shouldn't inherit behaviour from
@@ -98,3 +95,4 @@ ggplot2 object with the panel of plots
 \description{
 Plot panel of specified embeddings, extracting them from pagoda2 objects
 }
+\keyword{internal}

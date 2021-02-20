@@ -10,6 +10,8 @@
 #include <omp.h>
 #endif
 
+#define NDEBUG 1
+
 using namespace arma;
 /*
  * Global types

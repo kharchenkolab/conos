@@ -1,3 +1,4 @@
+#' @keywords internal
 splitVectorByNodes <- function(vec, nodes, n.nodes) {
   res <- lapply(1:n.nodes, function(x) list())
   splitted <- split(vec, nodes)
@@ -5,6 +6,7 @@ splitVectorByNodes <- function(vec, nodes, n.nodes) {
   return(res)
 }
 
+#' @keywords internal
 graphToAdjList <- function(graph) {
   edge.list.fact <- igraph::as_edgelist(graph) %>% as_factor()
   edge.list <- matrix(edge.list.fact$values, ncol=2)
@@ -18,13 +20,18 @@ graphToAdjList <- function(graph) {
     lapply(unlist) %>%
     lapply(function(x) x / sum(x))
 
-  if (any(sapply(probs, function(x) sum(is.na(x)))))
+  if (any(sapply(probs, function(x) sum(is.na(x))))){
     stop("NAs in transition probabilities")
+  }
 
   return(list(idx=adj.list, probabilities=probs, names=edge.list.fact$levels))
 }
 
+#' @keywords internal
 embedKnnGraph <- function(commute.times, n.neighbors, names=NULL, verbose=TRUE, target.dims=2, ...) {
+  if (!requireNamespace("uwot", quietly = TRUE)) {
+    stop("Package \"uwot\" needed for this function to work. Please install it.", call. = FALSE)
+  }
   min.n.neighbors <- sapply(commute.times$idx, length) %>% min()
   if (min.n.neighbors < n.neighbors) {
     n.neighbors <- min.n.neighbors
@@ -43,6 +50,7 @@ embedKnnGraph <- function(commute.times, n.neighbors, names=NULL, verbose=TRUE, 
   return(umap)
 }
 
+#' @keywords internal
 embedGraphUmap <- function(graph, verbose=TRUE, min.prob=1e-3, min.visited.verts=1000, n.cores=1,
                            max.hitting.nn.num=0, max.commute.nn.num=0, min.prob.lower=1e-7,
                            n.neighbors=40, n.epochs=1000, spread=15, min.dist=0.001, return.all=FALSE,
@@ -58,7 +66,7 @@ embedGraphUmap <- function(graph, verbose=TRUE, min.prob=1e-3, min.visited.verts
   }
 
   if (verbose) message("Convert graph to adjacency list...\n")
-  adj.info <- graphToAdjList(graph);
+  adj.info <- graphToAdjList(graph)
   if (verbose) message("Done\n")
 
   if (verbose) message("Estimate nearest neighbors and commute times...\n")
@@ -72,8 +80,9 @@ embedGraphUmap <- function(graph, verbose=TRUE, min.prob=1e-3, min.visited.verts
                         n_epochs=n.epochs, spread=spread, min_dist=min.dist, verbose=verbose, n_sgd_threads=n.sgd.cores, ...)
   if (verbose) message("Done\n")
 
-  if (return.all)
+  if (return.all){
     return(list(adj.info=adj.info, commute.times=commute.times, umap=umap))
+  }
 
   return(umap)
 }

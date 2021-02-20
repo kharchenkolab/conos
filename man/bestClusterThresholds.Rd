@@ -10,6 +10,8 @@ bestClusterThresholds(res, clusters, clmerges = NULL)
 \item{res}{walktrap result object (igraph)}
 
 \item{clusters}{cluster factor}
+
+\item{clmerges}{integer matrix of cluster merges (default=NULL). If NULL, the function treeJaccard() performs calculation without it.}
 }
 \value{
 a list of $thresholds - per cluster optimal detectability values, and $node - internal node id (merge row) where the optimum was found

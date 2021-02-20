@@ -2,7 +2,7 @@
 % Please edit documentation in R/conos.R
 \name{greedyModularityCut}
 \alias{greedyModularityCut}
-\title{performs a greedy top-down selective cut to optmize modularity}
+\title{Performs a greedy top-down selective cut to optmize modularity}
 \usage{
 greedyModularityCut(
   wt,
@@ -14,21 +14,21 @@ greedyModularityCut(
 )
 }
 \arguments{
-\item{wt}{walktrap rsult}
+\item{wt}{walktrap result}
 
-\item{N}{number of top greedy splits to take}
+\item{N}{numeric Number of top greedy splits to take}
 
-\item{leaf.labels}{leaf sample label factor, for breadth calculations - must be a named factor containing all wt$names, or if wt$names is null, a factor listing cells in the same order as wt leafs}
+\item{leaf.labels}{leaf sample label factor, for breadth calculations - must be a named factor containing all wt$names, or if wt$names is null, a factor listing cells in the same order as wt leafs (default=NULL)}
 
-\item{minsize}{minimum size of the branch (in number of leafs)}
+\item{minsize}{numeric Minimum size of the branch (in number of leafs) (default=0)}
 
-\item{minbreadth}{minimum allowed breadth of a branch (measured as normalized entropy)}
+\item{minbreadth}{numeric Minimum allowed breadth of a branch (measured as normalized entropy) (default=0)}
 
-\item{flat.cut}{whether to simply take a flat cut (i.e. follow provided tree; default=TRUE). Does no observe minsize/minbreadth restrictions}
+\item{flat.cut}{boolean Whether to simply take a flat cut (i.e. follow provided tree; default=TRUE). Does no observe minsize/minbreadth restrictions}
 }
 \value{
 list(hclust - hclust structure of the derived tree, leafContent - binary matrix with rows corresponding to old leaves, columns to new ones, deltaM - modularity increments)
 }
 \description{
-performs a greedy top-down selective cut to optmize modularity
+Performs a greedy top-down selective cut to optmize modularity
 }
