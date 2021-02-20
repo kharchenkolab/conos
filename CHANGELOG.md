@@ -2,11 +2,18 @@
 
 ### Changed
 
-* vignettes edits, detailing `p2app4conos()` for rendering Conos to pagoda2 application
+- vignettes edits, detailing `p2app4conos()` for rendering Conos to pagoda2 application
+- extensive revisions for CRAN upload, including roxygen2 documentation
+- updated Dockerfile
+- extensively revised vignettes and moved them, due to on CRAN build + check duration limits
 
 ### Added 
 
-* add parameter `raster.dpi` in `con$plotEmbedding()` to replace `raster.height` and `raster.width`, given these parameters are defunct with rewrite of `ggrastr` (v0.2.0)[https://github.com/VPetukhov/ggrastr/releases/tag/v0.2.0]
+- add parameter `raster.dpi` in `con$plotEmbedding()` to replace `raster.height` and `raster.width`, given these parameters are defunct with rewrite of `ggrastr` (v0.2.0)[https://github.com/VPetukhov/ggrastr/releases/tag/v0.2.0]
+- getGeneExpression method exists for Seurat
+- Rjnmf added as Rcpp function
+- auxilliary package conosPanel used
+
 
 ### Removed
 
