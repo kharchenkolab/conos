@@ -63,7 +63,6 @@ Suggests:
     tibble,
     uwot, 
     zoo
-VignetteBuilder: knitr
 Additional_repositories: https://kharchenkolab.github.io/drat/
 URL: https://github.com/kharchenkolab/conos
 BugReports: https://github.com/kharchenkolab/conos/issues
