@@ -21,9 +21,11 @@ con <- Conos$new(small_panel.preprocessed, n.cores=1)
 
 \donttest{ 
 library(pagoda2)
-panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, 
+    n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
 con <- Conos$new(panel.preprocessed, n.cores=1)
-con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', 
+    metric='angular', score.component.variance=TRUE, verbose=TRUE)
 }
 
 
@@ -34,9 +36,11 @@ con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.
 
 \donttest{ 
 library(pagoda2)
-panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, 
+    n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
 con <- Conos$new(panel.preprocessed, n.cores=1)
-con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', 
+    metric='angular', score.component.variance=TRUE, verbose=TRUE)
 con$findCommunities(method=leiden.community, resolution=2)
 con$getDifferentialGenes()
 }
@@ -48,9 +52,11 @@ con$getDifferentialGenes()
 
 \donttest{ 
 library(pagoda2)
-panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, 
+    n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
 con <- Conos$new(panel.preprocessed, n.cores=1)
-con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', 
+    metric='angular', score.component.variance=TRUE, verbose=TRUE)
 con$findCommunities(method = igraph::walktrap.community, steps=5)
 }
 
@@ -61,9 +67,11 @@ con$findCommunities(method = igraph::walktrap.community, steps=5)
 
 \donttest{ 
 library(pagoda2)
-panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, 
+    n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
 con <- Conos$new(panel.preprocessed, n.cores=1)
-con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN',
+    metric='angular', score.component.variance=TRUE, verbose=TRUE)
 con$plotPanel(clustering="multilevel", use.local.clusters=TRUE)
 }
 
@@ -74,9 +82,11 @@ con$plotPanel(clustering="multilevel", use.local.clusters=TRUE)
 
 \donttest{ 
 library(pagoda2)
-panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, 
+    n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
 con <- Conos$new(panel.preprocessed, n.cores=1)
-con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', 
+    metric='angular', score.component.variance=TRUE, verbose=TRUE)
 con$findCommunities(method = igraph::walktrap.community, steps=8)
 con$embedGraph(alpha=0.001, sgd_batched=1e8)  
 }
@@ -88,9 +98,11 @@ con$embedGraph(alpha=0.001, sgd_batched=1e8)
 
 \donttest{ 
 library(pagoda2)
-panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, 
+    n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
 con <- Conos$new(panel.preprocessed, n.cores=1)
-con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', 
+    metric='angular', score.component.variance=TRUE, verbose=TRUE)
 con$findCommunities(method=leiden.community, resolution=1)
 con$embedGraph(alpha=0.001, sgd_batched=1e8)  
 con$plotGraph(alpha=0.1)
@@ -103,9 +115,11 @@ con$plotGraph(alpha=0.1)
 
 \donttest{ 
 library(pagoda2)
-panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, 
+    n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
 con <- Conos$new(panel.preprocessed, n.cores=1)
-con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', 
+    metric='angular', score.component.variance=TRUE, verbose=TRUE)
 con$findCommunities(method=leiden.community, resolution=1)
 con$embedGraph(alpha=0.001, sgd_batched=1e8)  
 cellannot <- read.table(file.path(find.package('conos'),'extdata','cellannot.txt'),header=FALSE,sep='\t')
@@ -120,9 +134,11 @@ new.label.info <- con$propagateLabels(labels = cellannot, verbose=TRUE)
 
 \donttest{ 
 library(pagoda2)
-panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, 
+    n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
 con <- Conos$new(panel.preprocessed, n.cores=1)
-con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', 
+    metric='angular', score.component.variance=TRUE, verbose=TRUE)
 con$findCommunities(method=leiden.community, resolution=1)
 con$getClusterCountMatrices() 
 }
@@ -383,9 +399,11 @@ joint graph to be used for downstream analysis
 \if{html}{\out{<div class="r example copy">}}
 \preformatted{\donttest{ 
 library(pagoda2)
-panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, 
+    n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
 con <- Conos$new(panel.preprocessed, n.cores=1)
-con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', 
+    metric='angular', score.component.variance=TRUE, verbose=TRUE)
 }
 
 
@@ -438,9 +456,11 @@ list of DE results; each is a data frame with rows corresponding to the differen
 \if{html}{\out{<div class="r example copy">}}
 \preformatted{\donttest{ 
 library(pagoda2)
-panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, 
+    n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
 con <- Conos$new(panel.preprocessed, n.cores=1)
-con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', 
+    metric='angular', score.component.variance=TRUE, verbose=TRUE)
 con$findCommunities(method=leiden.community, resolution=2)
 con$getDifferentialGenes()
 }
@@ -503,9 +523,11 @@ invisible list containing identified communities (groups) and the full community
 \if{html}{\out{<div class="r example copy">}}
 \preformatted{\donttest{ 
 library(pagoda2)
-panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, 
+    n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
 con <- Conos$new(panel.preprocessed, n.cores=1)
-con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', 
+    metric='angular', score.component.variance=TRUE, verbose=TRUE)
 con$findCommunities(method = igraph::walktrap.community, steps=5)
 }
 
@@ -568,9 +590,11 @@ cowplot grid object with the panel of plots
 \if{html}{\out{<div class="r example copy">}}
 \preformatted{\donttest{ 
 library(pagoda2)
-panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, 
+    n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
 con <- Conos$new(panel.preprocessed, n.cores=1)
-con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN',
+    metric='angular', score.component.variance=TRUE, verbose=TRUE)
 con$plotPanel(clustering="multilevel", use.local.clusters=TRUE)
 }
 
@@ -639,9 +663,11 @@ joint graph embedding
 \if{html}{\out{<div class="r example copy">}}
 \preformatted{\donttest{ 
 library(pagoda2)
-panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, 
+    n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
 con <- Conos$new(panel.preprocessed, n.cores=1)
-con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', 
+    metric='angular', score.component.variance=TRUE, verbose=TRUE)
 con$findCommunities(method = igraph::walktrap.community, steps=8)
 con$embedGraph(alpha=0.001, sgd_batched=1e8)  
 }
@@ -723,9 +749,11 @@ ggplot2 plot of joint graph
 \if{html}{\out{<div class="r example copy">}}
 \preformatted{\donttest{ 
 library(pagoda2)
-panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, 
+    n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
 con <- Conos$new(panel.preprocessed, n.cores=1)
-con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', 
+    metric='angular', score.component.variance=TRUE, verbose=TRUE)
 con$findCommunities(method=leiden.community, resolution=1)
 con$embedGraph(alpha=0.001, sgd_batched=1e8)  
 con$plotGraph(alpha=0.1)
@@ -822,9 +850,11 @@ list with three fields:
 \if{html}{\out{<div class="r example copy">}}
 \preformatted{\donttest{ 
 library(pagoda2)
-panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, 
+    n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
 con <- Conos$new(panel.preprocessed, n.cores=1)
-con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', 
+    metric='angular', score.component.variance=TRUE, verbose=TRUE)
 con$findCommunities(method=leiden.community, resolution=1)
 con$embedGraph(alpha=0.001, sgd_batched=1e8)  
 cellannot <- read.table(file.path(find.package('conos'),'extdata','cellannot.txt'),header=FALSE,sep='\t')
@@ -872,9 +902,11 @@ a list of per-sample uniform dense matrices with rows being genes, and columns b
 \if{html}{\out{<div class="r example copy">}}
 \preformatted{\donttest{ 
 library(pagoda2)
-panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, 
+    n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
 con <- Conos$new(panel.preprocessed, n.cores=1)
-con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', 
+    metric='angular', score.component.variance=TRUE, verbose=TRUE)
 con$findCommunities(method=leiden.community, resolution=1)
 con$getClusterCountMatrices() 
 }

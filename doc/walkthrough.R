@@ -17,6 +17,9 @@ head(colnames(panel[[1]]))
 ## -----------------------------------------------------------------------------
 any(duplicated(unlist(lapply(panel,colnames))))
 
+## -----------------------------------------------------------------------------
+install.packages('p2data', repos='https://kharchenkolab.github.io/drat/', type='source')
+
 ## ---- message=FALSE, warning=FALSE--------------------------------------------
 library(pagoda2)
 panel.preprocessed <- lapply(panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
@@ -93,7 +96,7 @@ con$embedGraph(alpha=0.001, embedding.name="example_embedding", sgd_batched=1e8)
 con$plotGraph(clustering='walktrap', size=0.1)
 
 ## ---- message=FALSE, warning=FALSE--------------------------------------------
-con$embedGraph(method="UMAP", min.dist=0.01, spread=15, n.cores=1, min.prob.lower=1e-3)
+con$embedGraph(method="UMAP", min.dist=0.01, spread=15, min.prob.lower=1e-3)
 
 ## ---- fig.width=6, fig.height=6-----------------------------------------------
 con$plotGraph(clustering='walktrap', size=0.1)
@@ -161,7 +164,7 @@ samplegroups <- list(
   cb = c("MantonCB1_HiSeq_1","MantonCB2_HiSeq_1")
 )
 
-## -----------------------------------------------------------------------------
+## ---- message=FALSE, warning=FALSE--------------------------------------------
 de.info <- getPerCellTypeDE(con, groups=as.factor(new.annot), sample.groups = samplegroups, ref.level='bm', n.cores=1)
 
 ## -----------------------------------------------------------------------------

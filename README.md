@@ -71,7 +71,7 @@ Please see the following tutorials for detailed examples of how to use conos:
 
 ### Conos walkthrough:
 * [HTML version](https://htmlpreview.github.io/?https://raw.githubusercontent.com/kharchenkolab/conos/master/doc/walkthrough.html)
-* [Markdown version](https://github.com/kharchenkolab/conos/blob/master/vignettes/walkthrough.md)
+* [Markdown version](doc/walkthrough.md)
 
 ### Adjustment of alignment strength with conos:
 * [HTML version](https://htmlpreview.github.io/?https://raw.githubusercontent.com/kharchenkolab/conos/master/doc/adjust_alignment_strength.html)

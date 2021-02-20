@@ -1,4 +1,5 @@
-# Convert Conos Object to Scanpy
+# Convert Conos Object to ScanPy
+
 
 ## Install Auxilliary Data Packages
 
@@ -69,15 +70,15 @@ con$embedGraph(method="UMAP")
 ```
 
 ```
-## Estimating hitting distances: 19:18:09.
+## Estimating hitting distances: 01:52:30.
 ## Done.
-## Estimating commute distances: 19:19:07.
-## Hashing adjacency list: 19:19:07.
+## Estimating commute distances: 01:53:23.
+## Hashing adjacency list: 01:53:23.
 ## Done.
-## Estimating distances: 19:19:09.
+## Estimating distances: 01:53:25.
 ## Done
 ## Done.
-## All done!: 19:19:16.
+## All done!: 01:53:31.
 ```
 
 Now prepare the metadata (which can be any type of clustering of all the cells):

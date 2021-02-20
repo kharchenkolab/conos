@@ -26,7 +26,8 @@ Convert Conos object to Pagoda2 object
 \examples{
 \donttest{ 
 library(pagoda2)
-panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, 
+    n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
 con <- Conos$new(panel.preprocessed, n.cores=1)
 p2object <- convertToPagoda2(con)
 }
