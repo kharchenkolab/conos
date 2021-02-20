@@ -1,6 +1,6 @@
 # Adjustment of Alignment Strength with conos
 
-This tutorial uses the same data as the main [Walkthrough](https://github.com/kharchenkolab/conos/blob/master/vignettes/walkthrough.md) to demonstrate different options 
+This tutorial uses the same data and methods as the main [Conos Walkthrough](https://github.com/kharchenkolab/conos/blob/master/doc/walkthrough.md) to demonstrate different options 
 for forcing alignment. It can be especially useful if the samples are grouped by some external 
 condition (e.g. sequencing protocol or disease vs control).
 

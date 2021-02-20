@@ -1,6 +1,5 @@
 # Convert Conos Object to ScanPy
 
-
 ## Install Auxilliary Data Packages
 
 First install the auxilliary packages for pagoda2 and conos, [p2data](https://github.com/kharchenkolab/p2data) and [conosPanel](https://github.com/kharchenkolab/conosPanel):
@@ -70,15 +69,15 @@ con$embedGraph(method="UMAP")
 ```
 
 ```
-## Estimating hitting distances: 01:52:30.
+## Estimating hitting distances: 05:07:28.
 ## Done.
-## Estimating commute distances: 01:53:23.
-## Hashing adjacency list: 01:53:23.
+## Estimating commute distances: 05:08:20.
+## Hashing adjacency list: 05:08:20.
 ## Done.
-## Estimating distances: 01:53:25.
+## Estimating distances: 05:08:23.
 ## Done
 ## Done.
-## All done!: 01:53:31.
+## All done!: 05:08:29.
 ```
 
 Now prepare the metadata (which can be any type of clustering of all the cells):

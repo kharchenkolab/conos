@@ -2,7 +2,6 @@
 title: "Adjustment of Alignment Strength with conos"
 output: 
   rmarkdown::html_vignette:
-    toc: true
 vignette: >
   %\VignetteIndexEntry{"Adjustment of Alignment Strength with conos"}
   %\VignetteEngine{knitr::rmarkdown}
@@ -10,7 +9,7 @@ vignette: >
 ---
 
 
-This tutorial uses the same data as the main [Walkthrough](https://github.com/kharchenkolab/conos/blob/master/vignettes/walkthrough.md) to demonstrate different options 
+This tutorial uses the same data and methods as the main [Conos Walkthrough](https://github.com/kharchenkolab/conos/blob/master/doc/walkthrough.md) to demonstrate different options 
 for forcing alignment. It can be especially useful if the samples are grouped by some external 
 condition (e.g. sequencing protocol or disease vs control).
 
@@ -49,7 +48,7 @@ panel.preprocessed <- lapply(panel, basicP2proc, n.cores=1, min.cells.per.gene=0
                              n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
 ```
 
-```{r, message=FALSE, warning=FALSE, fig.width=6, fig.height=6}
+```{r, message=FALSE, warning=FALSE, fig.width=4, fig.height=4}
 con <- Conos$new(panel.preprocessed, n.cores=1)
 con$buildGraph(k=20, k.self=5, space='PCA', ncomps=30)
 con$embedGraph(embedding.name="first_embedding")
@@ -64,7 +63,7 @@ con$plotGraph(groups=cellannot, alpha=0.1, size=0.2)
 
 In this dataset our samples are grouped by tissue (BM vs CB), so we can color by this factor:
 
-```{r, message=FALSE, warning=FALSE, fig.width=6, fig.height=6}
+```{r, message=FALSE, warning=FALSE, fig.width=4, fig.height=4}
 tissue_per_cb <- con$getDatasetPerCell() %>% substr(7, 8) %>% 
   setNames(names(con$getDatasetPerCell()))
 
@@ -92,7 +91,7 @@ plotConosSummary <- function(con, cell.type.annot, tissue.annot, size=0.2, alpha
 }
 ```
 
-```{r, fig.width=18, fig.height=6, message=FALSE, warning=FALSE}
+```{r, fig.width=12, fig.height=4, message=FALSE, warning=FALSE}
 plotConosSummary(con, cellannot, tissue_per_cb)
 ```
 
@@ -111,7 +110,7 @@ con$embedGraph(embedding.name="second_embedding")
 ```
 
 
-```{r, fig.width=18, fig.height=6, warning=FALSE, message=FALSE}
+```{r, fig.width=12, fig.height=4, warning=FALSE, message=FALSE}
 plotConosSummary(con, cellannot, tissue_per_cb)
 ```
 
@@ -123,7 +122,7 @@ con$embedGraph(embedding.name="third_embedding")
 ```
 
 
-```{r, fig.width=18, fig.height=6, warning=FALSE, message=FALSE}
+```{r, fig.width=12, fig.height=4, warning=FALSE, message=FALSE}
 plotConosSummary(con, cellannot, tissue_per_cb)
 ```
 
@@ -134,7 +133,7 @@ con$buildGraph(k=20, k.self=5, space='PCA', ncomps=30, alignment.strength=1.0)
 con$embedGraph(embedding.name="fourth_embedding")
 ```
 
-```{r, fig.width=18, fig.height=6, message=FALSE, warning=FALSE}
+```{r, fig.width=12, fig.height=4, message=FALSE, warning=FALSE}
 plotConosSummary(con, cellannot, tissue_per_cb)
 ```
 
@@ -156,6 +155,6 @@ con$buildGraph(k=20, k.self=5, space='PCA', ncomps=30, same.factor.downweight=0.
 con$embedGraph(embedding.name="fifth_embedding")
 ```
 
-```{r, fig.width=18, fig.height=6, message=FALSE, warning=FALSE}
+```{r, fig.width=12, fig.height=4, message=FALSE, warning=FALSE}
 plotConosSummary(con, cellannot, tissue_per_cb)
 ```
