@@ -25,15 +25,16 @@ NULL
 multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=FALSE), hclust.link='single', min.community.size=10, verbose=FALSE, level=NULL, ...) {
   .Deprecated()
 
-  if(verbose) message("running multilevel ... ");
-  mt <- multilevel.community(graph);
+  if(verbose) message("running multilevel ... ")
+  mt <- multilevel.community(graph)
 
   if(is.null(level)) {
     # get higest level (to avoid oversplitting at the initial step)
-    mem <- membership(mt);
+    mem <- membership(mt)
   } else {
     # get the specified level
-    mem <- mt$memberships[level,]; names(mem) <- mt$names;
+    mem <- mt$memberships[level,]
+    names(mem) <- mt$names
   }
 
   if(verbose) message("found ",length(unique(mem))," communities\nrunning walktraps ... ")
@@ -41,7 +42,7 @@ multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=FAL
   # calculate hierarchy on the multilevel clusters
   cgraph <- getClusterGraph(graph,mem)
   chwt <- walktrap.community(cgraph,steps=8)
-  d <- as.dendrogram(chwt);
+  d <- as.dendrogram(chwt)
 
   wtl <- papply(sn(unique(mem)), function(cluster) {
     cn <- names(mem)[which(mem==cluster)]
@@ -49,13 +50,13 @@ multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=FAL
     walktrap.community(induced.subgraph(graph,cn))
   },n.cores=n.cores)
 
-  mbl <- lapply(wtl,membership);
+  mbl <- lapply(wtl,membership)
   # correct small communities
   mbl <- lapply(mbl,function(x) {
     tx <- table(x)
     ivn <- names(tx)[tx<min.community.size]
     if(length(ivn)>1) {
-      x[x %in% ivn] <- as.integer(ivn[1]); # collapse into one group
+      x[x %in% ivn] <- as.integer(ivn[1]) # collapse into one group
     }
     x
   })
@@ -67,8 +68,16 @@ multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=FAL
 
   # shift leaf ids to fill in 1..N range
   mn <- unlist(lapply(wtld,attr,'members'))
-  shift.leaf.ids <- function(l,v) { if(is.leaf(l)) { la <- attributes(l); l <- as.integer(l)+v; attributes(l) <- la; }; l  }
-  nshift <- cumsum(c(0,mn))[-(length(mn)+1)]; names(nshift) <- names(mn); # how much to shift ids in each tree
+  shift.leaf.ids <- function(l,v) { 
+    if(is.leaf(l)) { 
+      la <- attributes(l)
+      l <- as.integer(l)+v
+      attributes(l) <- la
+    }
+    l  
+  }
+  nshift <- cumsum(c(0,mn))[-(length(mn)+1)]
+  names(nshift) <- names(mn) # how much to shift ids in each tree
 
   get.heights <- function(l) {
     if(is.leaf(l)) {
@@ -85,18 +94,19 @@ multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=FAL
 
   glue.dends <- function(l) {
     if(is.leaf(l)) {
-      nam <- as.character(attr(l,'label'));
+      nam <- as.character(attr(l,'label'))
       id <- dendrapply(wtld[[nam]], shift.leaf.ids, v=nshift[nam])
       return(dendrapply(id,shift.heights,s=max.height-attr(id,'height')))
 
     }
-    attr(l,'height') <- (attr(l,'height')-min.d.height)*height.scale + max.height + height.shift;
-    l[[1]] <- glue.dends(l[[1]]); l[[2]] <- glue.dends(l[[2]])
+    attr(l,'height') <- (attr(l,'height')-min.d.height)*height.scale + max.height + height.shift
+    l[[1]] <- glue.dends(l[[1]])
+    l[[2]] <- glue.dends(l[[2]])
     attr(l,'members') <- attr(l[[1]],'members') + attr(l[[2]],'members')
     return(l)
   }
   combd <- glue.dends(d)
-  if(verbose) message("done\n");
+  if(verbose) message("done\n")
 
   # combined clustering factor
   fv <- unlist(lapply(sn(names(wtl)),function(cn) {
@@ -105,10 +115,9 @@ multitrap.community <- function(graph, n.cores=parallel::detectCores(logical=FAL
   names(fv) <- unlist(lapply(mbl,names))
 
   # enclose in a masquerading class
-  res <- list(membership=fv, dendrogram=combd, algorithm='multitrap', names=names(fv));
-  class(res) <- rev("fakeCommunities");
-  return(res);
-
+  res <- list(membership=fv, dendrogram=combd, algorithm='multitrap', names=names(fv))
+  class(res) <- rev("fakeCommunities")
+  return(res)
 }
 
 
@@ -174,9 +183,8 @@ multimulti.community <- function(graph, n.cores=parallel::detectCores(logical=FA
   names(fv) <- unlist(lapply(mbl,names))
 
   # enclose in a masquerading class
-  res <- list(membership=fv, dendrogram=NULL, algorithm='multimulti', names=names(fv));
+  res <- list(membership=fv, dendrogram=NULL, algorithm='multimulti', names=names(fv))
   class(res) <- rev("fakeCommunities")
   return(res)
-
 }
 

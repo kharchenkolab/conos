@@ -1,6 +1,5 @@
 
-## following the walkthrough tutorial
-## https://github.com/kharchenkolab/conos/blob/master/vignettes/walkthrough.md
+## following the walkthrough tutorial, walkthrough.md
 
 library(conos)
 library(dplyr)

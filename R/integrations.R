@@ -307,7 +307,7 @@ pcaFromConos <- function(p2.list, data.type='counts', k=30, ncomps=100, n.odgene
   nms <- Reduce(union, lapply(sm, colnames))
 
   pcs <- lapply(sm, function(x) {
-    cm <- Matrix::colMeans(x);
+    cm <- Matrix::colMeans(x)
     ncomps <- min(c(nrow(cm)-1,ncol(cm)-1,ncomps))
     res <- irlba::irlba(x, nv=ncomps, nu=0, center=cm, right_only=FALSE, reorth=TRUE)
     res
@@ -328,12 +328,22 @@ pcaFromConos <- function(p2.list, data.type='counts', k=30, ncomps=100, n.odgene
 #' @param verbose boolean Whether to give verbose output (default=TRUE)
 #' @param ... parameters passed to Pagoda2$new()
 #' @return pagoda2 object 
+#' @examples
+#' \donttest{ 
+#' library(pagoda2)
+#' panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+#' con <- Conos$new(panel.preprocessed, n.cores=1)
+#' p2object <- convertToPagoda2(con)
+#' }
+#'
 #' @export
 convertToPagoda2 <- function(con, n.pcs=100, n.odgenes=2000, verbose=TRUE, ...) {
   if (!requireNamespace('pagoda2', quietly=TRUE)) {
     stop("'pagoda2' must be installed to convert a Conos object to a Pagoda2 object. Please refer to <https://github.com/kharchenkolab/pagoda2>.")
   }
-
+  if (!requireNamespace('conosPanel', quietly=TRUE)) {
+    stop("'conosPanel' must be installed for the function 'convertToPagoda2()' to work. his can be installed via a drat repository, using \"install.packages('p2data', repos='https://kharchenkolab.github.io/drat/', type='source')\". Please read the details provided within the README at https://github.com/kharchenkolab/conos.", call. = FALSE)
+  }
   p2 <- con$getJointCountMatrix(raw=TRUE) %>% Matrix::t() %>%
     pagoda2::Pagoda2$new(n.cores=con$n.cores, verbose=verbose, ...)
 
@@ -368,19 +378,44 @@ convertToPagoda2 <- function(con, n.pcs=100, n.odgenes=2000, verbose=TRUE, ...) 
 #' @param metadata list Optional list of (named) metadata factors (default=NULL)
 #' @param filename string Name of the *.bin file to seralize for the pagoda2 application if save=TRUE (default='conos_app.bin')
 #' @param save boolean Save serialized *bin file specified in filename (default=TRUE)
-#' @param n.cores integer Number of cores (default=2)
+#' @param n.cores integer Number of cores (default=1)
+#' @param n.odgenes numeric Number of top overdispersed genes to use (dfault=3e3). From pagoda2::basicP2proc().
+#' @param nPcs numeric Number of PCs to use (default=100). From pagoda2::basicP2proc().
+#' @param k numeric Default number of neighbors to use in kNN graph (default=30). From pagoda2::basicP2proc().
+#' @param perplexity numeric Perplexity to use in generating tSNE and largeVis embeddings (default=50). From pagoda2::basicP2proc().
+#' @param log.scale boolean Whether to use log scale normalization (default=TRUE). From pagoda2::basicP2proc().
+#' @param trim numeric Number of cells to trim in winsorization (default=10). From pagoda2::basicP2proc().
+#' @param keep.genes optional set of genes to keep from being filtered out (even at low counts) (default=NULL). From pagoda2::basicP2proc().
+#' @param min.cells.per.gene numeric Minimal number of cells required for gene to be kept (unless listed in keep.genes) (default=0). From pagoda2::basicP2proc().
+#' @param min.transcripts.per.cell numeric Minimumal number of molecules/reads for a cell to be admitted (default=100). From pagoda2::basicP2proc().
+#' @param get.largevis boolean Whether to caluclate largeVis embedding (default=TRUE). From pagoda2::basicP2proc().
+#' @param get.tsne boolean Whether to calculate tSNE embedding (default=TRUE). From pagoda2::basicP2proc().
+#' @param make.geneknn boolean Whether pre-calculate gene kNN (for gene search) (default=TRUE). From pagoda2::basicP2proc().
 #' @param go.env GO environment for the organism of interest (default=NULL)
-#' @param cell.subset string Cells to subset with the conos embedding conos$embedding. If NULL, uses all cells via rownames(conos$embedding) (default-NULL)
+#' @param cell.subset string Cells to subset with the conos embedding conos$embedding. If NULL, uses all cells via rownames(conos$embedding) (default=NULL)
 #' @param max.cells numeric Limit to the cells that are included in the conos. If Inf, there is no limit (default=Inf)
 #' @param additional.embeddings list Additional embeddings to add to conos for the pagoda2 app (default=NULL)
 #' @param test.pathway.overdispersion boolean Find all IDs using GO category against either org.Hs.eg.db ('hs') or org.Mm.eg.db ('mm') (default=FALSE
-#' @param organism string Organism of interest, either 'hs' (Homo sapiens) or 'mm' (Mus musculus, i.e. mouse) (default=NULL). Only used if test.pathway.overdispersion is TRUE.
+#' @param organism string Organism of interest, either 'hs' (Homo sapiens) or 'mm' (Mus musculus, i.e. mouse) (default=NULL). Only used if test.pathway.overdispersion is TRUE. If NULL and test.pathway.overdispersion=TRUE, then 'hs' is used.
 #' @param return.details boolean If TRUE, return list of p2 application, pagoda2 object, list of raw matrices, and cell names. If FALSE, simply return pagoda2 app object. (default=FALSE)
 #' @return pagoda2 app object
+#' @examples
+#' \donttest{ 
+#' library(pagoda2)
+#' panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
+#' con <- Conos$new(panel.preprocessed, n.cores=1)
+#' con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
+#' con$findCommunities(method=leiden.community, resolution=1)
+#' con$embedGraph(alpha=0.001, sgd_batched=1e8) 
+#' p2app4conos(con)
+#' }
+#'
 #' @export 
 p2app4conos <- function(conos, cdl=NULL, metadata=NULL, filename='conos_app.bin', 
-  save=TRUE, n.cores=2, go.env=NULL, cell.subset=NULL, max.cells=Inf, additional.embeddings=NULL, 
-  test.pathway.overdispersion=FALSE, organism=NULL, return.details=FALSE) {
+  save=TRUE, n.cores=1, n.odgenes=3e3, nPcs=100, k=30, perplexity=50, log.scale=TRUE, trim=10, 
+  keep.genes=NULL, min.cells.per.gene=0, min.transcripts.per.cell=100, get.largevis=TRUE, 
+  get.tsne=TRUE, make.geneknn=TRUE, go.env=NULL, cell.subset=NULL, max.cells=Inf, 
+  additional.embeddings=NULL, test.pathway.overdispersion=FALSE, organism=NULL, return.details=FALSE) {
   
   if (!requireNamespace("pagoda2", quietly = TRUE)) {
     stop("You have to install the pagoda2 package to use p2app4conos(). Please refer to <https://github.com/kharchenkolab/pagoda2>.")
@@ -397,6 +432,10 @@ p2app4conos <- function(conos, cdl=NULL, metadata=NULL, filename='conos_app.bin'
   if (!requireNamespace("AnnotationDbi", quietly = TRUE)) {
     stop("Package \"AnnotationDbi\" is needed for this function to work. Please install it from Bioconductor.", call. = FALSE)
   }
+
+  if (is.null(conos$embedding)){
+    stop("The input Conos object must contain an embedding. Please generate with the method embedGraph().")
+  }
   if (is.null(cdl)) {
     #cdl <- lapply(conos$samples,function(p) t(p$misc$rawCounts))
     cdl <- lapply(rawMatricesWithCommonGenes(conos),t)
@@ -404,14 +443,14 @@ p2app4conos <- function(conos, cdl=NULL, metadata=NULL, filename='conos_app.bin'
   samf <- lapply(conos$samples,function(x) rownames(x$counts))
   samf <- as.factor(setNames(rep(names(samf),unlist(lapply(samf,length))),unlist(samf)))
 
-  if(!is.null(cell.subset)) {
+  if (!is.null(cell.subset)) {
     cell.subset <- intersect(cell.subset,rownames(conos$embedding))
   } else {
     cell.subset <- rownames(conos$embedding)  
   }
   
   samf <- droplevels(samf[names(samf) %in% cell.subset])
-  cdl <- lapply(cdl,function(x) x[,colnames(x) %in% cell.subset,drop=FALSE])
+  cdl <- lapply(cdl, function(x) x[,colnames(x) %in% cell.subset,drop=FALSE])
   
   # limit to the cells that are included in the conos
   vc <- unlist(lapply(cdl,colnames))
@@ -422,25 +461,25 @@ p2app4conos <- function(conos, cdl=NULL, metadata=NULL, filename='conos_app.bin'
   } 
   cdl <- lapply(cdl,function(d) d[,colnames(d) %in% intersect(vc,names(samf))])
   cm <- do.call(cbind,cdl)
-  
-   
-  cp2 <- pagoda2::basicP2proc(cm, min.cells.per.gene=1, nPcs=50, get.tsne=TRUE, get.largevis=FALSE, make.geneknn=TRUE, n.cores=n.cores)
+
+  cp2 <- pagoda2::basicP2proc(cm, n.cores=n.cores, n.odgenes=n.odgenes, nPcs=nPcs, k=k, perplexity=perplexity, log.scale=log.scale, min.cells.per.gene=min.cells.per.gene, min.transcripts.per.cell=min.transcripts.per.cell, get.largevis=get.largevis, get.tsne=get.tsne, make.geneknn=make.geneknn)
   
   if (test.pathway.overdispersion) {
-    if (organism =='mm') { 
+    if (is.null(organism) || organism =='hs') {
+      ids <- unlist(lapply(mget(colnames(cp2$counts),org.Hs.eg.db::org.Hs.egALIAS2EG,ifnotfound=NA),function(x) x[1]))
+      rids <- names(ids)
+      names(rids) <- ids
+      # list all the ids per GO category
+      go.env <- list2env(eapply(org.Hs.eg.db::org.Hs.egGO2ALLEGS, function(x) as.character(na.omit(rids[x]))))
+    } else if (organism =='mm') { 
       # translate gene names to ids
       ids <- unlist(lapply(mget(colnames(cp2$counts),org.Mm.eg.db::org.Mm.egALIAS2EG,ifnotfound=NA),function(x) x[1]))
       # reverse map
       rids <- names(ids)
       names(rids) <- ids
       # list all the ids per GO category
-      go.env <- list2env(eapply(org.Mm.eg.db::org.Mm.egGO2ALLEGS,function(x) as.character(na.omit(rids[x]))))
-    } else if (organism =='hs') {
-      ids <- unlist(lapply(mget(colnames(cp2$counts),org.Hs.eg.db::org.Hs.egALIAS2EG,ifnotfound=NA),function(x) x[1]))
-      rids <- names(ids)
-      names(rids) <- ids
-      # list all the ids per GO category
-      go.env <- list2env(eapply(org.Hs.eg.db::org.Hs.egGO2ALLEGS,function(x) as.character(na.omit(rids[x]))))
+      go.env <- list2env(eapply(org.Mm.eg.db::org.Mm.egGO2ALLEGS, function(x) as.character(na.omit(rids[x]))))
+
     } else { 
       stop("Unknown organism. Currently only 'hs' (human) and 'mm' (mouse) supported.")
     }
@@ -482,13 +521,12 @@ p2app4conos <- function(conos, cdl=NULL, metadata=NULL, filename='conos_app.bin'
     cp2$reductions$Other <- list()
   }
   
-  
   # additional metadata with different factors .. you probably want to include something like sample or tissue (or patient type)
   metadata <- c(metadata,list(sample=samf))
   metadata <- lapply(metadata, function(d) d[cn])
   meta <- lapply(sn(names(metadata)),function(n) pagoda2::p2.metadata.from.factor(droplevels(as.factor(metadata[[n]])),displayname=n))
   
-  p2app <- pagoda2::make.p2.app(cp2, dendrogramCellGroups = as.factor(conos$clusters[[1]]$groups[cn]), additionalMetadata = meta, geneSets = geneSets,innerOrder='odPCA');
+  p2app <- pagoda2::make.p2.app(cp2, dendrogramCellGroups = as.factor(conos$clusters[[1]]$groups[cn]), additionalMetadata = meta, geneSets = geneSets,innerOrder='odPCA')
   
   # Optional showing of app
   #show.app(p2app, name='newPagoda',browse=FALSE)

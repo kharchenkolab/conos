@@ -65,7 +65,7 @@ embedGraphUmap <- function(graph, verbose=TRUE, min.prob=1e-3, min.visited.verts
   }
 
   if (verbose) message("Convert graph to adjacency list...\n")
-  adj.info <- graphToAdjList(graph);
+  adj.info <- graphToAdjList(graph)
   if (verbose) message("Done\n")
 
   if (verbose) message("Estimate nearest neighbors and commute times...\n")

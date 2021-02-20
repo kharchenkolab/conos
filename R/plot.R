@@ -81,7 +81,7 @@ plotEmbeddings <- function(embeddings, groups=NULL, colors=NULL, ncol=NULL, nrow
   }
 
   plot.list <- lapply(names(embeddings), function(n) {
-    emb <- embeddings[[n]];
+    emb <- embeddings[[n]]
     if(!is.null(subset)) {
       emb <- emb[rownames(emb) %in% subset,,drop=FALSE]
     }
@@ -175,7 +175,7 @@ plotClusterBarplots <- function(conos.obj=NULL, clustering=NULL, groups=NULL, sa
   }
 
   if(is.null(sample.factor)) {
-    sample.factor <- conos.obj$getDatasetPerCell(); # assignment to samples
+    sample.factor <- conos.obj$getDatasetPerCell() # assignment to samples
   }
 
   xt <- table(sample.factor[match(names(groups),names(sample.factor))],groups)
@@ -195,7 +195,7 @@ plotClusterBarplots <- function(conos.obj=NULL, clustering=NULL, groups=NULL, sa
 
   # extract legend
   leg <- cowplot::get_legend(clp + ggplot2::theme(legend.position="bottom"))
-  pl <- list(clp + ggplot2::theme(legend.position="none"));
+  pl <- list(clp + ggplot2::theme(legend.position="none"))
 
   if(show.entropy) {
     if (!requireNamespace("entropy", quietly=TRUE)){
@@ -542,9 +542,6 @@ plotDEheatmap <- function(con, groups, de=NULL, min.auc=NULL, min.specificity=NU
     if(max(xp)>0) xp <- xp/max(xp);
     xp
   }))
-  
-  
-
 
   if(!is.null(cell.order)) {
     o <- cell.order[cell.order %in% colnames(x)]
@@ -592,14 +589,18 @@ plotDEheatmap <- function(con, groups, de=NULL, min.auc=NULL, min.specificity=NU
   rannot <- rannot[names(rannot) %in% rownames(x)]
   rannot <- data.frame(clusters=factor(rannot,levels=names(expl)))
 
-  if(remove.duplicates) { x <- x[!duplicated(rownames(x)),] }
+  if (remove.duplicates) { 
+    x <- x[!duplicated(rownames(x)),] 
+  }
 
   # draw heatmap
   ha <- ComplexHeatmap::HeatmapAnnotation(df=annot,border=border,col=column.metadata.colors,show_legend=show.cluster.legend)
 
   if(show.gene.clusters) {
     ra <- ComplexHeatmap::HeatmapAnnotation(df=rannot,which='row',show_annotation_name=FALSE, show_legend=FALSE, border=border,col=column.metadata.colors)
-  } else { ra <- NULL }
+  } else { 
+    ra <- NULL 
+  }
 
   ## turns off ComplexHeatmap warning:
   ## `use_raster` is automatically set to TRUE for a matrix with more than

@@ -119,10 +119,14 @@ commonOverdispersedGenes <- function(samples, n.odgenes, verbose) {
 #' @keywords internal
 quickNULL <- function(p2.objs, data.type='counts', n.odgenes = NULL, var.scale = T,
                       verbose = TRUE) {
-  if(length(p2.objs) != 2) stop('quickNULL only supports pairwise alignment');
+  if (length(p2.objs) != 2){
+    stop('quickNULL only supports pairwise alignment')
+  }
 
   od.genes <- commonOverdispersedGenes(p2.objs, n.odgenes, verbose=verbose)
-  if(length(od.genes)<5) return(NULL);
+  if (length(od.genes)<5){
+    return(NULL)
+  }
 
   cproj <- scaledMatrices(p2.objs, data.type=data.type, od.genes=od.genes, var.scale=var.scale)
 
@@ -200,7 +204,9 @@ cpcaFast <- function(covl,ncells,ncomp=10,maxit=1000,tol=1e-6,use.irlba=TRUE,ver
 #' @keywords internal
 quickCPCA <- function(r.n, data.type='counts', ncomps=100, n.odgenes=NULL, var.scale=TRUE, verbose=TRUE, score.component.variance=FALSE) {
   od.genes <- commonOverdispersedGenes(r.n, n.odgenes, verbose=verbose)
-  if(length(od.genes)<5) return(NULL);
+  if(length(od.genes)<5){
+    return(NULL)
+  }
 
   ncomps <- min(ncomps, length(od.genes) - 1)
 
@@ -233,7 +239,7 @@ quickCPCA <- function(r.n, data.type='counts', ncomps=100, n.odgenes=NULL, var.s
   res <- cpcaFast(covl,ncells,ncomp=ncomps,verbose=verbose,maxit=500,tol=1e-5)
   #system.time(res <- cpca:::cpca_stepwise_base(covl,ncells,k=ncomps))
   #res <- cpc(abind(covl,along=3),k=ncomps)
-  rownames(res$CPC) <- od.genes;
+  rownames(res$CPC) <- od.genes
   if (score.component.variance) {
     v0 <- lapply(sm,function(x) sum(apply(x,2,var)))
     v1 <- lapply(1:length(sm),function(i) {
@@ -243,7 +249,7 @@ quickCPCA <- function(r.n, data.type='counts', ncomps=100, n.odgenes=NULL, var.s
       apply(rot,2,var)/v0[[i]]
     })
     # calculate projection
-    res$nv <- v1;
+    res$nv <- v1
   }
   if(verbose) message(' done\n')
   return(res)
@@ -261,24 +267,29 @@ quickCPCA <- function(r.n, data.type='counts', ncomps=100, n.odgenes=NULL, var.s
 #' @param n.cores numeric Number of cores to use (default=1)
 #' @return PCA projection, using space of combined sample-specific PCAs
 #' @keywords internal
-quickPlainPCA <- function(r.n, data.type='counts', ncomps=30, n.odgenes=NULL, var.scale=TRUE, verbose=TRUE, score.component.variance=FALSE, n.cores=1) {
+quickPlainPCA <- function(r.n, data.type='counts', ncomps=30, n.odgenes=NULL, var.scale=TRUE, 
+  verbose=TRUE, score.component.variance=FALSE, n.cores=1) {
+  
   od.genes <- commonOverdispersedGenes(r.n, n.odgenes, verbose=verbose)
-  if(length(od.genes)<5) return(NULL);
+  
+  if (length(od.genes)<5){
+    return(NULL)
+  }
 
   if(verbose) message('calculating PCs for ',length(r.n),' datasets ...')
 
-  sm <- scaledMatrices(r.n, data.type=data.type, od.genes=od.genes, var.scale=var.scale);
+  sm <- scaledMatrices(r.n, data.type=data.type, od.genes=od.genes, var.scale=var.scale)
   pcs <- lapply(sm, function(x) {
-    cm <- Matrix::colMeans(x);
-    ncomps <- min(c(nrow(cm)-1,ncol(cm)-1,round(ncomps/2)));
-    res <- irlba::irlba(x, nv=ncomps, nu =0, center=cm, right_only = F, reorth = T);
+    cm <- Matrix::colMeans(x)
+    ncomps <- min(c(nrow(cm)-1,ncol(cm)-1,round(ncomps/2)))
+    res <- irlba::irlba(x, nv=ncomps, nu =0, center=cm, right_only = FALSE, reorth = TRUE)
     if(score.component.variance) {
       # calculate projection
       rot <- as.matrix(t(t(x %*% res$v) - as.vector(t(cm %*% res$v))))
       # note: this could be calculated a lot faster, but would need to account for the variable matrix format
       v0 <- apply(x,2,var)
       v1 <- apply(rot,2,var)/sum(v0)
-      res$nv <- v1;
+      res$nv <- v1
     }
     res
   })
@@ -289,15 +300,15 @@ quickPlainPCA <- function(r.n, data.type='counts', ncomps=30, n.odgenes=NULL, va
   ncols <- unlist(lapply(pcs,function(x) ncol(x$v)))
   pcj <- pcj[,interleave(ncols[1],ncols[2])]
   
-  rownames(pcj) <- od.genes;
-  res <- list(CPC=pcj);
+  rownames(pcj) <- od.genes
+  res <- list(CPC=pcj)
 
   if(score.component.variance) {
     res$nv <- lapply(pcs,function(x) x$nv)
   }
   if(verbose) message(' done\n')
 
-  return(res);
+  return(res)
 }
 
 
@@ -313,16 +324,18 @@ quickPlainPCA <- function(r.n, data.type='counts', ncomps=30, n.odgenes=NULL, va
 quickCCA <- function(r.n, data.type='counts', ncomps=100, n.odgenes=NULL, var.scale=TRUE, verbose=TRUE, PMA=FALSE, score.component.variance=FALSE) {
 
   od.genes <- commonOverdispersedGenes(r.n, n.odgenes, verbose=verbose)
-  if(length(od.genes)<5) return(NULL);
+  if(length(od.genes)<5){
+    return(NULL)
+  }
 
   ncomps <- min(ncomps, length(od.genes) - 1)
   sm <- scaledMatrices(r.n, data.type=data.type, od.genes=od.genes, var.scale=var.scale)
   sm <- lapply(sm,function(m) m[rowSums(m)>0,])
   sm <- lapply(sm,scale, scale=FALSE) # center
   if(PMA) {
-    if (!requireNamespace("PMA", quietly=TRUE))
+    if (!requireNamespace("PMA", quietly=TRUE)){
       stop("You need to install package 'PMA' to use the PMA flag.")
-
+    }
     res <- PMA::CCA(t(sm[[1]]),t(sm[[2]]),K=ncomps,trace=FALSE,standardize=FALSE)
   } else {
     res <- irlba::irlba(sm[[1]] %*% t(sm[[2]]),ncomps)
@@ -337,15 +350,15 @@ quickCCA <- function(r.n, data.type='counts', ncomps=100, n.odgenes=NULL, var.sc
   res$vl <- apply(res$vl,2,function(x) x/sqrt(sum(x*x)))
 
   v0 <- lapply(sm,function(x) sum(apply(x,2,var)))
-  res$nv <- list(apply(sm[[1]] %*% res$ul,2,var)/v0[[1]],
-                 apply(sm[[2]] %*% res$vl,2,var)/v0[[2]]);
-  names(res$nv) <- names(sm);
+  res$nv <- list(apply(sm[[1]] %*% res$ul,2,var)/v0[[1]], apply(sm[[2]] %*% res$vl,2,var)/v0[[2]])
+  names(res$nv) <- names(sm)
 
   #res$sm <- sm;
   # end DEBUG
 
   # adjust component weighting
-  cw <- sqrt(res$d); cw <- cw/max(cw)
+  cw <- sqrt(res$d)
+  cw <- cw/max(cw)
   res$u <- res$u %*% diag(cw)
   res$v <- res$v %*% diag(cw)
 
@@ -727,13 +740,15 @@ stableTreeClusters <- function(refwt, tests, min.threshold=0.8, min.size=10, n.c
   # calculate detectability thresholds for each node against entire list of tests
   #i<- 0;
   refwt$merges <- complete.dend(refwt,FALSE)
-  for(i in 1:length(tests)) tests[[i]]$merges <- complete.dend(tests[[i]],FALSE)
+  for (i in 1:length(tests)){
+    tests[[i]]$merges <- complete.dend(tests[[i]],FALSE)
+  }
   thrs <- papply(tests,function(testwt) {
     #i<<- i+1; cat("i=",i,'\n');
-    idmap <- match(refwt$names,testwt$names)-1L;
-    idmap[is.na(idmap)] <- -1;
+    idmap <- match(refwt$names,testwt$names)-1L
+    idmap[is.na(idmap)] <- -1
     x <- scoreTreeConsistency(testwt$merges-1L,refwt$merges-1L,idmap ,min.size)
-    x$thresholds;
+    x$thresholds
   },n.cores=n.cores)
   if(length(tests)==1) {
     x <- maxStableClusters(refwt$merges-1L,thrs[[1]],min.threshold,min.size)
@@ -860,7 +875,7 @@ getNeighborMatrix <- function(p1, p2, k, k1=k, matching='mNN', metric='angular',
   adj.mtx@x[adj.mtx@x < min.similarity] <- 0
   adj.mtx <- drop0(adj.mtx);
 
-  if(k1 > k) { # downsample edges
+  if (k1 > k) { # downsample edges
     adj.mtx <- reduceEdgesInGraphIteratively(adj.mtx,k)
   }
 
@@ -886,10 +901,13 @@ reduceEdgesInGraph <- function(adj.mtx,k,klow=k,preserve.order=TRUE) {
 ## max.kdiff gives approximate difference in the degree of the resulting nodes that is tolerable
 #' @keywords internal
 reduceEdgesInGraphIteratively <- function(adj.mtx,k,preserve.order=TRUE,max.kdiff=5,n.steps=3) {
-  cc <- diff(adj.mtx@p); rc <- tabulate(adj.mtx@i+1);
-  maxd <- max(max(cc),max(rc));
-  if(maxd<=k) return(adj.mtx); # nothing to be done - already below k
-  klow <- max(min(k,3),k-max.kdiff); # allowable lower limit
+  cc <- diff(adj.mtx@p)
+  rc <- tabulate(adj.mtx@i+1)
+  maxd <- max(max(cc),max(rc))
+  if (maxd<=k){
+    return(adj.mtx) # nothing to be done - already below k
+  } 
+  klow <- max(min(k,3),k-max.kdiff) # allowable lower limit
   # set up a stepping strategy
   n.steps <- min(n.steps,round(maxd/k))
   if(n.steps>1) {
@@ -900,8 +918,9 @@ reduceEdgesInGraphIteratively <- function(adj.mtx,k,preserve.order=TRUE,max.kdif
   for(ki in ks) {
     adj.mtx <- reduceEdgesInGraph(adj.mtx,ki,preserve.order=preserve.order)
   }
-  cc <- diff(adj.mtx@p); rc <- tabulate(adj.mtx@i+1);
-  maxd <- max(max(cc),max(rc));
+  cc <- diff(adj.mtx@p)
+  rc <- tabulate(adj.mtx@i+1)
+  maxd <- max(max(cc),max(rc))
   if(maxd-k > max.kdiff) {
     # do a cleanup step
     adj.mtx <- reduceEdgesInGraph(adj.mtx,k,klow=klow,preserve.order=preserve.order)
@@ -1140,14 +1159,14 @@ findSubcommunities <- function(con, target.clusters, clustering=NULL, groups=NUL
 
 #' @keywords internal
 parseCellGroups <- function(con, clustering, groups, parse.clusters=TRUE) {
-  if (!parse.clusters)
+  if (!parse.clusters){
     return(groups)
+  }
 
   if (!is.null(groups)) {
     if (!any(names(groups) %in% names(con$getDatasetPerCell()))){
       stop("'groups' aren't defined for any of the cells.")
     }
-
     return(groups)
   }
 
@@ -1155,7 +1174,6 @@ parseCellGroups <- function(con, clustering, groups, parse.clusters=TRUE) {
     if (length(con$clusters) > 0){
       return(con$clusters[[1]]$groups)
     }
-
     stop("Either 'groups' must be provided or the conos object must have some clustering estimated")
   }
   if (is.null(clusters[[clustering]])){

@@ -337,7 +337,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       }
 
       if (balance.edge.weights || !is.null(balancing.factor.per.cell)) {
-        if(verbose) message('balancing edge weights ');
+        if(verbose) message('balancing edge weights ')
 
         if (is.null(balancing.factor.per.cell)) {
           balancing.factor.per.cell <- self$getDatasetPerCell()
@@ -350,7 +350,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
         if(verbose) message('done')
       }
-      self$graph <- g;
+      self$graph <- g
       return(invisible(g))
     },
 
