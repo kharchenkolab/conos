@@ -4,8 +4,10 @@
 CHANGELOG.md
 ^LICENSE\.md$
 ^docker$
-^.*\.html
+^doc$
 ^Meta$
+^vignettes\*.md$
+^vignettes\figure$
 docker
 CONTRIBUTING.md
 data-raw

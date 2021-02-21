@@ -71,11 +71,11 @@ Please see the following tutorials for detailed examples of how to use conos:
 
 ### Conos walkthrough:
 * [HTML version](https://htmlpreview.github.io/?https://raw.githubusercontent.com/kharchenkolab/conos/master/doc/walkthrough.html)
-* [Markdown version](doc/walkthrough.md)
+* [Markdown version](https://github.com/kharchenkolab/conos/blob/master/doc/walkthrough.md)
 
 ### Adjustment of alignment strength with conos:
 * [HTML version](https://htmlpreview.github.io/?https://raw.githubusercontent.com/kharchenkolab/conos/master/doc/adjust_alignment_strength.html)
-* [Markdown version](doc/adjust_alignment_strength.md)
+* [Markdown version](https://github.com/kharchenkolab/conos/blob/master/doc/adjust_alignment_strength.md)
 
 ### Integration with Scanpy:
 
@@ -83,7 +83,7 @@ Note that for integration with [Scanpy](https://scanpy.readthedocs.io/en/stable/
 
 **Save conos for Scanpy:**
 * [HTML version](https://htmlpreview.github.io/?https://raw.githubusercontent.com/kharchenkolab/conos/master/doc/scanpy_integration.html)
-* [Markdown version](doc/scanpy_integration.md)
+* [Markdown version](https://github.com/kharchenkolab/conos/blob/master/doc/scanpy_integration.md)
 
 **Load conos files into Scanpy:**
 * [Jupyter Notebook](inst/scanpy_integration.ipynb)
@@ -91,7 +91,7 @@ Note that for integration with [Scanpy](https://scanpy.readthedocs.io/en/stable/
 
 ### Integrating RNA-seq and ATAC-seq with conos:
 * [HTML version](https://htmlpreview.github.io/?https://raw.githubusercontent.com/kharchenkolab/conos/master/doc/integrating_rnaseq_atacseq.html)
-* [Markdown version](doc/integrating_rnaseq_atacseq.md)
+* [Markdown version](https://github.com/kharchenkolab/conos/blob/master/doc/integrating_rnaseq_atacseq.md)
 
 ### Running RNA velocity on a Conos object
 
