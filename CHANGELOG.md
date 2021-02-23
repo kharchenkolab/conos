@@ -1,10 +1,6 @@
 ## Upcoming
 
-### Added
-- added travis config
-- added `getGeneExpression()` for Seurat v2 and v3 (January 2021)
-
-## [1.3.1] - 2020-24-09
+## [1.4.0] - 2021-23-02
 
 ### Changed
 
@@ -18,8 +14,8 @@ N2R and leidenAlg
 
 ### Added 
 
+- added `getGeneExpression()` for Seurat v2 and v3 (January 2021)
 - add parameter `raster.dpi` in `con$plotEmbedding()` to replace `raster.height` and `raster.width`, given these parameters are defunct with rewrite of `ggrastr` (v0.2.0)[https://github.com/VPetukhov/ggrastr/releases/tag/v0.2.0]
-- getGeneExpression method exists for Seurat
 - Rjnmf added as Rcpp function
 - auxilliary package conosPanel used
 
