@@ -146,7 +146,7 @@ Rjnmf <- function(Xs, Xu, k, alpha, lambda, epsilon, maxiter, verbose, seed = 42
 
 ## Perform pairwise JNMF
 #' @keywords internal
-quickJNMF <- function(p2.objs, data.type='counts', n.comps=30, n.odgenes=NULL, var.scale=TRUE, verbose=TRUE, max.iter=1000) {
+quickJNMF <- function(p2.objs, data.type='counts', n.comps=30, n.odgenes=NULL, var.scale=TRUE, verbose=TRUE, max.iter=1000, rjnmf.seed=12345) {
 
   ## Stop if more than 2 samples
   if (length(p2.objs) != 2){
@@ -161,7 +161,6 @@ quickJNMF <- function(p2.objs, data.type='counts', n.comps=30, n.odgenes=NULL, v
   cproj <- scaledMatrices(p2.objs, data.type=data.type, od.genes=od.genes, var.scale=var.scale) %>%
     lapply(as.matrix)
 
-  rjnmf.seed <- 12345
   ## Do JNMF
   z <- Rjnmf(Xs=t(cproj[[1]]), Xu=t(cproj[[2]]), k=n.comps, alpha=0.5, lambda = 0.5, epsilon = 0.001, maxiter= max.iter, verbose=FALSE, seed=rjnmf.seed)
   rot1 <- cproj[[1]] %*% z$W
