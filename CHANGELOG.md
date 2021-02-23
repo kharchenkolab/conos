@@ -1,9 +1,33 @@
 ## Upcoming
 
+### Changed 
+
 ### Added
-- added travis config
-- added `getGeneExpression()` for Seurat v2 and v3 (January 2021)
 - support Seurat objects in `getOdGenesUniformly` and `con$correctGenes`
+
+### Removed
+
+## [1.4.0] - 2021-23-02
+
+### Changed
+
+- extensive revisions for CRAN upload, including roxygen2 documentation
+- replaced relevant C++ code and Rcpp functions with 
+N2R and leidenAlg
+- vignettes edits, detailing `p2app4conos()` for rendering Conos to pagoda2 application
+- updated Dockerfile
+- extensively revised vignettes and moved them, due to on CRAN build + check duration limits
+- README revisions for clarity
+
+### Added 
+
+- added `getGeneExpression()` for Seurat v2 and v3 (January 2021)
+- add parameter `raster.dpi` in `con$plotEmbedding()` to replace `raster.height` and `raster.width`, given these parameters are defunct with rewrite of `ggrastr` (v0.2.0)[https://github.com/VPetukhov/ggrastr/releases/tag/v0.2.0]
+- Rjnmf added as Rcpp function
+- auxilliary package conosPanel used
+
+
+### Removed
 
 ## [1.3.1] - 2020-24-09
 
