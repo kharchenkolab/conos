@@ -1,4 +1,7 @@
 [![Build Status](https://travis-ci.com/kharchenkolab/conos.svg?branch=master)](https://travis-ci.com/github/kharchenkolab/conos)
+[![CRAN status](https://www.r-pkg.org/badges/version/conos)](https://cran.r-project.org/package=conos)
+[![CRAN downloads](https://cranlogs.r-pkg.org/badges/conos)](https://cran.r-project.org/package=conos)
+
 
 <img src="https://github.com/kharchenkolab/conos/blob/dev/inst/conos_logo.png" align="right" height="140">
 
@@ -138,11 +141,19 @@ show.velocity.on.embedding.cor(vi$emb, vel.info, cc = cc.velo$cc, n = 200, scale
 
 ## Installation
 
+
+To install the stable version from [CRAN](https://cran.r-project.org/web/packages/conos/index.html), use:
+
+```r
+install.packages('conos')
+```
+
+
 To install the latest version of `conos`, use:
 
 ```r
 install.packages('devtools')
-devtools::install_github('kharchenkolab/conos', build_vignettes = TRUE)
+devtools::install_github('kharchenkolab/conos')
 ```
 
 Please note that the package `conos` depends on data in a data package (`conosPanel`) that is available through a `drat` repository on GitHub. To use the `conos` package, you will need to install `conosPanel`. There are two equally valid options to install this package:
