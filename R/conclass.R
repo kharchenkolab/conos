@@ -1144,7 +1144,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       if(verbose) message('found ',sum(!is.na(mi)),' out of ',length(mi),' cached ',space,' space pairs ... ')
       if(any(is.na(mi))) { # some pairs are missing
         if(verbose) message('running ',sum(is.na(mi)),' additional ',space,' space pairs ')
-        xl2 <- plapply(which(is.na(mi)), function(i) {
+        xl2 <- sccore::plapply(which(is.na(mi)), function(i) {
           if(space=='CPCA') {
             xcp <- quickCPCA(self$samples[sn.pairs[,i]],data.type=data.type,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale, score.component.variance=score.component.variance)
           } else if(space=='JNMF') {
