@@ -499,20 +499,11 @@ factorBreakdown <- function(f) {tapply(names(f),f, identity) }
 #' @param n.genes number of overdispersed genes to extract
 #' @keywords internal
 getOdGenesUniformly <- function(samples, n.genes) {
-  if (!requireNamespace("tibble", quietly = TRUE)) {
-    stop("Package \"tibble\" is needed for this function to work. Please install it.", call. = FALSE)
-  }
-
-  if (!("Pagoda2" %in% class(samples[[1]]))){
-    stop("This function is currently supported only for Pagoda2 objects")
-  }
-
-  gene.info <- lapply(samples, function(s)
-    tibble::rownames_to_column(s$misc[['varinfo']], "gene") %>%
-      dplyr::mutate(rank=rank(.data$lpa, ties.method="first"))
-  )
-  genes <- gene.info %>% dplyr::bind_rows() %>% dplyr::group_by(.data$gene) %>%
-    dplyr::summarise(rank=min(rank)) %>% dplyr::arrange(rank) %>% .$gene
+  genes <- lapply(samples, getOverdispersedGenes, Inf) %>%
+    lapply(function(gs) data.frame(gene=gs, rank=1:length(gs), stringsAsFactors=FALSE)) %>%
+    dplyr::bind_rows() %>% dplyr::group_by(.data$gene) %>%
+    dplyr::summarise(rank=min(rank), .groups='drop') %>% dplyr::arrange(rank) %>%
+    .$gene
 
   return(genes[1:min(n.genes, length(genes))])
 }

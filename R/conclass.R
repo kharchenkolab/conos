@@ -915,7 +915,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           genes <- getOdGenesUniformly(self$samples, n.genes=n.od.genes)
         }
 
-        cms <- lapply(self$samples, `[[`, "counts")
+        cms <- lapply(self$samples, getCountMatrix, transposed=TRUE)
         genes <- Reduce(intersect, lapply(cms, colnames)) %>% intersect(genes)
         count.matrix <- Reduce(rbind, lapply(cms, function(x) x[, genes])) %>% as.matrix()
       } else {

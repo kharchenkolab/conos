@@ -3,6 +3,7 @@
 ### Added
 - added travis config
 - added `getGeneExpression()` for Seurat v2 and v3 (January 2021)
+- support Seurat objects in `getOdGenesUniformly` and `con$correctGenes`
 
 ## [1.3.1] - 2020-24-09
 
