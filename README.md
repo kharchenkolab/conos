@@ -142,7 +142,7 @@ show.velocity.on.embedding.cor(vi$emb, vel.info, cc = cc.velo$cc, n = 200, scale
 ## Installation
 
 
-To install the stable version from [CRAN](https://cran.r-project.org/web/packages/conos/index.html), use:
+To install the stable version from [CRAN](https://CRAN.R-project.org/package=conos), use:
 
 ```r
 install.packages('conos')
