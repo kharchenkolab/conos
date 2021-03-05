@@ -39,6 +39,7 @@ Suggests:
     AnnotationDbi,
     BiocParallel,
     conosPanel,
+    drat,
     DESeq2,
     entropy,
     ggrastr,
