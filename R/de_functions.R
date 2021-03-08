@@ -87,30 +87,6 @@ rawMatricesWithCommonGenes <- function(con.obj, sample.groups=NULL) {
   return(lapply(raw.mats, function(x) {x[,common.genes]}))
 }
 
-#' Collapse count matrices by cell type, given min/max number of cells
-#'
-#' @param cm count matrix
-#' @param groups factor specifying cell types
-#' @param min.cell.count numeric Minimum number of cells to include (default=10)
-#' @param max.cell.count numeric Maximum number of cells to include (default=Inf). If Inf, there is no maximum.
-#' @return Subsetted factor of collapsed cells by type, with NA cells omitted
-#' @export
-collapseCellsByType <- function(cm, groups, min.cell.count=10, max.cell.count=Inf) {
-  groups <- as.factor(groups);
-  cl <- setNames(factor(groups[match(rownames(cm),names(groups))],levels=levels(groups)),rownames(cm));
-  if(is.finite(max.cell.count)) {
-    vc <- unlist(tapply(names(cl),cl,function(nn) {
-      if(length(nn) > max.cell.count) sample(nn,max.cell.count) else nn
-    }))
-    cl <- cl[names(cl) %in% vc]
-    cm <- cm[names(cl),]
-  }
-
-  tc <- colSumByFactor(cm,cl);
-  tc <- tc[-1,,drop=FALSE]  # omit NA cells
-  tc[table(cl)>=min.cell.count,,drop=FALSE]
-}
-
 #' @keywords internal
 adjustMatrixRownames <- function(name, cm, cluster.sep.chr) {rownames(cm) <- paste0(name, cluster.sep.chr, rownames(cm)); return(cm)}
 

@@ -1,11 +1,14 @@
 ## Upcoming
 
-### Changed 
+### Changed
 
 ### Added
+
 - support Seurat objects in `getOdGenesUniformly` and `con$correctGenes`
 
 ### Removed
+
+- functions `collapseCellsByType` and `colSumByFactor` are moved to [sccore](https://github.com/kharchenkolab/sccore/)
 
 ## [1.4.0] - 2021-23-02
 
