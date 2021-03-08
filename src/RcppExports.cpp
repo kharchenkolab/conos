@@ -2,7 +2,6 @@
 // Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 #include <RcppArmadillo.h>
-#define NDEBUG 1
 #include <RcppEigen.h>
 #include <Rcpp.h>
 
@@ -299,18 +298,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// colSumByFactor
-NumericMatrix colSumByFactor(SEXP sY, IntegerVector rowSel);
-RcppExport SEXP _conos_colSumByFactor(SEXP sYSEXP, SEXP rowSelSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type sY(sYSEXP);
-    Rcpp::traits::input_parameter< IntegerVector >::type rowSel(rowSelSEXP);
-    rcpp_result_gen = Rcpp::wrap(colSumByFactor(sY, rowSel));
-    return rcpp_result_gen;
-END_RCPP
-}
 // spcov
 Eigen::MatrixXd spcov(const Eigen::SparseMatrix<double>& m, Eigen::VectorXd cm);
 RcppExport SEXP _conos_spcov(SEXP mSEXP, SEXP cmSEXP) {
@@ -346,7 +333,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_conos_smooth_count_matrix", (DL_FUNC) &_conos_smooth_count_matrix, 10},
     {"_conos_adjacent_vertices", (DL_FUNC) &_conos_adjacent_vertices, 1},
     {"_conos_adjacent_vertex_weights", (DL_FUNC) &_conos_adjacent_vertex_weights, 2},
-    {"_conos_colSumByFactor", (DL_FUNC) &_conos_colSumByFactor, 2},
     {"_conos_spcov", (DL_FUNC) &_conos_spcov, 2},
     {"adjustedRand", (DL_FUNC) &adjustedRand, 9},
     {NULL, NULL, 0}

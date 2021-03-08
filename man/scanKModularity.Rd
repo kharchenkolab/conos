@@ -46,9 +46,9 @@ Builds graph with different values of k (or k.self if scan.k.self=TRUE), evaluat
 NOTE: will run evaluations in parallel using con$n.cores (temporarily setting con$n.cores to 1 in the process)
 }
 \examples{
-\donttest{ 
+\donttest{
 library(pagoda2)
-panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, 
+panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0,
     n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
 con <- Conos$new(panel.preprocessed, n.cores=1)
 scanKModularity(con)
