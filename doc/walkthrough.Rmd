@@ -156,7 +156,7 @@ here.
 con <- Conos$new(panel.preprocessed, n.cores=1)
 ```
 
-Our original pagoda2 (or Seurat) objects are now saved in the Conos
+Our original Pagoda2 (or Seurat) objects are now saved in the Conos
 object.
 
 
@@ -656,9 +656,9 @@ For more details on this topic, please see the tutorial [Adjustment of Alignment
 
 # View Conos in Pagoda2 Application
 
-Users may also interactively explore Conos objects in the [Pagoda2](https://github.com/kharchenkolab/pagoda2) application. The process is very similar to the Pagoda2 walkthrough. 
+Users may also interactively explore Conos objects in the [Pagoda2](https://github.com/kharchenkolab/pagoda2) application. The process is very similar to the pagoda2 walkthrough. 
 
-After constructing the `con` object as shown above, users can save to a serialized `*.bin` file and upload into the pagoda application with the `p2app4conos()` function, using `p2app4conos(conos=con)`. More information, please review the Pagoda2 [walkthrough](https://github.com/kharchenkolab/pagoda2/blob/master/vignettes/pagoda2.walkthrough.md)
+After constructing the `con` object as shown above, users can save to a serialized `*.bin` file and upload into the pagoda application with the `p2app4conos()` function, using `p2app4conos(conos=con)`. More information, please review the [pagoda2 walkthrough](https://github.com/kharchenkolab/pagoda2/blob/master/vignettes/pagoda2.walkthrough.md)
 
 ```{r}
 # library(pagoda2)
