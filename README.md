@@ -182,23 +182,17 @@ library(devtools)
 install_github("kharchenkolab/conosPanel")
 ```
 
-**Note:** If you are using [pagoda2](https://github.com/kharchenkolab/pagoda2), you should also install the auxiliary package `p2data`:
-
-```r
-install.packages('p2data', repos='https://kharchenkolab.github.io/drat/', type='source')
-```
-
 
 #### System dependencies
 
-The dependencies are inherited from [pagoda2](https://github.com/kharchenkolab/pagoda2):
+The dependencies are inherited from [pagoda2](https://github.com/kharchenkolab/pagoda2). Note that this package depends on igraph, which requires various libraries to install correctly. Please see the installation instructions at that page for more details.
 
 ##### Ubuntu dependencies
 
 To install system dependencies using `apt-get`, use the following:
 ```sh
 sudo apt-get update
-sudo apt-get -y install libcurl4-openssl-dev libssl-dev
+sudo apt-get -y install libcurl4-openssl-dev libssl-dev libxml2-dev
 ```
 
 ##### Red Hat-based distributions dependencies
@@ -206,7 +200,8 @@ sudo apt-get -y install libcurl4-openssl-dev libssl-dev
 For Red Hat distributions using `yum`, use the following command:
 
 ```sh
-yum install openssl-devel libcurl-devel
+sudo yum update
+sudo yum install openssl-devel libcurl-devel libxml2-devel
 ```
 
 ##### Mac OS
@@ -214,7 +209,8 @@ yum install openssl-devel libcurl-devel
 Using the Mac OS package manager [Homebrew](https://brew.sh/), try the following command:
 
 ```sh
-brew install openssl curl-openssl
+brew update
+brew install openssl curl-openssl libxml2
 ```
 (You may need to run `brew uninstall curl` in order for `brew install curl-openssl` to be successful.)
 
