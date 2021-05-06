@@ -192,7 +192,7 @@ The dependencies are inherited from [pagoda2](https://github.com/kharchenkolab/p
 To install system dependencies using `apt-get`, use the following:
 ```sh
 sudo apt-get update
-sudo apt-get -y install libcurl4-openssl-dev libssl-dev libxml2-dev
+sudo apt-get -y install libcurl4-openssl-dev libssl-dev libxml2-dev libgmp-dev libglpk-dev
 ```
 
 ##### Red Hat-based distributions dependencies
@@ -201,7 +201,7 @@ For Red Hat distributions using `yum`, use the following command:
 
 ```sh
 sudo yum update
-sudo yum install openssl-devel libcurl-devel libxml2-devel
+sudo yum install openssl-devel libcurl-devel libxml2-devel gmp-devel glpk-devel
 ```
 
 ##### Mac OS
@@ -210,7 +210,7 @@ Using the Mac OS package manager [Homebrew](https://brew.sh/), try the following
 
 ```sh
 brew update
-brew install openssl curl-openssl libxml2
+brew install openssl curl-openssl libxml2 glpk gmp
 ```
 (You may need to run `brew uninstall curl` in order for `brew install curl-openssl` to be successful.)
 
