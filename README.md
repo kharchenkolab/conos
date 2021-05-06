@@ -185,7 +185,7 @@ install_github("kharchenkolab/conosPanel")
 
 #### System dependencies
 
-The dependencies are inherited from [pagoda2](https://github.com/kharchenkolab/pagoda2). Note that this package has the dependency [igraph](https://igraph.org/r/), which requires various libraries to install correctly. Please see the installation instructions at that page for more details, or the github README [here](https://github.com/igraph/rigraph).
+The dependencies are inherited from [pagoda2](https://github.com/kharchenkolab/pagoda2). Note that this package has the dependency [igraph](https://igraph.org/r/), which requires various libraries to install correctly. Please see the installation instructions at that page for more details, along with the github README [here](https://github.com/igraph/rigraph).
 
 ##### Ubuntu dependencies
 
