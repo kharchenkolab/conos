@@ -17,9 +17,6 @@ head(colnames(panel[[1]]))
 ## -----------------------------------------------------------------------------
 any(duplicated(unlist(lapply(panel,colnames))))
 
-## -----------------------------------------------------------------------------
-install.packages('p2data', repos='https://kharchenkolab.github.io/drat/', type='source')
-
 ## ---- message=FALSE, warning=FALSE--------------------------------------------
 library(pagoda2)
 panel.preprocessed <- lapply(panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)

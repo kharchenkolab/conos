@@ -5,11 +5,10 @@ This tutorial walks through an example of RNA-ATAC-seq integration based on the 
 
 ## Install Auxilliary Data Packages
 
-First install the auxilliary packages for pagoda2 and conos, [p2data](https://github.com/kharchenkolab/p2data) and [conosPanel](https://github.com/kharchenkolab/conosPanel):
+First install the auxilliary packages for conos, [conosPanel](https://github.com/kharchenkolab/conosPanel):
 
 
 ```r
-install.packages('p2data', repos='https://kharchenkolab.github.io/drat/', type='source')
 install.packages('conosPanel', repos='https://kharchenkolab.github.io/drat/', type='source')
 ```
 

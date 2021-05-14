@@ -1,5 +1,4 @@
 ## ---- message=FALSE, warning=FALSE--------------------------------------------
-install.packages('p2data', repos='https://kharchenkolab.github.io/drat/', type='source')
 install.packages('conosPanel', repos='https://kharchenkolab.github.io/drat/', type='source')
 
 ## ---- message=FALSE, warning=FALSE--------------------------------------------
