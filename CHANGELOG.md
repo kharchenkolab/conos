@@ -1,6 +1,7 @@
 ## Upcoming
 
-### Changed
+
+## [1.4.1] - 2021-14-05
 
 ### Added
 
@@ -9,6 +10,7 @@
 ### Removed
 
 - functions `collapseCellsByType` and `colSumByFactor` are moved to [sccore](https://github.com/kharchenkolab/sccore/)
+- removed strong dependency on drat repositories; only used now for the vignettes in the README
 
 ## [1.4.0] - 2021-23-02
 
