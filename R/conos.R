@@ -969,14 +969,6 @@ adjustWeightsByCellBalancing <- function(adj.mtx, factor.per.cell, balance.weigh
 #' @param plot boolean Whether to plot the output (default=TRUE)
 #' @param ... other parameters will be passed to con$buildGraph()
 #' @return a data frame with $k $m columns giving k and the corresponding modularity
-#' @examples
-#' \donttest{
-#' library(pagoda2)
-#' panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0,
-#'     n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
-#' con <- Conos$new(panel.preprocessed, n.cores=1)
-#' scanKModularity(con)
-#' }
 #'
 #' @export
 scanKModularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.internal.edges=TRUE, verbose=TRUE, plot=TRUE, ... ) {
