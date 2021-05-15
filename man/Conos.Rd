@@ -36,17 +36,6 @@ con$findCommunities(method = igraph::walktrap.community, steps=5)
 
 
 ## ------------------------------------------------
-## Method `Conos$embedGraph`
-## ------------------------------------------------
-
-con <- Conos$new(small_panel.preprocessed, n.cores=1)
-con$buildGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.method='mNN', 
-    metric='angular', score.component.variance=TRUE, verbose=TRUE)
-con$embedGraph(alpha=0.001, sgd_batched=1e8)
-
-
-
-## ------------------------------------------------
 ## Method `Conos$getDatasetPerCell`
 ## ------------------------------------------------
 
@@ -511,22 +500,6 @@ between \code{0} and \code{1}, the default value will be multiplied by the param
 }
 \if{html}{\out{</div>}}
 }
-\subsection{Returns}{
-joint graph embedding
-}
-\subsection{Examples}{
-\if{html}{\out{<div class="r example copy">}}
-\preformatted{con <- Conos$new(small_panel.preprocessed, n.cores=1)
-con$buildGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.method='mNN', 
-    metric='angular', score.component.variance=TRUE, verbose=TRUE)
-con$embedGraph(alpha=0.001, sgd_batched=1e8)
-
-
-}
-\if{html}{\out{</div>}}
-
-}
-
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-plotClusterStability"></a>}}

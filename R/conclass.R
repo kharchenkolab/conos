@@ -662,13 +662,6 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @param seed numeric Random seed for the largeVis algorithm (default=1)
     #' @param target.dims numeric Number of dimensions for the reduction (default=2). Higher dimensions can be used to generate embeddings for subsequent reductions by other methods, such as tSNE
     #' @param ... additional arguments, passed to UMAP embedding (run ?conos:::embedGraphUmap for more info)
-    #' @return joint graph embedding
-    #' @examples
-    #' con <- Conos$new(small_panel.preprocessed, n.cores=1)
-    #' con$buildGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.method='mNN', 
-    #'     metric='angular', score.component.variance=TRUE, verbose=TRUE)
-    #' con$embedGraph(alpha=0.001, sgd_batched=1e8)
-    #' 
     #'
     embedGraph=function(method='largeVis', embedding.name=method, M=1, gamma=1, alpha=0.1, perplexity=NA, sgd_batches=1e8, seed=1, verbose=TRUE, target.dims=2, ...) {
       supported.methods <- c('largeVis', 'UMAP')
