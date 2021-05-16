@@ -244,11 +244,6 @@ saveConosForScanPy <- function(con, output.path, hdf5_filename, metadata.df=NULL
 #' @param tsne boolean Whether to construct tSNE embedding (default=TRUE)
 #' @param umap boolean Whether to construct UMAP embedding, works only for Seurat v2.3.1 or higher (default=FALSE)
 #' @return Seurat object
-#' @examples
-#' \donttest{ 
-#' library(Seurat)
-#' panel.preprocessed <- lapply(conosPanel::panel, basicSeuratProc)
-#' }
 #'
 #' @export
 basicSeuratProc <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do.par=TRUE, n.pcs=100, cluster=TRUE, tsne=TRUE, umap=FALSE) {
@@ -334,14 +329,6 @@ pcaFromConos <- function(p2.list, data.type='counts', k=30, ncomps=100, n.odgene
 #' @param verbose boolean Whether to give verbose output (default=TRUE)
 #' @param ... parameters passed to Pagoda2$new()
 #' @return pagoda2 object 
-#' @examples
-#' \donttest{ 
-#' library(pagoda2)
-#' panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, 
-#'     n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
-#' con <- Conos$new(panel.preprocessed, n.cores=1)
-#' p2object <- convertToPagoda2(con)
-#' }
 #'
 #' @export
 convertToPagoda2 <- function(con, n.pcs=100, n.odgenes=2000, verbose=TRUE, ...) {
@@ -403,18 +390,6 @@ convertToPagoda2 <- function(con, n.pcs=100, n.odgenes=2000, verbose=TRUE, ...) 
 #' @param organism string Organism of interest, either 'hs' (Homo sapiens) or 'mm' (Mus musculus, i.e. mouse) (default=NULL). Only used if test.pathway.overdispersion is TRUE. If NULL and test.pathway.overdispersion=TRUE, then 'hs' is used.
 #' @param return.details boolean If TRUE, return list of p2 application, pagoda2 object, list of raw matrices, and cell names. If FALSE, simply return pagoda2 app object. (default=FALSE)
 #' @return pagoda2 app object
-#' @examples
-#' \donttest{ 
-#' library(pagoda2)
-#' panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, 
-#'     n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
-#' con <- Conos$new(panel.preprocessed, n.cores=1)
-#' con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', 
-#'     metric='angular', score.component.variance=TRUE, verbose=TRUE)
-#' con$findCommunities(method=leiden.community, resolution=1)
-#' con$embedGraph(alpha=0.001, sgd_batched=1e8) 
-#' p2app4conos(con)
-#' }
 #'
 #' @export 
 p2app4conos <- function(conos, cdl=NULL, metadata=NULL, filename='conos_app.bin', 

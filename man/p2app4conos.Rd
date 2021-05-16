@@ -89,17 +89,3 @@ pagoda2 app object
 \description{
 Utility function to generate a pagoda2 app from a conos object
 }
-\examples{
-\donttest{ 
-library(pagoda2)
-panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, 
-    n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
-con <- Conos$new(panel.preprocessed, n.cores=1)
-con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', 
-    metric='angular', score.component.variance=TRUE, verbose=TRUE)
-con$findCommunities(method=leiden.community, resolution=1)
-con$embedGraph(alpha=0.001, sgd_batched=1e8) 
-p2app4conos(con)
-}
-
-}

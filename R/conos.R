@@ -82,7 +82,7 @@ scaledMatricesSeuratV3 <- function(so.objs, data.type, od.genes, var.scale, neig
     }
   )
   res <- mapply(FUN = function(so, x) { return(x) }, so.objs, x.data )
-  
+
   return(res)
 }
 
@@ -151,7 +151,7 @@ quickJNMF <- function(p2.objs, data.type='counts', n.comps=30, n.odgenes=NULL, v
   ## Stop if more than 2 samples
   if (length(p2.objs) != 2){
     stop('quickJNMF only supports pairwise alignment')
-  } 
+  }
 
   od.genes <- commonOverdispersedGenes(p2.objs, n.odgenes, verbose=verbose)
   if (length(od.genes)<5){
@@ -191,7 +191,7 @@ cpcaFast <- function(covl,ncells,ncomp=10,maxit=1000,tol=1e-6,use.irlba=TRUE,ver
 }
 
 #' Perform cpca on two samples
-#' 
+#'
 #' @param r.n list of pagoda2 objects
 #' @param data.type character Type of data type in the input pagoda2 objects within r.n (default='counts')
 #' @param ncomps numeric Number of components to calculate (default=100)
@@ -266,11 +266,11 @@ quickCPCA <- function(r.n, data.type='counts', ncomps=100, n.odgenes=NULL, var.s
 #' @param n.cores numeric Number of cores to use (default=1)
 #' @return PCA projection, using space of combined sample-specific PCAs
 #' @keywords internal
-quickPlainPCA <- function(r.n, data.type='counts', ncomps=30, n.odgenes=NULL, var.scale=TRUE, 
+quickPlainPCA <- function(r.n, data.type='counts', ncomps=30, n.odgenes=NULL, var.scale=TRUE,
   verbose=TRUE, score.component.variance=FALSE, n.cores=1) {
-  
+
   od.genes <- commonOverdispersedGenes(r.n, n.odgenes, verbose=verbose)
-  
+
   if (length(od.genes)<5){
     return(NULL)
   }
@@ -298,7 +298,7 @@ quickPlainPCA <- function(r.n, data.type='counts', ncomps=30, n.odgenes=NULL, va
   interleave <- function(n1,n2) { order(c((1:n1)-0.5,1:n2)) }
   ncols <- unlist(lapply(pcs,function(x) ncol(x$v)))
   pcj <- pcj[,interleave(ncols[1],ncols[2])]
-  
+
   rownames(pcj) <- od.genes
   res <- list(CPC=pcj)
 
@@ -499,22 +499,13 @@ factorBreakdown <- function(f) {tapply(names(f),f, identity) }
 #' @param n.genes number of overdispersed genes to extract
 #' @keywords internal
 getOdGenesUniformly <- function(samples, n.genes) {
-  if (!requireNamespace("tibble", quietly = TRUE)) {
-    stop("Package \"tibble\" is needed for this function to work. Please install it.", call. = FALSE)
-  }
+  genes <- lapply(samples, getOverdispersedGenes, Inf) %>%
+    lapply(function(gs) data.frame(gene=gs, rank=1:length(gs), stringsAsFactors=FALSE)) %>%
+    dplyr::bind_rows() %>% dplyr::group_by(.data$gene) %>%
+    dplyr::summarise(rank=min(rank), .groups='drop') %>% dplyr::arrange(rank) %>%
+    .$gene
 
-  if (!("Pagoda2" %in% class(samples[[1]]))){
-    stop("This function is currently supported only for Pagoda2 objects")
-  }
-
-  gene.info <- lapply(samples, function(s)
-    tibble::rownames_to_column(s$misc[['varinfo']], "gene") %>%
-      dplyr::mutate(rank=rank(.data$lpa, ties.method="first"))
-  )
-  genes <- gene.info %>% dplyr::bind_rows() %>% dplyr::group_by(.data$gene) %>%
-    dplyr::summarise(rank=min(rank)) %>% dplyr::arrange(rank) %>% .$gene
-
-  return(genes[1:min(n.genes, length(.data$genes))])
+  return(genes[1:min(n.genes, length(genes))])
 }
 
 #' @keywords internal
@@ -527,7 +518,7 @@ projectSamplesOnGlobalAxes <- function(samples, cms.clust, data.type, verbose, n
   if(verbose) message('.')
   if(length(gns) < length(cms.clust)){
     stop("Insufficient number of common genes")
-  } 
+  }
   tcc <- Reduce('+',lapply(cms.clust,function(x) x[gns,]))
   tcc <- t(tcc)/colSums(tcc)*1e6
   gv <- apply(tcc,2,var)
@@ -596,7 +587,7 @@ getLocalNeighbors <- function(samples, k.self, k.self.weight, metric, l2.sigma, 
     if (is.null(pca)) {
       stop("PCA must be estimated for all samples")
     }
-    
+
     xk <- N2R::Knn(pca, k.self + 1, 1, verbose=FALSE, indexType=metric) # +1 accounts for self-edges that will be removed in the next line
     diag(xk) <- 0 # no self-edges
     xk <- as(drop0(xk),'dgTMatrix')
@@ -625,7 +616,7 @@ getLocalEdges <- function(local.neighbors) {
 #'
 #' @param res walktrap result object (igraph)
 #' @param clusters cluster factor
-#' @param clmerges integer matrix of cluster merges (default=NULL). If NULL, the function treeJaccard() performs calculation without it. 
+#' @param clmerges integer matrix of cluster merges (default=NULL). If NULL, the function treeJaccard() performs calculation without it.
 #' @return a list of $thresholds - per cluster optimal detectability values, and $node - internal node id (merge row) where the optimum was found
 #' @export
 bestClusterThresholds <- function(res, clusters, clmerges=NULL) {
@@ -653,7 +644,7 @@ bestClusterThresholds <- function(res, clusters, clmerges=NULL) {
 #' @param res walktrap result object (igraph) where the nodes were clusters
 #' @param leaf.factor a named factor describing cell assignments to the leaf nodes (in the same order as res$names)
 #' @param clusters cluster factor
-#' @param clmerges integer matrix of cluster merges (default=NULL). If NULL, the function treeJaccard() performs calculation without it. 
+#' @param clmerges integer matrix of cluster merges (default=NULL). If NULL, the function treeJaccard() performs calculation without it.
 #' @return a list of $thresholds - per cluster optimal detectability values, and $node - internal node id (merge row) where the optimum was found
 #' @export
 bestClusterTreeThresholds <- function(res, leaf.factor, clusters, clmerges=NULL) {
@@ -707,10 +698,10 @@ greedyModularityCut <- function(wt, N, leaf.labels=NULL, minsize=0, minbreadth=0
     stop("unable to make a single split using specified size/breadth restrictions")
   }
   # transfer cell names for the leaf content
-  if (!is.null(wt$names)) { 
+  if (!is.null(wt$names)) {
     rownames(x$leafContent) <- wt$names
-  } else { 
-    rownames(x$leafContent) <- c(1:nrow(x$leafContent)) 
+  } else {
+    rownames(x$leafContent) <- c(1:nrow(x$leafContent))
   }
   m <- x$merges+1
   nleafs <- nrow(m)+1
@@ -776,7 +767,7 @@ convertDistanceToSimilarity <- function(distances, metric, l2.sigma=1e5, cor.bas
 #' @keywords internal
 getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, k1=k, data.type='counts', var.scale=TRUE, common.centering=TRUE,
                                       matching.method='mNN', metric='angular', l2.sigma=1e5, cor.base=1, subset.cells=NULL,
-                                      base.groups=NULL, append.decoys=FALSE, samples=NULL, samf=NULL, decoy.threshold=1, n.decoys=k*2, 
+                                      base.groups=NULL, append.decoys=FALSE, samples=NULL, samf=NULL, decoy.threshold=1, n.decoys=k*2,
                                       append.global.axes=TRUE, global.proj=NULL) {
   # create matrices, adjust variance
   cproj <- scaledMatrices(sample.pair, data.type=data.type, od.genes=od.genes, var.scale=var.scale)
@@ -800,7 +791,7 @@ getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, k1=k, data.
     x <- t(as.matrix(t(x))-centering[[n]])
     x %*% rot;
   })
-  
+
   if(!is.null(base.groups) && append.global.axes) {
     #cpproj <- lapply(sn(names(cpproj)),function(n) cbind(cpproj[[n]],global.proj[[n]])) # case without decoys
     cpproj <- lapply(sn(names(cpproj)),function(n) {
@@ -905,7 +896,7 @@ reduceEdgesInGraphIteratively <- function(adj.mtx,k,preserve.order=TRUE,max.kdif
   maxd <- max(max(cc),max(rc))
   if (maxd<=k){
     return(adj.mtx) # nothing to be done - already below k
-  } 
+  }
   klow <- max(min(k,3),k-max.kdiff) # allowable lower limit
   # set up a stepping strategy
   n.steps <- min(n.steps,round(maxd/k))
@@ -978,15 +969,7 @@ adjustWeightsByCellBalancing <- function(adj.mtx, factor.per.cell, balance.weigh
 #' @param plot boolean Whether to plot the output (default=TRUE)
 #' @param ... other parameters will be passed to con$buildGraph()
 #' @return a data frame with $k $m columns giving k and the corresponding modularity
-#' @examples
-#' \donttest{ 
-#' library(pagoda2)
-#' panel.preprocessed <- lapply(conosPanel::panel, basicP2proc, n.cores=1, min.cells.per.gene=0, 
-#'     n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
-#' con <- Conos$new(panel.preprocessed, n.cores=1)
-#' scanKModularity(con)
-#' }
-#' 
+#'
 #' @export
 scanKModularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.internal.edges=TRUE, verbose=TRUE, plot=TRUE, ... ) {
   k.seq <- seq(min,max, by=by)
@@ -1051,7 +1034,7 @@ mergeCountMatrices <- function(cms, transposed=FALSE) {
 #' @param samples list of samples
 #' @return list of sample names
 #' getSampleNamePerCell(small_panel.preprocessed)
-#' 
+#'
 #' @export
 getSampleNamePerCell=function(samples) {
   cl <- lapply(samples, getCellNames)

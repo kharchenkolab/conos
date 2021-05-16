@@ -49,6 +49,8 @@ Next we will load a previously prepared panel of four samples, which you can acc
 install.packages('conosPanel', repos='https://kharchenkolab.github.io/drat/', type='source')
 ```
 
+(Please see the [drat documentation](https://dirk.eddelbuettel.com/code/drat.html) for more comprehensive explanations and vignettes regarding `drat` repositories.)
+
 This panel was originally
 made up of 16 cord blood and bone marrow samples, but for convenience, we will here focus on a smaller subset of just four samples: two samples with are bone marrow (BM), and two samples which are cord blood (CB). Each sample has been subset to a size of exactly 3000 cells. 
 
@@ -90,12 +92,6 @@ Conos is focused on integration, and relies on either
 pre-processing.
 
 ## Pre-processing with pagoda2
-
-Given we'll primarily use pagoda2 for this walkthrough, please install the auxilliary package [p2data](https://github.com/kharchenkolab/p2data):
-
-```{r}
-install.packages('p2data', repos='https://kharchenkolab.github.io/drat/', type='source')
-```
 
 We will generate `Pagoda2` objects for poorly-expressed genes from each
 individual sample using the `basicP2proc` helper function for quick
@@ -156,7 +152,7 @@ here.
 con <- Conos$new(panel.preprocessed, n.cores=1)
 ```
 
-Our original pagoda2 (or Seurat) objects are now saved in the Conos
+Our original Pagoda2 (or Seurat) objects are now saved in the Conos
 object.
 
 
@@ -656,9 +652,9 @@ For more details on this topic, please see the tutorial [Adjustment of Alignment
 
 # View Conos in Pagoda2 Application
 
-Users may also interactively explore Conos objects in the [Pagoda2](https://github.com/kharchenkolab/pagoda2) application. The process is very similar to the Pagoda2 walkthrough. 
+Users may also interactively explore Conos objects in the [Pagoda2](https://github.com/kharchenkolab/pagoda2) application. The process is very similar to the pagoda2 walkthrough. 
 
-After constructing the `con` object as shown above, users can save to a serialized `*.bin` file and upload into the pagoda application with the `p2app4conos()` function, using `p2app4conos(conos=con)`. More information, please review the Pagoda2 [walkthrough](https://github.com/kharchenkolab/pagoda2/blob/master/vignettes/pagoda2.walkthrough.md)
+After constructing the `con` object as shown above, users can save to a serialized `*.bin` file and upload into the pagoda application with the `p2app4conos()` function, using `p2app4conos(conos=con)`. More information, please review the [pagoda2 walkthrough](https://github.com/kharchenkolab/pagoda2/blob/master/vignettes/pagoda2.walkthrough.md)
 
 ```{r}
 # library(pagoda2)

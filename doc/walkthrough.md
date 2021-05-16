@@ -36,12 +36,14 @@ library(dplyr)
 
 # Loading the Data
 
-Next we will load a previously prepared panel of four samples, which you can access directly using the package [conosPanel](https://github.com/kharchenkolab/conosPanel) (See the README of conos for installation details): 
+Next we will load a previously prepared panel of four samples, which you can access directly using the package [conosPanel](https://github.com/kharchenkolab/conosPanel)
 
 
 ```r
 install.packages('conosPanel', repos='https://kharchenkolab.github.io/drat/', type='source')
 ```
+
+(Please see the [drat documentation](https://dirk.eddelbuettel.com/code/drat.html) for more comprehensive explanations and vignettes regarding `drat` repositories.)
 
 This panel was originally
 made up of 16 cord blood and bone marrow samples, but for convenience, we will here focus on a smaller subset of just four samples: two samples with are bone marrow (BM), and two samples which are cord blood (CB). Each sample has been subset to a size of exactly 3000 cells. 
@@ -109,13 +111,6 @@ Conos is focused on integration, and relies on either
 pre-processing.
 
 ## Pre-processing with pagoda2
-
-Given we'll primarily use pagoda2 for this walkthrough, please install the auxilliary package [p2data](https://github.com/kharchenkolab/p2data):
-
-
-```r
-install.packages('p2data', repos='https://kharchenkolab.github.io/drat/', type='source')
-```
 
 We will generate `Pagoda2` objects for poorly-expressed genes from each
 individual sample using the `basicP2proc` helper function for quick

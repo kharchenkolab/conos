@@ -45,7 +45,7 @@ getBetweenCellTypeDE(
 \item{remove.na}{boolean If TRUE, remove NAs from DESeq calculations (default=TRUE)}
 }
 \value{
-Returns either a DESeq2::results() object, or if return.details=TRUE, 
+Returns either a DESeq2::results() object, or if return.details=TRUE,
    returns a list of the DESeq2::results(), the samples from the panel to use in this comparison, refgroups, altgroup, and samplegroups
 }
 \description{

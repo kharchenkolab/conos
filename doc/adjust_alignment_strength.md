@@ -8,16 +8,8 @@ condition (e.g. sequencing protocol or disease vs control).
 
 Please install the auxilliary packages for conos, [conosPanel](https://github.com/kharchenkolab/conosPanel):
 
-
 ```r
 install.packages('conosPanel', repos='https://kharchenkolab.github.io/drat/', type='source')
-```
-
-Given we'll primarily use pagoda2 for this walkthrough, please install the auxilliary package [p2data](https://github.com/kharchenkolab/p2data):
-
-
-```r
-install.packages('p2data', repos='https://kharchenkolab.github.io/drat/', type='source')
 ```
 
 ## Load and align data

@@ -1,10 +1,10 @@
 #' @importFrom stats qnorm
 NULL
 
-#' Get a vector of the names of an object named by the names themselves. 
+#' Get a vector of the names of an object named by the names themselves.
 #' This is useful with lapply when passing names of objects as it ensures that the output list
 #' is also named
-#' 
+#'
 #' @param g an objects on which we can call names()
 #' @keywords internal
 namedNames <- function(g) {
@@ -70,11 +70,11 @@ validateBetweenCellTypeParams <- function(con.obj, groups, sample.groups, refgro
 }
 
 #' Get raw matrices with common genes
-#' 
+#'
 #' @param con.obj Conos object
 #' @param sample.groups list of samples to select from Conos object, con.obj$samples (default=NULL)
 #' @return raw matrices subset with common genes
-#' @export 
+#' @export
 rawMatricesWithCommonGenes <- function(con.obj, sample.groups=NULL) {
   samples <- con.obj$samples
   if (!is.null(sample.groups)) {
@@ -85,31 +85,6 @@ rawMatricesWithCommonGenes <- function(con.obj, sample.groups=NULL) {
   raw.mats <- lapply(samples, getRawCountMatrix, transposed=TRUE)
   common.genes <- Reduce(intersect,lapply(raw.mats, colnames))
   return(lapply(raw.mats, function(x) {x[,common.genes]}))
-}
-
-#' Collapse count matrices by cell type, given min/max number of cells 
-#'
-#' @param cm count matrix
-#' @param groups factor specifying cell types
-#' @param min.cell.count numeric Minimum number of cells to include (default=10)
-#' @param max.cell.count numeric Maximum number of cells to include (default=Inf). If Inf, there is no maximum.
-#' @return Subsetted factor of collapsed cells by type, with NA cells omitted
-#' @export 
-collapseCellsByType <- function(cm, groups, min.cell.count=10, max.cell.count=Inf) {
-  groups <- as.factor(groups);
-  cl <- setNames(factor(groups[match(rownames(cm),names(groups))],levels=levels(groups)),rownames(cm));
-  if(is.finite(max.cell.count)) {
-    vc <- unlist(tapply(names(cl),cl,function(nn) {
-      if(length(nn)>max.cell.count) { nn <- sample(nn,max.cell.count) }
-      return(nn)
-    }))
-    cl <- cl[names(cl) %in% vc]
-    cm <- cm[names(cl),]
-  }
-
-  tc <- colSumByFactor(cm,cl);
-  tc <- tc[-1,,drop=FALSE]  # omit NA cells
-  tc[table(cl)>=min.cell.count,,drop=FALSE]
 }
 
 #' @keywords internal
@@ -137,7 +112,7 @@ is.error <- function (x) {
 
 
 #' Do differential expression for each cell type in a conos object between the specified subsets of apps
-#' 
+#'
 #' @param con.obj conos object
 #' @param groups factor specifying cell types (default=NULL)
 #' @param sample.groups a list of two character vector specifying the app groups to compare (default=NULL)
@@ -153,7 +128,7 @@ is.error <- function (x) {
 #' @param return.details boolean Whether to return verbose details (default=TRUE)
 #' @return A list of differential expression results for every cell type
 #' @export getPerCellTypeDE
-getPerCellTypeDE <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cutoff=FALSE, ref.level=NULL, min.cell.count=10, 
+getPerCellTypeDE <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cutoff=FALSE, ref.level=NULL, min.cell.count=10,
   remove.na=TRUE, max.cell.count=Inf, test="LRT", independent.filtering=FALSE, n.cores=1, cluster.sep.chr = '<!!>', return.details=TRUE) {
   validatePerCellTypeParams(con.obj, groups, sample.groups, ref.level, cluster.sep.chr)
 
@@ -188,7 +163,7 @@ getPerCellTypeDE <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cut
       dds1 <- DESeq2::DESeqDataSetFromMatrix(cm, meta, design=~group)
       if(test=="LRT") {
         dds1 <- DESeq2::DESeq(dds1,test="LRT", reduced = ~ 1)
-      } else { # defaults to Wald 
+      } else { # defaults to Wald
         dds1 <- DESeq2::DESeq(dds1)
       }
       res1 <- DESeq2::results(dds1, cooksCutoff = cooks.cutoff, independentFiltering = independent.filtering)
@@ -261,7 +236,7 @@ saveDEasCSV <- function(de.results, saveprefix, gene.metadata=NULL) {
 #' @param gene.metadata data.frame with gene metadata (default=NULL)
 #' @param cluster.sep.chr character string of length 1 specifying a delimiter to separate cluster and app names (default='<!!>')
 #' @return JSON with DE results
-#' @export 
+#' @export
 saveDEasJSON <- function(de.results = NULL, saveprefix = NULL, gene.metadata = NULL, cluster.sep.chr='<!!>') {
 
     if (!requireNamespace("jsonlite", quietly = TRUE)) {
@@ -368,9 +343,9 @@ saveDEasJSON <- function(de.results = NULL, saveprefix = NULL, gene.metadata = N
 #' @param return.details boolean Return detailed results (default=TRUE)
 #' @param only.paired boolean Only keep samples that that both cell types above the min.cell.count threshold (default=TRUE)
 #' @param remove.na boolean If TRUE, remove NAs from DESeq calculations (default=TRUE)
-#' @return Returns either a DESeq2::results() object, or if return.details=TRUE, 
+#' @return Returns either a DESeq2::results() object, or if return.details=TRUE,
 #'    returns a list of the DESeq2::results(), the samples from the panel to use in this comparison, refgroups, altgroup, and samplegroups
-#' @export 
+#' @export
 getBetweenCellTypeDE <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cutoff = FALSE, refgroup = NULL, altgroup = NULL, min.cell.count = 10,
                                  independent.filtering = FALSE, cluster.sep.chr = '<!!>',return.details=TRUE, only.paired=TRUE, remove.na=TRUE) {
   # TODO: do we really need sample.groups here? They are used in the corrected version for some unknown reason.
@@ -436,7 +411,7 @@ generateDEMatrixMetadata <- function(mtx, refgroup, altgroup, cluster.sep.chr) {
 #' @param only.paired only keep samples that that both cell types above the min.cell.count threshold
 #' @param correction fold change corrections per genes
 #' @param ref.level reference level on the basis of which the correction was calculated
-#' @return Returns either a DESeq2::results() object, or if return.details=TRUE, 
+#' @return Returns either a DESeq2::results() object, or if return.details=TRUE,
 #'    returns a list of the DESeq2::results(), the samples from the panel to use in this comparison, refgroups, altgroup, and samplegroups
 #' @export
 getBetweenCellTypeCorrectedDE <- function(con.obj, sample.groups =  NULL, groups=NULL, cooks.cutoff = FALSE, refgroup = NULL, altgroup = NULL, min.cell.count = 10,

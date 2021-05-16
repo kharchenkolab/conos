@@ -2,7 +2,7 @@
 % Please edit documentation in R/de_functions.R
 \name{namedNames}
 \alias{namedNames}
-\title{Get a vector of the names of an object named by the names themselves. 
+\title{Get a vector of the names of an object named by the names themselves.
 This is useful with lapply when passing names of objects as it ensures that the output list
 is also named}
 \usage{
@@ -12,7 +12,7 @@ namedNames(g)
 \item{g}{an objects on which we can call names()}
 }
 \description{
-Get a vector of the names of an object named by the names themselves. 
+Get a vector of the names of an object named by the names themselves.
 This is useful with lapply when passing names of objects as it ensures that the output list
 is also named
 }

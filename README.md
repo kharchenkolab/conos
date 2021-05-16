@@ -141,13 +141,11 @@ show.velocity.on.embedding.cor(vi$emb, vel.info, cc = cc.velo$cc, n = 200, scale
 
 ## Installation
 
-
-To install the stable version from [CRAN](https://cran.r-project.org/web/packages/conos/index.html), use:
+To install the stable version from [CRAN](https://cran.r-project.org/package=conos), use:
 
 ```r
 install.packages('conos')
 ```
-
 
 To install the latest version of `conos`, use:
 
@@ -156,49 +154,17 @@ install.packages('devtools')
 devtools::install_github('kharchenkolab/conos')
 ```
 
-Please note that the package `conos` depends on data in a data package (`conosPanel`) that is available through a `drat` repository on GitHub. To use the `conos` package, you will need to install `conosPanel`. There are two equally valid options to install this package:
-
-A) Users could install `conosPanel` by adding the `drat` archive to the list of repositories your system will query when adding and updating R packages. Once you do this, you can install `conosPanel` with `install.packages()`, using the command:
-
-```r
-library(drat)
-addRepo("kharchenkolab")
-install.packages("conosPanel")
-```
-
-The following command is also a valid approach:
-
-```r
-install.packages('conosPanel', repos='https://kharchenkolab.github.io/drat/', type='source')
-```
-
-Please see the [drat documentation](https://dirk.eddelbuettel.com/code/drat.html) for more comprehensive explanations and vignettes.
-
-
-B) Another way to install the package `conosPanel` is to use `devtools::install_github()`:
-
-```r
-library(devtools)
-install_github("kharchenkolab/conosPanel")
-```
-
-**Note:** If you are using [pagoda2](https://github.com/kharchenkolab/pagoda2), you should also install the auxiliary package `p2data`:
-
-```r
-install.packages('p2data', repos='https://kharchenkolab.github.io/drat/', type='source')
-```
-
 
 #### System dependencies
 
-The dependencies are inherited from [pagoda2](https://github.com/kharchenkolab/pagoda2):
+The dependencies are inherited from [pagoda2](https://github.com/kharchenkolab/pagoda2). Note that this package also has the dependency [igraph](https://igraph.org/r/), which requires various libraries to install correctly. Please see the installation instructions at that page for more details, along with the github README [here](https://github.com/igraph/rigraph).
 
 ##### Ubuntu dependencies
 
 To install system dependencies using `apt-get`, use the following:
 ```sh
 sudo apt-get update
-sudo apt-get -y install libcurl4-openssl-dev libssl-dev
+sudo apt-get -y install libcurl4-openssl-dev libssl-dev libxml2-dev libgmp-dev libglpk-dev
 ```
 
 ##### Red Hat-based distributions dependencies
@@ -206,7 +172,8 @@ sudo apt-get -y install libcurl4-openssl-dev libssl-dev
 For Red Hat distributions using `yum`, use the following command:
 
 ```sh
-yum install openssl-devel libcurl-devel
+sudo yum update
+sudo yum install openssl-devel libcurl-devel libxml2-devel gmp-devel glpk-devel
 ```
 
 ##### Mac OS
@@ -214,11 +181,13 @@ yum install openssl-devel libcurl-devel
 Using the Mac OS package manager [Homebrew](https://brew.sh/), try the following command:
 
 ```sh
-brew install openssl curl-openssl
+brew update
+brew install openssl curl-openssl libxml2 glpk gmp
 ```
 (You may need to run `brew uninstall curl` in order for `brew install curl-openssl` to be successful.)
 
 As of version 1.3.1, `conos` should successfully install on Mac OS. However, if there are issues, please refer to the following wiki page for further instructions on installing `conos` with Mac OS: [Installing conos for Mac OS](https://github.com/kharchenkolab/conos/wiki/Installing-conos-for-Mac-OS)
+
 
 ### Running conos via Docker
 
@@ -269,5 +238,5 @@ The R package can be cited as:
 ```
 Viktor Petukhov, Nikolas Barkas, Peter Kharchenko, and Evan
 Biederstedt (2021). conos: Clustering on Network of Samples. R
-package version 1.4.0.
+package version 1.4.1.
 ```
