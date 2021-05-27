@@ -169,7 +169,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       if (!is.null(alignment.strength)) {
         alignment.strength %<>% max(0) %>% min(1)
         k1 <- sapply(self$samples, function(sample) ncol(getCountMatrix(sample))) %>% max() %>%
-          `*`(alignment.strength ^ 2) %>% round() %>% max(k)
+          `*`(alignment.strength ^ 2) %>% round() %>% max(k1)
       } else {
         alignment.strength <- 0 # otherwise, estimation of cor.base uses NULL value
       }
@@ -243,7 +243,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
                                            k=k.cur, k1=k1, matching.method=matching.method, metric=metric, l2.sigma=l2.sigma, cor.base=cor.base,
                                            var.scale=var.scale, common.centering=common.centering,
                                            base.groups=base.groups, append.decoys=append.decoys, samples=self$samples, samf=samf, decoy.threshold=decoy.threshold,
-                                           n.decoys=n.decoys, append.global.axes=append.global.axes, global.proj=global.proj, misc1=self$misc)
+                                           n.decoys=n.decoys, append.global.axes=append.global.axes, global.proj=global.proj, misc1=self$misc$neighborfilter)
         } else if (space=='genes') { ## Overdispersed Gene space
           mnn <- getNeighborMatrix(as.matrix(cached.pairs[[i]]$genespace1), as.matrix(cached.pairs[[i]]$genespace2),
                                    k=k.cur, k1=k1, matching=matching.method, metric=metric, l2.sigma=l2.sigma, cor.base=cor.base)
@@ -302,11 +302,60 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       # append local edges
       if(k.self>0) {
         if(is.null(local.neighbors) || snn.k!=k.self) { # recalculate local neighbors
-          local.neighbors <- getLocalNeighbors(self$samples[! names(self$samples) %in% exclude.samples], k.self, k.self.weight, metric, l2.sigma=l2.sigma, verbose, self$n.cores)
+          local.neighbors <- getLocalNeighbors(self$samples[! names(self$samples) %in% exclude.samples ], k.self, k.self.weight, metric, l2.sigma=l2.sigma, verbose, self$n.cores)
         }
         el <- rbind(el,getLocalEdges(local.neighbors))
       }
       if(verbose) message('building graph .')
+      if (!is.null(self$misc)){
+        cells.add <- list()
+        cells.add.zero <- list()
+        if (self$misc$add.cells){
+          i <- 1
+          cell.names <- lapply(self$samples,getCellNames)
+          cells_all <- unname(unlist(lapply(self$samples,getCellNames)))
+          cells_with_neig <- do.call(rbind,mnnres)
+          cells_zero <-intersect(cells_all[!cells_all %in% cells_with_neig$mB.lab], cells_all[!cells_all %in% cells_with_neig$mA.lab])
+          cells_zero_neig <- el[el$mA.lab %in% cells_zero,]
+          while (i <= self$misc$add.cells.times && !is.null(cells_zero)){
+           # cell.names <- lapply(self$samples,getCellNames)
+            #cells_all <- unname(unlist(lapply(self$samples,getCellNames)))
+            #cells_with_neig <- do.call(rbind,mnnres)
+            cells_zero <-intersect(cells_all[!cells_all %in% cells_with_neig$mB.lab], cells_all[!cells_all %in% cells_with_neig$mA.lab])
+            cells_zero_neig <- el[el$mA.lab %in% cells_zero,]
+
+            getSamplesNeighbors <- function(cell, cells_with_neig, el, k = self$misc$add.cells.k){
+              neighA <-el[el$mA.lab == cell,]$mB.lab
+              neighB <- el[el$mB.lab == cell,]$mA.lab
+              resA <- cells_with_neig[cells_with_neig$mA.lab %in% unique(neighA, neighB),]
+              resA$mA.lab <- rep(cell, nrow(resA))
+              resB <- cells_with_neig[cells_with_neig$mB.lab %in% unique(neighA, neighB),]
+              resB$mB.lab <- rep(cell, nrow(resB))
+              res <- rbind(resA, resB)
+              if (nrow(res > 0)){
+                res$type <- 1
+                res$w <- res$w/k
+                return(res)
+              }
+            }
+
+
+             t <- sapply(cells_zero, function(x) getSamplesNeighbors(x, cells_with_neig, el))
+             el.t <- do.call(rbind,t)
+             el <- rbind(el, el.t)
+             cells_with_neig <-  rbind(cells_with_neig, el.t[,-4])
+
+             cells.add[[i]] <- unique(c(el.t$mA.lab, el.t$mB.lab))
+             cells.add.zero[[i]] <- cells_zero
+             i <- i + 1
+
+          }
+        }
+        self$misc$cells.add.to.zero <- cells.add
+        self$misc$cells.zero <-  cells.add.zero
+      }
+      # self$misc$cells.add.to.zero <- cells.add
+      # self$misc$cells.zero <-  cells.add.zero
       el <- el[el[,3]>0,]
       g  <- graph_from_edgelist(as.matrix(el[,c(1,2)]), directed =FALSE)
       E(g)$weight <- el[,3]
