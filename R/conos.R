@@ -48,7 +48,7 @@ scaledMatricesP2 <- function(p2.objs, data.type, od.genes, var.scale) {
 #' @keywords internal
 scaledMatricesSeurat <- function(so.objs, data.type, od.genes, var.scale) {
   if (var.scale) {
-    warning("Seurat doesn't support variance scaling")
+    so.objs <- lapply(so.objs, function(so){ ScaleData(so, features = rownames(so))})
   }
 
   if (data.type == 'scaled') {
@@ -67,7 +67,7 @@ scaledMatricesSeurat <- function(so.objs, data.type, od.genes, var.scale) {
 scaledMatricesSeuratV3 <- function(so.objs, data.type, od.genes, var.scale, neighborhood.average) {
   checkSeuratV3()
   if (var.scale) {
-    warning("Seurat doesn't support variance scaling")
+    so.objs <- lapply(so.objs, function(so){ ScaleData(so, features = rownames(so))})
   }
   slot <- switch(
     EXPR = data.type,
