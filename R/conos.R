@@ -117,8 +117,8 @@ commonOverdispersedGenes <- function(samples, n.odgenes, verbose) {
 }
 
 #' @keywords internal
-quickNULL <- function(p2.objs, data.type='counts', n.odgenes = NULL, var.scale = T,
-                      verbose = TRUE) {
+quickNULL <- function(p2.objs, data.type='counts', n.odgenes = NULL, var.scale = TRUE, verbose = TRUE) {
+  
   if (length(p2.objs) != 2){
     stop('quickNULL only supports pairwise alignment')
   }
