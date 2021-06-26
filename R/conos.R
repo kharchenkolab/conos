@@ -48,7 +48,7 @@ scaledMatricesP2 <- function(p2.objs, data.type, od.genes, var.scale) {
 #' @keywords internal
 scaledMatricesSeurat <- function(so.objs, data.type, od.genes, var.scale) {
   if (var.scale) {
-    warning("Seurat doesn't support variance scaling")
+    so.objs <- lapply(so.objs, function(so){ ScaleData(so, features = rownames(so))})
   }
 
   if (data.type == 'scaled') {
@@ -67,7 +67,7 @@ scaledMatricesSeurat <- function(so.objs, data.type, od.genes, var.scale) {
 scaledMatricesSeuratV3 <- function(so.objs, data.type, od.genes, var.scale, neighborhood.average) {
   checkSeuratV3()
   if (var.scale) {
-    warning("Seurat doesn't support variance scaling")
+    so.objs <- lapply(so.objs, function(so){ ScaleData(so, features = rownames(so))})
   }
   slot <- switch(
     EXPR = data.type,
@@ -117,8 +117,8 @@ commonOverdispersedGenes <- function(samples, n.odgenes, verbose) {
 }
 
 #' @keywords internal
-quickNULL <- function(p2.objs, data.type='counts', n.odgenes = NULL, var.scale = T,
-                      verbose = TRUE) {
+quickNULL <- function(p2.objs, data.type='counts', n.odgenes = NULL, var.scale = TRUE, verbose = TRUE) {
+  
   if (length(p2.objs) != 2){
     stop('quickNULL only supports pairwise alignment')
   }
