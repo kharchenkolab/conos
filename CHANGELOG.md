@@ -1,5 +1,12 @@
 ## Upcoming
 
+## [1.4.2] - 2021-28-06
+
+### Changed
+
+- Add scaling to `scaledMatricesSeurat()`, `scaledMatricesSeuratV3()`
+- Change `sccore::plapply()` in `updatePairs()`
+
 ## [1.4.1] - 2021-14-05
 
 ### Added
