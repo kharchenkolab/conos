@@ -1078,7 +1078,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           }
           if(verbose) cat(".")
           xcp
-        }, n.cores=self$n.cores, mc.preschedule=(space=='PCA'), progress=verbose)
+        }, n.cores=self$n.cores, mc.preschedule=(space=='PCA'), progress=FALSE)
 
         names(xl2) <- apply(sn.pairs[,which(is.na(mi)),drop=FALSE],2,paste,collapse='.vs.')
         xl2 <- xl2[!unlist(lapply(xl2,is.null))]
