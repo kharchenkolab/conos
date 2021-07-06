@@ -703,7 +703,7 @@ convertDistanceToSimilarity <- function(distances, metric, l2.sigma=1e5, cor.bas
 }
 
 #' @keywords internal
-getPcaBasedNeighborMatrix <- function(sample.pair,misc=NULL, od.genes, rot, k, k1=k, data.type='counts', var.scale=TRUE, common.centering=TRUE,
+getPcaBasedNeighborMatrix <- function(sample.pair, od.genes, rot, k, k1=k, data.type='counts', var.scale=TRUE, common.centering=TRUE,
                                       matching.method='mNN', metric='angular', l2.sigma=1e5, cor.base=1, subset.cells=NULL,
                                       base.groups=NULL, append.decoys=FALSE, samples=NULL, samf=NULL, decoy.threshold=1, n.decoys=k*2,
                                       append.global.axes=TRUE, global.proj=NULL, misc1=NULL) {
@@ -762,8 +762,6 @@ getPcaBasedNeighborMatrix <- function(sample.pair,misc=NULL, od.genes, rot, k, k
   return(mnn)
 }
 
-
-
 #' Establish rough neighbor matching between samples given their projections in a common space
 #'
 #' @param p1 projection of sample 1
@@ -779,17 +777,13 @@ getPcaBasedNeighborMatrix <- function(sample.pair,misc=NULL, od.genes, rot, k, k
 #' @keywords internal
 getNeighborMatrix <- function(p1, p2, k, k1=k, matching='mNN', metric='angular', l2.sigma=1e5, cor.base=1, min.similarity=1e-5, misc1=NULL, samples.names=NULL) {
   quiet.knn <- (k1 > k)
-#align str не будет работать так как увеличивает k1 которое большое
-#затем getCellsFromList все равно оставит для кажой клетки максимум количество клеток из misc
   if (is.null(p2)) {
     n12 <- N2R::crossKnn(p1, p1,k1,1, FALSE, metric, quiet=quiet.knn)
     n21 <- n12
   } else {
-    #k1<- 500
     n12 <- N2R::crossKnn(p1, p2, k1, 1, FALSE, metric, quiet=quiet.knn)
     n21 <- N2R::crossKnn(p2, p1, k1, 1, FALSE, metric, quiet=quiet.knn)
   }
-
 
   n12@x <- convertDistanceToSimilarity(n12@x, metric=metric, l2.sigma=l2.sigma, cor.base=cor.base)
   n21@x <- convertDistanceToSimilarity(n21@x, metric=metric, l2.sigma=l2.sigma, cor.base=cor.base)
@@ -811,7 +805,6 @@ getNeighborMatrix <- function(p1, p2, k, k1=k, matching='mNN', metric='angular',
     stop("Unrecognized type of NN matching:", matching)
   }
 
-
   adj.mtx@x[adj.mtx@x < min.similarity] <- 0
   adj.mtx <- drop0(adj.mtx);
   rownames(adj.mtx) <- rownames(p1);
@@ -823,24 +816,43 @@ getNeighborMatrix <- function(p1, p2, k, k1=k, matching='mNN', metric='angular',
   return(as(drop0(adj.mtx),'dgTMatrix'))
 }
 
-#k=k1 k=k
+
 getCellsFromList <- function(mat, list.cells, k){
   res <- apply(mat, MARGIN = 2, function(x){
-  x.max <- names(which.max(x))
-  valid.rownames <- list.cells[[x.max]]
-  x[!names(x) %in% names(valid.rownames)] <- 0
+    x.max <- names(which.max(x))
+    valid.rownames <- list.cells[[x.max]]
+    x[!names(x) %in% names(valid.rownames)] <- 0
     return(x)
   })
-  # for (i in 1:dim(mat)[2]){
-  #   #closest.cell <- names(which.min(mat[, i][mat[, i] != 0]))
-  #   closest.cell <- names(which.max(mat[, i]))
-  #   mat[,i][!(names(mat[,i]) %in% names(list.cells[[closest.cell]]))] <- 0
-  #   #mat[,i][order(mat[,i], decreasing = T)[(k+1):nrow(mat)]] <- 0
-  # }
   return(res)
 }
 
+findCells <- function(sample,k=0.05){
+  n.cells <- round(dim(sample$reductions$PCA)[1]*k)
+  mat <- getNeighborMatrix(p1 = sample$reductions$PCA, p2=NULL, k = n.cells, matching = "NN")
+  colnames(mat) <- rownames(sample$reductions$PCA)
+  rownames(mat) <- rownames(sample$reductions$PCA)
+  list.cell <- lapply(as.data.frame(as.matrix(mat)), function(x){
+    cell.order <- order(x, decreasing = T)[2:n.cells]
+    return(setNames(x[cell.order], rownames(sample$reductions$PCA)[cell.order]))})
+  names(list.cell) <- rownames(sample$reductions$PCA)
+  return(list.cell)
+}
 
+getSamplesNeighbors <- function(cell,cells.with.neig,el,k=2){
+  neighA <-el[el$mA.lab == cell,]$mB.lab
+  neighB <- el[el$mB.lab == cell,]$mA.lab
+  resA <- cells.with.neig[cells.with.neig$mA.lab %in% unique(neighA, neighB),]
+  resA$mA.lab <- rep(cell, nrow(resA))
+  resB <- cells.with.neig[cells.with.neig$mB.lab %in% unique(neighA, neighB),]
+  resB$mB.lab <- rep(cell, nrow(resB))
+  res <- rbind(resA, resB)
+  if (nrow(res > 0)){
+    res$type <- 1
+    res$w <- res$w/k
+    return(res)
+  }
+}
 ## 1-step edge reduction
 #' @keywords internal
 reduceEdgesInGraph <- function(adj.mtx,k,klow=k,preserve.order=TRUE) {

@@ -141,8 +141,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
                         n.odgenes=2000, matching.mask=NULL, exclude.samples=NULL, common.centering=TRUE, verbose=TRUE,
                         base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, score.component.variance=FALSE,
                         snn=FALSE, snn.quantile=0.9, min.snn.jaccard=0, min.snn.weight=0, snn.k.self=k.self,
-                        balance.edge.weights=FALSE, balancing.factor.per.cell=NULL, same.factor.downweight=1.0, k.same.factor=k, balancing.factor.per.sample=NULL) {
-
+                        balance.edge.weights=FALSE, balancing.factor.per.cell=NULL, same.factor.downweight=1.0, k.same.factor=k, balancing.factor.per.sample=NULL, filt.neighbors=NULL, add.cells=F, add.cells.times=1) {
       supported.spaces <- c("CPCA","JNMF","genes","PCA","PMA","CCA")
       if(!space %in% supported.spaces) {
         stop(paste0("only the following spaces are currently supported: [",paste(supported.spaces,collapse=' '),"]"))
@@ -165,7 +164,6 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           stop("snn.quantile must be one or two numbers in the [0,1] range")
         }
       }
-
       if (!is.null(alignment.strength)) {
         alignment.strength %<>% max(0) %>% min(1)
         k1 <- sapply(self$samples, function(sample) ncol(getCountMatrix(sample))) %>% max() %>%
@@ -195,21 +193,21 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       } else {
         local.neighbors <- NULL
       }
-
+      if (!is.null(filt.neighbors)){
+        self$misc$neighborfilter <- lapply(self$samples, function(x) findCells(x, filt.neighbors))
+      } else {
+        self$misc <- NULL
+      }
       # determine inter-sample mapping
       if (verbose) message('inter-sample links using ',matching.method,' ')
       cached.pairs <- self$pairs[[space]]
       cor.base <- 1 + min(1, alignment.strength * 10)  ## see convertDistanceToSimilarity()
-     mnnres <- papply(1:ncol(sn.pairs), function(j)
-      {
-        #j<-1
+      mnnres <- papply(1:ncol(sn.pairs), function(j){
         # we'll look up the pair by name (possibly reversed), not to assume for the ordering of $pairs[[space]] to be the same
         i <- match(paste(sn.pairs[,j],collapse='.vs.'),names(cached.pairs))
         if(is.na(i)) { i <- match(paste(rev(sn.pairs[,j]),collapse='.vs.'),names(cached.pairs)) }
         if(is.na(i)) { stop(paste("unable to find alignment for pair",paste(sn.pairs[,j],collapse='.vs.'))) }
-
-       k.cur <- k
-
+        k.cur <- k
         if (!is.null(balancing.factor.per.sample) && (balancing.factor.per.sample[sn.pairs[1,j]] == balancing.factor.per.sample[sn.pairs[2,j]])) {
           k.cur <- min(k.same.factor, k1) # It always should be less then k1, though never supposed to be set higher
         }
@@ -238,7 +236,6 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           } else {
             rot <- rot[,1:ncomps,drop=FALSE]
           }
-          #k.cur <- 500
           mnn <- getPcaBasedNeighborMatrix(self$samples[sn.pairs[,j]], od.genes=od.genes, rot=rot, data.type=data.type,
                                            k=k.cur, k1=k1, matching.method=matching.method, metric=metric, l2.sigma=l2.sigma, cor.base=cor.base,
                                            var.scale=var.scale, common.centering=common.centering,
@@ -258,14 +255,12 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
           m1 <- cbind(mnn,t(local.neighbors[[sn.pairs[1,j] ]]))
           m2 <- rbind(local.neighbors[[sn.pairs[2,j] ]], mnn)
-
           mnn1 <- mnn
           mnn1@x <- rep(1,length(mnn1@x))
           m1@x <- rep(1,length(m1@x))
           m2@x <- rep(1,length(m2@x))
 
           x <- ((m1 %*% m2) * mnn1) / pmax(outer(rowSums(m1),colSums(m2),FUN=pmin),1)
-
           # scale by Jaccard coefficient
 
           if(min.snn.jaccard>0) {
@@ -276,7 +271,6 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
             xq <- quantile(x@x,p=c(snn.quantile[1],snn.quantile[2]))
             x@x <- pmax(0,pmin(1,(x@x-xq[1])/pmax(1,diff(xq))))
           }
-
           x <- drop0(x)
           if (min.snn.weight>0) {
             mnn <- as(drop0(mnn*min.snn.weight + mnn*x),'dgTMatrix')
@@ -286,9 +280,8 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
         }
 
-
-      if(verbose) cat(".")
-       return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=mnn@x, stringsAsFactors=FALSE))
+        if(verbose) cat(".")
+        return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=mnn@x, stringsAsFactors=FALSE))
       }, n.cores=self$n.cores,mc.preschedule=TRUE)
 
       if (verbose) message(" done")
@@ -308,59 +301,33 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       }
       if(verbose) message('building graph .')
       if (!is.null(self$misc)){
-        cells.add <- list()
-        cells.add.zero <- list()
-        if (self$misc$add.cells){
+        if (add.cells){
+          cells.add <- list()
+          cells.add.zero <- list()
           i <- 1
           cell.names <- lapply(self$samples,getCellNames)
-          cells_all <- unname(unlist(lapply(self$samples,getCellNames)))
-          cells_with_neig <- do.call(rbind,mnnres)
-          cells_zero <-intersect(cells_all[!cells_all %in% cells_with_neig$mB.lab], cells_all[!cells_all %in% cells_with_neig$mA.lab])
-          cells_zero_neig <- el[el$mA.lab %in% cells_zero,]
-          while (i <= self$misc$add.cells.times && !is.null(cells_zero)){
-           # cell.names <- lapply(self$samples,getCellNames)
-            #cells_all <- unname(unlist(lapply(self$samples,getCellNames)))
-            #cells_with_neig <- do.call(rbind,mnnres)
-            cells_zero <-intersect(cells_all[!cells_all %in% cells_with_neig$mB.lab], cells_all[!cells_all %in% cells_with_neig$mA.lab])
-            cells_zero_neig <- el[el$mA.lab %in% cells_zero,]
-
-            getSamplesNeighbors <- function(cell, cells_with_neig, el, k = self$misc$add.cells.k){
-              neighA <-el[el$mA.lab == cell,]$mB.lab
-              neighB <- el[el$mB.lab == cell,]$mA.lab
-              resA <- cells_with_neig[cells_with_neig$mA.lab %in% unique(neighA, neighB),]
-              resA$mA.lab <- rep(cell, nrow(resA))
-              resB <- cells_with_neig[cells_with_neig$mB.lab %in% unique(neighA, neighB),]
-              resB$mB.lab <- rep(cell, nrow(resB))
-              res <- rbind(resA, resB)
-              if (nrow(res > 0)){
-                res$type <- 1
-                res$w <- res$w/k
-                return(res)
-              }
-            }
-
-
-             t <- sapply(cells_zero, function(x) getSamplesNeighbors(x, cells_with_neig, el))
-             el.t <- do.call(rbind,t)
-             el <- rbind(el, el.t)
-             cells_with_neig <-  rbind(cells_with_neig, el.t[,-4])
-
-             cells.add[[i]] <- unique(c(el.t$mA.lab, el.t$mB.lab))
-             cells.add.zero[[i]] <- cells_zero
-             i <- i + 1
-
+          cells.all <- unname(unlist(lapply(self$samples,getCellNames)))
+          cells.with.neig <- do.call(rbind,mnnres)
+          cells.zero <-intersect(cells.all[!cells.all %in% cells.with.neig$mB.lab], cells.all[!cells.all %in% cells.with.neig$mA.lab])
+          while (i <= add.cells.times && !is.null(cells.zero)){
+            cells.zero <-intersect(cells.all[!cells.all %in% cells.with.neig$mB.lab], cells.all[!cells.all %in% cells.with.neig$mA.lab])
+            t <- sapply(cells.zero, function(x) getSamplesNeighbors(x, cells.with.neig, el, self$misc$add.cells.k))
+            el.t <- do.call(rbind,t)
+            el <- rbind(el, el.t)
+            cells.with.neig <-  rbind(cells.with.neig, el.t[,-4])
+            cells.add[[i]] <- unique(c(el.t$mA.lab, el.t$mB.lab))
+            cells.add.zero[[i]] <- cells.zero
+            i <- i + 1
           }
+
+          self$misc$cells.add.to.zero <- cells.add
+          self$misc$cells.zero <-  cells.add.zero
         }
-        self$misc$cells.add.to.zero <- cells.add
-        self$misc$cells.zero <-  cells.add.zero
       }
-      # self$misc$cells.add.to.zero <- cells.add
-      # self$misc$cells.zero <-  cells.add.zero
       el <- el[el[,3]>0,]
       g  <- graph_from_edgelist(as.matrix(el[,c(1,2)]), directed =FALSE)
       E(g)$weight <- el[,3]
       E(g)$type <- el[,4]
-
       if(verbose) cat(".")
 
       # collapse duplicate edges
