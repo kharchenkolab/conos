@@ -1152,6 +1152,7 @@ findSubcommunities <- function(con, target.clusters, clustering=NULL, groups=NUL
 
 #' @keywords internal
 parseCellGroups <- function(con, clustering, groups, parse.clusters=TRUE) {
+
   if (!parse.clusters){
     return(groups)
   }
@@ -1163,14 +1164,17 @@ parseCellGroups <- function(con, clustering, groups, parse.clusters=TRUE) {
     return(groups)
   }
 
+  if (length(con$clusters) < 1){
+    stop("Generate a joint clustering first")
+  } else if (!(clustering %in% names(con$clusters)) && !is.null(clustering)) {
+    stop(paste("Clustering",clustering,"does not exist, run findCommunity() first"))
+  }
+
   if (is.null(clustering)) {
     if (length(con$clusters) > 0){
       return(con$clusters[[1]]$groups)
     }
     stop("Either 'groups' must be provided or the conos object must have some clustering estimated")
-  }
-  if (is.null(clusters[[clustering]])){
-    stop(paste("Clustering",clustering,"doesn't exist, run findCommunity() first"))
   }
 
   return(con$clusters[[clustering]]$groups)
