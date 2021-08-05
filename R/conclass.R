@@ -622,6 +622,11 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #'
     plotPanel=function(clustering=NULL, groups=NULL, colors=NULL, gene=NULL, use.local.clusters=FALSE, plot.theme=NULL, use.common.embedding=FALSE, embedding=NULL, adj.list=NULL, ...) {
 
+      ## allow inputs to be not case sensitive
+      if (!is.null(embedding)){
+        embedding = tolower(embedding)
+      }
+
       if (use.local.clusters) {
         if (is.null(clustering) && !(inherits(x = self$samples[[1]], what = c('seurat', 'Seurat')))) {
           stop("You have to provide 'clustering' parameter to be able to use local clusters")
@@ -665,7 +670,10 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #'
     embedGraph=function(method='largeVis', embedding.name=method, M=1, gamma=1, alpha=0.1, perplexity=NA, sgd_batches=1e8, seed=1, verbose=TRUE, target.dims=2, ...) {
       supported.methods <- c('largeVis', 'UMAP')
-      if(!method %in% supported.methods) {
+
+      ## inputs no longer case sensitive
+      '%ni%' <- Negate('%in%')
+      if (tolower(method) %ni% tolower(supported.methods)) {
         stop(paste0("Currently, only the following embeddings are supported: ",paste(supported.methods,collapse=' ')))
       }
 
@@ -813,6 +821,12 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @return ggplot2 plot of joint graph
     #'
     plotGraph=function(color.by='cluster', clustering=NULL, embedding=NULL, groups=NULL, colors=NULL, gene=NULL, plot.theme=NULL, subset=NULL, ...) {
+
+      ## allow inputs to be not case sensitive
+      if (!is.null(embedding)){
+        embedding = tolower(embedding)
+      }
+      
       embedding <- private$getEmbedding(embedding)
 
       if (!is.null(subset)) {
