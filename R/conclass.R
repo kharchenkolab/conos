@@ -673,7 +673,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
       ## inputs no longer case sensitive
       '%ni%' <- Negate('%in%')
-      if (class(embedding)=='character' && tolower(method) %ni% tolower(supported.methods)) {
+      if (class(method)=='character' && tolower(method) %ni% tolower(supported.methods)) {
         stop(paste0("Currently, only the following embeddings are supported: ",paste(supported.methods,collapse=' ')))
       }
 
