@@ -4,7 +4,7 @@
 
 ### Changed
 - Fix the function `parseCellGroups()`, check if clustering exists
-
+- Allow 'embedding' parameter to be case insensitive in the Conos methods 'embedGraph()', 'getEmbedding()', 'plotGraph()', and 'plotPanel()'.
 
 ## [1.4.2] - 2021-28-06
 
