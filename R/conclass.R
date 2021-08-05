@@ -623,7 +623,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     plotPanel=function(clustering=NULL, groups=NULL, colors=NULL, gene=NULL, use.local.clusters=FALSE, plot.theme=NULL, use.common.embedding=FALSE, embedding=NULL, adj.list=NULL, ...) {
 
       ## allow inputs to be not case sensitive
-      if (!is.null(embedding)){
+      if (class(embedding)=='character' && !is.null(embedding)){
         embedding = tolower(embedding)
       }
 
@@ -673,7 +673,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
       ## inputs no longer case sensitive
       '%ni%' <- Negate('%in%')
-      if (tolower(method) %ni% tolower(supported.methods)) {
+      if (class(embedding)=='character' && tolower(method) %ni% tolower(supported.methods)) {
         stop(paste0("Currently, only the following embeddings are supported: ",paste(supported.methods,collapse=' ')))
       }
 
@@ -823,7 +823,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     plotGraph=function(color.by='cluster', clustering=NULL, embedding=NULL, groups=NULL, colors=NULL, gene=NULL, plot.theme=NULL, subset=NULL, ...) {
 
       ## allow inputs to be not case sensitive
-      if (!is.null(embedding)){
+      if (class(embedding)=='character' && !is.null(embedding)){
         embedding = tolower(embedding)
       }
       
@@ -1016,6 +1016,8 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         if(class(embedding) %in% c('matrix')) { # actuall embedding was passed
           # check validity?
         } else if(class(embedding)=='character') {  # look up embedding by name
+          ## allow inputs to be not case sensitive
+          embedding = tolower(embedding)
           ## check if embedding.name exists in list
           if (embedding %in% names(self$embeddings)) {
             ## embedding to plot
