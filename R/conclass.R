@@ -822,11 +822,6 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #'
     plotGraph=function(color.by='cluster', clustering=NULL, embedding=NULL, groups=NULL, colors=NULL, gene=NULL, plot.theme=NULL, subset=NULL, ...) {
 
-      ## allow inputs to be not case sensitive
-      if (class(embedding)=='character' && !is.null(embedding)){
-        embedding = tolower(embedding)
-      }
-      
       embedding <- private$getEmbedding(embedding)
 
       if (!is.null(subset)) {
@@ -1019,9 +1014,13 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           ## allow inputs to be not case sensitive
           embedding = tolower(embedding)
           ## check if embedding.name exists in list
-          if (embedding %in% names(self$embeddings)) {
+          ## allow inputs to be not case sensitive
+          if (tolower(embedding) %in% tolower(names(self$embeddings))) {
             ## embedding to plot
-            embedding <- self$embeddings[[embedding]]
+            ## Note: allow access of case insenstive names
+            available_embeddings_list <- self$embeddings
+            names(available_embeddings_list) <- tolower(names(available_embeddings_list)) ## all embedding names lowercase
+            embedding <- available_embeddings_list[[tolower(embedding)]] ##embedding <- self$embeddings[[embedding]]
           } else {
             ## embedding.name not in list of self$embeddings, so the user is confused
             ## throw error
