@@ -1,5 +1,11 @@
 ## Upcoming
 
+## [1.4.3] - 2021-02-08
+
+### Changed
+- Fix the function `parseCellGroups()`, check if clustering exists
+
+
 ## [1.4.2] - 2021-28-06
 
 ### Changed
