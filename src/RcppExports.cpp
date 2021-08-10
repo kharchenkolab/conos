@@ -8,11 +8,6 @@
 
 using namespace Rcpp;
 
-#ifdef RCPP_USE_GLOBAL_ROSTREAM
-Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
-Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
-#endif
-
 // RjnmfC
 arma::field<arma::mat> RjnmfC(arma::mat Xs, arma::mat Xu, int k, double alpha, double lambda, double epsilon, int maxiter, bool verbose);
 RcppExport SEXP _conos_RjnmfC(SEXP XsSEXP, SEXP XuSEXP, SEXP kSEXP, SEXP alphaSEXP, SEXP lambdaSEXP, SEXP epsilonSEXP, SEXP maxiterSEXP, SEXP verboseSEXP) {
