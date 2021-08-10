@@ -152,6 +152,16 @@ plotDEheatmap(con,as.factor(new.annot),de.info, n.genes.per.cluster = 5, column.
 gns <- c("GZMB","IL32","CD3E","LYZ","HLA-DRA","IGHD","GNLY","IGHM","GZMK")
 plotDEheatmap(con,new.annot,de.info[-c(3,10)], n.genes.per.cluster = 30, column.metadata=list(samples=con$getDatasetPerCell()), row.label.font.size = 7, labeled.gene.subset = gns)
 
+## ----fig.width=6, fig.height=6------------------------------------------------
+con$findCommunities(method = leiden.community, resolution = 1.0)
+leiden.de <- con$getDifferentialGenes(clustering = "leiden", append.auc = TRUE, groups=con$clusters$leiden$groups)
+plotDEheatmap(con, as.factor(con$clusters$leiden$groups), leiden.de, n.genes.per.cluster = 5, column.metadata=list(samples=con$getDatasetPerCell()), row.label.font.size = 7)
+
+## ----fig.width=6, fig.height=6------------------------------------------------
+con$findCommunities(method = igraph::walktrap.community, steps = 10)
+walktrap.de <- con$getDifferentialGenes(clustering = "walktrap", append.auc = TRUE, groups=con$clusters$walktrap$groups)
+plotDEheatmap(con, as.factor(con$clusters$walktrap$groups), leiden.de, n.genes.per.cluster = 5, column.metadata=list(samples=con$getDatasetPerCell()), row.label.font.size = 7)
+
 ## -----------------------------------------------------------------------------
 str(con$getClusterCountMatrices(), 1)
 
