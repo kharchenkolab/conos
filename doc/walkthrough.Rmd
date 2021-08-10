@@ -20,6 +20,7 @@ vignette: >
 - [Label Propagation](#label-propagation)
 - [Differential Expression](#differential-expression)
   * [Cluster markers](#cluster-markers)
+  * [Plot DE heatmaps using Leiden or walktrap clustering](#plot-de-heatmap-using-leiden-or-walktrap-clustering)
   * [Differential expression between sample groups](#differential-expression-between-sample-groups)
     + [Simple run](#simple-run)
 - [Forcing Better Alignment](#forcing-better-alignment)
@@ -218,7 +219,7 @@ con$plotPanel(clustering="multilevel", use.local.clusters=TRUE, title.size=6)
 ```
 
 We next use the graph we identified to get the global clusters. Here we use the
-Leiden community detection method to obtain clusters. Increasing the
+[Leiden community detection method](https://www.nature.com/articles/s41598-019-41695-z) to obtain clusters. Increasing the
 value of the resolution parameter will result in more fine-grained
 clusters, while decreasing it will return coarser clustering:
 
@@ -556,6 +557,28 @@ plotDEheatmap(con,new.annot,de.info[-c(3,10)], n.genes.per.cluster = 30, column.
 ```
 
 
+## Plot DE heatmaps using Leiden or walktrap clustering
+
+Users may also utilize the other clustering methods detailed above for plotting differential expression values. 
+
+For instance, users may plot the heatmap using the Leiden community detection as follows:
+
+```{r fig.width=6, fig.height=6}
+con$findCommunities(method = leiden.community, resolution = 1.0)
+leiden.de <- con$getDifferentialGenes(clustering = "leiden", append.auc = TRUE, groups=con$clusters$leiden$groups)
+plotDEheatmap(con, as.factor(con$clusters$leiden$groups), leiden.de, n.genes.per.cluster = 5, column.metadata=list(samples=con$getDatasetPerCell()), row.label.font.size = 7)
+```
+
+
+Or users may plot with the [igraph walktrap
+community](https://www.rdocumentation.org/packages/igraph/versions/0.5.1/topics/walktrap.community) detection method, as in this example:
+
+```{r fig.width=6, fig.height=6}
+con$findCommunities(method = igraph::walktrap.community, steps = 10)
+walktrap.de <- con$getDifferentialGenes(clustering = "walktrap", append.auc = TRUE, groups=con$clusters$walktrap$groups)
+plotDEheatmap(con, as.factor(con$clusters$walktrap$groups), leiden.de, n.genes.per.cluster = 5, column.metadata=list(samples=con$getDatasetPerCell()), row.label.font.size = 7)
+
+```
 
 ## Differential expression between sample groups
 
