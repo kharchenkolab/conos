@@ -20,7 +20,7 @@ vignette: >
 - [Label Propagation](#label-propagation)
 - [Differential Expression](#differential-expression)
   * [Cluster markers](#cluster-markers)
-  * [Plot DE heatmaps using Leiden or walktrap clustering](#plot-de-heatmap-using-leiden-or-walktrap-clustering)
+  * [Plot DE heatmaps using Leiden or walktrap clustering](#plot-de-heatmaps-using-leiden-or-walktrap-clustering)
   * [Differential expression between sample groups](#differential-expression-between-sample-groups)
     + [Simple run](#simple-run)
 - [Forcing Better Alignment](#forcing-better-alignment)
