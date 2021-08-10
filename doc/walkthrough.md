@@ -1,12 +1,4 @@
----
-title: "Conos Walkthrough"
-output: 
-  rmarkdown::html_vignette:
-vignette: >
-  %\VignetteIndexEntry{"Conos Walkthrough"}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
----
+# Conos Walkthrough
 
 - [Loading the Data](#loading-the-data)
   * [Pre-processing with pagoda2](#pre-processing-with-pagoda2)
