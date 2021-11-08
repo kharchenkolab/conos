@@ -11,3 +11,4 @@ CHANGELOG.md
 docker
 CONTRIBUTING.md
 data-raw
+^\.circleci$

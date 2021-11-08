@@ -1,6 +1,6 @@
 Package: conos
 Title: Clustering on Network of Samples
-Version: 1.4.3
+Version: 1.4.4
 Authors@R: c(person("Viktor","Petukhov", email="viktor.s.petuhov@ya.ru", role="aut"), person("Nikolas","Barkas", email="nikolas_barkas@hms.harvard.edu", role="aut"), person("Peter", "Kharchenko", email = "peter_kharchenko@hms.harvard.edu", role = "aut"), person("Weiliang", "Qiu", email = "weiliang.qiu@gmail.com", role = c("ctb")), person("Evan", "Biederstedt", email="evan.biederstedt@gmail.com", role=c("aut", "cre")))
 Description: Wires together large collections of single-cell RNA-seq datasets, which allows for both the identification of recurrent cell clusters and the propagation of information between datasets in multi-sample or atlas-scale collections. 'Conos' focuses on the uniform mapping of homologous cell types across heterogeneous sample collections. For instance, users could investigate a collection of dozens of peripheral blood samples from cancer patients combined with dozens of controls, which perhaps includes samples of a related tissue such as lymph nodes. This package interacts with data available through the 'conosPanel' package, which is available in a 'drat' repository. To access this data package, see the instructions at <https://github.com/kharchenkolab/conos>. The size of the 'conosPanel' package is approximately 12 MB.
 License: GPL-3
@@ -34,7 +34,7 @@ Imports:
     stats,
     tools,
     utils
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 Suggests:
     AnnotationDbi,
     BiocParallel,

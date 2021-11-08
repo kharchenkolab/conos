@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/kharchenkolab/conos.svg?branch=master)](https://travis-ci.com/github/kharchenkolab/conos)
+[![<kharchenkolab>](https://circleci.com/gh/kharchenkolab/conos.svg?style=svg)](https://app.circleci.com/pipelines/github/kharchenkolab/conos)
 [![CRAN status](https://www.r-pkg.org/badges/version/conos)](https://cran.r-project.org/package=conos)
 [![CRAN downloads](https://cranlogs.r-pkg.org/badges/conos)](https://cran.r-project.org/package=conos)
 
@@ -238,5 +238,5 @@ The R package can be cited as:
 ```
 Viktor Petukhov, Nikolas Barkas, Peter Kharchenko, and Evan
 Biederstedt (2021). conos: Clustering on Network of Samples. R
-package version 1.4.3.
+package version 1.4.4.
 ```
