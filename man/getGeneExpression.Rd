@@ -4,6 +4,8 @@
 \alias{getGeneExpression}
 \alias{getGeneExpression,Pagoda2-method}
 \alias{getGeneExpression,Conos-method}
+\alias{getGeneExpression,Seurat-method}
+\alias{getGeneExpression,seurat-method}
 \title{Access gene expression from sample}
 \usage{
 getGeneExpression(sample, gene)
@@ -11,6 +13,10 @@ getGeneExpression(sample, gene)
 \S4method{getGeneExpression}{Pagoda2}(sample, gene)
 
 \S4method{getGeneExpression}{Conos}(sample, gene)
+
+\S4method{getGeneExpression}{Seurat}(sample, gene)
+
+\S4method{getGeneExpression}{seurat}(sample, gene)
 }
 \arguments{
 \item{sample}{sample from which to access gene expression}
