@@ -10,6 +10,9 @@ jobs:
       - run:
           name: Install package dependencies
           command: R -e "devtools::install_deps(dep = TRUE)"
+      - run: 
+          name: Install sccore v1.0.0
+          command: R -e "install.packages('https://cran.r-project.org/src/contrib/sccore_1.0.0.tar.gz', repos=NULL, type='source')"   
       - run:
           name: Build package
           command: R CMD build .
