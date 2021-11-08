@@ -1,5 +1,13 @@
 ## Upcoming
 
+## [1.4.4] - 2021-11-08
+
+### Changed
+- Added `fail.on.error=TRUE` in some plapplys
+- Re-added `getGeneExpression()` methods for Seurat (lost in merge 552408f)
+- Switched to CircleCI
+
+
 ## [1.4.3] - 2021-02-08
 
 ### Changed

@@ -154,7 +154,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @return joint graph to be used for downstream analysis
     #' @examples
     #' con <- Conos$new(small_panel.preprocessed, n.cores=1)
-    #' con$buildGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.method='mNN', 
+    #' con$buildGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.method='mNN',
     #'     metric='angular', score.component.variance=TRUE, verbose=TRUE)
     #'
     #'
@@ -381,7 +381,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       groups %<>% as.factor() %>% droplevels()
       # TODO: add Seurat
       '%ni%' <- Negate('%in%')
-      if ('Pagoda2' %ni% class(self$samples[[1]])){
+      if ('Pagoda2' %ni% class(self$samples[[1]])) {
         stop("Only Pagoda2 objects are supported for marker genes")
       }
 
@@ -396,7 +396,8 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
         de.genes %<>% lapply(function(x) if ((length(x) > 0) && (nrow(x) > 0)) subset(x, complete.cases(x)) else x)
         de.genes %<>% names() %>% setNames(., .) %>%
-          sccore::plapply(function(n) appendSpecificityMetricsToDE(de.genes[[n]], groups.clean, n, p2.counts=cm.merged, append.auc=append.auc), progress=verbose, n.cores=self$n.cores)
+          sccore::plapply(function(n) appendSpecificityMetricsToDE(de.genes[[n]], groups.clean, n, p2.counts=cm.merged, append.auc=append.auc),
+                          progress=verbose, n.cores=self$n.cores, fail.on.error=TRUE)
       }
 
       if (verbose) message("All done!")
@@ -418,7 +419,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @return invisible list containing identified communities (groups) and the full community detection result (result); The results are stored in $clusters$name slot in the conos object. Each such slot contains an object with elements: $results which stores the raw output of the community detection method, and $groups which is a factor on cells describing the resulting clustering. The later can be used, for instance, in plotting: con$plotGraph(groups=con$clusters$leiden$groups). If test.stability==TRUE, then the result object will also contain a $stability slot.
     #' @examples
     #' con <- Conos$new(small_panel.preprocessed, n.cores=1)
-    #' con$buildGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.method='mNN', 
+    #' con$buildGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.method='mNN',
     #'     metric='angular', score.component.variance=TRUE, verbose=TRUE)
     #' con$findCommunities(method = igraph::walktrap.community, steps=5)
     #'
@@ -851,7 +852,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @param count.matrix Alternative gene count matrix to correct (rows: genes, columns: cells; has to be dense matrix). Default: joint count matrix for all datasets.
     #' @param normalize boolean Whether to normalize values (default=TRUE)
     #' @return smoothed expression of the input genes
-    #' 
+    #'
     correctGenes=function(genes=NULL, n.od.genes=500, fading=10.0, fading.const=0.5, max.iters=15, tol=5e-3, name='diffusion', verbose=TRUE, count.matrix=NULL, normalize=TRUE) {
       edges <- igraph::as_edgelist(self$graph)
       edge.weights <- igraph::edge.attributes(self$graph)$weight
@@ -1065,7 +1066,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       if(any(is.na(mi))) { # some pairs are missing
         if(verbose) message('running ',sum(is.na(mi)),' additional ',space,' space pairs ')
         xl2 <- sccore::plapply(which(is.na(mi)), function(i) {
-          if(space=='CPCA') {
+          if (space=='CPCA') {
             xcp <- quickCPCA(self$samples[sn.pairs[,i]],data.type=data.type,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale, score.component.variance=score.component.variance)
           } else if(space=='JNMF') {
             xcp <- quickJNMF(self$samples[sn.pairs[,i]],data.type=data.type,n.comps=ncomps,n.odgenes=n.odgenes,var.scale=var.scale,verbose=FALSE,max.iter=3e3)
@@ -1078,7 +1079,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           }
           if(verbose) cat(".")
           xcp
-        }, n.cores=self$n.cores, mc.preschedule=(space=='PCA'), progress=FALSE)
+        }, n.cores=self$n.cores, mc.preschedule=(space=='PCA'), progress=FALSE, fail.on.error=TRUE)
 
         names(xl2) <- apply(sn.pairs[,which(is.na(mi)),drop=FALSE],2,paste,collapse='.vs.')
         xl2 <- xl2[!unlist(lapply(xl2,is.null))]

@@ -20,7 +20,7 @@ con <- Conos$new(small_panel.preprocessed, n.cores=1)
 ## ------------------------------------------------
 
 con <- Conos$new(small_panel.preprocessed, n.cores=1)
-con$buildGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.method='mNN', 
+con$buildGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.method='mNN',
     metric='angular', score.component.variance=TRUE, verbose=TRUE)
 
 
@@ -30,7 +30,7 @@ con$buildGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.me
 ## ------------------------------------------------
 
 con <- Conos$new(small_panel.preprocessed, n.cores=1)
-con$buildGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.method='mNN', 
+con$buildGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.method='mNN',
     metric='angular', score.component.variance=TRUE, verbose=TRUE)
 con$findCommunities(method = igraph::walktrap.community, steps=5)
 
@@ -287,7 +287,7 @@ joint graph to be used for downstream analysis
 \subsection{Examples}{
 \if{html}{\out{<div class="r example copy">}}
 \preformatted{con <- Conos$new(small_panel.preprocessed, n.cores=1)
-con$buildGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.method='mNN', 
+con$buildGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.method='mNN',
     metric='angular', score.component.variance=TRUE, verbose=TRUE)
 
 
@@ -388,7 +388,7 @@ invisible list containing identified communities (groups) and the full community
 \subsection{Examples}{
 \if{html}{\out{<div class="r example copy">}}
 \preformatted{con <- Conos$new(small_panel.preprocessed, n.cores=1)
-con$buildGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.method='mNN', 
+con$buildGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.method='mNN',
     metric='angular', score.component.variance=TRUE, verbose=TRUE)
 con$findCommunities(method = igraph::walktrap.community, steps=5)
 

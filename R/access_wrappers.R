@@ -215,6 +215,29 @@ getGeneExpression.default <- function(sample, gene) {
   return(stats::setNames(rep(NA, ncol(count.matrix)), colnames(count.matrix)))
 }
 
+#' @rdname getGeneExpression
+setMethod("getGeneExpression", signature("Seurat"), function(sample, gene) {
+  checkSeuratV3()
+  ## https://satijalab.org/seurat/essential_commands.html
+  if (gene %in% rownames(Seurat::GetAssayData(object = sample))){
+    ## rownames(data) are gene names
+    return(Seurat::GetAssayData(object = sample)[gene, ])
+  }
+
+  return(stats::setNames(rep(NA, ncol(Seurat::GetAssayData(object = sample))), colnames(Seurat::GetAssayData(object = sample)))) 
+})
+
+#' @rdname getGeneExpression
+setMethod("getGeneExpression", signature("seurat"), function(sample, gene) {
+  ## https://satijalab.org/seurat/essential_commands.html
+  if (gene %in% rownames(sample@data)){
+    ## rownames(data) are gene names
+    return(sample@data[gene, ])
+  }
+
+  return(stats::setNames(rep(NA, ncol(sample@data)), colnames(sample@data))) 
+})
+
 
 #' Access raw count matrix from sample
 #' 
