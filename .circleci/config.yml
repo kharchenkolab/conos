@@ -8,6 +8,9 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Install system dependencies
+          command: sudo apt-get update -y && sudo apt-get install tk zip libcurl4-openssl-dev libssl-dev libxml2-dev libgmp-dev libglpk-dev r-cran-igraph -y  
+      - run:
           name: Install package dependencies
           command: R -e "devtools::install_deps(dep = TRUE)" 
       - run: 
