@@ -23,6 +23,8 @@ jobs:
       - run:
           name: Check package
           command: R CMD check --no-manual *tar.gz
-     - run: cp /root/project/conos.Rcheck/00install.out /tmp/tests
-      - store_test_results:
+     - run: 
+          name: copy file to tmp
+          command: cp /root/project/conos.Rcheck/00install.out /tmp/tests
+     - store_test_results:
           path: tmp/tests
