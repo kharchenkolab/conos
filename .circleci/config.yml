@@ -9,12 +9,20 @@ jobs:
       - checkout
       - run:
           name: Install package dependencies
-          command: R -e "devtools::install_deps(dep = TRUE)"
+          command: R -e "devtools::install_deps(dep = TRUE)" 
+      - run: 
+          name: Install sccore v1.0.0
+          command: R -e "install.packages('pbmcapply')" \
+                   R -e "install.packages('https://cran.r-project.org/src/contrib/sccore_1.0.0.tar.gz', repos=NULL, type='source')" \
       - run:
           name: Build package
           command: R CMD build .
+       - run:
+          name: Install package
+          command: R CMD INSTALL *tar.gz
       - run:
           name: Check package
           command: R CMD check --no-manual *tar.gz
+     - run: cp /root/project/conos.Rcheck/00install.out /tmp/tests
       - store_test_results:
           path: tmp/tests
