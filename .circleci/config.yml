@@ -2,14 +2,14 @@ version: 2
 jobs:
   build:
     docker:
-      - image: rocker/verse:4.0.3
+      - image: rocker/verse:4.1.0
     environment:
             _R_CHECK_FORCE_SUGGESTS_: false
     steps:
       - checkout
       - run:
           name: Install system dependencies
-          command: sudo apt-get update -y && sudo apt-get install tk zip libcurl4-openssl-dev libssl-dev libxml2-dev libgmp-dev libglpk-dev r-cran-igraph -y  
+          command: sudo apt-get update -y && sudo apt-get install tk zip libcurl4-openssl-dev libssl-dev libxml2-dev libgmp-dev libglpk-dev -y  
       - run:
           name: Install package dependencies
           command: R -e "devtools::install_deps(dep = TRUE)" 
@@ -17,6 +17,9 @@ jobs:
           name: Install sccore v1.0.0
           command: R -e "install.packages('pbmcapply')" \
                    R -e "install.packages('https://cran.r-project.org/src/contrib/sccore_1.0.0.tar.gz', repos=NULL, type='source')" \
+      - run: 
+          name: Install leidenAlg
+          command: R -e "install.packages('https://cran.r-project.org/src/contrib/leidenAlg_0.1.1.tar.gz', repos=NULL, type='source')"
       - run:
           name: Build package
           command: R CMD build .
