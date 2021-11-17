@@ -1004,7 +1004,7 @@ For more details on this topic, please see the tutorial [Adjustment of Alignment
 
 Users may also interactively explore Conos objects in the [Pagoda2](https://github.com/kharchenkolab/pagoda2) application. The process is very similar to the pagoda2 walkthrough. 
 
-After constructing the `con` object as shown above, users can save to a serialized `*.bin` file and upload into the pagoda application with the `p2app4conos()` function, using `p2app4conos(conos=con)`. More information, please review the [pagoda2 walkthrough](https://github.com/kharchenkolab/pagoda2/blob/main/doc/pagoda2.walkthrough.md)
+After constructing the `con` object as shown above, users can save to a serialized `*.bin` file and upload into the pagoda application with the `p2app4conos()` function, using `p2app4conos(conos=con)`. For more information, please review the [pagoda2 walkthrough](https://github.com/kharchenkolab/pagoda2/blob/main/doc/pagoda2.walkthrough.md)
 
 
 ```r
