@@ -117,7 +117,7 @@ We will generate `Pagoda2` objects for poorly-expressed genes from each
 individual sample using the `basicP2proc` helper function for quick
 processing. As the datasets will be compared to each other, we will turn
 off automated dropping of low-expressed genes (using `min.cells.per.gene=0`),
-and lower the numbers of local principal components (PCs) estimated for faster processing. (For more details on `pagoda2`, please see the tutorial [here](https://github.com/kharchenkolab/pagoda2/blob/master/vignettes/pagoda2.walkthrough.md).)
+and lower the numbers of local principal components (PCs) estimated for faster processing. (For more details on `pagoda2`, please see the tutorial [here](https://github.com/kharchenkolab/pagoda2/blob/main/doc/pagoda2.walkthrough.md).)
 
 We use `lapply()` here as `panel` is a list with 4 elements (i.e. a panel of four samples).
 
@@ -998,13 +998,13 @@ plotClusterBarplots(con, legend.height = 0.1)
 
 ![plot of chunk unnamed-chunk-55](figure_walkthrough/unnamed-chunk-55-1.png)
 
-For more details on this topic, please see the tutorial [Adjustment of Alignment Strength with conos](https://github.com/kharchenkolab/conos/blob/master/vignettes/adjust_alignment_strength.md).
+For more details on this topic, please see the tutorial [Adjustment of Alignment Strength with conos](https://github.com/kharchenkolab/conos/blob/main/doc/adjust_alignment_strength.md).
 
 # View Conos in Pagoda2 Application
 
 Users may also interactively explore Conos objects in the [Pagoda2](https://github.com/kharchenkolab/pagoda2) application. The process is very similar to the pagoda2 walkthrough. 
 
-After constructing the `con` object as shown above, users can save to a serialized `*.bin` file and upload into the pagoda application with the `p2app4conos()` function, using `p2app4conos(conos=con)`. More information, please review the [pagoda2 walkthrough](https://github.com/kharchenkolab/pagoda2/blob/master/vignettes/pagoda2.walkthrough.md)
+After constructing the `con` object as shown above, users can save to a serialized `*.bin` file and upload into the pagoda application with the `p2app4conos()` function, using `p2app4conos(conos=con)`. More information, please review the [pagoda2 walkthrough](https://github.com/kharchenkolab/pagoda2/blob/main/doc/pagoda2.walkthrough.md)
 
 
 ```r
