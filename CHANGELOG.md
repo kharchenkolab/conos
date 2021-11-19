@@ -1,5 +1,10 @@
 ## Upcoming
 
+## [1.4.5]
+
+### Changed
+- Removed unused R packages from "Suggests" (now in sccore), i.e. 'ggrastr', 'pROC', 'pbapply'
+
 ## [1.4.4] - 2021-11-08
 
 ### Changed

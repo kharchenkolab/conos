@@ -238,5 +238,5 @@ The R package can be cited as:
 ```
 Viktor Petukhov, Nikolas Barkas, Peter Kharchenko, and Evan
 Biederstedt (2021). conos: Clustering on Network of Samples. R
-package version 1.4.4.
+package version 1.4.5.
 ```
