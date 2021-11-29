@@ -25,7 +25,7 @@ jobs:
           command: R -e "install.packages('https://cran.r-project.org/src/contrib/matrixStats_0.61.0.tar.gz', repos=NULL, type='source')"
       - run: 
           name: Install DESeq2, SummarizedExperiment
-          command:  R -e "BiocManager::install(c("DESeq2", "SummarizedExperiment"))" 
+          command:  R -e "BiocManager::install(c('DESeq2', 'SummarizedExperiment'))" 
       - run:
           name: Build package
           command: R CMD build .
