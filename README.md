@@ -73,28 +73,28 @@ To see more documentation on the class `Conos`, run `?Conos`.
 Please see the following tutorials for detailed examples of how to use conos: 
 
 ### Conos walkthrough:
-* [HTML version](https://htmlpreview.github.io/?https://raw.githubusercontent.com/kharchenkolab/conos/master/doc/walkthrough.html)
-* [Markdown version](https://github.com/kharchenkolab/conos/blob/master/doc/walkthrough.md)
+* [HTML version](https://htmlpreview.github.io/?https://raw.githubusercontent.com/kharchenkolab/conos/main/doc/walkthrough.html)
+* [Markdown version](https://github.com/kharchenkolab/conos/blob/main/doc/walkthrough.md)
 
 ### Adjustment of alignment strength with conos:
-* [HTML version](https://htmlpreview.github.io/?https://raw.githubusercontent.com/kharchenkolab/conos/master/doc/adjust_alignment_strength.html)
-* [Markdown version](https://github.com/kharchenkolab/conos/blob/master/doc/adjust_alignment_strength.md)
+* [HTML version](https://htmlpreview.github.io/?https://raw.githubusercontent.com/kharchenkolab/conos/main/doc/adjust_alignment_strength.html)
+* [Markdown version](https://github.com/kharchenkolab/conos/blob/main/doc/adjust_alignment_strength.md)
 
 ### Integration with Scanpy:
 
 Note that for integration with [Scanpy](https://scanpy.readthedocs.io/en/stable/), users need to save conos files to disk from an R session, and then load these files into Python.
 
 **Save conos for Scanpy:**
-* [HTML version](https://htmlpreview.github.io/?https://raw.githubusercontent.com/kharchenkolab/conos/master/doc/scanpy_integration.html)
-* [Markdown version](https://github.com/kharchenkolab/conos/blob/master/doc/scanpy_integration.md)
+* [HTML version](https://htmlpreview.github.io/?https://raw.githubusercontent.com/kharchenkolab/conos/main/doc/scanpy_integration.html)
+* [Markdown version](https://github.com/kharchenkolab/conos/blob/main/doc/scanpy_integration.md)
 
 **Load conos files into Scanpy:**
 * [Jupyter Notebook](inst/scanpy_integration.ipynb)
 
 
 ### Integrating RNA-seq and ATAC-seq with conos:
-* [HTML version](https://htmlpreview.github.io/?https://raw.githubusercontent.com/kharchenkolab/conos/master/doc/integrating_rnaseq_atacseq.html)
-* [Markdown version](https://github.com/kharchenkolab/conos/blob/master/doc/integrating_rnaseq_atacseq.md)
+* [HTML version](https://htmlpreview.github.io/?https://raw.githubusercontent.com/kharchenkolab/conos/main/doc/integrating_rnaseq_atacseq.html)
+* [Markdown version](https://github.com/kharchenkolab/conos/blob/main/doc/integrating_rnaseq_atacseq.md)
 
 ### Running RNA velocity on a Conos object
 
@@ -212,7 +212,7 @@ docker pull pkharchenkolab/conos:latest
 
 #### Building Docker image from the Dockerfile
 
-If you want to build image by your own, download the [Dockerfile](https://github.com/kharchenkolab/conos/blob/master/docker/Dockerfile) (available in this repo under `/dockers`) and run to following command to build it:
+If you want to build image by your own, download the [Dockerfile](https://github.com/kharchenkolab/conos/blob/main/docker/Dockerfile) (available in this repo under `/dockers`) and run to following command to build it:
 ```
 docker build -t conos .
 ```
