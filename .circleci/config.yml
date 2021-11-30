@@ -28,7 +28,7 @@ jobs:
                    R -e "install.packages('https://cran.r-project.org/src/contrib/sccore_1.0.0.tar.gz', repos=NULL, type='source')" \
       - run: 
           name: Install leidenAlg
-          command: R -e "install.packages('https://cran.r-project.org/src/contrib/leidenAlg_0.1.1.tar.gz', repos=NULL, type='source')"
+          command: R -e "install.packages('https://cran.r-project.org/src/contrib/leidenAlg_1.0.0.tar.gz', repos=NULL, type='source')"
       - run:
           name: Build package
           command: R CMD build .
