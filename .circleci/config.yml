@@ -34,6 +34,6 @@ jobs:
           command: R CMD build .
       - run:
           name: Check package
-          command: R CMD check --no-manual *tar.gz
+          command: R CMD check --no-manual *tar.gz && cat /root/project/conos.Rcheck/00install.out
       - store_test_results:
           path: tmp/tests
