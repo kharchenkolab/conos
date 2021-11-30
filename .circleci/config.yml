@@ -11,6 +11,9 @@ jobs:
           name: Install system dependencies
           command: sudo apt-get update -y && sudo apt-get install tk zip libcurl4-openssl-dev libssl-dev libxml2-dev libgmp-dev libglpk-dev -y  
       - run: 
+          name: Install matrixStats
+          command: R -e "install.packages('https://cran.r-project.org/src/contrib/matrixStats_0.61.0.tar.gz', repos=NULL, type='source')"
+      - run: 
           name: Install DESeq2, SummarizedExperiment
           command:  R -e "BiocManager::install(c('DESeq2', 'SummarizedExperiment'), ask = FALSE, update = TRUE)"       
       - run:
@@ -23,9 +26,6 @@ jobs:
       - run: 
           name: Install leidenAlg
           command: R -e "install.packages('https://cran.r-project.org/src/contrib/leidenAlg_0.1.1.tar.gz', repos=NULL, type='source')"
-      - run: 
-          name: Install matrixStats
-          command: R -e "install.packages('https://cran.r-project.org/src/contrib/matrixStats_0.61.0.tar.gz', repos=NULL, type='source')"
       - run:
           name: Build package
           command: R CMD build .
