@@ -6,6 +6,9 @@ jobs:
     environment:
             _R_CHECK_FORCE_SUGGESTS_: false
     steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "SO:ME:FIN:G:ER:PR:IN:T"
       - checkout
       - run:
           name: Install system dependencies
