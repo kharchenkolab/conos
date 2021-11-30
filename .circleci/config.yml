@@ -10,6 +10,12 @@ jobs:
       - run:
           name: Install system dependencies
           command: sudo apt-get update -y && sudo apt-get install tk zip libcurl4-openssl-dev libssl-dev libxml2-dev libgmp-dev libglpk-dev -y  
+      - run: 
+          name: Install matrixStats
+          command: R -e "install.packages('https://cran.r-project.org/src/contrib/matrixStats_0.61.0.tar.gz', repos=NULL, type='source')"
+      - run: 
+          name: Install DESeq2, SummarizedExperiment
+          command:  R -e "BiocManager::install(c('DESeq2', 'SummarizedExperiment'), ask = FALSE, update = TRUE)"       
       - run:
           name: Install package dependencies
           command: R -e "devtools::install_deps(dep = TRUE)" 
@@ -19,12 +25,13 @@ jobs:
                    R -e "install.packages('https://cran.r-project.org/src/contrib/sccore_1.0.0.tar.gz', repos=NULL, type='source')" \
       - run: 
           name: Install leidenAlg
-          command: R -e "install.packages('https://cran.r-project.org/src/contrib/leidenAlg_0.1.1.tar.gz', repos=NULL, type='source')"
+          command: R -e "install.packages('https://cran.r-project.org/src/contrib/leidenAlg_1.0.0.tar.gz', repos=NULL, type='source')"
       - run:
           name: Build package
           command: R CMD build .
       - run:
           name: Check package
-          command: R CMD check --no-manual *tar.gz
+          command: R CMD check --no-manual *tar.gz 
       - store_test_results:
           path: tmp/tests
+          
