@@ -15,6 +15,7 @@
   * [Integration with Scanpy](#integration-with-scanpy)
   * [Integrating RNA-seq and ATAC-seq with conos](#integrating-rna-seq-and-atac-seq-with-conos)
   * [Running RNA velocity on a Conos object](#running-rna-velocity-on-a-conos-object)
+  * [Subsetting a conos object](#subsetting-conos-object)
 - [Installation](#installation)
   * [Running conos via Docker](#running-conos-via-docker)
 - [References](#references)
