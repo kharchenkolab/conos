@@ -1,9 +1,9 @@
 FROM rocker/tidyverse:4.0.1
 
 LABEL authors="Viktor Petukhov <viktor.s.petuhov@ya.ru>, Evan Biederstedt <evan.biederstedt@gmail.com>" \
-    version.image="1.4.0" \
-    version.pagoda2="1.4.0" \
-    description="tidyverse image R 4.0.1 to run pagoda2 with Rstudio"
+    version.image="1.4.4" \
+    version.pagoda2="1.4.4" \
+    description="tidyverse image R 4.0.1 to run conos with Rstudio"
 
 
 RUN apt-get update --yes && apt-get install --no-install-recommends --yes \
@@ -34,6 +34,7 @@ RUN R -e 'BiocManager::install(c("AnnotationDbi", "BiocGenerics", "GO.db", "pcaM
 
 RUN R -e "install.packages('Seurat',dependencies=TRUE, repos='http://cran.rstudio.com/')"
 
+RUN R -e "install.packages('testthat',dependencies=TRUE, repos='http://cran.rstudio.com/')"
 
 RUN R -e "install.packages('p2data',dependencies=TRUE, repos='https://kharchenkolab.github.io/drat/', type='source')"
 
