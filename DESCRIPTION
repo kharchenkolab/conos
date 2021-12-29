@@ -30,7 +30,7 @@ Imports:
     reshape2,
     rlang,
     Rtsne,
-    sccore (>= 1.0.1),
+    sccore (>= 1.0.0),
     stats,
     tools,
     utils
