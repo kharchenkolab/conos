@@ -1,4 +1,4 @@
-FROM rocker/tidyverse:4.0.1
+FROM rocker/tidyverse:4.1.2
 
 LABEL authors="Viktor Petukhov <viktor.s.petuhov@ya.ru>, Evan Biederstedt <evan.biederstedt@gmail.com>" \
     version.image="1.4.4" \
