@@ -3,7 +3,7 @@ FROM rocker/tidyverse:4.1.2
 LABEL authors="Viktor Petukhov <viktor.s.petuhov@ya.ru>, Evan Biederstedt <evan.biederstedt@gmail.com>" \
     version.image="1.4.4" \
     version.pagoda2="1.4.4" \
-    description="tidyverse image R 4.0.1 to run conos with Rstudio"
+    description="tidyverse image R 4.1.2 to run conos with Rstudio"
 
 
 RUN apt-get update --yes && apt-get install --no-install-recommends --yes \
