@@ -53,9 +53,6 @@ N2R and leidenAlg
 
 
 ### Removed
->>>>>>> dev
-
-### Removed
 
 ## [1.4.0] - 2021-23-02
 
