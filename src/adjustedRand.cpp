@@ -47,21 +47,15 @@ double adjustedRandcpp(Rcpp::NumericVector cl1, Rcpp::NumericVector cl1u, Rcpp::
     int mm1, int mm2, int nn, int fflag)
 {
     
-    // formerly pointer double *r12
-    // see the R code how this worked in clues
-    //Rcpp::NumericVector result = Rcpp::NumericVector::create(Rcpp::Named("Rand") = R_NilValue, 
-    //    Rcpp::Named("HA") = R_NilValue,
-    //    Rcpp::Named("MA") = R_NilValue,
-    //    Rcpp::Named("FM") = R_NilValue, 
-    //    Rcpp::Named("Jaccard") = R_NilValue);
-
+    // formerly 'double *r12'
+    // see the R code how this worked in clues, i.e. 
+    // multiple calls used to populate vector
     double result = 0.0;
 
     int i, j, t, r, *nmatrix;
     //int mm1, mm2, nn, fflag;
     double a, b, c, d, denom; 
     double *nc, *nr, ni_2, n_j2, nt, n_c;
-    double nij_2 = 0.0;
  
     //mm1 = *m1; mm2 = *m2; nn = *n; fflag = *flag;
  
@@ -98,7 +92,7 @@ double adjustedRandcpp(Rcpp::NumericVector cl1, Rcpp::NumericVector cl1u, Rcpp::
  
     /* nij_2= \sum_{i=1}^{m_1}\sum_{j=1}^{m_2} n_{ij}^2 */
     /* nr[i]= \sum_{j=1}^{m_2} n_{ij} */
-    //nij_2 = 0.0;
+    double nij_2 = 0.0;
     for(i = 0; i < mm1; i ++){
         nr[i] = 0; 
         for(j = 0; j < mm2; j ++){
