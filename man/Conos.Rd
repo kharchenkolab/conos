@@ -71,6 +71,8 @@ con$getJointCountMatrix()
 \item{\code{n.cores}}{number of cores}
 
 \item{\code{misc}}{list with unstructured additional info}
+
+\item{\code{override.conos.plot.theme}}{boolean Whether to override the conos plot theme}
 }
 \if{html}{\out{</div>}}
 }

@@ -4,6 +4,7 @@
 
 ### Changed
 - Removed unused R packages from "Suggests" (now in sccore), i.e. 'ggrastr', 'pROC', 'pbapply'
+- Modified adjustedRand.c from clues to C++ function, revised R code for internal function adjustedRand() in conclass.R
 
 ## [1.4.4] - 2021-11-08
 

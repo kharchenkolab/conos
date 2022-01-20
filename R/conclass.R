@@ -50,7 +50,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @field misc list with unstructured additional info
     misc = list(),
 
-    #' @field override.conos.plot.theme
+    #' @field override.conos.plot.theme boolean Whether to override the conos plot theme
     override.conos.plot.theme = FALSE,
 
     #' @description initialize Conos class
