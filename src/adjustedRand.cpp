@@ -1,6 +1,7 @@
-#include<stdio.h>
-#include<stdlib.h>
-#include<math.h>
+
+#include <Rcpp.h>
+
+using namespace Rcpp;
 
 // From clues
 // https://github.com/cran/clues/blob/master/src/adjustedRand.c
@@ -32,23 +33,37 @@ cluster analysis},
   cl2u --- unique values of elements in 'cl2'. 'cl2u' is a 'm2' by 1 vector.
   m1 --- number of clusters in partition 1
   m2 --- number of clusters in partition 2 (m2 can be not equal to m1)
-  n --- number of data points
-  flag = 1 --- Rand index
-  flag = 2 --- Hubert and Arabie's adjusted Rand index
-  flag = 3 --- Morey and Agresti's adjusted Rand index
-  flag = 4 --- Fowlkes and Mallows's index
-  flag = 5 --- Jaccard index
-  r12 --- the output index
+  nn --- number of data points
+  fflag = 1 --- Rand index
+  fflag = 2 --- Hubert and Arabie's adjusted Rand index
+  fflag = 3 --- Morey and Agresti's adjusted Rand index
+  fflag = 4 --- Fowlkes and Mallows's index
+  fflag = 5 --- Jaccard index
 ***************/
-void adjustedRand(int *cl1, int *cl1u, int *cl2, int *cl2u, int *m1, int *m2, 
-		  int *n, int *flag, double *r12)
+
+
+// [[Rcpp::export]]
+double adjustedRandcpp(Rcpp::NumericVector cl1, Rcpp::NumericVector cl1u, Rcpp::NumericVector cl2, Rcpp::NumericVector cl2u, 
+    int mm1, int mm2, int nn, int fflag)
 {
+    
+    // formerly pointer double *r12
+    // see the R code how this worked in clues
+    //Rcpp::NumericVector result = Rcpp::NumericVector::create(Rcpp::Named("Rand") = R_NilValue, 
+    //    Rcpp::Named("HA") = R_NilValue,
+    //    Rcpp::Named("MA") = R_NilValue,
+    //    Rcpp::Named("FM") = R_NilValue, 
+    //    Rcpp::Named("Jaccard") = R_NilValue);
+
+    double result = 0.0;
+
     int i, j, t, r, *nmatrix;
-    int mm1, mm2, nn, fflag;
+    //int mm1, mm2, nn, fflag;
     double a, b, c, d, denom; 
-    double *nc, *nr, ni_2, n_j2, nt, n_c, nij_2;
+    double *nc, *nr, ni_2, n_j2, nt, n_c;
+    double nij_2 = 0.0;
  
-    mm1 = *m1; mm2 = *m2; nn = *n; fflag = *flag;
+    //mm1 = *m1; mm2 = *m2; nn = *n; fflag = *flag;
  
     nmatrix = (int *)malloc((size_t)(mm1 * mm2 * sizeof(int)));
     nc = (double *)malloc((size_t)(mm2 * sizeof(double)));
@@ -83,7 +98,7 @@ void adjustedRand(int *cl1, int *cl1u, int *cl2, int *cl2u, int *m1, int *m2,
  
     /* nij_2= \sum_{i=1}^{m_1}\sum_{j=1}^{m_2} n_{ij}^2 */
     /* nr[i]= \sum_{j=1}^{m_2} n_{ij} */
-    nij_2 = 0.0;
+    //nij_2 = 0.0;
     for(i = 0; i < mm1; i ++){
         nr[i] = 0; 
         for(j = 0; j < mm2; j ++){
@@ -116,22 +131,33 @@ void adjustedRand(int *cl1, int *cl1u, int *cl2, int *cl2u, int *m1, int *m2,
         n_c = ( nt * (nt * nt + 1.0) - (nt + 1.0) * (ni_2 + n_j2) + 2.0 * ni_2 * n_j2 / nt ) / (2.0 * (nt - 1.0));
         //numer = a + d - n_c;
         denom = a + b + c + d - n_c;
-        if(denom < 1.0e-10)
-        { *r12 = 1.0; } 
-        else { *r12 = (a + d - n_c) / (a + b + c + d - n_c); }
+        if(denom < 1.0e-10){ 
+            result = 1.0; 
+        } else { 
+            result = (a + d - n_c) / (a + b + c + d - n_c); 
+        }
     } else if(fflag == 3) { //Morey and Agresti
         n_c = nt * (nt - 1.0) / 2.0 - (ni_2 + n_j2) / 2.0 + ni_2 * n_j2 / (nt * nt);
         // numer = a + d - n_c;
         denom = a + b + c + d - n_c;
-        if(denom < 1.0e-10)
-        { *r12 = 1.0; } 
-        else { *r12 = (a + d - n_c) / (a + b + c + d - n_c); }
+        if(denom < 1.0e-10){ 
+            result = 1.0; 
+        } else { 
+            result = (a + d - n_c) / (a + b + c + d - n_c); 
+        }
     } else if(fflag == 1) { // Rand
-        *r12 = (a + d) / (a + b + c + d);
+        result = (a + d) / (a + b + c + d);
     } else if(fflag == 4) { //Fowlkes and Mallows
-        *r12 = a / sqrt((a + b) * (a + c));
+        result = a / sqrt((a + b) * (a + c));
     } else if(fflag == 5) { //Jaccard
-        *r12 = a / (a + b + c);
+        result = a / (a + b + c);
     }
-    return;
+
+    free(nmatrix);
+    free(nc);
+    free(nr);
+
+    return result;
+
+
 }

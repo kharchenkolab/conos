@@ -476,6 +476,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         }, n.cores=self$n.cores, mc.preschedule=TRUE))
 
 
+        # based on the following C code from clues:
         # v0.2.4 on Feb. 3, 2009 by Weiliang Qiu, <https://github.com/cran/clues/blob/master/R/adjustedRand.R>
         #  (1) moved some code out of the for loop
         #
@@ -487,6 +488,8 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         # flag = 3 --- Morey and Agresti's adjusted Rand index
         # flag = 4 --- Fowlkes and Mallows's index
         # flag = 5 --- Jaccard index
+
+        # modified for C++, 19 January 2022
         adjustedRand <- function(cl1, cl2, randMethod = c("Rand","HA", "MA", "FM", "Jaccard")){
             if(!is.vector(cl1)){
               stop("cl1 is not a vector!\n")
@@ -523,17 +526,15 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
                 flag <- match(randMethod[i],
                     c("Rand","HA", "MA", "FM", "Jaccard"))
 
-                c.res <- .C("adjustedRand",
-                    as.integer(cl1),
+                c.res <- adjustedRandcpp(as.integer(cl1),
                     as.integer(cl1u),
                     as.integer(cl2),
                     as.integer(cl2u),
                     as.integer(m1),
                     as.integer(m2),
                     as.integer(n),
-                    as.integer(flag),
-                    r = as.double(0))
-                randVec[i] <- c.res$r
+                    as.integer(flag))
+                randVec[i] <- c.res
             }
             return(randVec)
         }

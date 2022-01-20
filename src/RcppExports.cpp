@@ -2,7 +2,6 @@
 // Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 #include <RcppArmadillo.h>
-#define NDEBUG 1
 #include <RcppEigen.h>
 #include <Rcpp.h>
 
@@ -28,6 +27,24 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type maxiter(maxiterSEXP);
     Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
     rcpp_result_gen = Rcpp::wrap(RjnmfC(Xs, Xu, k, alpha, lambda, epsilon, maxiter, verbose));
+    return rcpp_result_gen;
+END_RCPP
+}
+// adjustedRandcpp
+double adjustedRandcpp(Rcpp::NumericVector cl1, Rcpp::NumericVector cl1u, Rcpp::NumericVector cl2, Rcpp::NumericVector cl2u, int mm1, int mm2, int nn, int fflag);
+RcppExport SEXP _conos_adjustedRandcpp(SEXP cl1SEXP, SEXP cl1uSEXP, SEXP cl2SEXP, SEXP cl2uSEXP, SEXP mm1SEXP, SEXP mm2SEXP, SEXP nnSEXP, SEXP fflagSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type cl1(cl1SEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type cl1u(cl1uSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type cl2(cl2SEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type cl2u(cl2uSEXP);
+    Rcpp::traits::input_parameter< int >::type mm1(mm1SEXP);
+    Rcpp::traits::input_parameter< int >::type mm2(mm2SEXP);
+    Rcpp::traits::input_parameter< int >::type nn(nnSEXP);
+    Rcpp::traits::input_parameter< int >::type fflag(fflagSEXP);
+    rcpp_result_gen = Rcpp::wrap(adjustedRandcpp(cl1, cl1u, cl2, cl2u, mm1, mm2, nn, fflag));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -317,10 +334,9 @@ BEGIN_RCPP
 END_RCPP
 }
 
-RcppExport void adjustedRand(void *, void *, void *, void *, void *, void *, void *, void *, void *);
-
 static const R_CallMethodDef CallEntries[] = {
     {"_conos_RjnmfC", (DL_FUNC) &_conos_RjnmfC, 8},
+    {"_conos_adjustedRandcpp", (DL_FUNC) &_conos_adjustedRandcpp, 8},
     {"_conos_checkBits", (DL_FUNC) &_conos_checkBits, 0},
     {"_conos_checkOpenMP", (DL_FUNC) &_conos_checkOpenMP, 0},
     {"_conos_cpcaF", (DL_FUNC) &_conos_cpcaF, 7},
@@ -340,7 +356,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_conos_adjacent_vertices", (DL_FUNC) &_conos_adjacent_vertices, 1},
     {"_conos_adjacent_vertex_weights", (DL_FUNC) &_conos_adjacent_vertex_weights, 2},
     {"_conos_spcov", (DL_FUNC) &_conos_spcov, 2},
-    {"adjustedRand", (DL_FUNC) &adjustedRand, 9},
     {NULL, NULL, 0}
 };
 
