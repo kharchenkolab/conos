@@ -1,12 +1,12 @@
 ## Upcoming
 
-## [1.4.5]
+## [1.4.5] - 2021-20-January
 
 ### Changed
 - Removed unused R packages from "Suggests" (now in sccore), i.e. 'ggrastr', 'pROC', 'pbapply'
 - Modified adjustedRand.c from clues to C++ function, revised R code for internal function adjustedRand() in conclass.R
 
-## [1.4.4] - 2021-11-08
+## [1.4.4] - 2021-08-November
 
 ### Changed
 - Added `fail.on.error=TRUE` in some plapplys
@@ -14,20 +14,20 @@
 - Switched to CircleCI
 
 
-## [1.4.3] - 2021-02-08
+## [1.4.3] - 2021-02-August
 
 ### Changed
 - Fix the function `parseCellGroups()`, check if clustering exists
 
 
-## [1.4.2] - 2021-28-06
+## [1.4.2] - 2021-28-June
 
 ### Changed
 
 - Add scaling to `scaledMatricesSeurat()`, `scaledMatricesSeuratV3()`
 - Change `sccore::plapply()` in `updatePairs()`
 
-## [1.4.1] - 2021-14-05
+## [1.4.1] - 2021-14-May
 
 ### Added
 
@@ -38,7 +38,7 @@
 - functions `collapseCellsByType` and `colSumByFactor` are moved to [sccore](https://github.com/kharchenkolab/sccore/)
 - removed strong dependency on drat repositories; only used now for the vignettes in the README
 
-## [1.4.0] - 2021-23-02
+## [1.4.0] - 2021-23-Feb
 
 ### Changed
 
