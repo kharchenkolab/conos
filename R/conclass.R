@@ -319,7 +319,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       }
       # append local edges
       if(k.self>0) {
-        if(is.null(local.neighbors) || snn.k!=k.self) { # recalculate local neighbors
+        if(is.null(local.neighbors) || snn.k.self != k.self) { # recalculate local neighbors
           local.neighbors <- getLocalNeighbors(self$samples[! names(self$samples) %in% exclude.samples], k.self, k.self.weight, metric, l2.sigma=l2.sigma, verbose, self$n.cores)
         }
         el <- rbind(el,getLocalEdges(local.neighbors))
