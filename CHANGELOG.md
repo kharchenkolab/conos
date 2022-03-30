@@ -1,5 +1,7 @@
 ## Upcoming
 
+- Fixed bug with `snn` argument in `buildGraph()` due to the parameter `snn.k.self`
+
 ## [1.4.5] - 2021-20-January
 
 ### Changed
