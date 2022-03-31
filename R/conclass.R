@@ -387,13 +387,11 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
       de.genes <- getDifferentialGenesP2(self$samples, groups=groups, z.threshold=z.threshold, upregulated.only=upregulated.only, verbose=verbose, n.cores=self$n.cores)
       de.genes <- de.genes[levels(groups)]
-
       if (append.specificity.metrics) {
         if (verbose) message("Estimating specificity metrics")
 
         cm.merged <- self$getJointCountMatrix(raw=TRUE)
         groups.clean <- groups %>% .[!is.na(.)] %>% .[names(.) %in% rownames(cm.merged)]
-
         de.genes %<>% lapply(function(x) if ((length(x) > 0) && (nrow(x) > 0)) subset(x, complete.cases(x)) else x)
         de.genes %<>% names() %>% setNames(., .) %>%
           sccore::plapply(function(n) appendSpecificityMetricsToDE(de.genes[[n]], groups.clean, n, p2.counts=cm.merged, append.auc=append.auc),

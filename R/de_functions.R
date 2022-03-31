@@ -525,11 +525,22 @@ getDifferentialGenesP2 <- function(p2.samples, groups, z.threshold=3.0, upregula
   }, progress=verbose, n.cores=n.cores)
 
   if (verbose) message("Aggregating marker genes\n")
+
+  ## sccore::plapply, at least v1.0.1
+  ## sometimes appends warnings to output, e.g. there's a list element 'value' and 'warning'
+  ## 
+  ## $warning
+  ## <simpleWarning in p2$getDifferentialGenes(groups = groups, z.threshold = 0, append.specificity.metrics = FALSE,     append.auc = FALSE): cluster vector doesn't specify groups for all of the cells, dropping missing cells from comparison>
+  ##
+  ## 
+  ## If there's a warning, only take the value
+  if (!is.null(markers.per.sample$warning)) {
+    markers.per.sample <- markers.per.sample$value
+  }
+
   markers.per.type <- unique(groups) %>% setNames(., .) %>%
-    lapply(function(id) lapply(markers.per.sample, `[[`, id) %>% .[!sapply(., is.null)])
+    lapply(function(id) lapply(markers.per.sample, `[[`, id) %>% .[!sapply(., is.null)]) 
   markers.per.type = sccore::plapply(markers.per.type, aggregateDEMarkersAcrossDatasets, z.threshold=z.threshold, upregulated.only=upregulated.only, progress=verbose, n.cores=n.cores)
-
-
   return(markers.per.type)
 }
 

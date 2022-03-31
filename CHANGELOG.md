@@ -1,8 +1,11 @@
 ## Upcoming
 
-- Fixed bug with `snn` argument in `buildGraph()` due to the parameter `snn.k.self`
+## [1.4.6] - 2022-30-March
 
-## [1.4.5] - 2021-20-January
+- Fixed bug with `snn` argument in `buildGraph()` due to the parameter `snn.k.self`
+- Fixed bug in `getDifferentialGenes()` based on warnings from sccore::plapply()
+
+## [1.4.5] - 2022-20-January
 
 ### Changed
 - Removed unused R packages from "Suggests" (now in sccore), i.e. 'ggrastr', 'pROC', 'pbapply'
