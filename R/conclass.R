@@ -999,9 +999,9 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     # a utility function to look up an embedding by name or accept an actual embedding data
     getEmbedding=function(embedding) {
       if (!is.null(embedding)) {
-        if(class(embedding) %in% c('matrix')) { # actuall embedding was passed
+        if (class(embedding) %in% c('matrix')) { # actuall embedding was passed
           # check validity?
-        } else if(class(embedding)=='character') {  # look up embedding by name
+        } else if (inherits(embedding, 'character')) {  # look up embedding by name
           ## check if embedding.name exists in list
           if (embedding %in% names(self$embeddings)) {
             ## embedding to plot
