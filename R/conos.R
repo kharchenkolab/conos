@@ -218,7 +218,7 @@ quickCPCA <- function(r.n, data.type='counts', ncomps=100, n.odgenes=NULL, var.s
   ## }
 
   sm <- scaledMatrices(r.n, data.type=data.type, od.genes=od.genes, var.scale=var.scale)
-  covl <- lapply(sm,function(x) spcov(as(x, "dgCMatrix"), Matrix::colMeans(x)))
+  covl <- lapply(sm,function(x) spcov(as(as(as(x, "dMatrix"), "generalMatrix"), "CsparseMatrix"), Matrix::colMeans(x)))
   ## # centering
   ## if(common.centering) {
   ##   ncells <- unlist(lapply(covl,nrow));
@@ -590,7 +590,11 @@ getLocalNeighbors <- function(samples, k.self, k.self.weight, metric, l2.sigma, 
 
     xk <- N2R::Knn(pca, k.self + 1, 1, verbose=FALSE, indexType=metric) # +1 accounts for self-edges that will be removed in the next line
     diag(xk) <- 0 # no self-edges
-    xk <- as(drop0(xk),'dgTMatrix')
+    if (packageVersion("Matrix") >= '1.4.2'){
+      xk <- as(drop0(xk),'TsparseMatrix')
+    } else {
+      xk <- as(drop0(xk),'dgTMatrix')
+    }
     xk@x <- convertDistanceToSimilarity(xk@x, metric=metric, l2.sigma=l2.sigma) * k.self.weight
     rownames(xk) <- colnames(xk) <- rownames(pca)
     if(verbose) message(".")
@@ -869,7 +873,12 @@ getNeighborMatrix <- function(p1, p2, k, k1=k, matching='mNN', metric='angular',
     adj.mtx <- reduceEdgesInGraphIteratively(adj.mtx,k)
   }
 
-  return(as(drop0(adj.mtx),'dgTMatrix'))
+  if (packageVersion("Matrix") >= '1.4.2'){
+    return(as(drop0(adj.mtx),'TsparseMatrix'))
+  } else {
+    return(as(drop0(adj.mtx),'dgTMatrix'))
+  }
+
 }
 
 ## 1-step edge reduction
@@ -921,7 +930,12 @@ reduceEdgesInGraphIteratively <- function(adj.mtx,k,preserve.order=TRUE,max.kdif
 
 #' @keywords internal
 adjustWeightsByCellBalancing <- function(adj.mtx, factor.per.cell, balance.weights, same.factor.downweight=1.0, n.iters=50, verbose=FALSE) {
-  adj.mtx %<>% .[colnames(.), colnames(.)] %>% as("dgTMatrix")
+
+  if (packageVersion("Matrix") >= '1.4.2'){
+    adj.mtx %<>% .[colnames(.), colnames(.)] %>% as("TsparseMatrix")
+  } else {
+    adj.mtx %<>% .[colnames(.), colnames(.)] %>% as("dgTMatrix")
+  }
   factor.per.cell %<>% .[colnames(adj.mtx)] %>% as.factor() %>% droplevels()
 
   weights.adj <- adj.mtx@x
@@ -1188,7 +1202,11 @@ parseCellGroups <- function(con, clustering, groups, parse.clusters=TRUE) {
 #' @return entropy of edge weights per cell
 #' @export
 estimateWeightEntropyPerCell <- function(con, factor.per.cell) {
-  adj.mat <- igraph::as_adjacency_matrix(con$graph, attr="weight") %>% as("dgTMatrix")
+  if (packageVersion("Matrix") >= '1.4.2'){
+    adj.mat <- igraph::as_adjacency_matrix(con$graph, attr="weight") %>% as("TsparseMatrix")
+  } else {
+    adj.mat <- igraph::as_adjacency_matrix(con$graph, attr="weight") %>% as("dgTMatrix")
+  }
   factor.per.cell %<>% as.factor() %>% .[rownames(adj.mat)]
   weight.sum.per.fac.cell <- getSumWeightMatrix(adj.mat@x, adj.mat@i, adj.mat@j, as.integer(factor.per.cell)) %>%
     `colnames<-`(levels(adj.mat)) %>% `rownames<-`(rownames(adj.mat))

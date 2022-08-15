@@ -297,13 +297,20 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
           x <- drop0(x)
           if (min.snn.weight>0) {
-            mnn <- as(drop0(mnn*min.snn.weight + mnn*x),'dgTMatrix')
+            if (packageVersion("Matrix") >= '1.4.2'){
+              mnn <- as(drop0(mnn*min.snn.weight + mnn*x),'TsparseMatrix')
+            } else {
+              mnn <- as(drop0(mnn*min.snn.weight + mnn*x),'dgTMatrix')
+            }
           } else {
-            mnn <- as(drop0(mnn*x),'dgTMatrix')
+            if (packageVersion("Matrix") >= '1.4.2'){
+              mnn <- as(drop0(mnn*x),'TsparseMatrix')
+            } else {
+              mnn <- as(drop0(mnn*x),'dgTMatrix')
+            }
           }
 
         }
-
 
         if(verbose) cat(".")
         return(data.frame('mA.lab'=rownames(mnn)[mnn@i+1],'mB.lab'=colnames(mnn)[mnn@j+1],'w'=mnn@x, stringsAsFactors=FALSE))
