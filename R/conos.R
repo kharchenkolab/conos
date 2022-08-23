@@ -218,7 +218,11 @@ quickCPCA <- function(r.n, data.type='counts', ncomps=100, n.odgenes=NULL, var.s
   ## }
 
   sm <- scaledMatrices(r.n, data.type=data.type, od.genes=od.genes, var.scale=var.scale)
-  covl <- lapply(sm,function(x) spcov(as(as(as(x, "dMatrix"), "generalMatrix"), "CsparseMatrix"), Matrix::colMeans(x)))
+  if (packageVersion("Matrix") >= '1.4.2'){
+    covl <- lapply(sm,function(x) spcov(as(as(as(x, "dMatrix"), "generalMatrix"), "CsparseMatrix"), Matrix::colMeans(x)))
+  } else {
+    covl <- lapply(sm,function(x) spcov(as(x, "dgCMatrix"), Matrix::colMeans(x)))
+  }
   ## # centering
   ## if(common.centering) {
   ##   ncells <- unlist(lapply(covl,nrow));
