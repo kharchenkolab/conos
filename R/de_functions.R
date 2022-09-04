@@ -34,7 +34,7 @@ validatePerCellTypeParams <- function(con.obj, groups, sample.groups, ref.level,
   if (is.null(ref.level)) stop('reference level is not defined')
   ## todo: check samplegrousp are named
   if(is.null(names(sample.groups))) stop('sample.groups must be named')
-  if(class(groups) != 'factor') stop('groups must be a factor')
+  if(!inherits(groups,'factor')) stop('groups must be a factor')
   if(any(grepl(cluster.sep.chr, names(con.obj$samples),fixed=TRUE)))
     stop('cluster.sep.chr must not be part of any sample name')
   if(any(grepl(cluster.sep.chr,levels(groups),fixed=TRUE)))
@@ -47,10 +47,10 @@ validateBetweenCellTypeParams <- function(con.obj, groups, sample.groups, refgro
     stop("You have to install DESeq2 package to use differential expression")
   }
 
-  if (class(con.obj) != 'Conos') stop('con.obj must be a conos object')
+  if (!inherits(con.obj,'Conos')) stop('con.obj must be a conos object')
   if (is.null(groups) ) stop('groups must be specified');
   if (is.null(sample.groups) ) stop('sample.groups must be specified')
-  if (class(sample.groups) != 'list' ) stop('sample.groups must be a list');
+  if (!inherits(sample.groups,'list')) stop('sample.groups must be a list');
   #if ( length(sample.groups) != 2 ) stop('sample.groups must be of length 2');
   if (!all(unlist(lapply(sample.groups, function(x) class(x) == 'character'))) )
     stop('sample.groups must be a list of character vectors');
@@ -62,7 +62,7 @@ validateBetweenCellTypeParams <- function(con.obj, groups, sample.groups, refgro
   if (is.null(altgroup)) stop('altgroup is not defined')
   ## todo: check samplegrousp are named
   if(is.null(names(sample.groups))) stop('sample.groups must be named')
-  if(class(groups) != 'factor') stop('groups must be a factor')
+  if(!inherits(groups,'factor')) stop('groups must be a factor')
   if(any(grepl(cluster.sep.chr, names(con.obj$samples),fixed=TRUE)))
     stop('cluster.sep.chr must not be part of any sample name')
   if(any(grepl(cluster.sep.chr,levels(groups),fixed=TRUE)))

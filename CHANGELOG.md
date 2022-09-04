@@ -1,5 +1,10 @@
 ## Upcoming
 
+## [1.4.7] - 2022-04-Sept
+- Fixes for Matrix, updated versions 1.4.2, 1.5.0
+- Use `inherits()` for conditionals with class()
+
+
 ## [1.4.6] - 2022-30-March
 
 - Fixed bug with `snn` argument in `buildGraph()` due to the parameter `snn.k.self`
