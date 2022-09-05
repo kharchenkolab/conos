@@ -1,5 +1,9 @@
 ## Upcoming
 
+## [1.4.8] - 2022-05-Sept
+- Add back velocityInfoConos()
+
+
 ## [1.4.7] - 2022-04-Sept
 - Fixes for Matrix, updated versions 1.4.2, 1.5.0
 - Use `inherits()` for conditionals with class()

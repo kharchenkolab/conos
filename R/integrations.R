@@ -523,3 +523,79 @@ p2app4conos <- function(conos, cdl=NULL, metadata=NULL, filename='conos_app.bin'
 }
 
 
+#' Filter genes by requiring minimum average expression within at least one of the provided cell clusters
+#'
+#' @param emat spliced (exonic) count matrix
+#' @param clusters named cell factor defining clusters
+#' @param min.max.cluster.average numeric Required minimum average expression count (no normalization is perfomed) (default=0.1)
+#' @return filtered emat matrix
+#' @keywords internal
+filter.genes.by.cluster.expression <- function(emat, clusters, min.max.cluster.average=0.1) {
+  if(!any(colnames(emat) %in% names(clusters))) stop("provided clusters do not cover any of the emat cells!")
+  vc <- intersect(colnames(emat),names(clusters))
+  cl.emax <- apply(do.call(cbind,tapply(vc,as.factor(clusters[vc]),function(ii) Matrix::rowMeans(emat[,ii]))),1,max)
+  vi <- cl.emax>min.max.cluster.average;
+  emat[vi,]
+}
+
+
+#' RNA velocity analysis on samples integrated with conos
+#' Create a list of objects to pass into gene.relative.velocity.estimates function from the velocyto.R package
+#'
+#' @param cms.list list of velocity files written out as cell.counts.matrices.rds files by running dropest with -V option
+#' @param con conos object (after creating an embedding and running leiden clustering)
+#' @param clustering name of clustering in the conos object to use (default=NULL). Either 'clustering' or 'groups' must be provided. 
+#' @param groups set of clusters to use (default=NULL). Ignored if 'clustering' is not NULL. 
+#' @param n.odgenes numeric Number of overdispersed genes to use for PCA (default=2000).
+#' @param verbose boolean Whether to use verbose mode (default=TRUE)
+#' @return List with cell distances, combined spliced expression matrix, combined unspliced expression matrix, combined matrix of spanning reads, cell colors for clusters and embedding (taken from conos)
+#' @export
+velocityInfoConos <- function(cms.list, con, clustering=NULL, groups=NULL, n.odgenes=2e3, verbose=TRUE, min.max.cluster.average.emat=0.2, min.max.cluster.average.nmat=0.05, min.max.cluster.average.smat=0.01) {
+
+  groups <- parseCellGroups(con, clustering, groups)
+  cell.colors <- fac2col(groups)
+
+  if (!is.null(con$embedding)){
+    emb <- con$embedding
+  } else {
+    stop("No embedding found in the conos object. Run 'con$embedGraph()' before running this function.")
+  }
+
+  if (verbose) message("Merging raw count matrices...\n")
+  # Merge samples to get names of relevant cells and genes
+  raw.count.matrix.merged <- con$getJointCountMatrix(raw=TRUE)
+
+  if (verbose) message("Merging velocity files...\n")
+  # Intersect genes and cells between the conos object and all the velocity files
+  cms.list <- lapply(cms.list, prepareVelocity, genes=colnames(raw.count.matrix.merged), cells=rownames(raw.count.matrix.merged))
+  # Keep only genes present in velocity files from all the samples
+  common.genes <-  Reduce(intersect, lapply(cms.list, function(x) {rownames(x[[1]])}))
+  cms.list <- lapply(cms.list, function(x) {lapply(x, function(y) {y[row.names(y) %in% common.genes,]} )} )
+
+  # Merge velocity files from different samples
+  emat <- do.call(cbind, lapply(cms.list, function(x) {x[[1]]}))
+  nmat <- do.call(cbind, lapply(cms.list, function(x) {x[[2]]}))
+  smat <- do.call(cbind, lapply(cms.list, function(x) {x[[3]]}))
+
+  # Keep the order of cells consistent between velocity matrices and the embedding (not really sure whether it's necessary...)
+  emat <- emat[,order(match(colnames(emat), rownames(emb)))]
+  nmat <- nmat[,order(match(colnames(nmat), rownames(emb)))]
+  smat <- smat[,order(match(colnames(smat), rownames(emb)))]
+
+  if (verbose) message("Calculating cell distances...\n")
+  # Get PCA results for all the samples from the conos object
+  pcs <- pcaFromConos(con$samples, n.odgenes=n.odgenes)
+  # Again, keep the order of cells consistent
+  pcs <- pcs[order(match(rownames(pcs), rownames(emb))),]
+  # Calculate the cell distances based on correlation
+  cell.dist <- as.dist(1 - velocyto.R::armaCor(t(pcs)))
+
+  if (verbose) message("Filtering velocity...\n")
+  emat %<>% velocyto.R::filter.genes.by.cluster.expression(groups, min.max.cluster.average=min.max.cluster.average.emat)
+  nmat %<>% velocyto.R::filter.genes.by.cluster.expression(groups, min.max.cluster.average=min.max.cluster.average.nmat)
+  smat %<>% velocyto.R::filter.genes.by.cluster.expression(groups, min.max.cluster.average=min.max.cluster.average.smat)
+
+  if (verbose) message("All Done!")
+  return(list(cell.dist=cell.dist, emat=emat, nmat=nmat, smat=smat, cell.colors=cell.colors, emb=emb))
+}
+

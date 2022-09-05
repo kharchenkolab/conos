@@ -79,26 +79,26 @@ con$getJointCountMatrix()
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{Conos$new()}}
-\item \href{#method-addSamples}{\code{Conos$addSamples()}}
-\item \href{#method-buildGraph}{\code{Conos$buildGraph()}}
-\item \href{#method-getDifferentialGenes}{\code{Conos$getDifferentialGenes()}}
-\item \href{#method-findCommunities}{\code{Conos$findCommunities()}}
-\item \href{#method-plotPanel}{\code{Conos$plotPanel()}}
-\item \href{#method-embedGraph}{\code{Conos$embedGraph()}}
-\item \href{#method-plotClusterStability}{\code{Conos$plotClusterStability()}}
-\item \href{#method-plotGraph}{\code{Conos$plotGraph()}}
-\item \href{#method-correctGenes}{\code{Conos$correctGenes()}}
-\item \href{#method-propagateLabels}{\code{Conos$propagateLabels()}}
-\item \href{#method-getClusterCountMatrices}{\code{Conos$getClusterCountMatrices()}}
-\item \href{#method-getDatasetPerCell}{\code{Conos$getDatasetPerCell()}}
-\item \href{#method-getJointCountMatrix}{\code{Conos$getJointCountMatrix()}}
-\item \href{#method-clone}{\code{Conos$clone()}}
+\item \href{#method-Conos-new}{\code{Conos$new()}}
+\item \href{#method-Conos-addSamples}{\code{Conos$addSamples()}}
+\item \href{#method-Conos-buildGraph}{\code{Conos$buildGraph()}}
+\item \href{#method-Conos-getDifferentialGenes}{\code{Conos$getDifferentialGenes()}}
+\item \href{#method-Conos-findCommunities}{\code{Conos$findCommunities()}}
+\item \href{#method-Conos-plotPanel}{\code{Conos$plotPanel()}}
+\item \href{#method-Conos-embedGraph}{\code{Conos$embedGraph()}}
+\item \href{#method-Conos-plotClusterStability}{\code{Conos$plotClusterStability()}}
+\item \href{#method-Conos-plotGraph}{\code{Conos$plotGraph()}}
+\item \href{#method-Conos-correctGenes}{\code{Conos$correctGenes()}}
+\item \href{#method-Conos-propagateLabels}{\code{Conos$propagateLabels()}}
+\item \href{#method-Conos-getClusterCountMatrices}{\code{Conos$getClusterCountMatrices()}}
+\item \href{#method-Conos-getDatasetPerCell}{\code{Conos$getDatasetPerCell()}}
+\item \href{#method-Conos-getJointCountMatrix}{\code{Conos$getJointCountMatrix()}}
+\item \href{#method-Conos-clone}{\code{Conos$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-Conos-new"></a>}}
+\if{latex}{\out{\hypertarget{method-Conos-new}{}}}
 \subsection{Method \code{new()}}{
 initialize Conos class
 \subsection{Usage}{
@@ -140,8 +140,8 @@ a new 'Conos' object
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-addSamples"></a>}}
-\if{latex}{\out{\hypertarget{method-addSamples}{}}}
+\if{html}{\out{<a id="method-Conos-addSamples"></a>}}
+\if{latex}{\out{\hypertarget{method-Conos-addSamples}{}}}
 \subsection{Method \code{addSamples()}}{
 Initialize or add a set of samples to the conos panel. Note: this will simply add samples, but will not update graph, clustering, etc.
 \subsection{Usage}{
@@ -164,8 +164,8 @@ invisible view of the full sample list
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-buildGraph"></a>}}
-\if{latex}{\out{\hypertarget{method-buildGraph}{}}}
+\if{html}{\out{<a id="method-Conos-buildGraph"></a>}}
+\if{latex}{\out{\hypertarget{method-Conos-buildGraph}{}}}
 \subsection{Method \code{buildGraph()}}{
 Build the joint graph that encompasses all the samples, establishing weighted inter-sample cell-to-cell links
 \subsection{Usage}{
@@ -300,8 +300,8 @@ con$buildGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.me
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-getDifferentialGenes"></a>}}
-\if{latex}{\out{\hypertarget{method-getDifferentialGenes}{}}}
+\if{html}{\out{<a id="method-Conos-getDifferentialGenes"></a>}}
+\if{latex}{\out{\hypertarget{method-Conos-getDifferentialGenes}{}}}
 \subsection{Method \code{getDifferentialGenes()}}{
 Calculate genes differentially expressed between cell clusters. Estimates base mean, z-score, p-values, specificity, precision, expressionFraction, AUC (if append.auc=TRUE)
 \subsection{Usage}{
@@ -340,8 +340,8 @@ list of DE results; each is a data frame with rows corresponding to the differen
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-findCommunities"></a>}}
-\if{latex}{\out{\hypertarget{method-findCommunities}{}}}
+\if{html}{\out{<a id="method-Conos-findCommunities"></a>}}
+\if{latex}{\out{\hypertarget{method-Conos-findCommunities}{}}}
 \subsection{Method \code{findCommunities()}}{
 Find cell clusters (as communities on the joint graph)
 \subsection{Usage}{
@@ -401,8 +401,8 @@ con$findCommunities(method = igraph::walktrap.community, steps=5)
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-plotPanel"></a>}}
-\if{latex}{\out{\hypertarget{method-plotPanel}{}}}
+\if{html}{\out{<a id="method-Conos-plotPanel"></a>}}
+\if{latex}{\out{\hypertarget{method-Conos-plotPanel}{}}}
 \subsection{Method \code{plotPanel()}}{
 Plot panel of individual embeddings per sample with joint coloring
 \subsection{Usage}{
@@ -451,8 +451,8 @@ cowplot grid object with the panel of plots
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-embedGraph"></a>}}
-\if{latex}{\out{\hypertarget{method-embedGraph}{}}}
+\if{html}{\out{<a id="method-Conos-embedGraph"></a>}}
+\if{latex}{\out{\hypertarget{method-Conos-embedGraph}{}}}
 \subsection{Method \code{embedGraph()}}{
 Generate an embedding of a joint graph
 \subsection{Usage}{
@@ -504,8 +504,8 @@ between \code{0} and \code{1}, the default value will be multiplied by the param
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-plotClusterStability"></a>}}
-\if{latex}{\out{\hypertarget{method-plotClusterStability}{}}}
+\if{html}{\out{<a id="method-Conos-plotClusterStability"></a>}}
+\if{latex}{\out{\hypertarget{method-Conos-plotClusterStability}{}}}
 \subsection{Method \code{plotClusterStability()}}{
 Plot cluster stability statistics.
 \subsection{Usage}{
@@ -526,8 +526,8 @@ cluster stability statistics
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-plotGraph"></a>}}
-\if{latex}{\out{\hypertarget{method-plotGraph}{}}}
+\if{html}{\out{<a id="method-Conos-plotGraph"></a>}}
+\if{latex}{\out{\hypertarget{method-Conos-plotGraph}{}}}
 \subsection{Method \code{plotGraph()}}{
 Plot joint graph
 \subsection{Usage}{
@@ -572,8 +572,8 @@ ggplot2 plot of joint graph
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-correctGenes"></a>}}
-\if{latex}{\out{\hypertarget{method-correctGenes}{}}}
+\if{html}{\out{<a id="method-Conos-correctGenes"></a>}}
+\if{latex}{\out{\hypertarget{method-Conos-correctGenes}{}}}
 \subsection{Method \code{correctGenes()}}{
 Smooth expression of genes to minimize the batch effect between samples
   Use diffusion of expression on graph with the equation dv = exp(-a * (v + b))
@@ -622,8 +622,8 @@ smoothed expression of the input genes
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-propagateLabels"></a>}}
-\if{latex}{\out{\hypertarget{method-propagateLabels}{}}}
+\if{html}{\out{<a id="method-Conos-propagateLabels"></a>}}
+\if{latex}{\out{\hypertarget{method-Conos-propagateLabels}{}}}
 \subsection{Method \code{propagateLabels()}}{
 Estimate labeling distribution for each vertex, based on a partial labeling of the cells.
 There are two methods used for the propagation to calculate the distribution of labels: "solver" and "diffusion".
@@ -654,8 +654,8 @@ list with three fields:
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-getClusterCountMatrices"></a>}}
-\if{latex}{\out{\hypertarget{method-getClusterCountMatrices}{}}}
+\if{html}{\out{<a id="method-Conos-getClusterCountMatrices"></a>}}
+\if{latex}{\out{\hypertarget{method-Conos-getClusterCountMatrices}{}}}
 \subsection{Method \code{getClusterCountMatrices()}}{
 Calculate pseudo-bulk expression matrices for clusters (by adding up, for each gene, all of the molecules detected for all cells in a given cluster in a given sample)
 \subsection{Usage}{
@@ -685,8 +685,8 @@ a list of per-sample uniform dense matrices with rows being genes, and columns b
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-getDatasetPerCell"></a>}}
-\if{latex}{\out{\hypertarget{method-getDatasetPerCell}{}}}
+\if{html}{\out{<a id="method-Conos-getDatasetPerCell"></a>}}
+\if{latex}{\out{\hypertarget{method-Conos-getDatasetPerCell}{}}}
 \subsection{Method \code{getDatasetPerCell()}}{
 applies 'getCellNames()' on all samples
 \subsection{Usage}{
@@ -708,8 +708,8 @@ con$getDatasetPerCell()
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-getJointCountMatrix"></a>}}
-\if{latex}{\out{\hypertarget{method-getJointCountMatrix}{}}}
+\if{html}{\out{<a id="method-Conos-getJointCountMatrix"></a>}}
+\if{latex}{\out{\hypertarget{method-Conos-getJointCountMatrix}{}}}
 \subsection{Method \code{getJointCountMatrix()}}{
 Retrieve joint count matrices
 \subsection{Usage}{
@@ -738,8 +738,8 @@ con$getJointCountMatrix()
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-Conos-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-Conos-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{
