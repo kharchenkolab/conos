@@ -1,7 +1,6 @@
 #' @importFrom graphics par
 #' @importFrom grDevices adjustcolor colorRampPalette dev.size rainbow
 #' @importFrom igraph E induced.subgraph membership V walktrap.community
-#' @import Matrix.utils
 #' @import Matrix
 #' @import parallel
 #' @import sccore

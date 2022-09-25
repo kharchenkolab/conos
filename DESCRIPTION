@@ -22,7 +22,6 @@ Imports:
     irlba,
     leidenAlg,
     magrittr,
-    Matrix.utils,
     methods,
     N2R,
     parallel,

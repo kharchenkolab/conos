@@ -1,7 +1,8 @@
 ## Upcoming
 
-## [1.4.8] - 2022-05-Sept
+## [1.4.8] - 2022-25-Sept
 - Add back velocityInfoConos()
+- Remove 'Matrix.utils' as dependency
 
 
 ## [1.4.7] - 2022-04-Sept
