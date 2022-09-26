@@ -29,6 +29,12 @@ velocityInfoConos(
 \item{n.odgenes}{numeric Number of overdispersed genes to use for PCA (default=2000).}
 
 \item{verbose}{boolean Whether to use verbose mode (default=TRUE)}
+
+\item{min.max.cluster.average.emat}{Required minimum average expression count for emat, the spliced (exonic) count matrix (default=0.2). Note: no normalization is perfomed. See the parameter 'min.max.cluster.average' in the function 'filter.genes.by.cluster.expression.'}
+
+\item{min.max.cluster.average.nmat}{Required minimum average expression count for nmat, the unspliced (nascent) count matrix (default=0.05). Note: no normalization is perfomed. See the parameter 'min.max.cluster.average' in the function 'filter.genes.by.cluster.expression.'}
+
+\item{min.max.cluster.average.smat}{Required minimum average expression count for smat, the spanning read matrix (used in offset calculations) (default=0.01). Note: no normalization is perfomed. See the parameter 'min.max.cluster.average' in the function 'filter.genes.by.cluster.expression.'}
 }
 \value{
 List with cell distances, combined spliced expression matrix, combined unspliced expression matrix, combined matrix of spanning reads, cell colors for clusters and embedding (taken from conos)

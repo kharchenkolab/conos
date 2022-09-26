@@ -523,6 +523,7 @@ p2app4conos <- function(conos, cdl=NULL, metadata=NULL, filename='conos_app.bin'
 }
 
 
+
 #' Filter genes by requiring minimum average expression within at least one of the provided cell clusters
 #'
 #' @param emat spliced (exonic) count matrix
@@ -539,6 +540,19 @@ filter.genes.by.cluster.expression <- function(emat, clusters, min.max.cluster.a
 }
 
 
+
+#' A slightly faster way of calculating column correlation matrix
+#' @param mat matrix whose columns will be correlated
+#' @param nthreads number of threads to use 
+#' @return correlation matrix 
+#' @keywords internal
+armaCor <- function(mat,nthreads=1) {
+  cd <- arma_mat_cor(mat);
+  rownames(cd) <- colnames(cd) <- colnames(mat);
+  return(cd)
+}
+
+
 #' RNA velocity analysis on samples integrated with conos
 #' Create a list of objects to pass into gene.relative.velocity.estimates function from the velocyto.R package
 #'
@@ -548,6 +562,9 @@ filter.genes.by.cluster.expression <- function(emat, clusters, min.max.cluster.a
 #' @param groups set of clusters to use (default=NULL). Ignored if 'clustering' is not NULL. 
 #' @param n.odgenes numeric Number of overdispersed genes to use for PCA (default=2000).
 #' @param verbose boolean Whether to use verbose mode (default=TRUE)
+#' @param min.max.cluster.average.emat Required minimum average expression count for emat, the spliced (exonic) count matrix (default=0.2). Note: no normalization is perfomed. See the parameter 'min.max.cluster.average' in the function 'filter.genes.by.cluster.expression.'
+#' @param min.max.cluster.average.nmat Required minimum average expression count for nmat, the unspliced (nascent) count matrix (default=0.05). Note: no normalization is perfomed. See the parameter 'min.max.cluster.average' in the function 'filter.genes.by.cluster.expression.'
+#' @param min.max.cluster.average.smat Required minimum average expression count for smat, the spanning read matrix (used in offset calculations) (default=0.01). Note: no normalization is perfomed. See the parameter 'min.max.cluster.average' in the function 'filter.genes.by.cluster.expression.'
 #' @return List with cell distances, combined spliced expression matrix, combined unspliced expression matrix, combined matrix of spanning reads, cell colors for clusters and embedding (taken from conos)
 #' @export
 velocityInfoConos <- function(cms.list, con, clustering=NULL, groups=NULL, n.odgenes=2e3, verbose=TRUE, min.max.cluster.average.emat=0.2, min.max.cluster.average.nmat=0.05, min.max.cluster.average.smat=0.01) {
@@ -573,9 +590,9 @@ velocityInfoConos <- function(cms.list, con, clustering=NULL, groups=NULL, n.odg
   cms.list <- lapply(cms.list, function(x) {lapply(x, function(y) {y[row.names(y) %in% common.genes,]} )} )
 
   # Merge velocity files from different samples
-  emat <- do.call(cbind, lapply(cms.list, function(x) {x[[1]]}))
-  nmat <- do.call(cbind, lapply(cms.list, function(x) {x[[2]]}))
-  smat <- do.call(cbind, lapply(cms.list, function(x) {x[[3]]}))
+  emat <- do.call(cbind, lapply(cms.list, function(x) {x[[1]]}))  ## emat - spliced (exonic) count matrix
+  nmat <- do.call(cbind, lapply(cms.list, function(x) {x[[2]]}))  ## nmat - unspliced (nascent) count matrix
+  smat <- do.call(cbind, lapply(cms.list, function(x) {x[[3]]}))  ## smat - optional spanning read matrix (used in offset calculations)
 
   # Keep the order of cells consistent between velocity matrices and the embedding (not really sure whether it's necessary...)
   emat <- emat[,order(match(colnames(emat), rownames(emb)))]
@@ -588,12 +605,12 @@ velocityInfoConos <- function(cms.list, con, clustering=NULL, groups=NULL, n.odg
   # Again, keep the order of cells consistent
   pcs <- pcs[order(match(rownames(pcs), rownames(emb))),]
   # Calculate the cell distances based on correlation
-  cell.dist <- as.dist(1 - velocyto.R::armaCor(t(pcs)))
+  cell.dist <- as.dist(1 - armaCor(t(pcs)))
 
   if (verbose) message("Filtering velocity...\n")
-  emat %<>% velocyto.R::filter.genes.by.cluster.expression(groups, min.max.cluster.average=min.max.cluster.average.emat)
-  nmat %<>% velocyto.R::filter.genes.by.cluster.expression(groups, min.max.cluster.average=min.max.cluster.average.nmat)
-  smat %<>% velocyto.R::filter.genes.by.cluster.expression(groups, min.max.cluster.average=min.max.cluster.average.smat)
+  emat %<>% filter.genes.by.cluster.expression(groups, min.max.cluster.average=min.max.cluster.average.emat)
+  nmat %<>% filter.genes.by.cluster.expression(groups, min.max.cluster.average=min.max.cluster.average.nmat)
+  smat %<>% filter.genes.by.cluster.expression(groups, min.max.cluster.average=min.max.cluster.average.smat)
 
   if (verbose) message("All Done!")
   return(list(cell.dist=cell.dist, emat=emat, nmat=nmat, smat=smat, cell.colors=cell.colors, emb=emb))

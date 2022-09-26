@@ -2,6 +2,7 @@
 // Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 #include <RcppArmadillo.h>
+#define NDEBUG 1
 #include <RcppEigen.h>
 #include <Rcpp.h>
 
@@ -333,6 +334,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// arma_mat_cor
+arma::mat arma_mat_cor(const arma::mat& m);
+RcppExport SEXP _conos_arma_mat_cor(SEXP mSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type m(mSEXP);
+    rcpp_result_gen = Rcpp::wrap(arma_mat_cor(m));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_conos_RjnmfC", (DL_FUNC) &_conos_RjnmfC, 8},
@@ -356,6 +368,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_conos_adjacent_vertices", (DL_FUNC) &_conos_adjacent_vertices, 1},
     {"_conos_adjacent_vertex_weights", (DL_FUNC) &_conos_adjacent_vertex_weights, 2},
     {"_conos_spcov", (DL_FUNC) &_conos_spcov, 2},
+    {"_conos_arma_mat_cor", (DL_FUNC) &_conos_arma_mat_cor, 1},
     {NULL, NULL, 0}
 };
 

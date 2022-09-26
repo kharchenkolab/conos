@@ -85,3 +85,7 @@ spcov <- function(m, cm) {
     .Call('_conos_spcov', PACKAGE = 'conos', m, cm)
 }
 
+arma_mat_cor <- function(m) {
+    .Call('_conos_arma_mat_cor', PACKAGE = 'conos', m)
+}
+
