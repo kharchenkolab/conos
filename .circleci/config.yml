@@ -27,8 +27,8 @@ jobs:
           name: Install igraph v1.2.10
           command: R -e "install.packages('https://cran.r-project.org/src/contrib/igraph_1.2.10.tar.gz', repos=NULL, type='source')"   
       - run: 
-          name: Install leidenAlg v1.0.3
-          command: R -e "install.packages('https://cran.r-project.org/src/contrib/leidenAlg_1.0.3.tar.gz', repos=NULL, type='source')"
+          name: Install leidenAlg v1.0.4
+          command: R -e "install.packages('https://cran.r-project.org/src/contrib/leidenAlg_1.0.4.tar.gz', repos=NULL, type='source')"
       - run:
           name: Build package
           command: R CMD build .
