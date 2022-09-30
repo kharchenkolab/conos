@@ -1,5 +1,8 @@
 ## Upcoming
 
+## [1.4.9] - 2022-29-Sept
+- Fix multithreading with largeVis, GitHub issue #129
+
 ## [1.4.8] - 2022-25-Sept
 - Add back velocityInfoConos()
 - Remove 'Matrix.utils' as dependency
