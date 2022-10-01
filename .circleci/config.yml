@@ -20,9 +20,9 @@ jobs:
           name: Install package dependencies
           command: R -e "devtools::install_deps(dep = TRUE)" 
       - run: 
-          name: Install sccore v1.0.1
+          name: Install sccore v1.0.2
           command: R -e "install.packages('pbmcapply')" \
-                   R -e "install.packages('https://cran.r-project.org/src/contrib/sccore_1.0.1.tar.gz', repos=NULL, type='source')" \
+                   R -e "install.packages('https://cran.r-project.org/src/contrib/sccore_1.0.2.tar.gz', repos=NULL, type='source')" \
       - run: 
           name: Install igraph v1.2.10
           command: R -e "install.packages('https://cran.r-project.org/src/contrib/igraph_1.2.10.tar.gz', repos=NULL, type='source')"   
