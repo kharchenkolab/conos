@@ -275,7 +275,7 @@ arma::mat sgd(arma::mat& coords,
 		}
 	}	
 
-#pragma omp parallel for private(eIdx) schedule(static) 
+#pragma omp parallel for schedule(static) 
 	for (iterationtype eIdx = 0; eIdx < barrier; eIdx += batchSize) if (progress.increment(batchSize)) {
 		(*v)(eIdx, batchSize);
 	}
