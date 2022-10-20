@@ -266,6 +266,7 @@ arma::mat sgd(arma::mat& coords,
 	const unsigned int batchSize = 8192;
 	const iterationtype barrier = (n_samples * .99 < n_samples - coords.n_cols) ? n_samples * .99 : n_samples - coords.n_cols;
 
+
 #ifdef _OPENMP
  	if (threads.isNotNull()) {
 		int nthreads = IntegerVector(threads)[0];
@@ -274,13 +275,12 @@ arma::mat sgd(arma::mat& coords,
 		}
 	}	
 
-  iterationtype eIdx;
-#pragma omp parallel for private(eIdx) schedule(static) 
-	for (eIdx = 0; eIdx < barrier; eIdx += batchSize) if (progress.increment(batchSize)) {
+#pragma omp parallel for schedule(static) 
+	for (iterationtype eIdx = 0; eIdx < barrier; eIdx += batchSize) if (progress.increment(batchSize)) {
 		(*v)(eIdx, batchSize);
 	}
 #else 
-	for (eIdx = 0; eIdx < barrier; eIdx += batchSize) if (progress.increment(batchSize)) {
+	for (iterationtype eIdx = 0; eIdx < barrier; eIdx += batchSize) if (progress.increment(batchSize)) {
 		(*v)(eIdx, batchSize);
 	}
 #endif
