@@ -1,5 +1,10 @@
 ## Upcoming
 
+
+## [1.5.0] - 2022-17-Oct
+- Fixed compilation issue on certain OS configurations
+
+
 ## [1.4.9] - 2022-29-Sept
 - Fix multithreading with largeVis, GitHub issue #129
 
