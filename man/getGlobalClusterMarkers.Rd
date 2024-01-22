@@ -18,7 +18,7 @@ getGlobalClusterMarkers(
 
 \item{min.samples.expressing}{numeric Minimum number of samples that must have the genes upregulated in the respective cluster (default=0)}
 
-\item{min.percent.samples.expression}{numeric Minumum percent of samples that must have the gene upregulated (default=0)}
+\item{min.percent.samples.expressing}{numeric Minumum percent of samples that must have the gene upregulated (default=0)}
 }
 \value{
 List of consistent genes per each cluster

@@ -468,7 +468,7 @@ getClusterRelationshipConsistency <- function(p2list, pjc) {
 #' @param p2list list of pagoda2 object on which clustering was generated
 #' @param pjc the result of joint clustering
 #' @param pc.samples.cutoff numeric The percent of the number of the total samples that a cluster has to span to be considered global (default=0.9)
-#' @param min.cell.count.per.samples numeric The minimum number of cells of cluster in sample to be considered as represented in that sample (default=10)
+#' @param min.cell.count.per.sample numeric The minimum number of cells of cluster in sample to be considered as represented in that sample (default=10)
 #' @return percent of clusters that are global given the above criteria
 #' @keywords internal
 getPercentGlobalClusters <- function(p2list, pjc, pc.samples.cutoff = 0.9, min.cell.count.per.sample = 10) {

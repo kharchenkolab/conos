@@ -19,12 +19,14 @@ NULL
 buildWijMatrix <- function(x, threads=NULL, perplexity=50) UseMethod("buildWijMatrix")
 
 #' @rdname buildWijMatrix
+#' @export
 buildWijMatrix.TsparseMatrix <- function(x, threads = NULL, perplexity = 50) {
   wij <- referenceWij(x@j, x@i, x@x^2, as.integer(threads), perplexity)
   return(wij)
 }
 
 #' @rdname buildWijMatrix
+#' @export
 buildWijMatrix.CsparseMatrix <- function(x, threads = NULL, perplexity = 50) {
   is <- rep(0:(ncol(x) - 1), diff(x@p))
   wij <- referenceWij(is, x@i, x@x^2, as.integer(threads), perplexity)
