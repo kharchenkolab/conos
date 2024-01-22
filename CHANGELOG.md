@@ -3,6 +3,7 @@
 ## [1.5.1] - 2024-22-January
 - Remove C++11 flag
 - Fixed various roxygen2 typos and variable names for docs consistency
+- S3 method exports, buildWijMatrix.*
 
 ## [1.5.0] - 2022-17-October
 - Fixed compilation issue on certain OS configurations
