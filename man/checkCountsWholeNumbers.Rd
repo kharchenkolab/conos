@@ -7,7 +7,7 @@
 checkCountsWholeNumbers(input.matrix)
 }
 \arguments{
-\item{aggregated.samples}{the count data from aggreaged samples input to DESeq}
+\item{input.matrix}{the count data from aggregated samples input to DESeq}
 }
 \value{
 if non-integer counts are found, an error is returned

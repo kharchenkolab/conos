@@ -546,7 +546,7 @@ getDifferentialGenesP2 <- function(p2.samples, groups, z.threshold=3.0, upregula
 
 #' Check that the count data contain only integer counts
 #'
-#' @param aggregated.samples the count data from aggreaged samples input to DESeq
+#' @param input.matrix the count data from aggregated samples input to DESeq
 #' @return if non-integer counts are found, an error is returned
 #' @keywords internal
 checkCountsWholeNumbers <- function(input.matrix){

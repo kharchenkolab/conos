@@ -281,7 +281,7 @@ plotClusterBoxPlotsByAppType <- function(conos.obj, clustering=NULL, apptypes=NU
 #' @param conos.obj conos object
 #' @param clustering character Name of the clustering to use (default='multi level')
 #' @param min.samples.expressing numeric Minimum number of samples that must have the genes upregulated in the respective cluster (default=0)
-#' @param min.percent.samples.expression numeric Minumum percent of samples that must have the gene upregulated (default=0)
+#' @param min.percent.samples.expressing numeric Minumum percent of samples that must have the gene upregulated (default=0)
 #' @return List of consistent genes per each cluster
 #' @keywords internal
 getGlobalClusterMarkers <- function(conos.obj, clustering='multi level',

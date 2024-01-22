@@ -1,19 +1,22 @@
 ## Upcoming
 
+## [1.5.1] - 2024-22-January
+- Remove C++11 flag
+- Fixed various roxygen2 typos and variable names for docs consistency
 
-## [1.5.0] - 2022-17-Oct
+## [1.5.0] - 2022-17-October
 - Fixed compilation issue on certain OS configurations
 
 
-## [1.4.9] - 2022-29-Sept
+## [1.4.9] - 2022-29-September
 - Fix multithreading with largeVis, GitHub issue #129
 
-## [1.4.8] - 2022-25-Sept
+## [1.4.8] - 2022-25-September
 - Add back velocityInfoConos()
 - Remove 'Matrix.utils' as dependency
 
 
-## [1.4.7] - 2022-04-Sept
+## [1.4.7] - 2022-04-September
 - Fixes for Matrix, updated versions 1.4.2, 1.5.0
 - Use `inherits()` for conditionals with class()
 
