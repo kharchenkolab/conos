@@ -1,5 +1,8 @@
 ## Upcoming
 
+## [1.5.2] - 2024-26-February
+- Removed `-L/usr/lib/` in Makevars
+
 ## [1.5.1] - 2024-22-January
 - Remove C++11 flag
 - Fixed various roxygen2 typos and variable names for docs consistency
@@ -23,9 +26,8 @@
 
 
 ## [1.4.6] - 2022-30-March
-
 - Fixed bug with `snn` argument in `buildGraph()` due to the parameter `snn.k.self`
-- Fixed bug in `getDifferentialGenes()` based on warnings from sccore::plapply()
+- Fixed bug in `getDifferentialGenes()` based on warnings from `sccore::plapply()`
 
 ## [1.4.5] - 2022-20-January
 
