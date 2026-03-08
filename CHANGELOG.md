@@ -1,5 +1,9 @@
 ## Upcoming
 
+## [1.5.3] - 2026-08-March
+- Removed the 'Rcpp:::LdFlags()' from the Makevars files
+- Revised testthat for method `findCommunities()` to avoid CRAN error for gcc-UBSAN, now uses leiden
+
 ## [1.5.2] - 2024-26-February
 - Removed `-L/usr/lib/` in Makevars
 
