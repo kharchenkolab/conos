@@ -27,7 +27,7 @@ suppressWarnings(con$findCommunities(method=leiden.community))
 suppressWarnings(con$embedGraph(alpha=0.001, sgd_batched=1e8))
 
 
-test_that("check Conos object, number of clusters", {
+test_that("check Conos object, output of Leiden clustering", {
 	expect_equal(length(con$clusters$leiden$groups), 59)
 	expect_equal(length(con$clusters$leiden$result), 6)
 })
@@ -39,7 +39,7 @@ suppressWarnings(con$findCommunities(method = igraph::walktrap.community, steps=
 suppressWarnings(con$embedGraph(alpha=0.001, sgd_batched=1e8))
 
 
-test_that("check Conos object, number of clusters", {
+test_that("check Conos object, output of igraph walktrap clustering", {
 	expect_equal(length(con$clusters$walktrap$groups), 59)
 	expect_equal(length(con$clusters$walktrap$result), 2)
 })

@@ -1,7 +1,8 @@
 ## Upcoming
 
-## [1.5.3] - 2026-08-March
+## [1.5.3] - 2026-30-March
 - Removed the 'Rcpp:::LdFlags()' from the Makevars files
+- Added tests
 
 ## [1.5.2] - 2024-26-February
 - Removed `-L/usr/lib/` in Makevars
