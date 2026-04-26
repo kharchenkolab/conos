@@ -1,5 +1,8 @@
 ## Upcoming
 
+## [1.5.4] - 2026-25-April
+- Include 'pagoda2' in Imports to fix dependency in 'data/small_panel.preprocessed.rda'
+
 ## [1.5.3] - 2026-30-March
 - Removed the 'Rcpp:::LdFlags()' from the Makevars files
 - Added tests
