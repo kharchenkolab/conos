@@ -72,9 +72,7 @@ seuratProcV3 <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, n.pcs
     message("Running Seurat v3 workflow")
   }
   so <- Seurat::CreateSeuratObject(counts = count.matrix)
-  so <- Seurat::NormalizeData(object = so, verbose = verbose)
-  so <- Seurat::FindVariableFeatures(object = so, verbose = verbose)
-  so <- Seurat::ScaleData(object = so, vars.to.regress = vars.to.regress, verbose = verbose)
+  so <- Seurat::SCTransform(object = so, vars.to.regress = vars.to.regress, verbose = verbose)
   so <- Seurat::RunPCA(object = so, npcs = n.pcs, verbose = verbose)
   if (cluster) {
     so <- Seurat::FindNeighbors(object = so, dims = 1:n.pcs, verbose = verbose)
