@@ -69,7 +69,7 @@ scaledMatricesSeuratV3 <- function(so.objs, data.type, od.genes, var.scale, neig
   if (var.scale) {
     so.objs <- lapply(so.objs, function(so){ Seurat::ScaleData(so, features = rownames(so))})
   }
-  slot <- switch(
+  layer <- switch(
     EXPR = data.type,
     'scaled' = 'scale.data',
     'counts' = 'data',
@@ -78,7 +78,7 @@ scaledMatricesSeuratV3 <- function(so.objs, data.type, od.genes, var.scale, neig
   x.data <- lapply(
     X = so.objs,
     FUN = function(so) {
-      return(t(x = Seurat::GetAssayData(object = so, slot = slot))[, od.genes])
+      return(t(x = Seurat::GetAssayData(object = so, layer = layer))[, od.genes])
     }
   )
   res <- mapply(FUN = function(so, x) { return(x) }, so.objs, x.data )
