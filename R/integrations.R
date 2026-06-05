@@ -64,7 +64,7 @@ seuratProcV2 <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do.pa
 }
 
 #' @keywords internal
-seuratProcV3 <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, n.pcs=100, cluster=TRUE, tsne=TRUE, umap=FALSE, ...) {
+seuratProcV3 <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, n.pcs=100, cluster=TRUE, tsne=FALSE, umap=TRUE, ...) {
   if (!requireNamespace("Seurat", quietly = TRUE)) {
     stop("Package \"Seurat\" needed for this function to work. Please install it, as described here: <https://satijalab.org/seurat/articles/install.html>.", call. = FALSE)
   }
