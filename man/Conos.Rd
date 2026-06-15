@@ -16,26 +16,26 @@ con <- Conos$new(small_panel.preprocessed, n.cores=1)
 
 
 ## ------------------------------------------------
-## Method `Conos$buildGraph()`
+## Method `Conos$runGraph()`
 ## ------------------------------------------------
 
 \donttest{
 con <- Conos$new(small_panel.preprocessed, n.cores=1)
-con$buildGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.method='mNN',
+con$runGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.method='mNN',
     metric='angular', score.component.variance=TRUE, verbose=TRUE)
 }
 
 
 
 ## ------------------------------------------------
-## Method `Conos$findCommunities()`
+## Method `Conos$runClustering()`
 ## ------------------------------------------------
 
 \donttest{
 con <- Conos$new(small_panel.preprocessed, n.cores=1)
-con$buildGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.method='mNN',
+con$runGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.method='mNN',
     metric='angular', score.component.variance=TRUE, verbose=TRUE)
-con$findCommunities(method = igraph::walktrap.community, steps=5)
+con$runClustering(method = igraph::cluster_walktrap, steps=5)
 }
 
 
@@ -87,11 +87,15 @@ con$getJointCountMatrix()
     \item \href{#method-Conos-addSamples}{\code{Conos$addSamples()}}
     \item \href{#method-Conos-planIntegration}{\code{Conos$planIntegration()}}
     \item \href{#method-Conos-buildGraph}{\code{Conos$buildGraph()}}
-    \item \href{#method-Conos-getDifferentialGenes}{\code{Conos$getDifferentialGenes()}}
-    \item \href{#method-Conos-plotMarkerDotPlot}{\code{Conos$plotMarkerDotPlot()}}
     \item \href{#method-Conos-findCommunities}{\code{Conos$findCommunities()}}
-    \item \href{#method-Conos-plotPanel}{\code{Conos$plotPanel()}}
     \item \href{#method-Conos-embedGraph}{\code{Conos$embedGraph()}}
+    \item \href{#method-Conos-getDifferentialGenes}{\code{Conos$getDifferentialGenes()}}
+    \item \href{#method-Conos-runGraph}{\code{Conos$runGraph()}}
+    \item \href{#method-Conos-runMarkers}{\code{Conos$runMarkers()}}
+    \item \href{#method-Conos-plotMarkerDotPlot}{\code{Conos$plotMarkerDotPlot()}}
+    \item \href{#method-Conos-runClustering}{\code{Conos$runClustering()}}
+    \item \href{#method-Conos-plotPanel}{\code{Conos$plotPanel()}}
+    \item \href{#method-Conos-runEmbedding}{\code{Conos$runEmbedding()}}
     \item \href{#method-Conos-plotClusterStability}{\code{Conos$plotClusterStability()}}
     \item \href{#method-Conos-plotGraph}{\code{Conos$plotGraph()}}
     \item \href{#method-Conos-correctGenes}{\code{Conos$correctGenes()}}
@@ -196,10 +200,98 @@ con$getJointCountMatrix()
 \if{html}{\out{<a id="method-Conos-buildGraph"></a>}}
 \if{latex}{\out{\hypertarget{method-Conos-buildGraph}{}}}
 \subsection{\code{Conos$buildGraph()}}{
+  Deprecated alias of \code{runGraph()}. Prefer \code{runGraph()}.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Conos$buildGraph(...)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{...}}{arguments passed to \code{runGraph()}.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    joint graph (see \code{runGraph()}).
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Conos-findCommunities"></a>}}
+\if{latex}{\out{\hypertarget{method-Conos-findCommunities}{}}}
+\subsection{\code{Conos$findCommunities()}}{
+  Deprecated alias of \code{runClustering()}. Prefer \code{runClustering()}.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Conos$findCommunities(...)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{...}}{arguments passed to \code{runClustering()}.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    clustering result (see \code{runClustering()}).
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Conos-embedGraph"></a>}}
+\if{latex}{\out{\hypertarget{method-Conos-embedGraph}{}}}
+\subsection{\code{Conos$embedGraph()}}{
+  Deprecated alias of \code{runEmbedding()}. Prefer \code{runEmbedding()}.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Conos$embedGraph(...)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{...}}{arguments passed to \code{runEmbedding()}.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    embedding (see \code{runEmbedding()}).
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Conos-getDifferentialGenes"></a>}}
+\if{latex}{\out{\hypertarget{method-Conos-getDifferentialGenes}{}}}
+\subsection{\code{Conos$getDifferentialGenes()}}{
+  Deprecated alias of \code{runMarkers()}. Prefer \code{runMarkers()}.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Conos$getDifferentialGenes(...)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{...}}{arguments passed to \code{runMarkers()}.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    differential-expression result (see \code{runMarkers()}).
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Conos-runGraph"></a>}}
+\if{latex}{\out{\hypertarget{method-Conos-runGraph}{}}}
+\subsection{\code{Conos$runGraph()}}{
   Build the joint graph that encompasses all the samples, establishing weighted inter-sample cell-to-cell links
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{Conos$buildGraph(
+    \preformatted{Conos$runGraph(
   k = 15,
   k.self = 10,
   k.self.weight = 0.1,
@@ -289,7 +381,7 @@ con$getJointCountMatrix()
   \subsection{Examples}{
     \if{html}{\out{<div class="r example copy">}}
     \preformatted{con <- Conos$new(small_panel.preprocessed, n.cores=1)
-con$buildGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.method='mNN',
+con$runGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.method='mNN',
     metric='angular', score.component.variance=TRUE, verbose=TRUE)
 }
     \if{html}{\out{</div>}}
@@ -297,13 +389,13 @@ con$buildGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.me
 }
 
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Conos-getDifferentialGenes"></a>}}
-\if{latex}{\out{\hypertarget{method-Conos-getDifferentialGenes}{}}}
-\subsection{\code{Conos$getDifferentialGenes()}}{
+\if{html}{\out{<a id="method-Conos-runMarkers"></a>}}
+\if{latex}{\out{\hypertarget{method-Conos-runMarkers}{}}}
+\subsection{\code{Conos$runMarkers()}}{
   Calculate genes differentially expressed between cell clusters. Estimates base mean, z-score, p-values, specificity, precision, expressionFraction, AUC (if append.auc=TRUE)
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{Conos$getDifferentialGenes(
+    \preformatted{Conos$runMarkers(
   clustering = NULL,
   groups = NULL,
   z.threshold = 3,
@@ -375,14 +467,14 @@ con$buildGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.me
 }
 
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Conos-findCommunities"></a>}}
-\if{latex}{\out{\hypertarget{method-Conos-findCommunities}{}}}
-\subsection{\code{Conos$findCommunities()}}{
+\if{html}{\out{<a id="method-Conos-runClustering"></a>}}
+\if{latex}{\out{\hypertarget{method-Conos-runClustering}{}}}
+\subsection{\code{Conos$runClustering()}}{
   Find cell clusters (as communities on the joint graph)
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{Conos$findCommunities(
-  method = leiden.community,
+    \preformatted{Conos$runClustering(
+  method = .conos_default_leiden,
   min.group.size = 0,
   name = NULL,
   test.stability = FALSE,
@@ -417,9 +509,9 @@ con$buildGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.me
   \subsection{Examples}{
     \if{html}{\out{<div class="r example copy">}}
     \preformatted{con <- Conos$new(small_panel.preprocessed, n.cores=1)
-con$buildGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.method='mNN',
+con$runGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.method='mNN',
     metric='angular', score.component.variance=TRUE, verbose=TRUE)
-con$findCommunities(method = igraph::walktrap.community, steps=5)
+con$runClustering(method = igraph::cluster_walktrap, steps=5)
 }
     \if{html}{\out{</div>}}
   }
@@ -469,13 +561,13 @@ If a matrix is passed, it is interpreted as an actual embedding (then first two 
 }
 
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Conos-embedGraph"></a>}}
-\if{latex}{\out{\hypertarget{method-Conos-embedGraph}{}}}
-\subsection{\code{Conos$embedGraph()}}{
+\if{html}{\out{<a id="method-Conos-runEmbedding"></a>}}
+\if{latex}{\out{\hypertarget{method-Conos-runEmbedding}{}}}
+\subsection{\code{Conos$runEmbedding()}}{
   Generate an embedding of a joint graph
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{Conos$embedGraph(
+    \preformatted{Conos$runEmbedding(
   method = "largeVis",
   embedding.name = method,
   M = 1,

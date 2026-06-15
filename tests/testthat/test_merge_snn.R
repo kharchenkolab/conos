@@ -30,11 +30,11 @@ test_that("buildGraph(snn=TRUE) runs for scalar and length-2 snn.quantile (regre
   skip_if_not_installed("pagoda2")
   data("small_panel.preprocessed", package = "conos", envir = environment())
   con <- Conos$new(small_panel.preprocessed, n.cores = 1)
-  con$buildGraph(k = 15, k.self = 5, space = "PCA", ncomps = 20, n.odgenes = 1000, snn = TRUE, verbose = FALSE)
+  con$runGraph(k = 15, k.self = 5, space = "PCA", ncomps = 20, n.odgenes = 1000, snn = TRUE, verbose = FALSE)
   expect_gt(igraph::ecount(con$graph), 0)
 
   con2 <- Conos$new(small_panel.preprocessed, n.cores = 1)
-  con2$buildGraph(k = 15, k.self = 5, space = "PCA", ncomps = 20, n.odgenes = 1000,
+  con2$runGraph(k = 15, k.self = 5, space = "PCA", ncomps = 20, n.odgenes = 1000,
                   snn = TRUE, snn.quantile = c(0.1, 0.9), min.snn.jaccard = 0.1, verbose = FALSE)
   expect_gt(igraph::ecount(con2$graph), 0)
 })

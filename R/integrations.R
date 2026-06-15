@@ -159,7 +159,7 @@ saveConosForScanPy <- function(con, output.path, hdf5_filename, metadata.df=NULL
   # Create a batch-free embedding that can be used instead of PCA space
   if (pseudo.pca) {
     if (verbose) message("Create psudo-PCA space...\t")
-    pseudopca.df <- con$embedGraph(target.dims=n.dims, method="largeVis", verbose=FALSE)[cell.ids, ] %>% as.data.frame()
+    pseudopca.df <- con$runEmbedding(target.dims=n.dims, method="largeVis", verbose=FALSE)[cell.ids, ] %>% as.data.frame()
     if (verbose) message("Done.\n")
   }
 

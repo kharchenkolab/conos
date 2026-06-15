@@ -6,7 +6,7 @@ test_that("buildGraph pairs.storage keep/drop/disk manage the per-pair rotations
   data("small_panel.preprocessed", package = "conos", envir = environment())
   p <- small_panel.preprocessed
   bg <- function(con, storage)
-    con$buildGraph(k = 15, k.self = 5, space = "PCA", ncomps = 20, n.odgenes = 1000,
+    con$runGraph(k = 15, k.self = 5, space = "PCA", ncomps = 20, n.odgenes = 1000,
                    verbose = FALSE, pairs.storage = storage)
 
   ## keep (default): rotations retained, graph built

@@ -1014,9 +1014,9 @@ scanKModularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.in
   if(verbose) message(paste0(ifelse(scan.k.self,'k.self=(','k=('),min,', ',max,') ['))
   xl <- papply(k.seq,function(kv) {
     if(scan.k.self) {
-      x <- con$buildGraph(k.self=kv, ..., verbose=FALSE)
+      x <- con$runGraph(k.self=kv, ..., verbose=FALSE)
     } else {
-      x <- con$buildGraph(k=kv, ..., verbose=FALSE)
+      x <- con$runGraph(k=kv, ..., verbose=FALSE)
     }
     if(verbose) message('.')
     if(omit.internal.edges) {
@@ -1063,8 +1063,8 @@ scanKModularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.in
     if (is.null(grouping)) stop("clustering '", clustering, "' not found in $clusters", call. = FALSE)
   }
   grouping <- as.factor(grouping)
-  de <- con$getDifferentialGenes(groups = grouping, z.threshold = 0,
-                                 append.specificity.metrics = FALSE, append.auc = FALSE, verbose = FALSE)
+  de <- con$runMarkers(groups = grouping, z.threshold = 0,
+                       append.specificity.metrics = FALSE, append.auc = FALSE, verbose = FALSE)
   pick <- function(d) {
     if (is.null(d) || nrow(d) == 0L || !all(c("Gene", gene.metric) %in% colnames(d))) return(character(0))
     keep <- is.finite(d[[gene.metric]]) & d[[gene.metric]] >= z.threshold
@@ -1148,7 +1148,45 @@ scanKModularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.in
   invisible(structure(plan, class = c("conosIntegrationPlan", "data.frame")))
 }
 
-## Resolve a community-detection method given as a string to its function, for findCommunities(method=).
+#' Scan clustering resolution
+#'
+#' Run a resolution-based community method (Leiden by default) over a sequence of resolutions on the joint
+#' graph and report the number of clusters and modularity at each — a helper for choosing `resolution`.
+#'
+#' @param con a Conos object with a joint graph already built (runGraph()).
+#' @param resolutions numeric vector of resolutions to scan (default=seq(0.1, 2, by=0.1)).
+#' @param method a community-detection function (or name) accepting a `resolution=` argument (default: Leiden).
+#' @param plot boolean Whether to draw number-of-clusters vs resolution (default=TRUE).
+#' @param verbose boolean Whether to report progress (default=TRUE).
+#' @param ... passed to `method`.
+#' @return data.frame with columns `resolution`, `n.clusters`, `modularity`.
+#' @export
+scanResolution <- function(con, resolutions=seq(0.1, 2, by=0.1), method=.conos_default_leiden, plot=TRUE, verbose=TRUE, ...) {
+  if (is.null(con$graph)) stop("build the joint graph first with con$runGraph()", call.=FALSE)
+  if (is.character(method)) method <- .conos_resolve_community_method(method)
+  rows <- lapply(resolutions, function(r) {
+    cl <- method(con$graph, resolution=r, ...)
+    mem <- if (!is.null(cl$membership)) cl$membership else igraph::membership(cl) # leidenAlg vs igraph shape
+    if (verbose) message(".")
+    data.frame(resolution=r, n.clusters=length(unique(mem)),
+               modularity=igraph::modularity(con$graph, as.integer(as.factor(mem))))
+  })
+  res <- do.call(rbind, rows)
+  if (verbose) message("")
+  if (plot) {
+    print(ggplot2::ggplot(res, ggplot2::aes(x=.data$resolution, y=.data$n.clusters)) +
+            ggplot2::geom_point() + ggplot2::geom_line() + ggplot2::theme_bw() +
+            ggplot2::xlab("resolution") + ggplot2::ylab("number of clusters"))
+  }
+  res
+}
+
+## conos's default community method: Leiden with n.iterations=5. leidenAlg defaults to 2, which under-
+## converges on large joint graphs; 5 is a modest, safer default (behavior change, NEWS-flagged). Users
+## can still override n.iterations via ... or pass any community function / "name".
+.conos_default_leiden <- function(graph, n.iterations = 5, ...) leiden.community(graph, n.iterations = n.iterations, ...)
+
+## Resolve a community-detection method given as a string to its function, for runClustering(method=).
 ## Keeps the function-object form working; adds string sugar (the agent-accessibility win). Names are
 ## normalized (case-insensitive, punctuation-stripped) so "leiden"/"Leiden"/"label.prop" all resolve.
 .conos_resolve_community_method <- function(name) {
@@ -1156,7 +1194,7 @@ scanKModularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.in
     stop("community detection method name must be a single string", call. = FALSE)
   }
   map <- list(
-    leiden       = leiden.community,
+    leiden       = .conos_default_leiden,
     walktrap     = igraph::cluster_walktrap,
     louvain      = igraph::cluster_louvain,
     multilevel   = igraph::cluster_louvain,

@@ -392,7 +392,7 @@ plotDEheatmap <- function(con, groups, de=NULL, min.auc=NULL, min.specificity=NU
   groups <- as.factor(groups)
 
   if(is.null(de)) { # run DE
-    de <- con$getDifferentialGenes(groups=groups,append.auc=TRUE,z.threshold=0,upregulated.only=TRUE)
+    de <- con$runMarkers(groups=groups,append.auc=TRUE,z.threshold=0,upregulated.only=TRUE)
   }
 
   # drop empty results

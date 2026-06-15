@@ -122,6 +122,26 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @return invisible data.frame, one row per modality (modality, samples, common.features, overlap.min, overlap.med, verdict).
     planIntegration=function(min.common.features=5, verbose=TRUE) .conos_plan_integration(self, min.common.features=min.common.features, verbose=verbose),
 
+    #' @description Deprecated alias of \code{runGraph()}. Prefer \code{runGraph()}.
+    #' @param ... arguments passed to \code{runGraph()}.
+    #' @return joint graph (see \code{runGraph()}).
+    buildGraph=function(...) { .Deprecated("runGraph"); self$runGraph(...) },
+
+    #' @description Deprecated alias of \code{runClustering()}. Prefer \code{runClustering()}.
+    #' @param ... arguments passed to \code{runClustering()}.
+    #' @return clustering result (see \code{runClustering()}).
+    findCommunities=function(...) { .Deprecated("runClustering"); self$runClustering(...) },
+
+    #' @description Deprecated alias of \code{runEmbedding()}. Prefer \code{runEmbedding()}.
+    #' @param ... arguments passed to \code{runEmbedding()}.
+    #' @return embedding (see \code{runEmbedding()}).
+    embedGraph=function(...) { .Deprecated("runEmbedding"); self$runEmbedding(...) },
+
+    #' @description Deprecated alias of \code{runMarkers()}. Prefer \code{runMarkers()}.
+    #' @param ... arguments passed to \code{runMarkers()}.
+    #' @return differential-expression result (see \code{runMarkers()}).
+    getDifferentialGenes=function(...) { .Deprecated("runMarkers"); self$runMarkers(...) },
+
     #' @description Build the joint graph that encompasses all the samples, establishing weighted inter-sample cell-to-cell links
     #'
     #' @param k integer integer Size of the inter-sample neighborhood (default=15)
@@ -167,12 +187,12 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @examples
     #' \donttest{
     #' con <- Conos$new(small_panel.preprocessed, n.cores=1)
-    #' con$buildGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.method='mNN',
+    #' con$runGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.method='mNN',
     #'     metric='angular', score.component.variance=TRUE, verbose=TRUE)
     #' }
     #'
     #'
-    buildGraph=function(k=15, k.self=10, k.self.weight=0.1, alignment.strength=NULL, space='PCA', matching.method='mNN', metric='angular', k1=k, data.type='counts', l2.sigma=1e5, var.scale=TRUE, ncomps=40,
+    runGraph=function(k=15, k.self=10, k.self.weight=0.1, alignment.strength=NULL, space='PCA', matching.method='mNN', metric='angular', k1=k, data.type='counts', l2.sigma=1e5, var.scale=TRUE, ncomps=40,
                         n.odgenes=2000, matching.mask=NULL, exclude.samples=NULL, common.centering=TRUE, verbose=TRUE,
                         base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, score.component.variance=FALSE,
                         snn=FALSE, snn.quantile=0.9, min.snn.jaccard=0, min.snn.weight=0, snn.k.self=k.self,
@@ -417,7 +437,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @param append.auc boolean Whether to append AUC scores (default=TRUE)
     #' @return list of DE results; each is a data frame with rows corresponding to the differentially expressed genes, and columns listing log2 fold change (M), signed Z scores (both raw and adjusted for mulitple hypothesis using BH correction), optional specificty/sensitivity and AUC metrics.
     #'
-    getDifferentialGenes=function(clustering=NULL, groups=NULL, z.threshold=3.0, upregulated.only=FALSE, verbose=TRUE, append.specificity.metrics=TRUE, append.auc=TRUE) {
+    runMarkers=function(clustering=NULL, groups=NULL, z.threshold=3.0, upregulated.only=FALSE, verbose=TRUE, append.specificity.metrics=TRUE, append.auc=TRUE) {
 
       groups <- parseCellGroups(self, clustering, groups)
 
@@ -477,12 +497,12 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @examples
     #' \donttest{
     #' con <- Conos$new(small_panel.preprocessed, n.cores=1)
-    #' con$buildGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.method='mNN',
+    #' con$runGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.method='mNN',
     #'     metric='angular', score.component.variance=TRUE, verbose=TRUE)
-    #' con$findCommunities(method = igraph::walktrap.community, steps=5)
+    #' con$runClustering(method = igraph::cluster_walktrap, steps=5)
     #' }
     #'
-    findCommunities=function(method=leiden.community, min.group.size=0, name=NULL, test.stability=FALSE, stability.subsampling.fraction=0.95, stability.subsamples=100, verbose=TRUE, cls=NULL, sr=NULL, ...) {
+    runClustering=function(method=.conos_default_leiden, min.group.size=0, name=NULL, test.stability=FALSE, stability.subsampling.fraction=0.95, stability.subsamples=100, verbose=TRUE, cls=NULL, sr=NULL, ...) {
 
       if (is.character(method)) method <- .conos_resolve_community_method(method) # accept a string, not only a function
       if (is.null(cls)) {
@@ -725,7 +745,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @param target.dims numeric Number of dimensions for the reduction (default=2). Higher dimensions can be used to generate embeddings for subsequent reductions by other methods, such as tSNE
     #' @param ... additional arguments, passed to UMAP embedding (run ?conos:::embedGraphUmap for more info)
     #'
-    embedGraph=function(method='largeVis', embedding.name=method, M=1, gamma=1, alpha=0.1, perplexity=NA, sgd_batches=1e8, seed=1, verbose=TRUE, target.dims=2, ...) {
+    runEmbedding=function(method='largeVis', embedding.name=method, M=1, gamma=1, alpha=0.1, perplexity=NA, sgd_batches=1e8, seed=1, verbose=TRUE, target.dims=2, ...) {
       supported.methods <- c('largeVis', 'UMAP')
       if(!method %in% supported.methods) {
         stop(paste0("Currently, only the following embeddings are supported: ",paste(supported.methods,collapse=' ')))

@@ -22,9 +22,9 @@ test_that("check getJointCountMatrix()", {
 
 
 ## warnings due to small panel
-suppressWarnings(con$buildGraph(ncomps=25))#
-suppressWarnings(con$findCommunities(method=leiden.community)) 
-suppressWarnings(con$embedGraph(alpha=0.001, sgd_batched=1e8))
+suppressWarnings(con$runGraph(ncomps=25))#
+suppressWarnings(con$runClustering(method=leiden.community))
+suppressWarnings(con$runEmbedding(alpha=0.001, sgd_batched=1e8))
 
 
 test_that("check Conos object, output of Leiden clustering", {
@@ -34,9 +34,9 @@ test_that("check Conos object, output of Leiden clustering", {
 
 
 ## warnings due to small panel
-suppressWarnings(con$buildGraph(ncomps=25))
-suppressWarnings(con$findCommunities(method = igraph::walktrap.community, steps=7))
-suppressWarnings(con$embedGraph(alpha=0.001, sgd_batched=1e8))
+suppressWarnings(con$runGraph(ncomps=25))
+suppressWarnings(con$runClustering(method = igraph::cluster_walktrap, steps=7))
+suppressWarnings(con$runEmbedding(alpha=0.001, sgd_batched=1e8))
 
 
 test_that("check Conos object, output of igraph walktrap clustering", {
