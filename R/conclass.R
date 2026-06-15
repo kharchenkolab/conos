@@ -466,21 +466,23 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       return(de.genes)
     },
 
-    #' @description Marker dot plot: the top differentially-expressed genes per cluster shown as a
-    #'   sccore::dotPlot (dot size = fraction of cells expressing; colour = scaled mean expression) — the
-    #'   conos counterpart of pagoda2.1's plotMarkerDotPlot, so the same view is available at both levels.
+    #' @description Marker dot plot: specific per-cluster markers shown as a sccore::dotPlot (dot size =
+    #'   fraction of cells expressing; colour = scaled mean expression). Markers are selected with the same
+    #'   "balanced" rule as pagoda2.1 (up-regulated and discriminative — ranked by the precision x
+    #'   expression-fraction harmonic mean, not raw Z — so ubiquitous house-keeping / mitochondrial genes are
+    #'   excluded), then each gene is assigned to its best cluster and the genes are ordered by cluster.
     #' @param clustering character Name of the clustering in `$clusters` to use (default=NULL -> the first available).
     #' @param groups factor Optional explicit cell grouping (named by cell); overrides `clustering`.
     #' @param n.genes.per.group integer Number of top markers to show per cluster (default=5).
-    #' @param z.threshold numeric Minimum marker score (on `gene.metric`) to keep (default=1).
-    #' @param gene.metric character Ranking metric from the DE table: "Z" or "M" (default="Z").
+    #' @param z.threshold numeric Minimum Z (up-regulation) for a gene to be considered a marker (default=1).
+    #' @param min.auc numeric Minimum AUC (discrimination; 0.5 = none) for a gene to be considered a marker (default=0.6).
     #' @param cols length-2 colour vector (low, high) for scaled expression (default=c("grey88","firebrick3")).
     #' @param dot.scale numeric Dot size scale passed to sccore::dotPlot (default=6).
     #' @param text.angle numeric x-axis label angle (default=45).
     #' @param ... passed to sccore::dotPlot.
     #' @return a ggplot2 object (the marker dot plot).
-    plotMarkerDotPlot=function(clustering=NULL, groups=NULL, n.genes.per.group=5, z.threshold=1, gene.metric="Z", cols=c("grey88","firebrick3"), dot.scale=6, text.angle=45, ...)
-      .conos_plot_marker_dot_plot(self, clustering=clustering, groups=groups, n.genes.per.group=n.genes.per.group, z.threshold=z.threshold, gene.metric=gene.metric, cols=cols, dot.scale=dot.scale, text.angle=text.angle, ...),
+    plotMarkerDotPlot=function(clustering=NULL, groups=NULL, n.genes.per.group=5, z.threshold=1, min.auc=0.6, cols=c("grey88","firebrick3"), dot.scale=6, text.angle=45, ...)
+      .conos_plot_marker_dot_plot(self, clustering=clustering, groups=groups, n.genes.per.group=n.genes.per.group, z.threshold=z.threshold, min.auc=min.auc, cols=cols, dot.scale=dot.scale, text.angle=text.angle, ...),
 
     #' @description Find cell clusters (as communities on the joint graph)
     #'

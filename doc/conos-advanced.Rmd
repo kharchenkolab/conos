@@ -10,38 +10,54 @@ format:
 jupyter: ir44
 ---
 
-This tutorial assumes you have been through the [walkthrough](conos-walkthrough.ipynb) and covers the knobs
-that matter when integration is harder: **which space** to align in, **how aggressively** to align,
-**memory** on large panels, **what the samples actually share** (modalities/features), and **label-transfer**
-choices. We reuse the same bone-marrow / cord-blood panel.
+This tutorial assumes you have worked through the [walkthrough](conos-walkthrough.ipynb). It covers the
+knobs that matter when integration is harder: **which space** to align in, **how strongly** to align,
+**memory** on large panels, **what the samples actually share** (modalities), and how to **transfer
+labels**. We reuse the same bone-marrow / cord-blood panel and take each topic one small step at a time.
+
+## Contents
+
+- [Setup](#setup)
+- [Plan the integration first](#plan-the-integration-first)
+- [Choosing the alignment space](#choosing-the-alignment-space)
+- [Choosing a clustering resolution](#choosing-a-clustering-resolution)
+- [Label transfer: diffusion vs solver](#label-transfer-diffusion-vs-solver)
+- [Tuning the alignment strength](#tuning-the-alignment-strength)
+- [Memory on large panels](#memory-on-large-panels)
+- [Multimodal panels (facets)](#multimodal-panels-facets)
+- [Recap](#recap)
+
+## Setup
+
+Same preparation as the walkthrough: load the panel, down-sample for speed, and turn each sample into a
+`Pagoda2` object carrying a PCA reduction.
 
 ```{r}
 #| message: false
 #| warning: false
 library(conos)
 library(pagoda2)
-library(conosPanel)
 
 set.seed(1)
-n.cores <- 4
-panel <- lapply(conosPanel::panel, function(m) m[, sample(ncol(m), min(1000, ncol(m)))])  # subsample for speed
-samples <- lapply(panel, function(cm) {
-  rownames(cm) <- make.unique(rownames(cm))
-  p <- Pagoda2$from(cm, n.cores = n.cores, min.cells.per.gene = 0, min.transcripts.per.cell = 0,
-                    log.scale = TRUE, verbose = FALSE)
-  p$run(steps = c("variance", "pca"), dependencies = "error", verbose = FALSE)   # just the reduction
-  p
-})
-con <- Conos$new(samples, n.cores = n.cores)
+panel <- lapply(conosPanel::panel, function(m) m[, sample(ncol(m), 600)])
 ```
 
-## 1. Plan the integration first
+```{r}
+#| message: false
+#| warning: false
+samples <- lapply(panel, function(counts) {
+  Pagoda2$from(counts, verbose = FALSE)$run(steps = c("variance", "pca"), verbose = FALSE)
+})
+con <- Conos$new(samples, n.cores = 1)
+```
 
-`planIntegration()` is a read-only preliminary step. It polls each sample's molecular modalities (here just
-RNA; for multimodal samples it would list ADT/ATAC facets too) and, per modality, reports how many features
-are shared across the samples and how well they overlap — with a *usable / marginal / not-integrable*
-verdict. This is where you catch problems like independently-called scATAC peaks that simply cannot be
-reconciled without re-processing.
+## Plan the integration first
+
+`planIntegration()` is a read-only check you run **before** building the graph. It polls each sample's
+molecular modalities (here just RNA; for multimodal samples it would also list ADT/ATAC) and, per modality,
+reports how many features are shared across samples and how well they overlap — with a *usable / marginal /
+not-integrable* verdict. This is where you catch problems like independently-called scATAC peaks that simply
+cannot be reconciled.
 
 ```{r}
 plan <- con$planIntegration()
@@ -51,117 +67,194 @@ plan
 The resolved default modality is recorded on the object and is what `runGraph()` aligns on unless you tell
 it otherwise.
 
-## 2. Choosing the alignment space
+## Choosing the alignment space
 
-The `space` argument controls how each pair of samples is matched:
+The `space` argument decides how each pair of samples is matched:
 
-* **`"PCA"` (default)** — *reciprocal PCA*: each sample's PCA loadings define a shared gene basis both
-  samples project into. Fast and robust; the right default for most panels.
-* **`"CCA"`** — canonical correlation. Useful for **heterogeneous** integrations (very different
-  compositions), but heavier and prone to **over-smoothing** (merging distinct populations) when little
-  correction is actually needed.
-* **`"CPCA"`** — common principal components; available, but in practice much slower without a clear gain
-  over reciprocal PCA, so it is not the default.
+* **`"PCA"` (default)** — *reciprocal PCA*: each sample's PCA loadings define a shared gene basis that both
+  samples project into. Fast and robust — the right default for most panels.
+* **`"CCA"`** — canonical correlation. Useful for **heterogeneous** panels (very different compositions),
+  but heavier and prone to **over-smoothing** (merging distinct populations) when little correction is
+  actually needed.
+* **`"CPCA"`** — common principal components; available, but usually much slower without a clear gain over
+  reciprocal PCA, so it is not the default.
 
-```{r}
-#| message: false
-con$runGraph(k = 20, k.self = 5, space = "PCA", ncomps = 30, n.odgenes = 2000, verbose = FALSE)
-con$runClustering(name = "leiden_pca", verbose = FALSE)
-
-con$runGraph(k = 20, k.self = 5, space = "CCA", ncomps = 30, n.odgenes = 2000, verbose = FALSE)
-con$runClustering(name = "leiden_cca", verbose = FALSE)
-
-c(PCA = length(unique(con$clusters$leiden_pca$groups)),
-  CCA = length(unique(con$clusters$leiden_cca$groups)))
-```
-
-CCA typically yields a more aggressively mixed graph (often fewer, larger clusters). Inspect both and pick
-the one whose mixing matches your biological expectation rather than trusting a single default.
-
-`alignment.strength` (and `k`/`k1`) tune how forcefully samples are pulled together — raise it for stronger
-batch correction, lower it to preserve subtle structure.
-
-## 3. Memory on large panels
-
-The per-pair alignment rotations are O(samples²) and dominate memory on big panels. `pairs.storage` controls
-them: `"keep"` (default) retains them in RAM for reuse, `"drop"` discards them after the graph is built
-(a later `runGraph()` recomputes), and `"disk"` offloads them to a scratch file — freed from RAM but
-restored on the next `runGraph()` so re-runs are cheap.
-
-The disk path costs almost nothing in time (the rotations are written once after the graph is built), so on
-large panels it is essentially free memory:
+Rather than take that on faith, let's see it. We build the graph with each space and look at the joint
+embedding **coloured by sample** — the more the samples interleave, the more aggressively that space mixed
+them. First the default, reciprocal PCA:
 
 ```{r}
 #| message: false
-t_keep <- system.time(con$runGraph(k = 20, k.self = 5, space = "PCA", ncomps = 30, n.odgenes = 2000,
-                                   pairs.storage = "keep", verbose = FALSE))["elapsed"]
-rot_mb  <- as.numeric(object.size(con$pairs[["PCA"]])) / 1e6     # rotation RAM held under "keep"
-
-t_disk <- system.time(con$runGraph(k = 20, k.self = 5, space = "PCA", ncomps = 30, n.odgenes = 2000,
-                                   pairs.storage = "disk", verbose = FALSE))["elapsed"]
-
-c(keep_s = round(t_keep, 2), disk_s = round(t_disk, 2),
-  rotation_RAM_freed_MB = round(rot_mb, 1), pairs_in_RAM_after_disk = length(con$pairs[["PCA"]]))
+con$runGraph(space = "PCA", k = 20, k.self = 5, ncomps = 30, n.odgenes = 2000, verbose = FALSE)
+con$runEmbedding(method = "UMAP", min.visited.verts = 100, verbose = FALSE)
 ```
 
-`runClustering()` / `runEmbedding()` work the same way regardless of `pairs.storage`. On a four-sample panel
-the freed RAM is small, but it grows as the square of the number of samples, so `"disk"` is the right choice
-for large atlases. (On lstar-backed pagoda2 samples the build path also streams expression in gene blocks,
-keeping the per-sample footprint flat as well.)
+```{r}
+#| fig-width: 6.5
+#| fig-height: 5
+con$plotGraph(color.by = "sample", mark.groups = FALSE, show.legend = TRUE, alpha = 0.1)
+```
+
+Now CCA, on the same panel:
 
 ```{r}
 #| message: false
-con$runClustering(verbose = FALSE)
+con$runGraph(space = "CCA", k = 20, k.self = 5, ncomps = 30, n.odgenes = 2000, verbose = FALSE)
+con$runEmbedding(method = "UMAP", min.visited.verts = 100, verbose = FALSE)
 ```
 
-## 4. Choosing a clustering resolution
+```{r}
+#| fig-width: 6.5
+#| fig-height: 5
+con$plotGraph(color.by = "sample", mark.groups = FALSE, show.legend = TRUE, alpha = 0.1)
+```
+
+CCA pulls the samples together more tightly. On a well-behaved panel like this one that is unnecessary —
+reciprocal PCA already interleaves the samples — and over-mixing risks merging populations that should stay
+separate. So we **keep reciprocal PCA** for the rest of the tutorial; rebuild the graph and embedding we'll
+use from here on:
+
+```{r}
+#| message: false
+con$runGraph(space = "PCA", k = 20, k.self = 5, ncomps = 30, n.odgenes = 2000, verbose = FALSE)
+con$runEmbedding(method = "UMAP", min.visited.verts = 100, verbose = FALSE)
+```
+
+## Choosing a clustering resolution
 
 `scanResolution()` runs the community detection over a range of resolutions and reports the number of
-clusters (and modularity), helping you pick a value rather than guessing:
+clusters (and modularity), so you can pick a value deliberately rather than guess:
 
 ```{r}
+#| message: false
 #| fig-width: 6
 #| fig-height: 4
 res <- scanResolution(con, resolutions = c(0.5, 1, 1.5, 2), plot = TRUE, verbose = FALSE)
 res
 ```
 
+Higher resolution = more, finer clusters. Pick the coarsest resolution that still separates the populations
+you care about, then commit to it:
+
 ```{r}
 #| message: false
 con$runClustering(resolution = 1.5, name = "leiden_r15", verbose = FALSE)
 ```
 
-## 5. Label transfer: diffusion vs solver
+## Label transfer: diffusion vs solver
 
-`propagateLabels()` offers two engines. On real panels they give near-identical results; the difference is
-scaling:
+`propagateLabels()` spreads a partial set of labels over the joint graph. It has two engines that give
+near-identical results — the difference is how they scale. Let's walk through it.
 
-* **`"diffusion"` (default)** — iterative graph diffusion. Scales to very large panels.
-* **`"solver"`** — a Zhu–Ghahramani–Lafferty harmonic solve. Fast and slightly more accurate at typical
-  sizes, but its linear solve does not scale much beyond ~20k cells.
+First set up the problem: take the clustering as ground truth, reveal a random **30%** of cells as the
+"reference", and hide the rest.
 
 ```{r}
-groups <- con$clusters$leiden_pca$groups
+groups    <- con$clusters$leiden_r15$groups
 set.seed(1)
 reference <- groups[sample(length(groups), round(0.30 * length(groups)))]
 held.out  <- setdiff(names(groups), names(reference))
-
-td <- con$propagateLabels(labels = reference, method = "diffusion", verbose = FALSE)
-ts <- con$propagateLabels(labels = reference, method = "solver", solver = "Matrix")
-
-c(diffusion = mean(td$labels[held.out] == as.character(groups[held.out])),
-  solver    = mean(ts$labels[held.out] == as.character(groups[held.out])),
-  agreement = mean(td$labels[held.out] == ts$labels[held.out]))
 ```
 
-Use `diffusion` (the default) for very large atlases and `solver` when the panel is modest and you want the
+The reference is sparse — only a scattering of labelled seeds across the embedding:
+
+```{r}
+#| fig-width: 6
+#| fig-height: 5
+con$plotGraph(groups = reference, mark.groups = FALSE, show.legend = TRUE)
+```
+
+**`"diffusion"` (default)** — iterative graph diffusion; scales to very large panels.
+
+```{r}
+#| message: false
+td <- con$propagateLabels(labels = reference, method = "diffusion", verbose = FALSE)
+```
+
+```{r}
+#| fig-width: 6
+#| fig-height: 5
+con$plotGraph(groups = td$labels)
+```
+
+The labels have filled in across the whole embedding from those few seeds.
+
+**`"solver"`** — a Zhu–Ghahramani–Lafferty harmonic solve; fast and slightly more accurate at typical
+sizes, but its linear solve does not scale much past ~20k cells.
+
+```{r}
+#| message: false
+ts <- con$propagateLabels(labels = reference, method = "solver", solver = "Matrix")
+```
+
+Both engines recover the held-out labels well above chance, and they largely agree with each other:
+
+```{r}
+c(diffusion_accuracy = round(mean(td$labels[held.out] == as.character(groups[held.out])), 3),
+  solver_accuracy    = round(mean(ts$labels[held.out] == as.character(groups[held.out])), 3),
+  engine_agreement   = round(mean(td$labels[held.out] == ts$labels[held.out]), 3))
+```
+
+Either way, `*$uncertainty` flags the cells whose transferred label is least trustworthy — typically those
+at the boundaries between populations. Painting it onto the embedding tells you *where* to trust the
+transfer:
+
+```{r}
+#| fig-width: 6
+#| fig-height: 5
+con$plotGraph(colors = td$uncertainty)
+```
+
+Use `diffusion` (the default) for large atlases, and `solver` when the panel is modest and you want the
 extra speed/accuracy.
 
-## 6. Multimodal panels (facets)
+## Tuning the alignment strength
 
-When samples carry more than one molecular modality (e.g. RNA + ADT in CITE-seq, or RNA + ATAC in multiome,
-produced with pagoda2.1 *facets*), `planIntegration()` polls and assesses **each** modality separately, so
-you can see which ones are actually integrable across the panel before committing. Today Conos aligns on a
+Within a space, **how forcefully** samples are pulled together is set by `alignment.strength` (0 = none,
+higher = stronger) together with the neighbourhood sizes `k` / `k.self`. Raise it for stronger batch
+correction across heterogeneous samples; lower it to preserve subtle within-sample structure. It is the
+first dial to reach for when the sample-mixing plot looks under- or over-corrected — leave it at the default
+otherwise.
+
+```{r}
+#| message: false
+con$runGraph(space = "PCA", alignment.strength = 0.3, k = 20, k.self = 5,
+             ncomps = 30, n.odgenes = 2000, verbose = FALSE)
+```
+
+(After changing the graph you would re-run `runClustering()` / `runEmbedding()` to see the effect.)
+
+## Memory on large panels
+
+The per-pair alignment rotations are O(samples²) and dominate memory on big panels. `pairs.storage`
+controls where they live:
+
+* **`"keep"` (default)** — kept in RAM for reuse.
+* **`"drop"`** — discarded after the graph is built (a later `runGraph()` recomputes them).
+* **`"disk"`** — offloaded to a scratch file: freed from RAM, but restored on the next `runGraph()` so
+  re-runs stay cheap.
+
+The disk path costs almost nothing in time, because the rotations are written once after the graph is built.
+We can time it:
+
+```{r}
+#| message: false
+t_keep <- system.time(con$runGraph(space = "PCA", k = 20, k.self = 5, ncomps = 30, n.odgenes = 2000,
+                                   pairs.storage = "keep", verbose = FALSE))["elapsed"]
+t_disk <- system.time(con$runGraph(space = "PCA", k = 20, k.self = 5, ncomps = 30, n.odgenes = 2000,
+                                   pairs.storage = "disk", verbose = FALSE))["elapsed"]
+c(keep_seconds = round(t_keep, 2), disk_seconds = round(t_disk, 2))
+```
+
+On a four-sample panel the RAM saved is small, but it grows as the *square* of the number of samples — so
+`"disk"` is the right choice for large atlases, at essentially no time cost. (On lstar-backed pagoda2
+samples the build path also streams expression in gene blocks, keeping the per-sample footprint flat.)
+
+## Multimodal panels (facets)
+
+When samples carry more than one molecular modality (RNA + ADT in CITE-seq, or RNA + ATAC in multiome,
+produced with pagoda2 *facets*), `planIntegration()` polls and assesses **each** modality separately, so you
+can see which ones are actually integrable across the panel before committing. Today Conos aligns on a
 single shared modality (the common default, usually RNA) — the recommended, robust path — and
 modality-aware accessors (`getModalities()`, `getDefaultModality()`) expose the rest. Joint multimodal
 *fusion* (weighting modalities per cell, à la WNN) is the next step on the roadmap.
@@ -170,5 +263,6 @@ modality-aware accessors (`getModalities()`, `getDefaultModality()`) expose the 
 
 `planIntegration()` to see what's realistic → `runGraph(space=, alignment.strength=, pairs.storage=)` to
 control the alignment and memory → `scanResolution()` + `runClustering(resolution=)` to tune granularity →
-`propagateLabels(method=)` to transfer annotations. Start from the [walkthrough](conos-walkthrough.ipynb)
-defaults and reach for these only when a particular integration needs them.
+`propagateLabels(method=)` to transfer annotations. Start from the
+[walkthrough](conos-walkthrough.ipynb) defaults and reach for these knobs only when a particular integration
+needs them.

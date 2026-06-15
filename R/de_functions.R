@@ -516,12 +516,14 @@ getDifferentialGenesP2 <- function(p2.samples, groups, z.threshold=3.0, upregula
   markers.per.sample <- sccore::plapply(p2.samples, function(p2) {
     if (length(intersect(getCellNames(p2), names(groups))) < 3) {
       list()
+    } else if (is.function(p2$runMarkers)) {
+      ## pagoda2 >= 2.0: runMarkers is the supported verb (returns the same per-cluster table list as the
+      ## deprecated getDifferentialGenes, but without the deprecation warning). z.threshold=0 here keeps every
+      ## gene; filtering happens later in aggregateDEMarkersAcrossDatasets.
+      p2$runMarkers(groups=groups, z.threshold=0, upregulated.only=FALSE,
+                    append.specificity.metrics=FALSE, append.auc=FALSE, verbose=FALSE)
     } else {
-      if (packageVersion("pagoda2") >= "0.1.1") {
-        p2$getDifferentialGenes(groups=groups, z.threshold=0, append.specificity.metrics=FALSE, append.auc=FALSE)
-      } else {
-        p2$getDifferentialGenes(groups=groups, z.threshold=0)
-      }
+      p2$getDifferentialGenes(groups=groups, z.threshold=0)
     }
   }, progress=verbose, n.cores=n.cores)
 

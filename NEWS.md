@@ -17,8 +17,11 @@ Major release, coordinated with pagoda2 2.0 and lstar.
   reconcile without consistent pre-processing). Records the resolved default modality on the object.
 * `getModalities()` / `getDefaultModality()` accessors (pagoda2.1 facets, Seurat assays, or a single
   `"RNA"` for legacy/single-modality objects).
-* `plotMarkerDotPlot()` — top per-cluster markers rendered through `sccore::dotPlot` (the conos counterpart
-  of pagoda2.1's `plotMarkerDotPlot`).
+* `plotMarkerDotPlot()` — specific per-cluster markers rendered through `sccore::dotPlot` (the conos
+  counterpart of pagoda2.1's `plotMarkerDotPlot`). Genes are selected with pagoda2.1's "balanced" rule
+  (up-regulated *and* discriminative — ranked by the precision x expression-fraction harmonic mean rather
+  than raw `Z`, with an `min.auc` discrimination floor), then assigned to a single best cluster and ordered
+  by cluster, so ubiquitous house-keeping / mitochondrial genes no longer dominate the plot.
 * `scanResolution()` — scan a community method's `resolution` over a range, reporting cluster count and
   modularity.
 * `buildGraph(pairs.storage = c("keep", "drop", "disk"))` — optionally drop or offload the O(n^2) per-pair
@@ -42,6 +45,9 @@ Major release, coordinated with pagoda2 2.0 and lstar.
   (the warning is now raised only when the `"mumps"` solver is requested but unavailable).
 * `propagateLabels(method = "solver")` no longer errors when the labelled (reference) cells miss one or
   more cluster levels (the label-indicator matrix is now sized to the number of levels).
+* The per-sample marker step (`runMarkers()` / `plotMarkerDotPlot()`) now calls pagoda2.1's `runMarkers()`
+  on each sample instead of the deprecated `getDifferentialGenes()`, so it no longer emits pagoda2
+  deprecation warnings.
 
 ## Performance and memory
 

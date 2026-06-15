@@ -428,9 +428,11 @@ con$runGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.meth
 \if{html}{\out{<a id="method-Conos-plotMarkerDotPlot"></a>}}
 \if{latex}{\out{\hypertarget{method-Conos-plotMarkerDotPlot}{}}}
 \subsection{\code{Conos$plotMarkerDotPlot()}}{
-  Marker dot plot: the top differentially-expressed genes per cluster shown as a
-  sccore::dotPlot (dot size = fraction of cells expressing; colour = scaled mean expression) — the
-  conos counterpart of pagoda2.1's plotMarkerDotPlot, so the same view is available at both levels.
+  Marker dot plot: specific per-cluster markers shown as a sccore::dotPlot (dot size =
+  fraction of cells expressing; colour = scaled mean expression). Markers are selected with the same
+  "balanced" rule as pagoda2.1 (up-regulated and discriminative — ranked by the precision x
+  expression-fraction harmonic mean, not raw Z — so ubiquitous house-keeping / mitochondrial genes are
+  excluded), then each gene is assigned to its best cluster and the genes are ordered by cluster.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
     \preformatted{Conos$plotMarkerDotPlot(
@@ -438,7 +440,7 @@ con$runGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.meth
   groups = NULL,
   n.genes.per.group = 5,
   z.threshold = 1,
-  gene.metric = "Z",
+  min.auc = 0.6,
   cols = c("grey88", "firebrick3"),
   dot.scale = 6,
   text.angle = 45,
@@ -452,8 +454,8 @@ con$runGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.meth
       \item{\code{clustering}}{character Name of the clustering in `$clusters` to use (default=NULL -> the first available).}
       \item{\code{groups}}{factor Optional explicit cell grouping (named by cell); overrides `clustering`.}
       \item{\code{n.genes.per.group}}{integer Number of top markers to show per cluster (default=5).}
-      \item{\code{z.threshold}}{numeric Minimum marker score (on `gene.metric`) to keep (default=1).}
-      \item{\code{gene.metric}}{character Ranking metric from the DE table: "Z" or "M" (default="Z").}
+      \item{\code{z.threshold}}{numeric Minimum Z (up-regulation) for a gene to be considered a marker (default=1).}
+      \item{\code{min.auc}}{numeric Minimum AUC (discrimination; 0.5 = none) for a gene to be considered a marker (default=0.6).}
       \item{\code{cols}}{length-2 colour vector (low, high) for scaled expression (default=c("grey88","firebrick3")).}
       \item{\code{dot.scale}}{numeric Dot size scale passed to sccore::dotPlot (default=6).}
       \item{\code{text.angle}}{numeric x-axis label angle (default=45).}

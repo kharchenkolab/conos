@@ -1046,13 +1046,50 @@ scanKModularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.in
 ## (mergeCountMatrices / extendMatrix live in R/integrations.R — the duplicate copies that were here,
 ## shadowed by alphabetical sourcing, have been removed.)
 
-## Back end for Conos$plotMarkerDotPlot(): select the top n markers per cluster from the joint DE table and
-## hand them to sccore::dotPlot over the joint (cells x genes) count matrix -- the conos twin of pagoda2.1's
-## plotMarkerDotPlot, routed through the same sccore engine for a consistent view (§6).
+## Select per-cluster marker genes for the dot plot, mirroring pagoda2.1's "balanced" selection on the
+## joint DE table: a gene must be up-regulated (Z >= z.threshold) AND discriminative (AUC >= min.auc), and
+## is ranked by the Precision x ExpressionFraction harmonic mean (so ubiquitous house-keeping / mito genes,
+## which have high Z but AUC ~0.5 and low precision, are pushed out). Each gene is then assigned to the one
+## cluster where it scores best (highest.only), and the genes are ordered by cluster so the plot reads as a
+## diagonal. Returns a list(genes=<ordered gene vector>) or NULL if nothing passes.
+.conos_select_dotplot_markers <- function(de, levels.order, n.genes.per.group=5, z.threshold=1, min.auc=0.6) {
+  needed <- c("Gene", "Z", "AUC", "Precision", "ExpressionFraction")
+  pick <- function(d) {
+    if (is.null(d) || nrow(d) == 0L || !all(needed %in% colnames(d))) return(NULL)
+    keep <- is.finite(d$Z) & d$Z >= z.threshold & is.finite(d$AUC) & d$AUC >= min.auc
+    d <- d[keep, , drop = FALSE]
+    if (nrow(d) == 0L) return(NULL)
+    p <- d$Precision; r <- d$ExpressionFraction
+    f1 <- ifelse(is.finite(p + r) & (p + r) > 0, 2 * p * r / (p + r), NA_real_)
+    ok <- is.finite(f1)
+    d <- d[ok, , drop = FALSE]; f1 <- f1[ok]
+    if (nrow(d) == 0L) return(NULL)
+    ord <- order(-f1, -d$AUC, -d$M, -d$Z)
+    utils::head(data.frame(Gene = as.character(d$Gene)[ord], score = f1[ord], stringsAsFactors = FALSE),
+                n.genes.per.group)
+  }
+  per <- lapply(names(de), function(cl) {
+    pk <- pick(de[[cl]]); if (is.null(pk) || nrow(pk) == 0L) return(NULL)
+    data.frame(cluster = cl, pk, stringsAsFactors = FALSE)
+  })
+  per <- do.call(rbind, per)
+  if (is.null(per) || nrow(per) == 0L) return(NULL)
+  ## highest.only: keep each gene only for its best-scoring cluster
+  per <- per[order(-per$score), , drop = FALSE]
+  per <- per[!duplicated(per$Gene), , drop = FALSE]
+  ## order genes by cluster position (so rows and gene blocks share a diagonal), then by score
+  per$cl.idx <- match(per$cluster, levels.order)
+  per <- per[order(per$cl.idx, -per$score), , drop = FALSE]
+  list(genes = per$Gene, table = per)
+}
+
+## Back end for Conos$plotMarkerDotPlot(): select specific per-cluster markers from the joint DE table
+## (.conos_select_dotplot_markers, the conos twin of pagoda2.1's "balanced" marker selection) and hand them
+## to sccore::dotPlot over the joint (cells x genes) count matrix, routed through the same engine for a
+## consistent view (§6).
 .conos_plot_marker_dot_plot <- function(con, clustering=NULL, groups=NULL, n.genes.per.group=5,
-                                        z.threshold=1, gene.metric="Z", cols=c("grey88","firebrick3"),
+                                        z.threshold=1, min.auc=0.6, cols=c("grey88","firebrick3"),
                                         dot.scale=6, text.angle=45, ...) {
-  if (!gene.metric %in% c("Z", "M")) stop("gene.metric must be 'Z' or 'M'", call. = FALSE)
   grouping <- groups
   if (is.null(grouping)) {
     if (is.null(clustering)) {
@@ -1062,21 +1099,19 @@ scanKModularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.in
     grouping <- con$clusters[[clustering]]$groups
     if (is.null(grouping)) stop("clustering '", clustering, "' not found in $clusters", call. = FALSE)
   }
-  grouping <- as.factor(grouping)
-  de <- con$runMarkers(groups = grouping, z.threshold = 0,
-                       append.specificity.metrics = FALSE, append.auc = FALSE, verbose = FALSE)
-  pick <- function(d) {
-    if (is.null(d) || nrow(d) == 0L || !all(c("Gene", gene.metric) %in% colnames(d))) return(character(0))
-    keep <- is.finite(d[[gene.metric]]) & d[[gene.metric]] >= z.threshold
-    d <- d[keep, , drop = FALSE]
-    utils::head(d$Gene[order(-d[[gene.metric]])], n.genes.per.group)
-  }
-  markers <- unique(unlist(lapply(de, pick)))
-  if (length(markers) == 0L) stop("no markers passed z.threshold=", z.threshold, "; lower it or check the clustering", call. = FALSE)
+  grouping <- droplevels(as.factor(grouping))
+  ## specificity metrics (AUC / Precision / ExpressionFraction) drive the "balanced" selection below
+  de <- con$runMarkers(groups = grouping, z.threshold = 0, upregulated.only = TRUE,
+                       append.specificity.metrics = TRUE, append.auc = TRUE, verbose = FALSE)
+  sel <- .conos_select_dotplot_markers(de, levels(grouping), n.genes.per.group = n.genes.per.group,
+                                       z.threshold = z.threshold, min.auc = min.auc)
+  if (is.null(sel)) stop("no specific markers passed the Z/AUC filters (z.threshold=", z.threshold,
+                         ", min.auc=", min.auc, "); lower them or check the clustering", call. = FALSE)
   cm <- con$getJointCountMatrix(raw = FALSE) # cells x genes (joint normalized)
-  markers <- intersect(markers, colnames(cm))
-  sccore::dotPlot(markers = markers, count.matrix = cm, cell.groups = grouping,
-                  cols = cols, dot.scale = dot.scale, text.angle = text.angle, ...)
+  gene.order <- intersect(sel$genes, colnames(cm))
+  if (length(gene.order) == 0L) stop("selected markers are absent from the joint count matrix", call. = FALSE)
+  sccore::dotPlot(markers = gene.order, count.matrix = cm, cell.groups = grouping,
+                  gene.order = gene.order, cols = cols, dot.scale = dot.scale, text.angle = text.angle, ...)
 }
 
 ## SNN edge weights (Jaccard-style shared-neighbor overlap), evaluated ONLY at the mNN-masked nonzeros so
