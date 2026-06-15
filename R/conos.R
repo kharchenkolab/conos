@@ -390,6 +390,23 @@ complete.dend <- function(comm, use.modularity) {
   merges
 }
 
+# Evaluate `expr` with the BLAS thread count temporarily set to `n` (restored on exit), if
+# RhpcBLASctl is available and `n` is non-NULL. Used inside forked workers to prevent BLAS
+# oversubscription (n.cores forks each spawning BLAS threads) -- mirrors pagoda2's
+# .pagoda2_with_blas_threads. `n = NULL` is a no-op (leave BLAS at its default), so the serial
+# (n.cores == 1) path keeps full BLAS threading.
+#' @keywords internal
+withBlasThreads <- function(n, expr) {
+  if (!is.null(n) && requireNamespace("RhpcBLASctl", quietly = TRUE)) {
+    old <- tryCatch(RhpcBLASctl::blas_get_num_procs(), error = function(e) NULL)
+    tryCatch(RhpcBLASctl::blas_set_num_threads(n), error = function(e) NULL)
+    if (!is.null(old)) {
+      on.exit(tryCatch(RhpcBLASctl::blas_set_num_threads(old), error = function(e) NULL), add = TRUE)
+    }
+  }
+  force(expr)
+}
+
 # use mclapply if available, fall back on BiocParallel, but use regular
 # lapply() when only one core is specified
 #' @keywords internal

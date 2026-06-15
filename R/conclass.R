@@ -1071,7 +1071,10 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       if(verbose) message('found ',sum(!is.na(mi)),' out of ',length(mi),' cached ',space,' space pairs ... ')
       if(any(is.na(mi))) { # some pairs are missing
         if(verbose) message('running ',sum(is.na(mi)),' additional ',space,' space pairs ')
-        xl2 <- sccore::plapply(which(is.na(mi)), function(i) {
+        ## pin BLAS to 1 thread inside each forked worker to avoid oversubscription
+        ## (n.cores pair-workers each spawning BLAS threads); no-op in the serial n.cores==1 path
+        blas.n <- if (isTRUE(self$n.cores > 1L)) 1L else NULL
+        xl2 <- sccore::plapply(which(is.na(mi)), function(i) withBlasThreads(blas.n, {
           if (space=='CPCA') {
             xcp <- quickCPCA(self$samples[sn.pairs[,i]],data.type=data.type,ncomps=ncomps,n.odgenes=n.odgenes,verbose=FALSE,var.scale=var.scale, score.component.variance=score.component.variance)
           } else if(space=='JNMF') {
@@ -1085,7 +1088,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           }
           if(verbose) cat(".")
           xcp
-        }, n.cores=self$n.cores, mc.preschedule=(space=='PCA'), progress=FALSE, fail.on.error=TRUE)
+        }), n.cores=self$n.cores, mc.preschedule=(space=='PCA'), progress=FALSE, fail.on.error=TRUE)
 
         names(xl2) <- apply(sn.pairs[,which(is.na(mi)),drop=FALSE],2,paste,collapse='.vs.')
         xl2 <- xl2[!unlist(lapply(xl2,is.null))]

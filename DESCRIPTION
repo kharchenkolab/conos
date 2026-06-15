@@ -52,6 +52,7 @@ Suggests:
     PMA,
     plyr,
     rhdf5,
+    RhpcBLASctl,
     rmarkdown,
     rmumps,
     Seurat,

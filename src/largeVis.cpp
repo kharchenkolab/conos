@@ -285,10 +285,6 @@ arma::mat sgd(arma::mat& coords,
 	}
 #endif
 
-#ifdef _OPENMP
-#pragma omp barrier
-#endif
-
 	for (iterationtype eIdx = barrier; eIdx < n_samples; eIdx += batchSize) if (progress.increment(batchSize)) (*v)(eIdx, batchSize);
 
 	delete v;

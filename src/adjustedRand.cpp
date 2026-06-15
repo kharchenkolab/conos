@@ -52,16 +52,16 @@ double adjustedRandcpp(Rcpp::NumericVector cl1, Rcpp::NumericVector cl1u, Rcpp::
     // multiple calls used to populate vector
     double result = 0.0;
 
-    int i, j, t, r, *nmatrix;
+    int i, j, t, r;
     //int mm1, mm2, nn, fflag;
-    double a, b, c, d, denom; 
-    double *nc, *nr, ni_2, n_j2, nt, n_c;
- 
+    double a, b, c, d, denom;
+    double ni_2, n_j2, nt, n_c;
+
     //mm1 = *m1; mm2 = *m2; nn = *n; fflag = *flag;
- 
-    nmatrix = (int *)malloc((size_t)(mm1 * mm2 * sizeof(int)));
-    nc = (double *)malloc((size_t)(mm2 * sizeof(double)));
-    nr = (double *)malloc((size_t)(mm1 * sizeof(double)));
+
+    // RAII buffers (interrupt/longjmp-safe vs. raw malloc/free); zero-initialized then filled below
+    std::vector<int> nmatrix(static_cast<size_t>(mm1) * mm2);
+    std::vector<double> nc(mm2), nr(mm1);
  
     a = 0.0; b = 0.0; c = 0.0; d = 0.0;
     denom = 0.0;
@@ -146,10 +146,6 @@ double adjustedRandcpp(Rcpp::NumericVector cl1, Rcpp::NumericVector cl1u, Rcpp::
     } else if(fflag == 5) { //Jaccard
         result = a / (a + b + c);
     }
-
-    free(nmatrix);
-    free(nc);
-    free(nr);
 
     return result;
 

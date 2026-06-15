@@ -181,10 +181,6 @@ std::pair<std::vector<std::vector<int>>, std::vector<std::vector<double>>>
                              int min_visited_verts=1000, double min_prob_lower=1e-5,
                              int max_adj_num=0, bool verbose=true)
 {
-#ifdef _OPENMP
-  omp_set_num_threads(n_cores);
-#endif
-
   if (n_verts <= 0 || n_verts >= adjacency_list.size()) {
     n_verts = adjacency_list.size();
   }
@@ -194,8 +190,10 @@ std::pair<std::vector<std::vector<int>>, std::vector<std::vector<double>>>
 
   Progress p(n_verts, verbose);
 
+  // Fork-safe threading: serial when n_cores<=1 (no parallel region entered), and set the thread
+  // count locally via num_threads() rather than mutating the global OpenMP state.
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic)
+#pragma omp parallel for schedule(dynamic) if(n_cores > 1) num_threads(n_cores)
 #endif
   for (int v1 = 0; v1 < n_verts; ++v1) {
     if (Progress::check_abort())
@@ -205,13 +203,9 @@ std::pair<std::vector<std::vector<int>>, std::vector<std::vector<double>>>
                                                    min_prob, min_visited_verts, min_prob_lower, max_adj_num);
     p.increment();
 
-#ifdef _OPENMP
-#pragma omp critical
-#endif
-{
-  res_times.at(v1) = cur_res.first;
-  res_idx.at(v1) = cur_res.second;
-}
+    // each iteration writes a distinct index (v1) -> disjoint elements, no `omp critical` needed
+    res_times.at(v1) = cur_res.first;
+    res_idx.at(v1) = cur_res.second;
   }
 
   if (Progress::check_abort())
@@ -228,10 +222,6 @@ Rcpp::List commute_time_per_node(const std::vector<std::vector<int>> &adjacency_
   if (adjacency_list.size() != hitting_times.size())
     Rcpp::stop("Vectors must have the same length");
 
-#ifdef _OPENMP
-  omp_set_num_threads(n_cores);
-#endif
-
   std::vector<std::unordered_map<int, double>> hitting_times_map(adjacency_list.size());
 
   if (verbose) {
@@ -242,7 +232,7 @@ Rcpp::List commute_time_per_node(const std::vector<std::vector<int>> &adjacency_
     Progress p_hash(adjacency_list.size(), verbose);
 
 #ifdef _OPENMP
-#pragma omp parallel for schedule(static)
+#pragma omp parallel for schedule(static) if(n_cores > 1) num_threads(n_cores)
 #endif
     for (int v1 = 0; v1 < adjacency_list.size(); ++v1) {
       if (Progress::check_abort())
@@ -271,7 +261,7 @@ Rcpp::List commute_time_per_node(const std::vector<std::vector<int>> &adjacency_
     }
 
 #ifdef _OPENMP
-#pragma omp parallel for schedule(static)
+#pragma omp parallel for schedule(static) if(n_cores > 1) num_threads(n_cores)
 #endif
     for (int v1 = 0; v1 < hitting_times_map.size(); ++v1) {
       if (Progress::check_abort())
@@ -304,10 +294,6 @@ Rcpp::List commute_time_per_node(const std::vector<std::vector<int>> &adjacency_
   if (verbose) {
     Rcpp::Rcout << "Done" << std::endl;
   }
-
-#ifdef _OPENMP
-#pragma omp barrier
-#endif
 
   return Rcpp::List::create(Rcpp::_["idx"]=Rcpp::wrap(commute_time_idx),
                             Rcpp::_["dist"]=Rcpp::wrap(commute_times));
