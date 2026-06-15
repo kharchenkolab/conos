@@ -191,13 +191,19 @@ embedded. The quality levers and their current defaults:
     (pairwise matching). Open: conos-facing term `facet` (project vocabulary; Seurat assays map onto it) vs the
     neutral `modality`; and default `facet.coverage` = `"common"` (safe) vs conos's traditional opportunism.
   - **pagoda2-side asks this depends on:**
-    1. **Per-cell modality weights in the facet-aware accessor contract** — expose `wnn_weight_<facet>` (already
-       in `cellMeta`) as a documented accessor so conos can consume them for Path-B fusion. *(open)*
+    1. **Per-cell modality weights accessor** — ✅ **DONE** (pagoda2 commit `6d541e8`). WNN attaches its
+       cells×facets weight matrix to the joint reduction (name-scoped, so multiple joints coexist) and
+       `getModalityWeights(name=)` reads it — the surface conos Path-B fusion consumes (NULL for non-WNN
+       reductions). `cellMeta$wnn_weight_<facet>` retained for back-compat (most-recent run only).
     2. **Verbose `listReductions(long=TRUE)`** surfacing `{facets, method, input_axes}` so conos picks the right
        joint and derives projectability from `method`. ✅ **DONE** (pagoda2 commit `6634386`).
-    3. **Subset-facet joints** — `runGraph(method="wnn", facets=<subset>)` / joint reductions over a chosen facet
-       subset (needed once a sample carries >2 facets and multiple joints coexist; pairs with #2's keys).
-       *(open, forward-looking)*
+    3. **Subset-facet joints** — ✅ **DONE** (pagoda2 commits `6d541e8`, `3cc4f2e`). `runGraph(method="wnn",
+       facets=<subset>, name=)` and the joint builders run over any facet subset; multiple named joints coexist
+       with distinct provenance. Consistent with pagoda2's §4.5.1 namespace rules: joint names still pass the
+       no-shadow validator, bare-name resolution is unchanged, running a joint never mutates the default
+       reduction/graph, and the clobber-guard *complements* §4.5.1 (joint-vs-joint same-name protection it
+       lacked). The convenience `cellMeta$wnn_weight_<facet>` columns are written only for the canonical
+       default `"WNN"` joint; named joints keep weights name-scoped in the reduction attr (`getModalityWeights`).
   - *Staging:* the **plumbing** (modality-aware accessors §4.3, `planIntegration()`, default-modality polling,
     warn/drop) is additive and single-facet-safe → can land in the **wave (2.0)**; **Path B fusion** is the
     genuinely new integration research → **next release**.
