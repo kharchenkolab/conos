@@ -70,9 +70,21 @@ To see more documentation on the class `Conos`, run `?Conos`.
 ## Tutorials
 
 
-Please see the following tutorials for detailed examples of how to use conos: 
+Please see the following tutorials for detailed examples of how to use conos.
 
-### Conos walkthrough:
+The two main tutorials are rendered Jupyter notebooks — GitHub displays them directly (no download needed):
+
+### Conos walkthrough (start here):
+The standard, minimal workflow on a panel of samples — building the joint graph, clustering, embedding,
+marker dot plots, and label transfer.
+* [Jupyter notebook](doc/conos-walkthrough.ipynb)
+
+### Advanced Conos workflows:
+Choosing the alignment space (reciprocal PCA / CCA), `planIntegration()`, disk-backed memory control
+(`pairs.storage`), resolution scanning, label-transfer methods, and multimodal facets.
+* [Jupyter notebook](doc/conos-advanced.ipynb)
+
+### Conos walkthrough (legacy):
 * [HTML version](https://htmlpreview.github.io/?https://raw.githubusercontent.com/kharchenkolab/conos/main/doc/walkthrough.html)
 * [Markdown version](https://github.com/kharchenkolab/conos/blob/main/doc/walkthrough.md)
 
