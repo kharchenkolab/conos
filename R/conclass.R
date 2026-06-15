@@ -153,9 +153,11 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @param k.same.factor integer An neighborhood size that should be used when aligning samples of the same balancing.factor.per.sample level. Setting a value smaller than k will lead to reduction of alingment strenth within the sample batches (default=k)
     #' @return joint graph to be used for downstream analysis
     #' @examples
+    #' \donttest{
     #' con <- Conos$new(small_panel.preprocessed, n.cores=1)
     #' con$buildGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.method='mNN',
     #'     metric='angular', score.component.variance=TRUE, verbose=TRUE)
+    #' }
     #'
     #'
     buildGraph=function(k=15, k.self=10, k.self.weight=0.1, alignment.strength=NULL, space='PCA', matching.method='mNN', metric='angular', k1=k, data.type='counts', l2.sigma=1e5, var.scale=TRUE, ncomps=40,
@@ -423,10 +425,12 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @param ... extra parameters are passed to the specified community detection method
     #' @return invisible list containing identified communities (groups) and the full community detection result (result); The results are stored in $clusters$name slot in the conos object. Each such slot contains an object with elements: $results which stores the raw output of the community detection method, and $groups which is a factor on cells describing the resulting clustering. The later can be used, for instance, in plotting: con$plotGraph(groups=con$clusters$leiden$groups). If test.stability==TRUE, then the result object will also contain a $stability slot.
     #' @examples
+    #' \donttest{
     #' con <- Conos$new(small_panel.preprocessed, n.cores=1)
     #' con$buildGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.method='mNN',
     #'     metric='angular', score.component.variance=TRUE, verbose=TRUE)
     #' con$findCommunities(method = igraph::walktrap.community, steps=5)
+    #' }
     #'
     findCommunities=function(method=leiden.community, min.group.size=0, name=NULL, test.stability=FALSE, stability.subsampling.fraction=0.95, stability.subsamples=100, verbose=TRUE, cls=NULL, sr=NULL, ...) {
 

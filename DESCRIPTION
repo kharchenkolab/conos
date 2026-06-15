@@ -13,11 +13,11 @@ biocViews:
 Imports:
     abind,
     cowplot,
-    ComplexHeatmap,
     dendextend,
     dplyr,
     ggplot2,
     ggrepel,
+    grid,
     gridExtra,
     irlba,
     leidenAlg,
@@ -34,10 +34,10 @@ Imports:
     stats,
     tools,
     utils
-RoxygenNote: 7.2.3
 Suggests:
     AnnotationDbi,
     BiocParallel,
+    ComplexHeatmap,
     conosPanel,
     drat,
     DESeq2,
@@ -69,3 +69,4 @@ NeedsCompilation: yes
 LinkingTo: Rcpp, RcppArmadillo, RcppEigen, RcppProgress
 Author: Viktor Petukhov [aut], Nikolas Barkas [aut], Peter Kharchenko [aut], Weiliang Qiu [ctb], Evan Biederstedt [aut, cre]
 Maintainer: Evan Biederstedt <evan.biederstedt@gmail.com>
+Config/roxygen2/version: 8.0.0

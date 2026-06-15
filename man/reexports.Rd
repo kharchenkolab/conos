@@ -12,8 +12,8 @@ These objects are imported from other packages. Follow the links
 below to see their documentation.
 
 \describe{
-  \item{leidenAlg}{\code{\link[leidenAlg]{leiden.community}}, \code{\link[leidenAlg]{leiden.community}}}
+  \item{leidenAlg}{\code{\link[leidenAlg:leiden.community]{leiden.community()}}, \code{\link[leidenAlg:leiden.community]{leiden.community()}}}
 
-  \item{sccore}{\code{\link[sccore]{embeddingPlot}}}
+  \item{sccore}{\code{\link[sccore:embeddingPlot]{embeddingPlot()}}}
 }}
 

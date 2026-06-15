@@ -1,7 +1,4 @@
 #' @importFrom dplyr %>%
-#' @importFrom ComplexHeatmap ht_opt
-#' @importFrom ComplexHeatmap Heatmap
-#' @importFrom ComplexHeatmap HeatmapAnnotation
 #' @importFrom rlang .data
 #' @importFrom stats setNames
 NULL
@@ -607,8 +604,8 @@ plotDEheatmap <- function(con, groups, de=NULL, min.auc=NULL, min.specificity=NU
   ## 2000 columns. You can control `use_raster` argument by explicitly
   ## setting TRUE/FALSE to it.
   ## Set `ht_opt$message = FALSE` to turn off this message.
-  ## 
-  ht_opt$message = FALSE
+  ##
+  ComplexHeatmap::ht_opt$message = FALSE
 
   #ComplexHeatmap::Heatmap(x, col=pal, cluster_rows=FALSE, cluster_columns=FALSE, show_column_names=FALSE, top_annotation=ha , left_annotation=ra, column_split=groups[colnames(x)], row_split=rannot[,1], row_gap = unit(0, "mm"), column_gap = unit(0, "mm"), border=TRUE,  ...);
   if(split) {
