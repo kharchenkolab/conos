@@ -446,6 +446,22 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       return(de.genes)
     },
 
+    #' @description Marker dot plot: the top differentially-expressed genes per cluster shown as a
+    #'   sccore::dotPlot (dot size = fraction of cells expressing; colour = scaled mean expression) — the
+    #'   conos counterpart of pagoda2.1's plotMarkerDotPlot, so the same view is available at both levels.
+    #' @param clustering character Name of the clustering in `$clusters` to use (default=NULL -> the first available).
+    #' @param groups factor Optional explicit cell grouping (named by cell); overrides `clustering`.
+    #' @param n.genes.per.group integer Number of top markers to show per cluster (default=5).
+    #' @param z.threshold numeric Minimum marker score (on `gene.metric`) to keep (default=1).
+    #' @param gene.metric character Ranking metric from the DE table: "Z" or "M" (default="Z").
+    #' @param cols length-2 colour vector (low, high) for scaled expression (default=c("grey88","firebrick3")).
+    #' @param dot.scale numeric Dot size scale passed to sccore::dotPlot (default=6).
+    #' @param text.angle numeric x-axis label angle (default=45).
+    #' @param ... passed to sccore::dotPlot.
+    #' @return a ggplot2 object (the marker dot plot).
+    plotMarkerDotPlot=function(clustering=NULL, groups=NULL, n.genes.per.group=5, z.threshold=1, gene.metric="Z", cols=c("grey88","firebrick3"), dot.scale=6, text.angle=45, ...)
+      .conos_plot_marker_dot_plot(self, clustering=clustering, groups=groups, n.genes.per.group=n.genes.per.group, z.threshold=z.threshold, gene.metric=gene.metric, cols=cols, dot.scale=dot.scale, text.angle=text.angle, ...),
+
     #' @description Find cell clusters (as communities on the joint graph)
     #'
     #' @param method community detection method: either a function (igraph syntax, e.g. \code{leiden.community} (default) or \code{igraph::cluster_walktrap}) or a string naming one of "leiden", "walktrap", "louvain"/"multilevel", "infomap", "fastgreedy", "labelprop", "leadingeigen" (default=leiden.community)

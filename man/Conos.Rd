@@ -88,6 +88,7 @@ con$getJointCountMatrix()
     \item \href{#method-Conos-planIntegration}{\code{Conos$planIntegration()}}
     \item \href{#method-Conos-buildGraph}{\code{Conos$buildGraph()}}
     \item \href{#method-Conos-getDifferentialGenes}{\code{Conos$getDifferentialGenes()}}
+    \item \href{#method-Conos-plotMarkerDotPlot}{\code{Conos$plotMarkerDotPlot()}}
     \item \href{#method-Conos-findCommunities}{\code{Conos$findCommunities()}}
     \item \href{#method-Conos-plotPanel}{\code{Conos$plotPanel()}}
     \item \href{#method-Conos-embedGraph}{\code{Conos$embedGraph()}}
@@ -328,6 +329,48 @@ con$buildGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.me
   }
   \subsection{Returns}{
     list of DE results; each is a data frame with rows corresponding to the differentially expressed genes, and columns listing log2 fold change (M), signed Z scores (both raw and adjusted for mulitple hypothesis using BH correction), optional specificty/sensitivity and AUC metrics.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Conos-plotMarkerDotPlot"></a>}}
+\if{latex}{\out{\hypertarget{method-Conos-plotMarkerDotPlot}{}}}
+\subsection{\code{Conos$plotMarkerDotPlot()}}{
+  Marker dot plot: the top differentially-expressed genes per cluster shown as a
+  sccore::dotPlot (dot size = fraction of cells expressing; colour = scaled mean expression) — the
+  conos counterpart of pagoda2.1's plotMarkerDotPlot, so the same view is available at both levels.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Conos$plotMarkerDotPlot(
+  clustering = NULL,
+  groups = NULL,
+  n.genes.per.group = 5,
+  z.threshold = 1,
+  gene.metric = "Z",
+  cols = c("grey88", "firebrick3"),
+  dot.scale = 6,
+  text.angle = 45,
+  ...
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{clustering}}{character Name of the clustering in `$clusters` to use (default=NULL -> the first available).}
+      \item{\code{groups}}{factor Optional explicit cell grouping (named by cell); overrides `clustering`.}
+      \item{\code{n.genes.per.group}}{integer Number of top markers to show per cluster (default=5).}
+      \item{\code{z.threshold}}{numeric Minimum marker score (on `gene.metric`) to keep (default=1).}
+      \item{\code{gene.metric}}{character Ranking metric from the DE table: "Z" or "M" (default="Z").}
+      \item{\code{cols}}{length-2 colour vector (low, high) for scaled expression (default=c("grey88","firebrick3")).}
+      \item{\code{dot.scale}}{numeric Dot size scale passed to sccore::dotPlot (default=6).}
+      \item{\code{text.angle}}{numeric x-axis label angle (default=45).}
+      \item{\code{...}}{passed to sccore::dotPlot.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    a ggplot2 object (the marker dot plot).
   }
 }
 

@@ -1046,6 +1046,39 @@ scanKModularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.in
 ## (mergeCountMatrices / extendMatrix live in R/integrations.R — the duplicate copies that were here,
 ## shadowed by alphabetical sourcing, have been removed.)
 
+## Back end for Conos$plotMarkerDotPlot(): select the top n markers per cluster from the joint DE table and
+## hand them to sccore::dotPlot over the joint (cells x genes) count matrix -- the conos twin of pagoda2.1's
+## plotMarkerDotPlot, routed through the same sccore engine for a consistent view (§6).
+.conos_plot_marker_dot_plot <- function(con, clustering=NULL, groups=NULL, n.genes.per.group=5,
+                                        z.threshold=1, gene.metric="Z", cols=c("grey88","firebrick3"),
+                                        dot.scale=6, text.angle=45, ...) {
+  if (!gene.metric %in% c("Z", "M")) stop("gene.metric must be 'Z' or 'M'", call. = FALSE)
+  grouping <- groups
+  if (is.null(grouping)) {
+    if (is.null(clustering)) {
+      if (length(con$clusters) == 0L) stop("no clustering available; run findCommunities() first or pass groups=", call. = FALSE)
+      clustering <- names(con$clusters)[1]
+    }
+    grouping <- con$clusters[[clustering]]$groups
+    if (is.null(grouping)) stop("clustering '", clustering, "' not found in $clusters", call. = FALSE)
+  }
+  grouping <- as.factor(grouping)
+  de <- con$getDifferentialGenes(groups = grouping, z.threshold = 0,
+                                 append.specificity.metrics = FALSE, append.auc = FALSE, verbose = FALSE)
+  pick <- function(d) {
+    if (is.null(d) || nrow(d) == 0L || !all(c("Gene", gene.metric) %in% colnames(d))) return(character(0))
+    keep <- is.finite(d[[gene.metric]]) & d[[gene.metric]] >= z.threshold
+    d <- d[keep, , drop = FALSE]
+    utils::head(d$Gene[order(-d[[gene.metric]])], n.genes.per.group)
+  }
+  markers <- unique(unlist(lapply(de, pick)))
+  if (length(markers) == 0L) stop("no markers passed z.threshold=", z.threshold, "; lower it or check the clustering", call. = FALSE)
+  cm <- con$getJointCountMatrix(raw = FALSE) # cells x genes (joint normalized)
+  markers <- intersect(markers, colnames(cm))
+  sccore::dotPlot(markers = markers, count.matrix = cm, cell.groups = grouping,
+                  cols = cols, dot.scale = dot.scale, text.angle = text.angle, ...)
+}
+
 ## SNN edge weights (Jaccard-style shared-neighbor overlap), evaluated ONLY at the mNN-masked nonzeros so
 ## the n1 x n2 neighbor product never densifies. Identical to the dense form
 ## `((m1 %*% m2) * mnn1) / pmax(outer(rowSums(m1), colSums(m2), pmin), 1)` -- at a zero of the masked
