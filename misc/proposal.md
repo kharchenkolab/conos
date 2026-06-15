@@ -170,11 +170,14 @@ against pagoda2.1:
 | facet/modality | `getFacet`/`listFacets`/`getFacetMembership` | none | **absent** |
 
 **Suggestions:**
-- **4.1 (P0)** Fix the broken keys: `getEmbedding` → `sample$getEmbedding(type, name)` /
-  `embeddings[["counts"]][[name]]`; `getClustering` → `getGrouping`/`cellMeta`; `getPca` →
-  method-probe a reduction getter, fall back to `reductions[[sample$defaults$reduction]]` (not
-  hardcoded `$reductions$PCA`). Remove `$counts` reach-ins from `p2app4conos`/`convertToPagoda2`.
-  Refs: `access_wrappers.R:9,358,393`; `integrations.R:421-491,334-361`.
+- **4.1 (DONE 2026-06-15)** — **Correction:** the audit overstated this. For a standard pagoda2.1
+  `run()` object the keys *already align* (`reductions$PCA`, `embeddings[["PCA"]][["UMAP"]]`,
+  `clusters[["PCA"]][["leiden"]]`) because the default reduction/graph key **is** `"PCA"`, so the old
+  accessors worked; the `$counts` throws were already fixed by the accessor-shim commit. The fix made
+  them **robust** (not a breakage fix): `getPca` prefers `defaults$reduction` (fallback PCA / sole
+  reduction); `getEmbedding` searches reduction namespaces by embedding name; `getClustering` uses the
+  `getGrouping()` accessor. Verified on a real pagoda2.1 object + `test_pagoda2_accessors.R`. Net:
+  the pagoda2 2.0 ↔ conos revdep is **not hard-broken** — good news for the wave.
 - **4.2 (P1)** Replace the hand-rolled variance scaling in `scaledMatricesP2` with
   `getExpressionBlock(scale.variance=TRUE)` — removes the last reach-in into a pagoda2 internal
   (`R/conos.R:18-46`).
@@ -291,6 +294,9 @@ conos is mid-CRAN-prep (v1.5.4 "fix for CRAN"). Remaining gaps:
 - `utils::globalVariables` gaps (`aRI`/`cluster`/`jc`); two bare `T`/`F` literals; ~1 MB of removable
   `inst/` payload (`scanpy_integration.ipynb` 430 KB).
 - Thin test suite (5 `test_that` blocks) — expand with `skip_if_not_installed` for Suggests paths.
+  (Added `test_concurrency.R` + `test_pagoda2_accessors.R` so far.)
+- ✅ **DONE** — `src/Makevars`(`.win`): dropped the CRAN-flagged `-L"." -lpthread -lm` (OpenMP runtime
+  links pthread/m; no direct thread use); `.gitignore` now covers `src/*.o`/`*.so`/`*.dll`.
 - **Maintainer change.** `Authors@R` currently lists the former maintainer (E. Biederstedt, who has
   left) as `cre`. Move `cre` to the current maintainer, sync the `Maintainer:`/`Author:` fields (or
   delete them and let R derive from `Authors@R`), and note the handover in `cran-comments.md` (CRAN
@@ -306,8 +312,9 @@ Everything ready and worth shipping goes here. The "1.6" conservative set is fol
 `dev` checkpoint tag, not a separate CRAN release).
 
 **Tier A — correctness + the economical-RAM mode (highest value):**
-- §4.1 Fix pagoda2.1 sample accessors (`getEmbedding`/`getClustering`/`getPca` keys; `$counts`
-  reach-ins) — **the pagoda2 2.0 revdep prerequisite.**
+- §4.1 ✅ **DONE** — robust pagoda2.1 sample accessors (`getPca`/`getEmbedding`/`getClustering` via
+  `defaults$reduction`/`getGrouping`/name-search); `$counts` reach-ins already fixed by the shim.
+  (Audit overstated the breakage — standard objects worked; revdep is not hard-broken.)
 - §5 / §1.1 **Disk-backed sample access**: guarantee block/streamed reads so lstar-backed samples
   lower peak RAM (the main-path memory lever).
 - §1.2 **`pairs.storage = keep | disk | drop`**; §1.3 free per-pair intermediates / bound fork
