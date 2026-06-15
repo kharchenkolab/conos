@@ -513,7 +513,7 @@ getDifferentialGenesP2 <- function(p2.samples, groups, z.threshold=3.0, upregula
 
   if (verbose) message("Estimating marker genes per sample\n")
   markers.per.sample <- sccore::plapply(p2.samples, function(p2) {
-    if (length(intersect(rownames(p2$counts), names(groups))) < 3) {
+    if (length(intersect(getCellNames(p2), names(groups))) < 3) {
       list()
     } else {
       if (packageVersion("pagoda2") >= "0.1.1") {
@@ -555,4 +555,3 @@ checkCountsWholeNumbers <- function(input.matrix){
     stop("There are counts in matrix ", input.matrix, "which are not integers. This leads to DESeq errors. Please check your count matrices.")
   }
 }
-

@@ -21,6 +21,57 @@ setMethod(
   }
 )
 
+.conos_pagoda2_has_method <- function(sample, name) {
+  is.function(tryCatch(sample[[name]], error = function(e) NULL))
+}
+
+.conos_get_pagoda2_expression <- function(sample, genes = NULL, transposed = FALSE) {
+  if (.conos_pagoda2_has_method(sample, "getExpressionBlock")) {
+    orientation <- if (transposed) "cell_by_gene" else "gene_by_cell"
+    return(sample$getExpressionBlock(genes = genes, orientation = orientation))
+  }
+  x <- sample$counts
+  if (!is.null(genes)) {
+    x <- x[, genes, drop = FALSE]
+  }
+  if (transposed) {
+    return(x)
+  }
+  Matrix::t(x)
+}
+
+.conos_get_pagoda2_raw_counts <- function(sample, genes = NULL, cells = NULL, transposed = FALSE) {
+  if (.conos_pagoda2_has_method(sample, "getRawCounts")) {
+    orientation <- if (transposed) "cell_by_gene" else "gene_by_cell"
+    return(sample$getRawCounts(cells = cells, genes = genes, orientation = orientation))
+  }
+  x <- sample$misc$rawCounts
+  if (!is.null(cells)) {
+    x <- x[cells, , drop = FALSE]
+  }
+  if (!is.null(genes)) {
+    x <- x[, genes, drop = FALSE]
+  }
+  if (transposed) {
+    return(x)
+  }
+  Matrix::t(x)
+}
+
+.conos_get_pagoda2_cell_names <- function(sample) {
+  if (.conos_pagoda2_has_method(sample, "getRawCounts")) {
+    return(rownames(sample$getRawCounts()))
+  }
+  rownames(sample$counts)
+}
+
+.conos_get_pagoda2_gene_names <- function(sample) {
+  if (.conos_pagoda2_has_method(sample, "getRawCounts")) {
+    return(colnames(sample$getRawCounts()))
+  }
+  colnames(sample$counts)
+}
+
 
 #' Access overdispersed genes from sample
 #' 
@@ -62,7 +113,7 @@ setMethod("getOverdispersedGenes", signature("Conos"), function(sample, n.odgene
 setGeneric("getCellNames", function(sample) standardGeneric("getCellNames"))
 
 #' @rdname getCellNames
-setMethod("getCellNames", signature("Pagoda2"), function(sample) rownames(sample$counts))
+setMethod("getCellNames", signature("Pagoda2"), function(sample) .conos_get_pagoda2_cell_names(sample))
 
 #' @rdname getCellNames
 setMethod("getCellNames", signature("seurat"), function(sample) colnames(sample@data))
@@ -82,7 +133,7 @@ setMethod("getCellNames", signature("Conos"), function(sample) unlist(lapply(sam
 setGeneric("getGenes", function(sample) standardGeneric("getGenes"))
 
 #' @rdname getGenes
-setMethod("getGenes", signature("Pagoda2"), function(sample) colnames(sample$counts))
+setMethod("getGenes", signature("Pagoda2"), function(sample) .conos_get_pagoda2_gene_names(sample))
 
 #' @rdname getGenes
 setMethod("getGenes", signature("seurat"), function(sample) rownames(sample@data))
@@ -154,7 +205,7 @@ setMethod(
 setGeneric("getCountMatrix", function(sample, transposed=FALSE) standardGeneric("getCountMatrix"))
 
 #' @rdname getCountMatrix
-setMethod("getCountMatrix", signature("Pagoda2"), function(sample, transposed=FALSE) if (transposed) sample$counts else Matrix::t(sample$counts))
+setMethod("getCountMatrix", signature("Pagoda2"), function(sample, transposed=FALSE) .conos_get_pagoda2_expression(sample, transposed = transposed))
 
 #' @rdname getCountMatrix
 setMethod("getCountMatrix", signature("seurat"), function(sample, transposed=FALSE) {
@@ -194,11 +245,13 @@ setGeneric("getGeneExpression", function(sample, gene) standardGeneric("getGeneE
 
 #' @rdname getGeneExpression
 setMethod("getGeneExpression", signature("Pagoda2"), function(sample, gene) {
-  if (gene %in% colnames(sample$counts)) {
-    return(sample$counts[, gene])
+  if (gene %in% .conos_get_pagoda2_gene_names(sample)) {
+    x <- .conos_get_pagoda2_expression(sample, genes = gene, transposed = TRUE)
+    return(stats::setNames(as.numeric(x[, gene]), rownames(x)))
   }
 
-  return(stats::setNames(rep(NA, nrow(sample$counts)), rownames(sample$counts)))
+  cells <- .conos_get_pagoda2_cell_names(sample)
+  return(stats::setNames(rep(NA, length(cells)), cells))
 })
 
 #' @rdname getGeneExpression
@@ -248,7 +301,7 @@ setMethod("getGeneExpression", signature("seurat"), function(sample, gene) {
 setGeneric("getRawCountMatrix", function(sample, transposed=FALSE) standardGeneric("getRawCountMatrix"))
 
 #' @rdname getRawCountMatrix
-setMethod("getRawCountMatrix", signature("Pagoda2"), function(sample, transposed=FALSE) if (transposed) sample$misc$rawCounts else t(sample$misc$rawCounts))
+setMethod("getRawCountMatrix", signature("Pagoda2"), function(sample, transposed=FALSE) .conos_get_pagoda2_raw_counts(sample, transposed = transposed))
 
 #' @rdname getRawCountMatrix
 setMethod(

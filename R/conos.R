@@ -24,7 +24,7 @@ scaledMatricesP2 <- function(p2.objs, data.type, od.genes, var.scale) {
   ## Prepare the matrices
   cproj <- lapply(p2.objs, function(r) {
     if (data.type == 'counts') {
-      x <- r$counts[,od.genes]
+      x <- .conos_get_pagoda2_expression(r, genes = od.genes, transposed = TRUE)
     } else if (data.type %in% names(r$reductions)){
       if (!all(od.genes %in% colnames(r$reductions[[data.type]]))) {
         stop("Reduction '", data.type, "' should have columns indexed by gene, with all overdispersed genes presented")
@@ -438,9 +438,10 @@ sn <- function(x) { names(x) <- x; x }
 getClusterRelationshipConsistency <- function(p2list, pjc) {
     hcs <- lapply(sn(names(p2list)), function(n) {
         x <- p2list[[n]]
-        app.cl <- pjc[names(pjc) %in% getCellNames(x)]
-        cpm <- sweep(rowsum(as.matrix(x$misc$rawCounts),
-                            app.cl[rownames(x$misc$rawCounts)]),1, table(app.cl), FUN='/') * 1e6
+        raw.counts <- getRawCountMatrix(x, transposed = TRUE)
+        app.cl <- pjc[names(pjc) %in% rownames(raw.counts)]
+        cpm <- sweep(rowsum(as.matrix(raw.counts),
+                            app.cl[rownames(raw.counts)]),1, table(app.cl), FUN='/') * 1e6
         as.dendrogram(hclust(as.dist( 1 - cor(t(cpm)))))
     })
     ## Compare all dendrograms pairwise
@@ -1221,5 +1222,4 @@ estimateWeightEntropyPerCell <- function(con, factor.per.cell) {
 
   return(entropy.per.cell)
 }
-
 

@@ -245,7 +245,7 @@ plotClusterBoxPlotsByAppType <- function(conos.obj, clustering=NULL, apptypes=NU
     groups <- as.factor(conos.obj$clusters[[clustering]]$groups)
     plot.df <- do.call(rbind,lapply(names(conos.obj$samples), function(n) {
         o <- conos.obj$samples[[n]]
-        grps1 <- groups[intersect(names(groups), rownames(o$counts))]
+        grps1 <- groups[intersect(names(groups), getCellNames(o))]
         tbl1 <- data.frame(
             clname=levels(grps1),
             val=tabulate(grps1),
@@ -291,7 +291,7 @@ getGlobalClusterMarkers <- function(conos.obj, clustering='multi level',
     groups <- as.factor(conos.obj$clusters[[clustering]]$groups)
     ## de lists
     delists <- lapply(conos.obj$samples, function(p2) {
-        cells <- rownames(p2$counts)
+        cells <- getCellNames(p2)
         groups.p2 <- groups[cells]
         de <- p2$getDifferentialGenes(groups=groups.p2)
         de
@@ -633,4 +633,3 @@ plotDEheatmap <- function(con, groups, de=NULL, min.auc=NULL, min.specificity=NU
 
   return(ha)
 }
-
