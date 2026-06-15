@@ -32,6 +32,11 @@ edgeMat(sample)
 
 \item{value}{values to set with edgeMat<-}
 }
+\value{
+the sample, modified in place with the edge matrix stored (invisibly, per the replacement-function convention)
+
+the edge matrix (`edgeMat`) previously stored on the sample, or NULL if none
+}
 \description{
 Set edge matrix edgeMat with certain values on sample
 

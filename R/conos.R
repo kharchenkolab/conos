@@ -1065,12 +1065,39 @@ mergeCountMatrices <- function(cms, transposed=FALSE) {
   return(res)
 }
 
+## Resolve a community-detection method given as a string to its function, for findCommunities(method=).
+## Keeps the function-object form working; adds string sugar (the agent-accessibility win). Names are
+## normalized (case-insensitive, punctuation-stripped) so "leiden"/"Leiden"/"label.prop" all resolve.
+.conos_resolve_community_method <- function(name) {
+  if (!is.character(name) || length(name) != 1L) {
+    stop("community detection method name must be a single string", call. = FALSE)
+  }
+  map <- list(
+    leiden       = leiden.community,
+    walktrap     = igraph::cluster_walktrap,
+    louvain      = igraph::cluster_louvain,
+    multilevel   = igraph::cluster_louvain,
+    infomap      = igraph::cluster_infomap,
+    fastgreedy   = igraph::cluster_fast_greedy,
+    labelprop    = igraph::cluster_label_prop,
+    leadingeigen = igraph::cluster_leading_eigen
+  )
+  fn <- map[[gsub("[._-]", "", tolower(name))]]
+  if (is.null(fn)) {
+    stop("unknown community detection method '", name, "'; choose one of: ",
+         paste(sort(unique(names(map))), collapse = ", "), ", or pass a function", call. = FALSE)
+  }
+  fn
+}
+
 #' Retrieve sample names per cell
 #'
 #' @param samples list of samples
-#' @return list of sample names
+#' @return factor of sample names, named by cell, one entry per cell across all samples
+#' @examples
+#' \donttest{
 #' getSampleNamePerCell(small_panel.preprocessed)
-#'
+#' }
 #' @export
 getSampleNamePerCell=function(samples) {
   cl <- lapply(samples, getCellNames)

@@ -23,6 +23,9 @@ getEmbedding(sample, type)
 
 \item{type}{character Type of embedding to get}
 }
+\value{
+matrix of the requested embedding (cells x coordinates), or NULL if not present
+}
 \description{
 Access embedding from sample
 }

@@ -21,6 +21,9 @@ getCellNames(sample)
 \arguments{
 \item{sample}{sample from which to cell names}
 }
+\value{
+character vector of cell names
+}
 \description{
 Access cell names from sample
 }

@@ -23,6 +23,9 @@ getGeneExpression(sample, gene)
 
 \item{gene}{character vector Genes to access}
 }
+\value{
+named numeric vector of the requested gene's expression across cells (NA for cells/samples lacking the gene)
+}
 \description{
 Access gene expression from sample
 }

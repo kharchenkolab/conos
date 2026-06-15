@@ -21,6 +21,9 @@ getGenes(sample)
 \arguments{
 \item{sample}{sample from which to get genes}
 }
+\value{
+character vector of gene (feature) names
+}
 \description{
 Access genes from sample
 }

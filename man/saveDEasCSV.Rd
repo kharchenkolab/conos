@@ -13,6 +13,9 @@ saveDEasCSV(de.results, saveprefix, gene.metadata = NULL)
 
 \item{gene.metadata}{gene metadta to include (default=NULL)}
 }
+\value{
+No return value; writes one CSV file per cell type (named `<saveprefix><celltype>.csv`) as a side effect.
+}
 \description{
 Save differential expression as table in *csv format
 }

@@ -326,7 +326,7 @@ con$buildGraph(k=10, k.self=5, space='PCA', ncomps=10, n.odgenes=20, matching.me
   \subsection{Arguments}{
     \if{html}{\out{<div class="arguments">}}
     \describe{
-      \item{\code{method}}{community detection method (igraph syntax) (default=leiden.community)}
+      \item{\code{method}}{community detection method: either a function (igraph syntax, e.g. \code{leiden.community} (default) or \code{igraph::cluster_walktrap}) or a string naming one of "leiden", "walktrap", "louvain"/"multilevel", "infomap", "fastgreedy", "labelprop", "leadingeigen" (default=leiden.community)}
       \item{\code{min.group.size}}{numeric Minimal allowed community size (default=0)}
       \item{\code{name}}{character Optional name of the clustering result (will default to the algorithm name) (default=NULL will try to obtain the name from the community detection method, or will use 'community' as a default)}
       \item{\code{test.stability}}{boolean Whether to test stability of community detection (default=FALSE)}

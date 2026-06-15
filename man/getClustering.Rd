@@ -23,6 +23,9 @@ getClustering(sample, type)
 
 \item{type}{character Type of clustering to get}
 }
+\value{
+factor of cluster assignments per cell, or NULL if the requested clustering is absent
+}
 \description{
 Access clustering from sample
 }

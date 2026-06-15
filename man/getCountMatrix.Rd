@@ -5,6 +5,7 @@
 \alias{getCountMatrix,Pagoda2-method}
 \alias{getCountMatrix,seurat-method}
 \alias{getCountMatrix,Seurat-method}
+\alias{getCountMatrix,Conos-method}
 \title{Access count matrix from sample}
 \usage{
 getCountMatrix(sample, transposed = FALSE)
@@ -14,11 +15,16 @@ getCountMatrix(sample, transposed = FALSE)
 \S4method{getCountMatrix}{seurat}(sample, transposed = FALSE)
 
 \S4method{getCountMatrix}{Seurat}(sample, transposed = FALSE)
+
+\S4method{getCountMatrix}{Conos}(sample, transposed = FALSE)
 }
 \arguments{
 \item{sample}{sample from which to get the count matrix}
 
 \item{transposed}{boolean Whether the count matrix should be transposed (default=FALSE)}
+}
+\value{
+the normalized expression matrix (genes x cells, or cells x genes when `transposed=TRUE`)
 }
 \description{
 Access count matrix from sample

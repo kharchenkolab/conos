@@ -1,8 +1,9 @@
 #' Access PCA from sample
 #' 
 #' @param sample sample from which to access PCA
+#' @return matrix of PCA cell embeddings (cells x components); NULL if the sample has no PCA reduction
 #' @rdname getPca
-#' @export 
+#' @export
 setGeneric("getPca", function(sample) standardGeneric("getPca"))
 
 #' @rdname getPca
@@ -30,6 +31,9 @@ setMethod(
     return(Seurat::Embeddings(object = sample))
   }
 )
+
+#' @rdname getPca
+setMethod("getPca", signature("Conos"), function(sample) NULL) # a Conos has no single joint PCA; use getEmbedding()
 
 .conos_pagoda2_has_method <- function(sample, name) {
   is.function(tryCatch(sample[[name]], error = function(e) NULL))
@@ -87,8 +91,9 @@ setMethod(
 #' 
 #' @param sample sample from which to overdispereed genes
 #' @param n.odgenes numeric Number of overdisperesed genes to get
+#' @return character vector of overdispersed gene names
 #' @rdname getOverdispersedGenes
-#' @export 
+#' @export
 setGeneric("getOverdispersedGenes", function(sample, n.odgenes=1000) standardGeneric("getOverdispersedGenes"))
 
 #' @rdname getOverdispersedGenes
@@ -118,8 +123,9 @@ setMethod("getOverdispersedGenes", signature("Conos"), function(sample, n.odgene
 #' Access cell names from sample
 #' 
 #' @param sample sample from which to cell names
+#' @return character vector of cell names
 #' @rdname getCellNames
-#' @export 
+#' @export
 setGeneric("getCellNames", function(sample) standardGeneric("getCellNames"))
 
 #' @rdname getCellNames
@@ -138,8 +144,9 @@ setMethod("getCellNames", signature("Conos"), function(sample) unlist(lapply(sam
 #' Access genes from sample
 #' 
 #' @param sample sample from which to get genes
+#' @return character vector of gene (feature) names
 #' @rdname getGenes
-#' @export 
+#' @export
 setGeneric("getGenes", function(sample) standardGeneric("getGenes"))
 
 #' @rdname getGenes
@@ -159,8 +166,9 @@ setMethod("getGenes", signature("Conos"), function(sample) unique(unlist(lapply(
 #' 
 #' @param sample sample from which to set edge matrix edgeMat with certain values
 #' @param value values to set with edgeMat<-
+#' @return the sample, modified in place with the edge matrix stored (invisibly, per the replacement-function convention)
 #' @rdname edgeMat
-#' @export 
+#' @export
 setGeneric("edgeMat<-", function(sample, value) standardGeneric("edgeMat<-"))
 
 #' @rdname edgeMat
@@ -185,8 +193,9 @@ setMethod(
 #' Access edgeMat from sample
 #' 
 #' @param sample sample from which to access edge matrix edgeMat
+#' @return the edge matrix (`edgeMat`) previously stored on the sample, or NULL if none
 #' @rdname edgeMat
-#' @export 
+#' @export
 setGeneric("edgeMat", function(sample) standardGeneric("edgeMat"))
 
 #' @rdname edgeMat
@@ -210,8 +219,9 @@ setMethod(
 #' 
 #' @param sample sample from which to get the count matrix
 #' @param transposed boolean Whether the count matrix should be transposed (default=FALSE)
+#' @return the normalized expression matrix (genes x cells, or cells x genes when `transposed=TRUE`)
 #' @rdname getCountMatrix
-#' @export 
+#' @export
 setGeneric("getCountMatrix", function(sample, transposed=FALSE) standardGeneric("getCountMatrix"))
 
 #' @rdname getCountMatrix
@@ -243,14 +253,18 @@ setMethod('getCountMatrix', signature('Seurat'), function(sample, transposed=FAL
   }
 )
 
+#' @rdname getCountMatrix
+setMethod("getCountMatrix", signature("Conos"), function(sample, transposed=FALSE) { m <- sample$getJointCountMatrix(raw=FALSE); if (transposed) Matrix::t(m) else m })
+
 
 
 #' Access gene expression from sample
 #' 
 #' @param sample sample from which to access gene expression
 #' @param gene character vector Genes to access
+#' @return named numeric vector of the requested gene's expression across cells (NA for cells/samples lacking the gene)
 #' @rdname getGeneExpression
-#' @export 
+#' @export
 setGeneric("getGeneExpression", function(sample, gene) standardGeneric("getGeneExpression"))
 
 #' @rdname getGeneExpression
@@ -306,8 +320,9 @@ setMethod("getGeneExpression", signature("seurat"), function(sample, gene) {
 #' 
 #' @param sample sample from which to get the raw count matrix
 #' @param transposed boolean Whether the raw count matrix should be transposed (default=FALSE)
+#' @return the raw count matrix (genes x cells, or cells x genes when `transposed=TRUE`)
 #' @rdname getRawCountMatrix
-#' @export 
+#' @export
 setGeneric("getRawCountMatrix", function(sample, transposed=FALSE) standardGeneric("getRawCountMatrix"))
 
 #' @rdname getRawCountMatrix
@@ -360,8 +375,9 @@ setMethod("getRawCountMatrix", signature("Conos"), function(sample, transposed=F
 #' 
 #' @param sample sample from which to get the embedding
 #' @param type character Type of embedding to get
+#' @return matrix of the requested embedding (cells x coordinates), or NULL if not present
 #' @rdname getEmbedding
-#' @export 
+#' @export
 setGeneric("getEmbedding", function(sample, type) standardGeneric("getEmbedding"))
 
 #' @rdname getEmbedding
@@ -397,7 +413,14 @@ setMethod(
 )
 
 #' @rdname getEmbedding
-setMethod("getEmbedding", signature("Conos"), function(sample, type) sample$embedding)
+setMethod("getEmbedding", signature("Conos"), function(sample, type) {
+  ## honor a requested named embedding (con$embeddings[[type]]); fall back to the current joint embedding
+  if (!missing(type) && !is.null(type)) {
+    e <- sample$embeddings[[type]]
+    if (!is.null(e)) return(e)
+  }
+  sample$embedding
+})
 
 
 
@@ -405,8 +428,9 @@ setMethod("getEmbedding", signature("Conos"), function(sample, type) sample$embe
 #' 
 #' @param sample sample from which to get the clustering
 #' @param type character Type of clustering to get
+#' @return factor of cluster assignments per cell, or NULL if the requested clustering is absent
 #' @rdname getClustering
-#' @export 
+#' @export
 setGeneric("getClustering", function(sample, type) standardGeneric("getClustering"))
 
 #' @rdname getClustering

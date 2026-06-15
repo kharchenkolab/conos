@@ -10,9 +10,13 @@ getSampleNamePerCell(samples)
 \item{samples}{list of samples}
 }
 \value{
-list of sample names
-getSampleNamePerCell(small_panel.preprocessed)
+factor of sample names, named by cell, one entry per cell across all samples
 }
 \description{
 Retrieve sample names per cell
+}
+\examples{
+\donttest{
+getSampleNamePerCell(small_panel.preprocessed)
+}
 }

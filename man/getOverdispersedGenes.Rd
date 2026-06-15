@@ -23,6 +23,9 @@ getOverdispersedGenes(sample, n.odgenes = 1000)
 
 \item{n.odgenes}{numeric Number of overdisperesed genes to get}
 }
+\value{
+character vector of overdispersed gene names
+}
 \description{
 Access overdispersed genes from sample
 }

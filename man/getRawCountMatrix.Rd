@@ -23,6 +23,9 @@ getRawCountMatrix(sample, transposed = FALSE)
 
 \item{transposed}{boolean Whether the raw count matrix should be transposed (default=FALSE)}
 }
+\value{
+the raw count matrix (genes x cells, or cells x genes when `transposed=TRUE`)
+}
 \description{
 Access raw count matrix from sample
 }

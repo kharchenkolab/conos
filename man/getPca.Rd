@@ -5,6 +5,7 @@
 \alias{getPca,Pagoda2-method}
 \alias{getPca,seurat-method}
 \alias{getPca,Seurat-method}
+\alias{getPca,Conos-method}
 \title{Access PCA from sample}
 \usage{
 getPca(sample)
@@ -14,9 +15,14 @@ getPca(sample)
 \S4method{getPca}{seurat}(sample)
 
 \S4method{getPca}{Seurat}(sample)
+
+\S4method{getPca}{Conos}(sample)
 }
 \arguments{
 \item{sample}{sample from which to access PCA}
+}
+\value{
+matrix of PCA cell embeddings (cells x components); NULL if the sample has no PCA reduction
 }
 \description{
 Access PCA from sample

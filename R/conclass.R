@@ -437,7 +437,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
     #' @description Find cell clusters (as communities on the joint graph)
     #'
-    #' @param method community detection method (igraph syntax) (default=leiden.community)
+    #' @param method community detection method: either a function (igraph syntax, e.g. \code{leiden.community} (default) or \code{igraph::cluster_walktrap}) or a string naming one of "leiden", "walktrap", "louvain"/"multilevel", "infomap", "fastgreedy", "labelprop", "leadingeigen" (default=leiden.community)
     #' @param min.group.size numeric Minimal allowed community size (default=0)
     #' @param name character Optional name of the clustering result (will default to the algorithm name) (default=NULL will try to obtain the name from the community detection method, or will use 'community' as a default)
     #' @param test.stability boolean Whether to test stability of community detection (default=FALSE)
@@ -457,6 +457,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #'
     findCommunities=function(method=leiden.community, min.group.size=0, name=NULL, test.stability=FALSE, stability.subsampling.fraction=0.95, stability.subsamples=100, verbose=TRUE, cls=NULL, sr=NULL, ...) {
 
+      if (is.character(method)) method <- .conos_resolve_community_method(method) # accept a string, not only a function
       if (is.null(cls)) {
         cls <- method(self$graph, ...)
       }

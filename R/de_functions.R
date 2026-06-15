@@ -189,6 +189,7 @@ getPerCellTypeDE <- function(con.obj, groups=NULL, sample.groups=NULL, cooks.cut
 #' @param de.results output of differential expression results, corrected or uncorrected
 #' @param saveprefix character prefix for output file
 #' @param gene.metadata gene metadta to include (default=NULL)
+#' @return No return value; writes one CSV file per cell type (named `<saveprefix><celltype>.csv`) as a side effect.
 #' @export
 saveDEasCSV <- function(de.results, saveprefix, gene.metadata=NULL) {
     ## find errors
