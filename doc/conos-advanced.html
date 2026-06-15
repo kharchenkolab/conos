@@ -2201,12 +2201,12 @@ vertical-align: -.125em;
 
 <body class="quarto-light">
 
-<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
-<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article toc-left">
+<div id="quarto-sidebar-toc-left" class="sidebar toc-left">
   <nav id="TOC" role="doc-toc" class="toc-active">
     <h2 id="toc-title">Table of contents</h2>
    
-  <ul>
+  <ul class="collapse">
   <li><a href="#plan-the-integration-first" id="toc-plan-the-integration-first" class="nav-link active" data-scroll-target="#plan-the-integration-first">1. Plan the integration first</a></li>
   <li><a href="#choosing-the-alignment-space" id="toc-choosing-the-alignment-space" class="nav-link" data-scroll-target="#choosing-the-alignment-space">2. Choosing the alignment space</a></li>
   <li><a href="#memory-on-large-panels" id="toc-memory-on-large-panels" class="nav-link" data-scroll-target="#memory-on-large-panels">3. Memory on large panels</a></li>
@@ -2216,6 +2216,8 @@ vertical-align: -.125em;
   <li><a href="#recap" id="toc-recap" class="nav-link" data-scroll-target="#recap">Recap</a></li>
   </ul>
 <div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="conos-advanced.ipynb" download="conos-advanced.ipynb"><i class="bi bi-journal-code"></i>Jupyter</a></li></ul></div></nav>
+</div>
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
 </div>
 <main class="content" id="quarto-document-content">
 
@@ -2298,7 +2300,7 @@ vertical-align: -.125em;
 <span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">CCA =</span> <span class="fu">length</span>(<span class="fu">unique</span>(con<span class="sc">$</span>clusters<span class="sc">$</span>leiden_cca<span class="sc">$</span>groups)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>PCA CCA 
-  9   7 </code></pre>
+ 10   7 </code></pre>
 </div>
 </div>
 <p>CCA typically yields a more aggressively mixed graph (often fewer, larger clusters). Inspect both and pick the one whose mixing matches your biological expectation rather than trusting a single default.</p>
@@ -2320,7 +2322,7 @@ vertical-align: -.125em;
 <span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">rotation_RAM_freed_MB =</span> <span class="fu">round</span>(rot_mb, <span class="dv">1</span>), <span class="at">pairs_in_RAM_after_disk =</span> <span class="fu">length</span>(con<span class="sc">$</span>pairs[[<span class="st">&quot;PCA&quot;</span>]]))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>         keep_s.elapsed          disk_s.elapsed   rotation_RAM_freed_MB 
-                   2.82                    3.07                    3.70 
+                   1.85                    1.88                    3.70 
 pairs_in_RAM_after_disk 
                    0.00 </code></pre>
 </div>
@@ -2345,10 +2347,10 @@ pairs_in_RAM_after_disk
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>res</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>  resolution n.clusters modularity
-1        0.5          7  0.7560707
-2        1.0         10  0.7604003
-3        1.5         14  0.7512287
-4        2.0         15  0.7252299</code></pre>
+1        0.5          7  0.7560577
+2        1.0         10  0.7603385
+3        1.5         14  0.7504100
+4        2.0         15  0.7232798</code></pre>
 </div>
 </div>
 <div class="cell">
@@ -2376,7 +2378,7 @@ pairs_in_RAM_after_disk
 <span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">agreement =</span> <span class="fu">mean</span>(td<span class="sc">$</span>labels[held.out] <span class="sc">==</span> ts<span class="sc">$</span>labels[held.out]))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>diffusion    solver agreement 
-0.9639286 0.9667857 0.9896429 </code></pre>
+0.9571429 0.9592857 0.9892857 </code></pre>
 </div>
 </div>
 <p>Use <code>diffusion</code> (the default) for very large atlases and <code>solver</code> when the panel is modest and you want the extra speed/accuracy.</p>

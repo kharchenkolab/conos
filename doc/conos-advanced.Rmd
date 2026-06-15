@@ -3,7 +3,8 @@ title: "Conos advanced: alignment spaces, memory, modalities, label transfer"
 format:
   html:
     toc: true
-    toc-depth: 3
+    toc-location: left
+    toc-depth: 2
     self-contained: true
   ipynb: default
 jupyter: ir44
