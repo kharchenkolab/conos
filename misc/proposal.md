@@ -423,6 +423,16 @@ conos is mid-CRAN-prep (v1.5.4 "fix for CRAN"). Remaining gaps:
 
 ## 9. Consolidated roadmap
 
+> **Implementation status (2026-06-15, `dev`, unpushed, full suite green).** Phases 1–5 of the execution
+> plan are DONE: P1 CRAN `@return` + accessor correctness + `findCommunities`/`runClustering(method=)`
+> string dispatch; P2 `getModalities`/`getDefaultModality` + `planIntegration()` (single-facet-safe);
+> P3 sparse merge (6.7× less transient) + sparse SNN denom + fixed pre-existing `snn=TRUE` R≥4.2 break;
+> P4 §2.2 descoped (profiled non-win) + robustness bugs + `plotMarkerDotPlot`; P5 `runX` verbs preferred
+> with old names **deprecated-warning-now** + Leiden `n.iterations`→5 + `scanResolution()` + **version
+> 2.0.0 / NEWS.md**. **Deferred (lower value / higher risk):** §4.2 varinfo accessor (reach-in not broken),
+> §3.2 reduction reuse (graph-change risk), §6 theme/palette unification (dotplot shipped), §5
+> primary-facet `backend=` (pagoda2-side), Phase-2b `facet=` build-path threading + Path-B fusion.
+
 ### conos 2.0 — the wave release (with pagoda2 2.0; after lstar)
 
 Everything ready and worth shipping goes here. The "1.6" conservative set is folded in (at most a
