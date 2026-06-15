@@ -203,7 +203,7 @@ con$getJointCountMatrix()
   same.factor.downweight = 1,
   k.same.factor = k,
   balancing.factor.per.sample = NULL,
-  pairs.storage = c("keep", "drop")
+  pairs.storage = c("keep", "drop", "disk")
 )}
     \if{html}{\out{</div>}}
   }
@@ -249,7 +249,7 @@ con$getJointCountMatrix()
       \item{\code{same.factor.downweight}}{numeric Optional weighting factor for edges connecting cells with the same cell factor level per cell balancing (default=1.0)}
       \item{\code{k.same.factor}}{integer An neighborhood size that should be used when aligning samples of the same balancing.factor.per.sample level. Setting a value smaller than k will lead to reduction of alingment strenth within the sample batches (default=k)}
       \item{\code{balancing.factor.per.sample}}{A covariate factor per sample that should be controlled for by adjusting edge weights in the joint graph (default=NULL)}
-      \item{\code{pairs.storage}}{character What to do with the O(n^2) per-pair alignment rotations after the graph is built: "keep" (default) retains them in $pairs for reuse/inspection; "drop" frees them to save memory (a subsequent buildGraph call will recompute them).}
+      \item{\code{pairs.storage}}{character What to do with the O(n^2) per-pair alignment rotations after the graph is built: "keep" (default) retains them in $pairs for reuse/inspection; "drop" frees them to save memory (a subsequent buildGraph call will recompute them); "disk" offloads them to a scratch file, freeing RAM while still allowing reuse (a subsequent buildGraph restores them from disk).}
     }
     \if{html}{\out{</div>}}
   }

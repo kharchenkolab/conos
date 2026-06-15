@@ -89,7 +89,7 @@ thread (that would oversubscribe). The levers, with that in mind:
 
 | # | Item | Evidence | Fix | Effort |
 |---|---|---|---|---|
-| **2.1** | **kNN backend.** `N2R::Knn`/`crossKnn` are called with `nThreads` hardcoded to `1` (and N2R 1.0.5's threading is a no-op anyway). Because alignment is parallelized **across** pairs, per-pair threading is usually unnecessary — but the **within-sample** kNN (`getLocalNeighbors`, once per sample) and the **few-samples / large-cells** regime *do* leave cores idle. | `R/conos.R:596,852-856` | Pluggable `.conos_knn_sparse()` (RcppHNSW preferred, N2R fallback) — for consistency with pagoda2, better recall, faster single-thread; **thread only where pair-level parallelism doesn't already saturate cores** (within-sample step, few-pair panels). Not a blanket "8× via threading." | Med |
+| **2.1** | **kNN backend — DEPRIORITIZED (assessed 2026-06-15).** `N2R::Knn`/`crossKnn` are called with `nThreads=1` (and N2R 1.0.5's threading is a no-op). But on inspection **both** kNN types are already fork-parallelized: the cross-kNN runs in the per-pair `papply` loop, **and `getLocalNeighbors` forks across samples** (`papply(samples, ...)`). So the hardcoded `nThreads=1` is largely **by design** — cores are saturated whenever #samples/#pairs ≥ #cores. Per-call threading only helps the narrow **few-large-samples** regime, and switching backend would **change the integration graph** (approximate neighbors differ) for marginal gain. | `R/conos.R:596,607,852-856` | If done at all: a **pluggable, opt-in** `.conos_knn` backend (RcppHNSW), **default N2R to preserve results**; validate recall on real data before any default flip. Low priority — the real perf levers are §5 (memory/disk) and §12 (spcov reducer), not the kNN. | Low (opt-in) |
 | **2.2** | **SVD is all `irlba`.** | `R/conos.R:185,288,344`; `R/integrations.R:313` | Swap to `RSpectra::svds` (near drop-in, consistent with pagoda2.1) for the per-pair decompositions; offer randomized SVD for the few-pass disk-backed case. | Low |
 | **2.3** | **O(n²) pairwise alignment** with no subsampling (the `# TODO: add random subsampling for very large panels` is unimplemented). This — not within-pair threading — is the real scaling wall for large panels. | `R/conclass.R:1045,1058` | Landmark/anchor-sample or subsampled-pair scheme; the pair cache already supports incremental population. | Med–high (later) |
 | **2.4** | **Per-pair re-decomposition — mostly intentional.** Recomputing per pair is *correct* in the general case: each pair should be compared the most sensible way for *that* pair (common genes between those two samples — gene sets can differ; a pair-specific CCA; etc.). The only redundancy is the **simple common case**: identical gene space across datasets + PCA/CPCA, where the per-sample PCA could be reused (conos already pulls the dataset's stored PCA for the *within*-sample step). | `R/conos.R:288`, `access_wrappers.R:9` | In the common-gene + PCA/CPCA case, reuse the precomputed per-sample reduction for the inter-sample step too; keep per-pair recomputation as the default general path. | Low–med |
@@ -213,6 +213,40 @@ Deliverable: a `con$buildGraph(..., pairs.storage="disk")`-style economical path
 "large-collection / disk-backed" recipe, validated to hold peak RSS roughly flat as samples are
 added. This is the highest-value memory work and the through-line of the §1 items.
 
+### Status (2026-06-15) — measured on real data (MantonBM panel `small_panel.preprocessed`; 10x GSM5746259)
+
+- **#2 `pairs.storage = keep|drop|disk` — DONE.** `"disk"` offloads `self$pairs[[space]]` to a scratch
+  `.rds`, frees RAM, and `updatePairs` restores it on the next `buildGraph` (reuse without recompute).
+  Measured: a single CPCA pair (1000 odgenes × 30 comps) is **302 KB resident under `keep` → 0.2 KB
+  under `disk`** (80 KB on disk); resident footprint scales O(N²) across samples (≈1.5 GB freed at
+  100 samples). Tests: `test_pairs_storage.R` (keep/drop/disk + disk round-trip on the real panel).
+- **#1 sample-access streaming — AUDITED, build path is already safe.** The whole `buildGraph` path
+  (`scaledMatricesP2`→`getExpressionBlock(genes=od.genes)`, `getLocalNeighbors`→`getPca`, neighbor
+  matching on rotations) reads only **gene-blocks + reductions + small `varinfo`** — no
+  whole-sample-matrix materialization. So lstar-backed samples stay streamed during alignment. The
+  only `as.matrix(raw.counts)` is in `p2app4conos` (off-path CPM/velocity, not buildGraph).
+- **#1 disk-backed sample data — the mechanism EXISTS in pagoda2.1 and streams through the exact
+  accessors conos reads.** A facet added with `addFacet(backend="lstar")` writes its counts to an
+  lstar zarr store and keeps **no in-memory `rawCounts`** (`facet.R`); `getRawCounts`/
+  `getExpressionBlock`/`viewColMeanVar`/`viewColSumByFac` all branch on `f$backend == "lstar"` and
+  **stream off disk** (`lstar::lstar_read_genes` / `stream_col_stats`). Measured on a **real 10x
+  sample** (GSM5746259, 7532 cells × 15544 genes): the count matrix is **149.9 MB resident in-memory
+  → 0 MB resident disk-backed** (99 MB streamed off the zarr). The values conos consumes are
+  bit-exact across backends — `getExpressionBlock` (the `.conos_get_pagoda2_expression` read path)
+  `max|mem−disk| = 0`, `viewColMeanVar` `≤ 1e-13` — so an lstar-backed sample genuinely lowers peak
+  RAM with no change to the integration graph. This matches the pagoda2 disk-backed benchmarks
+  (zarr 3–16× less RAM on the marrow set). *(Earlier note that "pagoda2 has no disk-backed load
+  path" was wrong: it conflated `addFacet(backend="lstar")` — the real out-of-core path — with
+  `pagoda2:::pagoda2FromLstar`, which is a separate **eager** round-trip import.)*
+- **The one real gap is the PRIMARY facet, not the mechanism.** `addFacet(backend="lstar")` disk-backs
+  only **non-default** facets; the primary RNA facet that conos reads by default is built by
+  `setCountMatrix`/`$new`, which have **no `backend=` option** (always in-memory), and
+  `pagoda2FromLstar` eager-loads. **Action for the wave (pagoda2 side):** give the primary facet a
+  disk-backed option (a `backend=`/`store=` on the loader/constructor) — or, conos-side, let a sample
+  declare which named facet to read so it can target a disk-backed one. The streaming kernels and the
+  conos build path are both ready; this is a small plumbing step, not new machinery. Until `lstar >
+  0.0.1` ships, leave it opt-in. Repro: `misc/diskback_measure.R` (real GSM10x sample).
+
 ---
 
 ## 6. Graphics consistency
@@ -319,7 +353,9 @@ Everything ready and worth shipping goes here. The "1.6" conservative set is fol
   lower peak RAM (the main-path memory lever).
 - §1.2 **`pairs.storage = keep | disk | drop`**; §1.3 free per-pair intermediates / bound fork
   fan-out — together these deliver the **flat-peak-RAM disk-backed mode** (§5).
-- §2.1 Pluggable kNN backend (RcppHNSW), threaded only where pair-level parallelism leaves cores idle.
+- §2.1 kNN backend — **deprioritized** (assessed): both kNN types are already fork-parallelized
+  (cross-kNN per pair; `getLocalNeighbors` across samples), so `nThreads=1` is by design; a swap would
+  change the integration graph for marginal gain. Opt-in only, default N2R, if ever done.
 - §12 **C++/concurrency parity (audit-driven):** fork-safe threading (the pagoda2 N2R lesson),
   threaded/streamed view-aware reducers (the `colSumByFac` disparity), built on `sccore_par.hpp`.
 - §8 CRAN basics (`@return`, declare `grid`, `ComplexHeatmap`→Suggests, `\donttest` examples, unused

@@ -151,7 +151,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @param balancing.factor.per.cell A per-cell factor (discrete factor, named with cell names) specifying a design difference should be controlled for by adjusting edge weights in the joint graph (default=NULL)
     #' @param same.factor.downweight numeric Optional weighting factor for edges connecting cells with the same cell factor level per cell balancing (default=1.0)
     #' @param k.same.factor integer An neighborhood size that should be used when aligning samples of the same balancing.factor.per.sample level. Setting a value smaller than k will lead to reduction of alingment strenth within the sample batches (default=k)
-    #' @param pairs.storage character What to do with the O(n^2) per-pair alignment rotations after the graph is built: "keep" (default) retains them in $pairs for reuse/inspection; "drop" frees them to save memory (a subsequent buildGraph call will recompute them).
+    #' @param pairs.storage character What to do with the O(n^2) per-pair alignment rotations after the graph is built: "keep" (default) retains them in $pairs for reuse/inspection; "drop" frees them to save memory (a subsequent buildGraph call will recompute them); "disk" offloads them to a scratch file, freeing RAM while still allowing reuse (a subsequent buildGraph restores them from disk).
     #' @return joint graph to be used for downstream analysis
     #' @examples
     #' \donttest{
@@ -166,7 +166,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
                         base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, score.component.variance=FALSE,
                         snn=FALSE, snn.quantile=0.9, min.snn.jaccard=0, min.snn.weight=0, snn.k.self=k.self,
                         balance.edge.weights=FALSE, balancing.factor.per.cell=NULL, same.factor.downweight=1.0, k.same.factor=k, balancing.factor.per.sample=NULL,
-                        pairs.storage=c("keep","drop")) {
+                        pairs.storage=c("keep","drop","disk")) {
 
       supported.spaces <- c("CPCA","JNMF","genes","PCA","PMA","CCA")
       if (!space %in% supported.spaces) {
@@ -371,11 +371,22 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
         if(verbose) message('done')
       }
-      ## optionally free the O(n^2) per-pair rotations once the graph is built (re-running buildGraph
-      ## will recompute them); 'keep' (default) retains them for reuse / inspection
+      ## free the O(n^2) per-pair rotations once the graph is built. 'keep' (default) retains them in
+      ## RAM for reuse/inspection; 'drop' discards them (re-run recomputes); 'disk' offloads them to a
+      ## scratch file (RAM freed, restored on the next buildGraph -- see updatePairs).
       if (identical(pairs.storage, "drop")) {
         self$pairs[[space]] <- NULL
         if (verbose) message('dropped cached ', space, ' pairs (pairs.storage="drop")')
+      } else if (identical(pairs.storage, "disk") && length(self$pairs[[space]]) > 0) {
+        if (is.null(self$misc[["pairs.disk"]])) self$misc[["pairs.disk"]] <- list()
+        path <- self$misc[["pairs.disk"]][[space]]
+        if (is.null(path)) {
+          path <- tempfile(paste0("conos_pairs_", space, "_"), fileext = ".rds")
+          self$misc[["pairs.disk"]][[space]] <- path
+        }
+        saveRDS(self$pairs[[space]], path)
+        self$pairs[[space]] <- NULL
+        if (verbose) message('offloaded cached ', space, ' pairs to disk (pairs.storage="disk")')
       }
       self$graph <- g
       return(invisible(g))
@@ -1046,6 +1057,12 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     },
 
     updatePairs=function(space='PCA', data.type='counts', ncomps=50, n.odgenes=1e3, var.scale=TRUE, matching.mask=NULL, exclude.samples=NULL, score.component.variance=FALSE, verbose=FALSE) {
+
+      # restore disk-offloaded pairs (pairs.storage="disk") so the cache can be reused instead of recomputed
+      if (is.null(self$pairs[[space]]) && !is.null(self$misc[["pairs.disk"]][[space]]) && file.exists(self$misc[["pairs.disk"]][[space]])) {
+        self$pairs[[space]] <- readRDS(self$misc[["pairs.disk"]][[space]])
+        if(verbose) message("restored cached ", space, " pairs from disk")
+      }
 
       # make a list of all pairs
       sample.names <- names(self$samples)
