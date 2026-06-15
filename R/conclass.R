@@ -151,6 +151,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @param balancing.factor.per.cell A per-cell factor (discrete factor, named with cell names) specifying a design difference should be controlled for by adjusting edge weights in the joint graph (default=NULL)
     #' @param same.factor.downweight numeric Optional weighting factor for edges connecting cells with the same cell factor level per cell balancing (default=1.0)
     #' @param k.same.factor integer An neighborhood size that should be used when aligning samples of the same balancing.factor.per.sample level. Setting a value smaller than k will lead to reduction of alingment strenth within the sample batches (default=k)
+    #' @param pairs.storage character What to do with the O(n^2) per-pair alignment rotations after the graph is built: "keep" (default) retains them in $pairs for reuse/inspection; "drop" frees them to save memory (a subsequent buildGraph call will recompute them).
     #' @return joint graph to be used for downstream analysis
     #' @examples
     #' \donttest{
@@ -164,12 +165,14 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
                         n.odgenes=2000, matching.mask=NULL, exclude.samples=NULL, common.centering=TRUE, verbose=TRUE,
                         base.groups=NULL, append.global.axes=TRUE, append.decoys=TRUE, decoy.threshold=1, n.decoys=k*2, score.component.variance=FALSE,
                         snn=FALSE, snn.quantile=0.9, min.snn.jaccard=0, min.snn.weight=0, snn.k.self=k.self,
-                        balance.edge.weights=FALSE, balancing.factor.per.cell=NULL, same.factor.downweight=1.0, k.same.factor=k, balancing.factor.per.sample=NULL) {
+                        balance.edge.weights=FALSE, balancing.factor.per.cell=NULL, same.factor.downweight=1.0, k.same.factor=k, balancing.factor.per.sample=NULL,
+                        pairs.storage=c("keep","drop")) {
 
       supported.spaces <- c("CPCA","JNMF","genes","PCA","PMA","CCA")
       if (!space %in% supported.spaces) {
         stop(paste0("only the following spaces are currently supported: [",paste(supported.spaces,collapse=' '),"]"))
       }
+      pairs.storage <- match.arg(pairs.storage)
       supported.matching.methods <- c("mNN", "NN")
       if (!matching.method %in% supported.matching.methods) {
         stop(paste0("only the following matching methods are currently supported: ['",paste(supported.matching.methods,collapse="' '"),"']"))
@@ -367,6 +370,12 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           igraph::graph_from_adjacency_matrix(mode="undirected", weighted=TRUE)
 
         if(verbose) message('done')
+      }
+      ## optionally free the O(n^2) per-pair rotations once the graph is built (re-running buildGraph
+      ## will recompute them); 'keep' (default) retains them for reuse / inspection
+      if (identical(pairs.storage, "drop")) {
+        self$pairs[[space]] <- NULL
+        if (verbose) message('dropped cached ', space, ' pairs (pairs.storage="drop")')
       }
       self$graph <- g
       return(invisible(g))
