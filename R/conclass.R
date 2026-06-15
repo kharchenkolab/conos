@@ -193,7 +193,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         stop(paste0("only the following distance metrics are currently supported: ['",paste(supported.metrics,collapse="' '"),"']"))
       }
 
-      if (!is.null(snn.quantile) && !is.na(snn.quantile)) {
+      if (!is.null(snn.quantile) && !anyNA(snn.quantile)) {
         if(length(snn.quantile)==1)  {
           snn.quantile <- c(1-snn.quantile,snn.quantile)
         }
@@ -298,7 +298,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           m1@x <- rep(1,length(m1@x))
           m2@x <- rep(1,length(m2@x))
 
-          x <- ((m1 %*% m2) * mnn1) / pmax(outer(rowSums(m1),colSums(m2),FUN=pmin),1)
+          x <- .conos_snn_jaccard(m1, m2, mnn1) # sparse; identical to numerator/outer(pmin) but no dense n1xn2 (§1.3)
 
           # scale by Jaccard coefficient
 
@@ -306,7 +306,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
             x@x[x@x<min.snn.jaccard] <- 0
           }
 
-          if(!is.null(snn.quantile) && !is.na(snn.quantile)) {
+          if(!is.null(snn.quantile) && !anyNA(snn.quantile)) {
             xq <- quantile(x@x,p=c(snn.quantile[1],snn.quantile[2]))
             x@x <- pmax(0,pmin(1,(x@x-xq[1])/pmax(1,diff(xq))))
           }

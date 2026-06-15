@@ -1041,28 +1041,19 @@ scanKModularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.in
   return(k.sens)
 }
 
-## Merge into a common matrix, entering 0s for the missing ones
-#' @keywords internal
-mergeCountMatrices <- function(cms, transposed=FALSE) {
-  extendMatrix <- function(mtx, col.names) {
-    new.names <- setdiff(col.names, colnames(mtx))
-    ext.mtx <- Matrix::Matrix(0, nrow=nrow(mtx), ncol=length(new.names), sparse=TRUE) %>%
-      as(class(mtx)) %>% `colnames<-`(new.names)
-    return(cbind(mtx, ext.mtx)[,col.names])
-  }
+## (mergeCountMatrices / extendMatrix live in R/integrations.R — the duplicate copies that were here,
+## shadowed by alphabetical sourcing, have been removed.)
 
-  if (!transposed) {
-    cms %<>% lapply(Matrix::t)
-  }
-
-  gene.union <- lapply(cms, colnames) %>% Reduce(union, .)
-  res <- lapply(cms, extendMatrix, gene.union) %>% Reduce(rbind, .)
-
-  if (!transposed) {
-    res %<>% Matrix::t()
-  }
-
-  return(res)
+## SNN edge weights (Jaccard-style shared-neighbor overlap), evaluated ONLY at the mNN-masked nonzeros so
+## the n1 x n2 neighbor product never densifies. Identical to the dense form
+## `((m1 %*% m2) * mnn1) / pmax(outer(rowSums(m1), colSums(m2), pmin), 1)` -- at a zero of the masked
+## numerator the dense form is 0/denom = 0 too -- but bounded by nnz, not n1*n2 (§1.3, snn=TRUE path).
+.conos_snn_jaccard <- function(m1, m2, mnn1) {
+  S <- methods::as((m1 %*% m2) * mnn1, "TsparseMatrix")
+  if (length(S@x) == 0L) return(methods::as(S, "CsparseMatrix"))
+  denom <- pmax(pmin(Matrix::rowSums(m1)[S@i + 1L], Matrix::colSums(m2)[S@j + 1L]), 1)
+  S@x <- S@x / denom
+  methods::as(Matrix::drop0(S), "CsparseMatrix")
 }
 
 ## Back end for Conos$planIntegration(): poll modalities across samples, assess per-modality feature
