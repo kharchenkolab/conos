@@ -111,6 +111,17 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       self$samples <- c(self$samples, x)
     },
 
+    #' @description Assess what cross-sample integration is realistic before building the graph (a preliminary,
+    #'   read-only step). Polls each sample's molecular modalities (pagoda2.1 facets / Seurat assays), and per
+    #'   modality reports feature commonality across the samples that have it (the shared feature count + the
+    #'   per-pair overlap fraction) with a usable / marginal / not-integrable verdict — surfacing cases like
+    #'   independently-called scATAC peaks that cannot reconcile without consistent pre-processing. Records the
+    #'   resolved common default modality on the object (`$misc$integration.plan`), which buildGraph() reads.
+    #' @param min.common.features integer Shared-feature floor below which a modality is too small for a stable reduction (default=5); the usable/marginal verdict is otherwise driven by the per-pair overlap fraction.
+    #' @param verbose boolean Whether to print the plan (default=TRUE).
+    #' @return invisible data.frame, one row per modality (modality, samples, common.features, overlap.min, overlap.med, verdict).
+    planIntegration=function(min.common.features=5, verbose=TRUE) .conos_plan_integration(self, min.common.features=min.common.features, verbose=verbose),
+
     #' @description Build the joint graph that encompasses all the samples, establishing weighted inter-sample cell-to-cell links
     #'
     #' @param k integer integer Size of the inter-sample neighborhood (default=15)

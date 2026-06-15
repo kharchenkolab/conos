@@ -120,6 +120,62 @@ setMethod(
 setMethod("getOverdispersedGenes", signature("Conos"), function(sample, n.odgenes=NULL) commonOverdispersedGenes(sample$samples,n.odgenes, verbose=FALSE))
 
 
+#' List the molecular modalities (facets / assays) available in a sample
+#'
+#' @param sample a sample (pagoda2, Seurat, ...)
+#' @return character vector of modality names (pagoda2.1 facets, Seurat assays; a single "RNA" for
+#'   single-modality / legacy objects)
+#' @rdname getModalities
+#' @export
+setGeneric("getModalities", function(sample) standardGeneric("getModalities"))
+
+#' @rdname getModalities
+setMethod("getModalities", signature("Pagoda2"), function(sample) {
+  if (.conos_pagoda2_has_method(sample, "listFacets")) return(as.character(sample$listFacets()))
+  "RNA" # legacy single-modality pagoda2
+})
+
+#' @rdname getModalities
+setMethod("getModalities", signature("seurat"), function(sample) "RNA")
+
+#' @rdname getModalities
+setMethod("getModalities", signature("Seurat"), function(sample) { checkSeuratV3(); as.character(Seurat::Assays(sample)) })
+
+
+#' The default molecular modality of a sample (the one integration uses unless told otherwise)
+#'
+#' @param sample a sample (pagoda2, Seurat, ...)
+#' @return character scalar naming the sample's default modality (pagoda2.1 `defaultFacet`, Seurat
+#'   `DefaultAssay`; "RNA" for single-modality / legacy objects)
+#' @rdname getDefaultModality
+#' @export
+setGeneric("getDefaultModality", function(sample) standardGeneric("getDefaultModality"))
+
+#' @rdname getDefaultModality
+setMethod("getDefaultModality", signature("Pagoda2"), function(sample) {
+  df <- tryCatch(sample$defaultFacet, error = function(e) NULL)
+  if (!is.null(df) && nzchar(df)) return(as.character(df))
+  getModalities(sample)[1]
+})
+
+#' @rdname getDefaultModality
+setMethod("getDefaultModality", signature("seurat"), function(sample) "RNA")
+
+#' @rdname getDefaultModality
+setMethod("getDefaultModality", signature("Seurat"), function(sample) { checkSeuratV3(); as.character(Seurat::DefaultAssay(sample)) })
+
+## Feature names for a given modality, cheaply (no count materialization where avoidable): pagoda2.1 facet
+## featureMeta rownames; Seurat assay rownames; else the default-modality genes (legacy pagoda2 / fallback).
+.conos_modality_features <- function(sample, modality) {
+  if (inherits(sample, "Seurat")) { checkSeuratV3(); return(rownames(sample[[modality]])) }
+  if (inherits(sample, "Pagoda2") && .conos_pagoda2_has_method(sample, "getFacet")) {
+    fm <- tryCatch(sample$getFacet(modality)$featureMeta, error = function(e) NULL)
+    if (!is.null(fm)) return(rownames(fm))
+  }
+  getGenes(sample)
+}
+
+
 #' Access cell names from sample
 #' 
 #' @param sample sample from which to cell names

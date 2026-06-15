@@ -85,6 +85,7 @@ con$getJointCountMatrix()
   \itemize{
     \item \href{#method-Conos-initialize}{\code{Conos$new()}}
     \item \href{#method-Conos-addSamples}{\code{Conos$addSamples()}}
+    \item \href{#method-Conos-planIntegration}{\code{Conos$planIntegration()}}
     \item \href{#method-Conos-buildGraph}{\code{Conos$buildGraph()}}
     \item \href{#method-Conos-getDifferentialGenes}{\code{Conos$getDifferentialGenes()}}
     \item \href{#method-Conos-findCommunities}{\code{Conos$findCommunities()}}
@@ -159,6 +160,34 @@ con$getJointCountMatrix()
   }
   \subsection{Returns}{
     invisible view of the full sample list
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Conos-planIntegration"></a>}}
+\if{latex}{\out{\hypertarget{method-Conos-planIntegration}{}}}
+\subsection{\code{Conos$planIntegration()}}{
+  Assess what cross-sample integration is realistic before building the graph (a preliminary,
+  read-only step). Polls each sample's molecular modalities (pagoda2.1 facets / Seurat assays), and per
+  modality reports feature commonality across the samples that have it (the shared feature count + the
+  per-pair overlap fraction) with a usable / marginal / not-integrable verdict — surfacing cases like
+  independently-called scATAC peaks that cannot reconcile without consistent pre-processing. Records the
+  resolved common default modality on the object (`$misc$integration.plan`), which buildGraph() reads.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Conos$planIntegration(min.common.features = 5, verbose = TRUE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{min.common.features}}{integer Shared-feature floor below which a modality is too small for a stable reduction (default=5); the usable/marginal verdict is otherwise driven by the per-pair overlap fraction.}
+      \item{\code{verbose}}{boolean Whether to print the plan (default=TRUE).}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    invisible data.frame, one row per modality (modality, samples, common.features, overlap.min, overlap.med, verdict).
   }
 }
 

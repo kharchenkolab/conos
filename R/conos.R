@@ -1065,6 +1065,63 @@ mergeCountMatrices <- function(cms, transposed=FALSE) {
   return(res)
 }
 
+## Back end for Conos$planIntegration(): poll modalities across samples, assess per-modality feature
+## commonality, record the resolved default modality on the object. Read-only diagnostic (§3.3).
+.conos_plan_integration <- function(con, min.common.features = 5, verbose = TRUE) {
+  samples <- con$samples
+  if (length(samples) < 1L) stop("no samples in the Conos object", call. = FALSE)
+  n <- length(samples)
+  mods.per <- lapply(samples, getModalities)
+  defs <- vapply(samples, getDefaultModality, character(1))
+  all.mods <- unique(unlist(mods.per))
+
+  overlap_stats <- function(feats) {
+    feats <- Filter(function(x) length(x) > 0L, feats)
+    if (length(feats) < 2L) return(c(min = NA_real_, med = NA_real_))
+    fr <- apply(utils::combn(length(feats), 2L), 2L, function(ix) {
+      a <- feats[[ix[1]]]; b <- feats[[ix[2]]]
+      d <- min(length(a), length(b)); if (d == 0L) 0 else length(intersect(a, b)) / d
+    })
+    c(min = min(fr), med = stats::median(fr))
+  }
+
+  rows <- lapply(all.mods, function(mod) {
+    have <- vapply(mods.per, function(m) mod %in% m, logical(1))
+    feats <- lapply(samples[have], .conos_modality_features, modality = mod)
+    common <- if (length(feats) > 0L) Reduce(intersect, feats) else character(0)
+    ov <- overlap_stats(feats)
+    ## Verdict keys on the OVERLAP FRACTION (the homology/reconciliation question — does the feature space
+    ## line up across samples?), not absolute size; a small-but-fully-shared panel (e.g. 10 ADT proteins) is
+    ## fine. Absolute count only matters below the reduction floor (min.common.features, ~5 for a PCA).
+    verdict <- if (length(common) == 0L) "not-integrable: no shared features" else
+      if (!is.na(ov[["med"]]) && ov[["med"]] < 0.05) "not-integrable: ~no feature overlap" else
+      if (length(common) < min.common.features) "marginal: too few shared features" else
+      if (!is.na(ov[["med"]]) && ov[["med"]] < 0.5) "marginal: features only partly shared" else
+      if (sum(have) < n) sprintf("usable (partial: %d/%d)", sum(have), n) else "usable"
+    data.frame(modality = mod, samples = sprintf("%d/%d", sum(have), n),
+               common.features = length(common),
+               overlap.min = round(unname(ov[["min"]]), 3), overlap.med = round(unname(ov[["med"]]), 3),
+               verdict = verdict, stringsAsFactors = FALSE)
+  })
+  plan <- do.call(rbind, rows)
+
+  ## a single common default modality across all samples -> what buildGraph uses; else NA (heterogeneous)
+  default.modality <- if (length(unique(defs)) == 1L) defs[[1]] else NA_character_
+  con$misc[["integration.plan"]] <- list(default.modality = default.modality, table = plan,
+                                         min.common.features = min.common.features)
+  if (verbose) {
+    message("Integration plan — ", n, " samples")
+    print(plan, row.names = FALSE)
+    if (is.na(default.modality)) {
+      message("default modality differs across samples (", paste(unique(defs), collapse = ", "),
+              "); pass facet= to buildGraph() to choose one")
+    } else {
+      message("common default modality: ", default.modality, " — buildGraph() integrates on it")
+    }
+  }
+  invisible(structure(plan, class = c("conosIntegrationPlan", "data.frame")))
+}
+
 ## Resolve a community-detection method given as a string to its function, for findCommunities(method=).
 ## Keeps the function-object form working; adds string sugar (the agent-accessibility win). Names are
 ## normalized (case-insensitive, punctuation-stripped) so "leiden"/"Leiden"/"label.prop" all resolve.
