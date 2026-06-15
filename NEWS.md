@@ -38,6 +38,8 @@ Major release, coordinated with pagoda2 2.0 and lstar.
 * `scanKModularity(plot = TRUE)` now draws its plot (it was built and silently discarded) and its x/y axis
   labels are no longer swapped.
 * `plotClusterStability(what = "dend")` returns the dendrogram (invisibly) instead of `NULL`.
+* `propagateLabels(method = "solver", solver = "Matrix")` no longer spuriously warns about `rmumps`
+  (the warning is now raised only when the `"mumps"` solver is requested but unavailable).
 
 ## Performance and memory
 

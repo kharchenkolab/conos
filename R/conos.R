@@ -1258,8 +1258,8 @@ propagateLabelsSolver <- function(graph, labels, solver="mumps") {
     stop("Unknown solver: ", solver, ". Only 'mumps' and 'Matrix' are currently supported")
   }
 
-  if (!requireNamespace("rmumps", quietly=TRUE)) {
-    warning("Package 'rmumps' is required to use 'mumps' solver, which is the default option. Falliing back to solver='Matrix'")
+  if (solver == "mumps" && !requireNamespace("rmumps", quietly=TRUE)) {
+    warning("Package 'rmumps' is required for the 'mumps' solver; falling back to solver='Matrix'")
     solver <- "Matrix"
   }
 
