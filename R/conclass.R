@@ -118,11 +118,11 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @param k.self.weight numeric Weight multiplier on the intra-sample edges relative to inter-sample edges (default=0.1)
     #' @param alignment.strength numeric Alignment strength (default=NULL will result in alignment.strength=0)
     #' @param space character Reduced expression space used to establish putative alignments between pairs of samples (default='PCA'). Currently supported spaces are:
-    #'     --- "CPCA" Common principal component analysis
+    #'     --- "PCA" Reciprocal PCA: each sample's PCA loadings are interleaved into a shared gene-loading basis both samples project into. The recommended general-purpose default -- fast and robust.
+    #'     --- "CPCA" Common principal component analysis. Available but not the default: in practice it is much slower without a measurable improvement over reciprocal PCA.
+    #'     --- "CCA" Canonical correlation analysis. Useful for heterogeneous integrations, but heavier and prone to over-smoothing (over-merging distinct populations) in low-correction cases -- opt-in, not a default.
     #'     --- "JNMF" Joint NMF
     #'     --- "genes" Gene expression space (log2 transformed)
-    #'     --- "PCA" Principal component analysis
-    #'     --- "CCA" Canonical correlation analysis
     #'     --- "PMA" (Penalized Multivariate Analysis <https://cran.r-project.org/web/packages/PMA/index.html>)
     #' @param matching.method character Matching method (default='mNN'). Currently supported methods are "NN" (nearest neighbors) or "mNN" (mututal nearest neighbors).
     #' @param metric character Distance metric to measure similarity (default='angular'). Currenlty supported metrics are "angular" and "L2".
@@ -384,7 +384,10 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           path <- tempfile(paste0("conos_pairs_", space, "_"), fileext = ".rds")
           self$misc[["pairs.disk"]][[space]] <- path
         }
-        saveRDS(self$pairs[[space]], path)
+        ## The cache is a list of many small DENSE rotation matrices read back whole, so a single flat
+        ## uncompressed saveRDS is the fastest store -- benchmarked faster + smaller than per-pair lstar
+        ## zarr, which is reserved for the large streamed count matrices where chunked reads pay off.
+        saveRDS(self$pairs[[space]], path, compress = FALSE)
         self$pairs[[space]] <- NULL
         if (verbose) message('offloaded cached ', space, ' pairs to disk (pairs.storage="disk")')
       }

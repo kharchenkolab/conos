@@ -25,9 +25,9 @@ pain points, in priority order: **memory use, speed, and integration quality.**
    `.Deprecated()`), and reserve outright *removals* (`.Defunct`) for the next major. cacoa is off
    CRAN and migrates against the deprecated-but-working API at its own pace. So "conservative" is
    now a user-experience / cacoa-migration choice, not a CRAN constraint.
-3. **Default flips land in 2.0, clearly noted.** Because this is the major bump, the decided
-   default changes (e.g. `space`→CPCA, Leiden iterations) ship here with a prominent NEWS entry —
-   no need to defer them further.
+3. **Default changes land in 2.0, clearly noted.** Because this is the major bump, any decided
+   default change (e.g. Leiden iterations) ships here with a prominent NEWS entry. *(The default
+   `space` stays `PCA`/reciprocal — CPCA deprioritized, CCA opt-in — so there is no `space` flip.)*
 4. **One coordinated wave; lstar first.** Submit **lstar** (the leaf dependency) first, then
    **pagoda2 2.0 + conos 2.0 together** (co-dependent, noted in each `cran-comments.md`). The
    pagoda2.1 accessor fixes (§4) are still a hard prerequisite — pagoda2 2.0's revdep check needs a
@@ -106,7 +106,7 @@ embedded. The quality levers and their current defaults:
 
 | Lever | Default | Effect / concern |
 |---|---|---|
-| `space` | **`PCA`** (current) → **`CPCA`** (decided) | `PCA` is *concatenated per-pair PCAs*, the weakest aligner — correspondence rests entirely on mNN. **`CPCA`** (common principal components, `src/cpca.cpp`) is the principled shared-subspace choice and the original-paper recommendation — **the agreed default.** `CCA` aligns *too aggressively* (over-merges distinct populations) and stays **opt-in, not a default**. |
+| `space` | **`PCA`** (keep — decided) | `PCA` here is **reciprocal PCA** (`quickPlainPCA`): each sample's PCA loadings are interleaved into a shared gene-loading basis both samples project into, with mNN matching across it — *not* a naive concatenation. **Decision (reversed from an earlier draft): keep `PCA` as the default.** `CPCA` (common principal components, `src/cpca.cpp`) has **not proved helpful in practice** — it is much slower and does not measurably improve results — so it stays available but **non-default**. `CCA` *is* useful for **heterogeneous** integrations, but is heavier and **over-smooths in low-correction cases** (over-merges distinct populations), so it stays **opt-in, not a default**. |
 | `ncomps` | **40** | **Per-pair** alignment dimensionality (the shared subspace between *two* samples) — *not* a whole-atlas representation; atlas-scale resolution comes from the *graph* connectivity across all pairs, not from this rank. So 40 is reasonable and raising it is not clearly motivated. (Minor: `quickCPCA`/`quickCCA` default internally to 100 but `buildGraph` truncates to 40 — an inconsistency worth reconciling for clarity, not a quality problem.) |
 | `k` / `k.self` / `k.self.weight` | 15 / 10 / 0.1 | Mixing strength vs structure preservation; the key tuning axis. |
 | `matching.method` | `mNN` | mNN (conservative) vs NN (permissive). |
@@ -116,12 +116,14 @@ embedded. The quality levers and their current defaults:
 
 **Quality-improvement suggestions** (the heart of the upgrade):
 
-- **3.1 — Better defaults (behavior-affecting; stage carefully).** **Switch the default `space`
-  `PCA` → `CPCA`** (*decided* — CPCA is the principled shared-subspace aligner and the original-paper
-  default; `CCA` over-merges and stays opt-in, never a default). Also bump Leiden `n.iterations`
-  2 → ~5–10 and surface `resolution` + a resolution-sweep helper. (`ncomps=40` is **per-pair** and
-  fine — see the levers table — so it is *not* on this list.) *These ship in conos 2.0 (the major
-  bump) with a prominent NEWS entry flagging the reproducibility change.*
+- **3.1 — Better defaults (behavior-affecting; stage carefully).** **Keep the default `space` =
+  `PCA` (reciprocal PCA)** (*decided — reversed from an earlier "→ CPCA" draft*): CPCA has not proved
+  helpful in practice (much slower, no measurable improvement), so it stays non-default; `CCA` helps
+  for heterogeneous integration but is heavier and over-smooths low-correction cases, so it stays
+  opt-in. So there is **no default-`space` change** in conos 2.0. The remaining default work: bump
+  Leiden `n.iterations` 2 → ~5–10 and surface `resolution` + a resolution-sweep helper. (`ncomps=40`
+  is **per-pair** and fine — see the levers table — so it is *not* on this list.) *Any
+  behavior-affecting default that does change ships in conos 2.0 with a prominent NEWS entry.*
 - **3.2 — Reuse the precomputed reduction in the common case (not a blanket change).** Per-pair
   recomputation is the *right* behavior in general — each pair should be aligned the most sensible
   way for that pair (common genes between those two samples, a pair-specific CCA, etc.). The narrow
@@ -216,10 +218,17 @@ added. This is the highest-value memory work and the through-line of the §1 ite
 ### Status (2026-06-15) — measured on real data (MantonBM panel `small_panel.preprocessed`; 10x GSM5746259)
 
 - **#2 `pairs.storage = keep|drop|disk` — DONE.** `"disk"` offloads `self$pairs[[space]]` to a scratch
-  `.rds`, frees RAM, and `updatePairs` restores it on the next `buildGraph` (reuse without recompute).
+  file, frees RAM, and `updatePairs` restores it on the next `buildGraph` (reuse without recompute).
   Measured: a single CPCA pair (1000 odgenes × 30 comps) is **302 KB resident under `keep` → 0.2 KB
   under `disk`** (80 KB on disk); resident footprint scales O(N²) across samples (≈1.5 GB freed at
   100 samples). Tests: `test_pairs_storage.R` (keep/drop/disk + disk round-trip on the real panel).
+  **Store format — decided: flat uncompressed `saveRDS`, not lstar/zarr.** The cache is a list of many
+  *small dense* rotation matrices, each read back whole and each with its own gene axis (one zarr store
+  per pair → ~5000 stores at 100 samples). Benchmarked on a realistic 2000×30 rotation,
+  `saveRDS(compress=FALSE)` beats per-pair lstar-zarr on write (3 ms vs 16 ms), read (3 ms vs 6 ms),
+  and size (0.62 MB vs 0.67 MB) — zarr's per-store metadata/directory overhead dominates for small
+  dense payloads. lstar/zarr stays the tool for the **large streamed count matrices** (#1), where
+  chunked/threaded partial reads pay off; it is not a fit for the rotation cache.
 - **#1 sample-access streaming — AUDITED, build path is already safe.** The whole `buildGraph` path
   (`scaledMatricesP2`→`getExpressionBlock(genes=od.genes)`, `getLocalNeighbors`→`getPca`, neighbor
   matching on rotations) reads only **gene-blocks + reductions + small `varinfo`** — no
@@ -370,8 +379,9 @@ Everything ready and worth shipping goes here. The "1.6" conservative set is fol
   fix robustness bugs (see §11 for the sccore decision).
 - §3.4 Integration-QC wrapper (mixing entropy + over-integration); §3.5 surface SNN/edge-balancing.
 
-**Tier C — decided default flips (major-version-appropriate, NEWS-flagged):**
-- §3.1 **Default `space` PCA→CPCA** (decided; `CCA` stays opt-in — too aggressive); Leiden
+**Tier C — decided default changes (major-version-appropriate, NEWS-flagged):**
+- §3.1 **Default `space` stays `PCA`** (reciprocal PCA) — CPCA deprioritized (slow, no measurable gain),
+  CCA opt-in (heterogeneous-only, over-smooths low-correction). **No `space` flip.** Remaining: Leiden
   `n.iterations` 2→~5–10 + a resolution-sweep helper. (`ncomps=40` left as-is — per-pair.)
 
 ### Deferred to the next conos release (post-wave, GitHub-first, with cacoa migration)
@@ -389,9 +399,10 @@ Everything ready and worth shipping goes here. The "1.6" conservative set is fol
 - **Release shape** — no intermediate conos 1.6 CRAN release; **one coordinated wave** (lstar first,
   then pagoda2 2.0 + conos 2.0 together). The non-breaking set folds into conos 2.0 (at most a `dev`
   tag, not merged to main). cacoa stays off CRAN and migrates later on GitHub.
-- **Default `space` = `CPCA`** (currently `PCA`). CPCA is the principled shared-subspace aligner;
-  `CCA` is too aggressive (over-merges) and stays opt-in, never a default. (Behavior-affecting — land
-  with a NEWS note in 2.0.)
+- **Default `space` stays `PCA`** (reciprocal PCA). *Reversed from an earlier "→ CPCA" draft:* CPCA
+  has not proved helpful in practice (much slower, no measurable improvement), so it stays non-default;
+  `CCA` is useful for heterogeneous integrations but heavier and over-smooths in low-correction cases,
+  so it stays opt-in. No default-`space` change in 2.0.
 - **`ncomps=40` stays** — it's per-pair alignment rank, not whole-atlas representation.
 - **API realignment is additive in 2.0** — `runX` preferred, old names deprecated-but-working;
   removals deferred to the next major.

@@ -215,11 +215,11 @@ con$getJointCountMatrix()
       \item{\code{k.self.weight}}{numeric Weight multiplier on the intra-sample edges relative to inter-sample edges (default=0.1)}
       \item{\code{alignment.strength}}{numeric Alignment strength (default=NULL will result in alignment.strength=0)}
       \item{\code{space}}{character Reduced expression space used to establish putative alignments between pairs of samples (default='PCA'). Currently supported spaces are:
---- "CPCA" Common principal component analysis
+--- "PCA" Reciprocal PCA: each sample's PCA loadings are interleaved into a shared gene-loading basis both samples project into. The recommended general-purpose default -- fast and robust.
+--- "CPCA" Common principal component analysis. Available but not the default: in practice it is much slower without a measurable improvement over reciprocal PCA.
+--- "CCA" Canonical correlation analysis. Useful for heterogeneous integrations, but heavier and prone to over-smoothing (over-merging distinct populations) in low-correction cases -- opt-in, not a default.
 --- "JNMF" Joint NMF
 --- "genes" Gene expression space (log2 transformed)
---- "PCA" Principal component analysis
---- "CCA" Canonical correlation analysis
 --- "PMA" (Penalized Multivariate Analysis <https://cran.r-project.org/web/packages/PMA/index.html>)}
       \item{\code{matching.method}}{character Matching method (default='mNN'). Currently supported methods are "NN" (nearest neighbors) or "mNN" (mututal nearest neighbors).}
       \item{\code{metric}}{character Distance metric to measure similarity (default='angular'). Currenlty supported metrics are "angular" and "L2".}
