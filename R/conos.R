@@ -1274,7 +1274,10 @@ propagateLabelsSolver <- function(graph, labels, solver="mumps") {
 
   laplasian.uu <- (weight.sum.mat[unlabeled.cbs, unlabeled.cbs] - adj.mat[unlabeled.cbs, unlabeled.cbs])
 
-  type.scores <- Matrix::sparseMatrix(i=1:length(labels), j=as.integer(labels), x=1.0) %>%
+  ## force ncol = nlevels(labels): if the labelled subset happens to miss a level, sparseMatrix() would
+  ## otherwise size to max(code) and the colnames<-levels() assignment would fail.
+  type.scores <- Matrix::sparseMatrix(i=1:length(labels), j=as.integer(labels), x=1.0,
+                                      dims=c(length(labels), nlevels(labels))) %>%
     `colnames<-`(levels(labels)) %>% `rownames<-`(labeled.cbs)
 
   right.side <- Matrix::drop0(adj.mat[unlabeled.cbs, labeled.cbs] %*% type.scores)

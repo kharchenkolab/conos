@@ -40,6 +40,8 @@ Major release, coordinated with pagoda2 2.0 and lstar.
 * `plotClusterStability(what = "dend")` returns the dendrogram (invisibly) instead of `NULL`.
 * `propagateLabels(method = "solver", solver = "Matrix")` no longer spuriously warns about `rmumps`
   (the warning is now raised only when the `"mumps"` solver is requested but unavailable).
+* `propagateLabels(method = "solver")` no longer errors when the labelled (reference) cells miss one or
+  more cluster levels (the label-indicator matrix is now sized to the number of levels).
 
 ## Performance and memory
 

@@ -25,3 +25,15 @@ test_that("propagateLabels recovers held-out labels (diffusion and solver) with 
   expect_gt(acc.s, baseline)
   expect_gt(mean(rd$labels[hidden] == rs$labels[hidden]), 0.7)          # the two engines largely agree
 })
+
+test_that("propagateLabels(solver) tolerates a reference missing some cluster levels", {
+  skip_if_not_installed("pagoda2")
+  data("small_panel.preprocessed", package = "conos", envir = environment())
+  con <- Conos$new(small_panel.preprocessed, n.cores = 1)
+  con$runGraph(k = 15, k.self = 5, space = "PCA", ncomps = 20, n.odgenes = 1000, verbose = FALSE)
+  con$runClustering(verbose = FALSE)
+  g <- con$clusters$leiden$groups
+  known <- g[g != levels(g)[1]]                                         # one whole level absent from the reference
+  r <- con$propagateLabels(labels = known, method = "solver", solver = "Matrix")  # used to error: colnames vs ncol
+  expect_setequal(names(r$labels), names(g))                            # still a label for every cell
+})
