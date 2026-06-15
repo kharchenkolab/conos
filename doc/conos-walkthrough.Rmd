@@ -10,39 +10,46 @@ format:
 jupyter: ir44
 ---
 
-**Conos** (*Clustering On Network of Samples*) analyses a **collection** of single-cell samples *together*.
-Rather than merging all cells into one matrix, it aligns each pair of samples in a shared space, stitches
-their neighbourhoods into a single weighted graph, and then runs clustering, embedding, and differential
-expression on that joint graph. Cells of the same type connect across samples, while each sample keeps its
-own structure — so you can ask:
+**Conos** (*Clustering On Network of Samples*) analyses a *collection* of single-cell samples **together**.
+Rather than merging all the cells into one matrix, it aligns each pair of samples in a shared space and
+stitches their neighbourhoods into a single weighted graph. On that joint graph it then runs clustering,
+embedding, and differential expression — so cells of the same type connect *across* samples while each
+sample keeps its own structure.
 
-* which cell populations are **shared** across samples?
-* how do their **proportions** differ between conditions?
-* can I **carry annotations** from one labelled sample to the rest?
+In this walkthrough we take a panel of four bone-marrow (BM) and cord-blood (CB) samples through the whole
+standard workflow:
 
-This walkthrough runs the standard workflow end to end on a small panel of bone-marrow (BM) and cord-blood
-(CB) samples. Once you are comfortable here, the [advanced tutorial](conos-advanced.ipynb) covers the knobs
-that matter when integration is harder (alignment spaces, memory, multimodal data, label-transfer engines).
+1. pre-process each sample on its own,
+2. build the **joint graph** and find clusters of corresponding cells across all samples,
+3. embed and visualise the joint structure,
+4. characterise clusters with **marker genes**, and
+5. **transfer cell-type annotations** from one labelled sample to the rest.
+
+When you need to control *how* the samples are aligned (alignment spaces, strength, memory, multimodal
+data), see the [advanced tutorial](conos-advanced.ipynb).
 
 ## Contents
 
-- [Loading your data](#loading-your-data)
+- [Loading the data](#loading-the-data)
 - [Pre-processing each sample](#pre-processing-each-sample)
+- [Constructing the Conos object](#constructing-the-conos-object)
 - [Building the joint graph](#building-the-joint-graph)
 - [Joint clustering](#joint-clustering)
 - [The joint embedding](#the-joint-embedding)
+- [Shared clusters vs per-sample clusters](#shared-clusters-vs-per-sample-clusters)
 - [Are the samples well mixed?](#are-the-samples-well-mixed)
 - [Cluster composition across samples](#cluster-composition-across-samples)
-- [A per-sample view](#a-per-sample-view)
+- [Looking at a gene](#looking-at-a-gene)
 - [Marker genes](#marker-genes)
-- [Transferring annotations](#transferring-annotations)
+- [Transferring annotations between samples](#transferring-annotations-between-samples)
+- [Markers of the transferred cell types](#markers-of-the-transferred-cell-types)
 - [Recap](#recap)
 
-## Loading your data
+## Loading the data
 
-A Conos panel is a **named list of per-sample objects** — one per sample, each already processed with
+A Conos panel is a **named list of per-sample objects** — one per sample, each processed with
 [pagoda2](https://github.com/kharchenkolab/pagoda2) (or Seurat). You build one object per sample from its
-own count data. `Pagoda2$from()` accepts the formats you are most likely to have:
+own count data; `Pagoda2$from()` reads the formats you are most likely to have:
 
 ```{r}
 #| eval: false
@@ -58,11 +65,9 @@ s2 <- Pagoda2$from10xH5("sample2_filtered_feature_bc_matrix.h5")
 s3 <- Pagoda2$from(my_counts_matrix)
 ```
 
-One rule: **cell names must be unique across the whole panel**, so that no two cells (even in different
-samples) collide. The easiest way is to prefix each sample's barcodes with the sample name.
-
-For a runnable example we use a ready-made panel of four samples from the `conosPanel` package. Each element
-is a sparse counts matrix (genes × cells):
+For a runnable example we use a ready-made panel from the `conosPanel` package
+(`install.packages("conosPanel", repos = "https://kharchenkolab.github.io/drat/")`). It is a named list of
+four sparse count matrices (genes × cells) — two bone-marrow and two cord-blood samples:
 
 ```{r}
 #| message: false
@@ -74,41 +79,63 @@ panel <- conosPanel::panel
 str(panel, 1)
 ```
 
-To keep the tutorial fast we down-sample each matrix to a few hundred cells; in a real analysis you would
-use them all.
+**Cell names must be unique across the whole panel** — no two cells, even in different samples, may share a
+name. Here each barcode is already prefixed with its sample id, so there are no collisions:
+
+```{r}
+head(colnames(panel[[1]]), 3)
+any(duplicated(unlist(lapply(panel, colnames))))   # FALSE = all unique
+```
+
+To keep the tutorial fast we down-sample each matrix to a thousand cells; in a real analysis you would use
+them all (and would first filter out low-count / dying cells as part of standard QC).
 
 ```{r}
 set.seed(1)
-panel <- lapply(panel, function(m) m[, sample(ncol(m), 600)])
+panel <- lapply(panel, function(m) m[, sample(ncol(m), 1000)])
 ```
 
 ## Pre-processing each sample
 
-Each count matrix becomes a `Pagoda2` object carrying the **PCA reduction** that Conos aligns on. A single
-call does it: `run()` normalises the variance and computes the PCA (`steps = c("variance", "pca")`), taking
-care of the QC and gene-filtering prerequisites along the way. We map it over the panel:
+Each sample is turned into a `Pagoda2` object and processed **on its own**: normalisation, a PCA reduction
+(which Conos will align on), a within-sample kNN graph, and a within-sample clustering. A single `run()`
+call does all of it, so the whole panel is one short `lapply`:
 
 ```{r}
 #| message: false
 #| warning: false
 samples <- lapply(panel, function(counts) {
-  Pagoda2$from(counts, verbose = FALSE)$run(steps = c("variance", "pca"), verbose = FALSE)
+  Pagoda2$from(counts, verbose = FALSE)$run(verbose = FALSE)
 })
 ```
 
-That's the whole per-sample preparation — no manual gene-name cleanup or parameter tuning required; the
-defaults are sensible for typical 10x data.
+We now have a named list of `Pagoda2` objects — the starting point for Conos:
 
-## Building the joint graph
+```{r}
+names(samples)
+```
 
-Create the Conos object from the per-sample objects, then build the joint alignment graph. `runGraph()`
-aligns **every pair** of samples in a shared space (`space = "PCA"`, *reciprocal PCA* — the recommended
-default) and stitches their neighbourhoods into one graph. `k` sets the inter-sample neighbourhood size and
-`k.self` the within-sample one.
+(If you prefer Seurat, pre-process with `basicSeuratProc()` instead and pass the resulting list straight to
+`Conos$new()`; everything below is identical.)
+
+## Constructing the Conos object
+
+`Conos$new()` simply collects the per-sample objects — nothing is computed yet. `n.cores` controls the
+parallelism of the steps that follow (graph construction in particular benefits from more cores):
 
 ```{r}
 con <- Conos$new(samples, n.cores = 1)
 ```
+
+## Building the joint graph
+
+`runGraph()` is the heart of Conos. For **every pair** of samples it projects the two into a shared space,
+finds mutual nearest neighbours between them, and adds within-sample neighbours so that every cell is
+connected — producing one joint graph spanning the whole panel.
+
+The `space` argument chooses how each pair is matched. `"PCA"` (reciprocal PCA, the default used here) is
+fast and robust and is the right choice for most panels; `"CCA"` helps for very heterogeneous panels;
+`"CPCA"` and `"genes"` are also available. The [advanced tutorial](conos-advanced.ipynb) compares them.
 
 ```{r}
 #| message: false
@@ -117,8 +144,8 @@ con$runGraph(k = 15, k.self = 5, space = "PCA", ncomps = 30, n.odgenes = 2000, v
 
 ## Joint clustering
 
-Detect cell clusters as **communities** on the joint graph (Leiden by default). Because the graph spans all
-samples, a cluster is a population defined consistently across the whole panel:
+Now detect cell clusters as **communities** on the joint graph (Leiden by default). Because the graph spans
+all samples, each cluster is a population defined *consistently* across the whole panel:
 
 ```{r}
 #| message: false
@@ -127,8 +154,7 @@ con$runClustering(verbose = FALSE)
 
 ## The joint embedding
 
-Compute a 2-D embedding of the joint graph (UMAP) so we can look at it, and colour it by the clusters we
-just found:
+Compute a 2-D embedding of the joint graph (UMAP) so we can see it, then colour it by the clusters:
 
 ```{r}
 #| message: false
@@ -141,18 +167,39 @@ con$runEmbedding(method = "UMAP", min.visited.verts = 100, verbose = FALSE)
 con$plotGraph(clustering = "leiden")
 ```
 
-Each blob is a cluster; nearby blobs are transcriptionally similar populations.
+Each blob is a cluster; neighbouring blobs are transcriptionally similar populations.
+
+## Shared clusters vs per-sample clusters
+
+Why bother with a joint graph at all? Each sample was *also* clustered on its own during pre-processing.
+Laid over the joint embedding, those **independent** clusterings use a different, unrelated set of labels in
+every sample — cluster "3" in one sample has nothing to do with cluster "3" in another:
+
+```{r}
+#| fig-width: 8
+#| fig-height: 6
+con$plotPanel(clustering = "leiden", use.local.clusters = TRUE, use.common.embedding = TRUE, font.size = 3)
+```
+
+The **joint** clustering fixes exactly this. The same colours now mean the same population in every sample,
+so a cluster present in several samples is immediately recognisable as one shared cell type:
+
+```{r}
+#| fig-width: 8
+#| fig-height: 6
+con$plotPanel(clustering = "leiden", use.common.embedding = TRUE)
+```
 
 ## Are the samples well mixed?
 
-This is *the* question for any integration: do the samples **overlap** in the joint embedding (good — the
-same cell types are aligned across samples), or do they sit apart (a sign of under-correction, or of
-genuinely distinct populations)? Colour the *same* embedding by **sample** instead of by cluster:
+*The* question for any integration: do the samples **overlap** in the joint embedding (good — the same cell
+types are aligned across samples) or sit apart (under-correction, or genuinely distinct populations)? Colour
+the *same* embedding by **sample**:
 
 ```{r}
 #| fig-width: 6.5
 #| fig-height: 5
-con$plotGraph(color.by = "sample", mark.groups = FALSE, show.legend = TRUE, alpha = 0.1)
+con$plotGraph(color.by = "sample", mark.groups = FALSE, alpha = 0.1, show.legend = TRUE)
 ```
 
 Cells from all four samples are interspersed within each region rather than forming sample-specific islands,
@@ -172,15 +219,24 @@ plotClusterBarplots(con, clustering = "leiden", show.entropy = FALSE)
 A bar split evenly across samples is a shared population; a bar dominated by one or two samples flags a
 condition-specific one.
 
-## A per-sample view
+## Looking at a gene
 
-The same joint clustering laid over each sample separately. Because the clustering is *joint*, seeing the
-same colours in every panel confirms the populations are shared rather than sample-specific:
+You can paint any gene onto the joint embedding to see where it is expressed — here *CD3E*, a pan-T-cell
+marker:
+
+```{r}
+#| fig-width: 6
+#| fig-height: 5
+con$plotGraph(gene = "CD3E")
+```
+
+The same gene, shown per sample on the common embedding, confirms the pattern is consistent across the
+panel rather than driven by one sample:
 
 ```{r}
 #| fig-width: 8
 #| fig-height: 6
-con$plotPanel(clustering = "leiden", use.common.embedding = TRUE)
+con$plotPanel(gene = "CD3E", use.common.embedding = TRUE)
 ```
 
 ## Marker genes
@@ -195,59 +251,89 @@ top few **specific** markers per cluster — dot **size** is the fraction of cel
 con$plotMarkerDotPlot(n.genes.per.group = 3)
 ```
 
-The diagonal pattern (each cluster lit up by its own genes) is what you want to see — for example the T-cell
-(*CD3D/CD3E*), B-cell (*MS4A1/CD79A*) and monocyte (*FCN1*) blocks.
+The diagonal pattern (each cluster lit up by its own genes) is what to look for, and it lets you read off
+cell identities — e.g. the T-cell (*CD3D/CD3E/IL7R*), B-cell (*MS4A1/CD79A*), monocyte (*FCN1/CSTA*) and
+NK (*KLRF1/GZMB*) blocks.
 
-You can also paint a single gene onto the joint embedding to see where it is expressed:
+## Transferring annotations between samples
 
-```{r}
-#| fig-width: 6
-#| fig-height: 5
-con$plotGraph(gene = "CD3E")
-```
-
-## Transferring annotations
-
-A common task is to carry cell-type labels from an annotated sample (or any labelled subset) onto the rest
-of the panel. `propagateLabels()` spreads labels over the joint graph and returns, per cell, a transferred
-label **and** an uncertainty score.
-
-We simulate it here: label a random 40% of cells (the "reference") and propagate to the other 60%.
+A very common task: carry cell-type labels from one **annotated** sample onto the rest of the panel. We load
+a real annotation of the first bone-marrow sample (shipped with conos) — a named factor of cell types:
 
 ```{r}
-groups    <- con$clusters$leiden$groups
-set.seed(1)
-reference <- groups[sample(length(groups), round(0.40 * length(groups)))]
+cellannot <- read.table(file.path(find.package("conos"), "extdata", "cellannot.txt"),
+                        header = FALSE, sep = "\t")
+cellannot <- setNames(cellannot[, 2], cellannot[, 1])
+head(cellannot, 3)
 ```
+
+Per sample, the labels exist for only one sample; the other three are unlabelled (shown faded):
+
+```{r}
+#| fig-width: 8
+#| fig-height: 6
+con$plotPanel(groups = cellannot, use.common.embedding = TRUE)
+```
+
+`propagateLabels()` spreads those labels over the joint graph, returning a transferred label **and** an
+uncertainty score for every cell:
 
 ```{r}
 #| message: false
-transfer <- con$propagateLabels(labels = reference, verbose = FALSE)
+transfer <- con$propagateLabels(labels = cellannot, verbose = FALSE)
 ```
 
-`transfer$labels` is the propagated label for every cell. Plotted on the embedding it recovers the original
-cluster structure from a sparse set of seeds:
+On the joint embedding, the cell types now cover all the cells — and line up with the clusters we found
+independently:
 
 ```{r}
-#| fig-width: 6
+#| fig-width: 6.5
 #| fig-height: 5
 con$plotGraph(groups = transfer$labels)
 ```
 
-`transfer$uncertainty` is a 0–1 score per cell (low = confident). Painting it onto the embedding shows
-*where* the transfer is trustworthy — uncertainty rises at the boundaries between populations:
+Faceting the transferred labels **by sample** shows the same cell types recovered consistently in every
+sample, including the three that started out unlabelled:
 
 ```{r}
-#| fig-width: 6
-#| fig-height: 5
-con$plotGraph(colors = transfer$uncertainty)
+#| fig-width: 8
+#| fig-height: 6
+con$plotPanel(groups = transfer$labels, use.common.embedding = TRUE, show.legend = FALSE)
 ```
 
-You can threshold this score to flag cells whose transferred label is ambiguous.
+`transfer$uncertainty` is a 0–1 score per cell (low = confident). Painting it per sample shows *where* the
+transfer is trustworthy — uncertainty rises at the boundaries between populations and in rare types:
+
+```{r}
+#| fig-width: 8
+#| fig-height: 6
+con$plotPanel(colors = transfer$uncertainty, use.common.embedding = TRUE, show.legend = TRUE)
+```
+
+## Markers of the transferred cell types
+
+Because the transferred labels are *named* cell types, marker detection on them is directly interpretable.
+`runMarkers()` returns, per cell type, a table of differentially expressed genes with effect size (`M`),
+significance (`Z`), and — with `append.auc = TRUE` — discrimination and specificity metrics:
+
+```{r}
+#| message: false
+de <- con$runMarkers(groups = transfer$labels, append.auc = TRUE, verbose = FALSE)
+head(de[["B cells"]][order(-de[["B cells"]]$AUC), c("Gene", "M", "Z", "AUC", "Specificity", "Precision")])
+```
+
+The top B-cell markers are exactly the expected ones (*CD79A*, *MS4A1*, *IGHD*, MHC-II genes). A dot plot
+across all the transferred types reads as a clean marker map of the panel:
+
+```{r}
+#| fig-width: 10
+#| fig-height: 6
+con$plotMarkerDotPlot(groups = transfer$labels, n.genes.per.group = 3)
+```
 
 ## Recap
 
-The whole standard workflow is four calls on the Conos object:
+The standard workflow is four calls on the Conos object:
 
 ```r
 con <- Conos$new(samples)
@@ -258,4 +344,5 @@ con$runEmbedding()    # joint 2-D embedding
 
 plus `plotGraph()` / `plotPanel()` / `plotClusterBarplots()` to visualise, `runMarkers()` +
 `plotMarkerDotPlot()` for markers, and `propagateLabels()` for annotation transfer. To control the
-alignment space, memory use, and multimodal data, continue to the [advanced tutorial](conos-advanced.ipynb).
+alignment space, strength, memory, and multimodal data, continue to the
+[advanced tutorial](conos-advanced.ipynb).

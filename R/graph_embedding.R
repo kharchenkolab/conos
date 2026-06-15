@@ -44,7 +44,9 @@ embedKnnGraph <- function(commute.times, n.neighbors, names=NULL, verbose=TRUE, 
   ct.top.ids <- cbind(1:nrow(ct.top.ids), ct.top.ids)
   ct.top <- cbind(rep(0, nrow(ct.top)), ct.top)
 
-  umap <- uwot::umap(data.frame(x=rep(0, nrow(ct.top))), nn_method=list(idx=ct.top.ids, dist=ct.top),
+  ## X=NULL: the embedding is driven entirely by the precomputed commute-time neighbours (nn_method). A
+  ## placeholder X would otherwise trip uwot's "n_components > number of columns" warning on every call.
+  umap <- uwot::umap(X=NULL, nn_method=list(idx=ct.top.ids, dist=ct.top),
                      n_components=target.dims, verbose=verbose, ...)
   rownames(umap) <- names
   return(umap)

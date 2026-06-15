@@ -86,27 +86,27 @@ them. First the default, reciprocal PCA:
 ```{r}
 #| message: false
 con$runGraph(space = "PCA", k = 20, k.self = 5, ncomps = 30, n.odgenes = 2000, verbose = FALSE)
-con$runEmbedding(method = "UMAP", min.visited.verts = 100, verbose = FALSE)
+con$runEmbedding(method = "UMAP", embedding.name = "umap_pca", min.visited.verts = 100, verbose = FALSE)
 ```
 
 ```{r}
 #| fig-width: 6.5
 #| fig-height: 5
-con$plotGraph(color.by = "sample", mark.groups = FALSE, show.legend = TRUE, alpha = 0.1)
+con$plotGraph(embedding = "umap_pca", color.by = "sample", mark.groups = FALSE, show.legend = TRUE, alpha = 0.1)
 ```
 
-Now CCA, on the same panel:
+Now CCA, on the same panel (a separately named embedding so we can compare the two):
 
 ```{r}
 #| message: false
 con$runGraph(space = "CCA", k = 20, k.self = 5, ncomps = 30, n.odgenes = 2000, verbose = FALSE)
-con$runEmbedding(method = "UMAP", min.visited.verts = 100, verbose = FALSE)
+con$runEmbedding(method = "UMAP", embedding.name = "umap_cca", min.visited.verts = 100, verbose = FALSE)
 ```
 
 ```{r}
 #| fig-width: 6.5
 #| fig-height: 5
-con$plotGraph(color.by = "sample", mark.groups = FALSE, show.legend = TRUE, alpha = 0.1)
+con$plotGraph(embedding = "umap_cca", color.by = "sample", mark.groups = FALSE, show.legend = TRUE, alpha = 0.1)
 ```
 
 CCA pulls the samples together more tightly. On a well-behaved panel like this one that is unnecessary —

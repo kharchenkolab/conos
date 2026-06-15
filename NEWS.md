@@ -48,6 +48,9 @@ Major release, coordinated with pagoda2 2.0 and lstar.
 * The per-sample marker step (`runMarkers()` / `plotMarkerDotPlot()`) now calls pagoda2.1's `runMarkers()`
   on each sample instead of the deprecated `getDifferentialGenes()`, so it no longer emits pagoda2
   deprecation warnings.
+* `runEmbedding(method = "UMAP")` no longer emits uwot's "n_components > number of columns in input data"
+  warning on every call (the commute-time neighbours are passed via `nn_method`, so `X = NULL` is used
+  instead of a 1-column placeholder).
 
 ## Performance and memory
 
