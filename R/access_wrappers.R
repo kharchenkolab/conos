@@ -6,7 +6,17 @@
 setGeneric("getPca", function(sample) standardGeneric("getPca"))
 
 #' @rdname getPca
-setMethod("getPca", signature("Pagoda2"), function(sample) sample$reductions$PCA)
+setMethod("getPca", signature("Pagoda2"), function(sample) {
+  ## pagoda2.1 stores reductions name-keyed; prefer the object's default reduction rather than a
+  ## hardcoded "PCA" (works for renamed reductions), falling back to "PCA" / a sole reduction.
+  red <- sample$reductions
+  if (is.null(red) || length(red) == 0L) return(NULL)
+  key <- tryCatch(sample$defaults$reduction, error = function(e) NULL)
+  if (!is.null(key) && !is.null(red[[key]])) return(red[[key]])
+  if (!is.null(red[["PCA"]])) return(red[["PCA"]])
+  if (length(red) == 1L) return(red[[1]])
+  NULL
+})
 
 #' @rdname getPca
 setMethod("getPca", signature("seurat"), function(sample) sample@dr$pca@cell.embeddings)
@@ -355,7 +365,17 @@ setMethod("getRawCountMatrix", signature("Conos"), function(sample, transposed=F
 setGeneric("getEmbedding", function(sample, type) standardGeneric("getEmbedding"))
 
 #' @rdname getEmbedding
-setMethod("getEmbedding", signature("Pagoda2"), function(sample, type) sample$embeddings$PCA[[type]])
+setMethod("getEmbedding", signature("Pagoda2"), function(sample, type) {
+  ## pagoda2.1 nests embeddings as embeddings[[reduction]][[name]] (reduction defaults to the PCA
+  ## key for a standard run). Look under the default reduction first, then any reduction namespace
+  ## for an embedding named `type`, then the legacy embeddings$PCA[[type]] layout.
+  emb <- sample$embeddings
+  if (is.null(emb) || length(emb) == 0L) return(NULL)
+  key <- tryCatch(sample$defaults$reduction, error = function(e) NULL)
+  if (!is.null(key) && !is.null(emb[[key]]) && !is.null(emb[[key]][[type]])) return(emb[[key]][[type]])
+  for (r in emb) if (!is.null(r) && !is.null(r[[type]])) return(r[[type]])
+  emb[["PCA"]][[type]]
+})
 
 #' @rdname getEmbedding
 setMethod("getEmbedding", signature("seurat"), function(sample, type) if (is.null(sample@dr[[type]])) NULL else as.data.frame(sample@dr[[type]]@cell.embeddings))
@@ -390,7 +410,15 @@ setMethod("getEmbedding", signature("Conos"), function(sample, type) sample$embe
 setGeneric("getClustering", function(sample, type) standardGeneric("getClustering"))
 
 #' @rdname getClustering
-setMethod("getClustering", signature("Pagoda2"), function(sample, type) sample$clusters$PCA[[type]])
+setMethod("getClustering", signature("Pagoda2"), function(sample, type) {
+  ## pagoda2.1 keeps groupings in cellMeta; use the getGrouping() accessor (type = grouping name,
+  ## NULL -> defaultGrouping) when available, falling back to the legacy clusters$PCA[[type]] slot.
+  if (.conos_pagoda2_has_method(sample, "getGrouping")) {
+    g <- if (missing(type) || is.null(type)) NULL else type
+    return(tryCatch(sample$getGrouping(g), error = function(e) NULL))
+  }
+  sample$clusters$PCA[[type]]
+})
 
 #' @rdname getClustering
 setMethod("getClustering", signature("seurat"), function(sample, type) {if (!is.null(type)) warning("Seurat support only single type of clustering"); sample@ident})
