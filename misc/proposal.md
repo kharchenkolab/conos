@@ -521,3 +521,27 @@ oversubscription**; set BLAS threads=1 in workers (R/env fix, mirroring pagoda2'
 `malloc`/`free` — make interrupt-safe). **Fine as-is:** `gradients.cpp` (reentrant by design),
 `deltacut.cpp`, `edgeFilter.cpp` (sequential greedy). The matching plan was anticipated here; the audit
 confirms it.
+
+### Implementation status (2026-06-15)
+
+**Done + verified (committed):**
+- **P0 fork-safe set** — `graph_embedding.cpp` now uses `#pragma omp parallel for if(n_cores>1)
+  num_threads(n_cores)` (no global `omp_set_num_threads`), the unnecessary `omp critical` is dropped
+  (disjoint write indices), and both stray `omp barrier`s (`graph_embedding.cpp`, `largeVis.cpp`) are
+  removed. **Bit-identical** — `get_nearest_neighbors` output matches the pre-change baseline and is
+  identical across `n_cores`.
+- **adjustedRand.cpp** `malloc/free` → `std::vector` (interrupt-safe; bit-identical).
+- **BLAS oversubscription** — the forked `updatePairs` pair-loop pins BLAS to 1 thread per worker via
+  `withBlasThreads()` (guarded by `RhpcBLASctl`, added to Suggests; no-op on the serial path and when
+  RhpcBLASctl is absent).
+- Regression tests added (`tests/testthat/test_concurrency.R`); full conos suite green.
+
+**Deferred (larger reworks — design + review before implementing; fix no live bug):**
+- **`spcov` streaming/blocked covariance** — the high-value memory item, but it changes the
+  `quickCPCA`/`cpcaFast` R↔C++ interface (compute per-pair covariances + the weighted sum in C++
+  instead of `abind`-ing a dense k×p×p cube in R) and is gated on adding **`sccore` to `LinkingTo`**
+  to reuse `sccore_par.hpp`. Numerically equivalent if done carefully; needs a tolerance test.
+- **`propagate_labels::smooth_count_matrix_c` threading** — per-thread partial matrices (the edge loop
+  races on shared rows), which changes FP summation order (tolerance test, not bit-identical). Top-level,
+  so safe to thread once done.
+- **`edge_rebalancing::getSumWeightMatrix`** — low priority; align to the shared primitive.
