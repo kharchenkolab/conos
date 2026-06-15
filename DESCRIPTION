@@ -65,6 +65,7 @@ Suggests:
 Additional_repositories: https://kharchenkolab.github.io/drat/
 URL: https://github.com/kharchenkolab/conos
 BugReports: https://github.com/kharchenkolab/conos/issues
+VignetteBuilder: knitr
 NeedsCompilation: yes
 LinkingTo: Rcpp, RcppArmadillo, RcppEigen, RcppProgress
 Author: Viktor Petukhov [aut], Nikolas Barkas [aut], Peter Kharchenko [aut], Weiliang Qiu [ctb], Evan Biederstedt [aut, cre]

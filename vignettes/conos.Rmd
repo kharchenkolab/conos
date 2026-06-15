@@ -1,0 +1,101 @@
+---
+title: "Integrating single-cell samples with Conos"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Integrating single-cell samples with Conos}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 6, fig.height = 4.5)
+```
+
+**Conos** (Clustering On Network of Samples) jointly analyses a *collection* of single-cell samples.
+Rather than merging cells into one matrix, it aligns each pair of samples in a shared reduced space,
+stitches the per-sample neighbourhoods into one weighted graph, and runs clustering, embedding and
+differential expression on that joint graph. This keeps each sample's own structure intact while still
+letting corresponding cell populations connect across samples.
+
+This vignette walks through the minimal workflow on a small bundled example. For larger, fully worked
+tutorials (including the choice of alignment space and multimodal data) see the notebooks in the
+package's `doc/` directory.
+
+## Input
+
+Conos takes a named list of already-preprocessed per-sample objects (`Pagoda2` or `Seurat`). The package
+ships a tiny two-sample panel so the vignette builds quickly:
+
+```{r}
+library(conos)
+data("small_panel.preprocessed", package = "conos")
+names(small_panel.preprocessed)
+```
+
+Each element is one sample with its own PCA reduction; to prepare your own data, process each sample with
+pagoda2 (e.g. `Pagoda2$new()` followed by `runVariance()` and a PCA reduction) or Seurat before passing it
+to Conos.
+
+## Building the joint graph
+
+```{r}
+con <- Conos$new(small_panel.preprocessed, n.cores = 1)
+```
+
+`runGraph()` aligns every pair of samples and builds the joint graph. `space = "PCA"` uses reciprocal PCA
+(the recommended default); `k`/`k.self` set the inter- and within-sample neighbourhood sizes.
+
+```{r}
+con$runGraph(k = 15, k.self = 5, space = "PCA", ncomps = 20, n.odgenes = 1000, verbose = FALSE)
+```
+
+## Clustering and embedding
+
+```{r}
+con$runClustering(verbose = FALSE)                 # Leiden communities on the joint graph
+con$runEmbedding(method = "UMAP", verbose = FALSE)  # joint 2D embedding
+```
+
+Colour the joint graph embedding by the detected clusters:
+
+```{r}
+con$plotGraph(clustering = "leiden")
+```
+
+`plotPanel()` shows the same joint clustering laid over each sample separately, which is useful for
+checking that clusters are shared rather than sample-specific:
+
+```{r}
+con$plotPanel(clustering = "leiden", use.common.embedding = FALSE)
+```
+
+## Markers
+
+`runMarkers()` finds genes differentially expressed between clusters, and `plotMarkerDotPlot()` shows the
+top markers per cluster (dot size = fraction of cells expressing; colour = scaled mean expression):
+
+```{r}
+con$plotMarkerDotPlot(n.genes.per.group = 3, z.threshold = 0.5)
+```
+
+## Transferring labels
+
+If one sample (or a subset of cells) is annotated, `propagateLabels()` spreads those labels over the joint
+graph and reports a per-cell confidence:
+
+```{r}
+groups <- con$clusters$leiden$groups
+known  <- groups[sample(length(groups), round(0.7 * length(groups)))]  # pretend 70% are annotated
+res <- con$propagateLabels(labels = known, verbose = FALSE)
+str(res$labels)        # transferred label per cell
+summary(res$uncertainty)
+```
+
+## Where to go next
+
+* `?Conos` — the full set of methods. The preferred verbs are `runGraph()`, `runClustering()`,
+  `runEmbedding()` and `runMarkers()` (the older `buildGraph()`/`findCommunities()`/`embedGraph()`/
+  `getDifferentialGenes()` names still work but are deprecated).
+* `planIntegration()` — inspect, before building, which modalities/features the samples actually share.
+* The `doc/` notebooks — a fuller novice walkthrough and an advanced tutorial (alignment spaces,
+  multimodal facets, label transfer).
