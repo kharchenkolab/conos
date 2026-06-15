@@ -839,7 +839,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
         #text(xy,labels=round(x[to],2),col='blue',adj=c(-0.1,-1.24),cex=0.8)
         x <- apply(st$hierarchical$jc,2,median)
         text(xy,labels=round(x[to],2),col='red',adj=c(-0.1,-0.12),cex=0.8)
-        return(NULL)
+        return(invisible(d)) # return the dendrogram (for inspection/replot) rather than NULL
       }
 
       cowplot::plot_grid(plotlist=list(p.fai,p.fjc,p.hjc),nrow=1,rel_widths=c(4,nclusters,nclusters))

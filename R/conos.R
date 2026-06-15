@@ -1035,7 +1035,9 @@ scanKModularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.in
 
   k.sens <- data.frame(k=k.seq,m=as.numeric(unlist(xl)))
   if(plot) {
-    ggplot2::ggplot(k.sens,ggplot2::aes(x=.data$k,y=.data$m))+ggplot2::theme_bw()+ggplot2::geom_point()+ggplot2::geom_smooth()+ggplot2::xlab('modularity')+ggplot2::ylab('k')
+    ## print() so plot=TRUE actually draws (the ggplot was previously built and discarded); axis labels were
+    ## also swapped (x is k, y is modularity).
+    print(ggplot2::ggplot(k.sens,ggplot2::aes(x=.data$k,y=.data$m))+ggplot2::theme_bw()+ggplot2::geom_point()+ggplot2::geom_smooth()+ggplot2::xlab('k')+ggplot2::ylab('modularity'))
   }
 
   return(k.sens)
