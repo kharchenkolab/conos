@@ -133,11 +133,74 @@ embedded. The quality levers and their current defaults:
   types geometrically consistent. Implementation: let `getPca` accept a reduction name (§4) and add
   a fast path in `getPcaBasedNeighborMatrix` for the precomputed-reduction case; **do not** force it
   on the CCA / differing-gene paths.
-- **3.3 — Multimodal / WNN integration (biggest capability gap; deferred research, post-wave).** Conos has **no**
-  collection-level multimodal path (`grep` for wnn/facet/atac/adt is empty). pagoda2.1 now produces
-  per-sample WNN / `runReduction(facets=...)` joint reductions. Add a path to align samples on a
-  joint multimodal reduction (accept per-sample cell-embeddings as alignment coordinates; multimodal
-  or per-modality-combined mNN).
+- **3.3 — Multimodal integration (facets): single-facet-first, with an explicit `planIntegration()` prep step.**
+  Conos has **no** collection-level multimodal path today (`grep` for wnn/facet/atac/adt is empty). pagoda2.1
+  now produces per-sample facets, per-facet reductions, and joint reductions/graphs (`runReduction(facets=,
+  method="cca"/"concat")`, `runGraph(method="wnn")`). The design below makes multimodal alignment possible
+  **without complicating the common case.**
+
+  - **Guiding principle — the 90% case is one common facet.** Almost every collection integrates on a single
+    shared modality (RNA). `con$buildGraph()` with no facet argument must look and behave exactly as today: it
+    **polls each sample's default modality** (pagoda2 `defaultFacet`; Seurat `DefaultAssay()`; legacy `seurat`
+    → its one assay), takes the common one (typically RNA), aligns on it, and **always prints a one-line
+    commonality summary**. No facet vocabulary on the common path; multi-facet is strictly opt-in.
+  - **The hard part is commonality, not fusion — the multi-species homology problem generalized.** Integration
+    needs a *shared observable-variable space*, and establishing it is modality-dependent: RNA = gene-symbol
+    intersect (trivial); ADT = antibody panel (fine if named consistently); **scATAC peaks do not reconcile
+    across independently-called samples** (sample-specific coordinates) — they need consistent peak calling or
+    projection to a common reference (fixed bins / gene-activity scores), a *pre-processing input conos cannot
+    synthesize*. Conos's job is to **diagnose, warn, drop, regularize — not manufacture the homology map.**
+  - **`con$planIntegration()` — the preliminary step.** Polls modalities → reconciles modality *names* across
+    types (pagoda2 facet ↔ Seurat assay; `RNA`/`SCT`, `ADT`/`protein`, `ATAC`/`peaks`) → per candidate facet
+    computes the globally-common feature set + per-pair overlap distribution → returns a plan with a per-facet
+    **verdict + reason** (usable / marginal / not-integrable), e.g. *"ATAC: 3% peak overlap — peaks
+    independently called; re-call on a shared set or use gene-activity scores."* It also **records the resolved
+    defaults on the object** (chosen facet(s), coverage, thresholds) that `buildGraph()` reads; the user can
+    override any of them in the `buildGraph()` call. It is *optional* — `buildGraph()` auto-runs a lightweight
+    version (default-modality poll + commonality check + warn/drop) so it is robust and self-reporting when
+    called directly.
+  - **Two ways multimodal coordinates enter the alignment:**
+    - **Path A — align on a *projectable* per-sample joint reduction.** Valid **only** for joints with a shared
+      linear feature basis: concat-PCA, CCA, sparse-CCA (fixed feature loadings → reciprocal projection works,
+      like PCA). `buildGraph(reduction="CCA")`. **WNN is *not* projectable** (per-cell-weighted concatenation,
+      intrinsic to each sample) and is refused here with a pointer to `facets=`. Conos derives projectability
+      from the reduction's `method` attr (surfaced by `listReductions(long=TRUE)`).
+    - **Path B — per-facet alignment, fused by data-driven weights (the WNN-grade path).** `buildGraph(facets=
+      c("RNA","ADT"))`: conos aligns each facet on its own projectable per-facet reduction (RNA PCA, ADT PCA),
+      then fuses the per-facet cross-sample affinities using **data-driven per-cell modality weights** (WNN-style;
+      pagoda2 `cellMeta$wnn_weight_<facet>`, Seurat `obj$<assay>.weight`). **Weighting is never a user
+      parameter** — it's what WNN/CCA are for.
+  - **Coverage & warn/drop policy (makes conos's current *silent* gene-set regularization explicit).**
+    `facet.coverage = c("common","opportunistic","regularized")` controls uneven coverage (all pairs on the
+    universally-shared facet set; each pair on the richest set it shares; or opportunistic with per-pair
+    edge-weight normalization so richer pairs don't dominate). `min.common.features`/`min.overlap.fraction` set
+    floors; `on.low = c("warn","drop","error")` chooses the action — at **facet** granularity (drop a facet
+    globally) and **pair** granularity (skip that pair's edges for that facet / fall back). Single-facet runs
+    use this layer too (it just confirms "RNA: 18k common genes — fine").
+  - **Suggested API (additive; common path unchanged):**
+    ```r
+    con$buildGraph()                                  # 90%: poll default modality (RNA), align, print summary
+    con$planIntegration()                             # optional prep: verdicts + sets resolved defaults
+    con$buildGraph(facet = "ATAC")                    # one named modality (errors if planIntegration flagged it)
+    con$buildGraph(facets = c("RNA","ADT"))           # Path B: per-facet + data-driven fusion
+    con$buildGraph(facets = c("RNA","ADT"),
+                   facet.coverage = "regularized", min.common.features = 50, on.low = "drop")
+    con$buildGraph(reduction = "CCA")                 # Path A: projectable joint only (WNN refused)
+    ```
+    `facet`/`facets`/`reduction` are mutually-exclusive coordinate selectors; `space` stays orthogonal
+    (pairwise matching). Open: conos-facing term `facet` (project vocabulary; Seurat assays map onto it) vs the
+    neutral `modality`; and default `facet.coverage` = `"common"` (safe) vs conos's traditional opportunism.
+  - **pagoda2-side asks this depends on:**
+    1. **Per-cell modality weights in the facet-aware accessor contract** — expose `wnn_weight_<facet>` (already
+       in `cellMeta`) as a documented accessor so conos can consume them for Path-B fusion. *(open)*
+    2. **Verbose `listReductions(long=TRUE)`** surfacing `{facets, method, input_axes}` so conos picks the right
+       joint and derives projectability from `method`. ✅ **DONE** (pagoda2 commit `6634386`).
+    3. **Subset-facet joints** — `runGraph(method="wnn", facets=<subset>)` / joint reductions over a chosen facet
+       subset (needed once a sample carries >2 facets and multiple joints coexist; pairs with #2's keys).
+       *(open, forward-looking)*
+  - *Staging:* the **plumbing** (modality-aware accessors §4.3, `planIntegration()`, default-modality polling,
+    warn/drop) is additive and single-facet-safe → can land in the **wave (2.0)**; **Path B fusion** is the
+    genuinely new integration research → **next release**.
 - **3.4 — Integration QC, including over-integration.** Conos already has
   `estimateWeightEntropyPerCell` (batch-mixing entropy), `scanKModularity`, and stability tests, but
   they're scattered and opt-in, and only detect *under*-mixing. Package a one-call "integration
@@ -169,7 +232,8 @@ against pagoda2.1:
 | embedding | `getEmbedding(type, name)` | `sample$embeddings$PCA[[type]]` (wrong key) | **broken** |
 | clustering | `getGrouping()` / `cellMeta` | `sample$clusters$PCA[[type]]` (wrong key) | **broken** |
 | (legacy) | — | `p2app4conos`/`convertToPagoda2` touch removed `$counts` | **throws** |
-| facet/modality | `getFacet`/`listFacets`/`getFacetMembership` | none | **absent** |
+| modality/facet | pagoda2 `listFacets`/`defaultFacet`; Seurat `Assays`/`DefaultAssay` | none | **absent** (§3.3/§4.3) |
+| per-cell modality weights | pagoda2 `cellMeta$wnn_weight_<facet>`; Seurat `obj$<assay>.weight` | none | **absent** (Path-B fusion) |
 
 **Suggestions:**
 - **4.1 (DONE 2026-06-15)** — **Correction:** the audit overstated this. For a standard pagoda2.1
@@ -183,9 +247,13 @@ against pagoda2.1:
 - **4.2 (P1)** Replace the hand-rolled variance scaling in `scaledMatricesP2` with
   `getExpressionBlock(scale.variance=TRUE)` — removes the last reach-in into a pagoda2 internal
   (`R/conos.R:18-46`).
-- **4.3 (P1)** Make accessors facet-aware: thread a `facet=` (default = sample's `defaultFacet`)
-  through the count/expr/gene/cellname accessors, so "align on the ATAC facet" becomes a parameter
-  rather than impossible. (Multimodal *integration* is §3.3; this is just the plumbing.)
+- **4.3 (P1)** Make accessors modality-aware (the §3.3 plumbing). Add two generics — `getModalities(sample)`
+  and `getDefaultModality(sample)` — implemented per class (pagoda2 `listFacets`/`defaultFacet`; Seurat
+  `Assays`/`DefaultAssay`; legacy `seurat` → single modality), plus thread a `facet=`/`assay=` (default =
+  the sample's default modality) through the count/expr/gene/cellname/reduction accessors, and expose
+  per-cell modality weights. This lets `buildGraph()` **poll the common default modality** (so it no longer
+  hardcodes "RNA"), lets `planIntegration()` assess commonality, and makes "align on the ATAC facet" a
+  parameter. (Multimodal *fusion* is §3.3 Path B; this is the plumbing it stands on.)
 - **4.4 (P2)** Formalize a single documented `ConosSampleAdapter` capability contract (the table
   above) to replace the scattered per-class S4 reach-ins (resolves the `# TODO: package-independent
   wrapper`, `conclass.R:110`), centralizing orientation/facet handling.
@@ -378,6 +446,9 @@ Everything ready and worth shipping goes here. The "1.6" conservative set is fol
 - §6 Graphics consistency: shared theme + `sccore` palettes + grouping resolver + `plotMarkerDotPlot`;
   fix robustness bugs (see §11 for the sccore decision).
 - §3.4 Integration-QC wrapper (mixing entropy + over-integration); §3.5 surface SNN/edge-balancing.
+- §3.3/§4.3 **Multimodal plumbing (single-facet-safe, additive):** modality-aware accessors
+  (`getModalities`/`getDefaultModality` + `facet=`/`assay=`), `planIntegration()` diagnostic, `buildGraph()`
+  default-modality polling + commonality summary + warn/drop. (Path-B *fusion* stays deferred — below.)
 
 **Tier C — decided default changes (major-version-appropriate, NEWS-flagged):**
 - §3.1 **Default `space` stays `PCA`** (reciprocal PCA) — CPCA deprioritized (slow, no measurable gain),
@@ -388,7 +459,8 @@ Everything ready and worth shipping goes here. The "1.6" conservative set is fol
 
 - §7.5–7.7 Remove deprecated aliases (`.Defunct`); **unify DE** (breaking output shape, couples to
   cacoa); restructure `con$graph` → `con$graphs[[method]]`; canonicalize args with removal.
-- §3.3 Multimodal / WNN collection-level integration; §4.3 facet-aware accessors; §4.4 adapter contract.
+- §3.3 **Path-B multimodal fusion** (per-facet alignment + data-driven WNN-weighted combination) and Path-A
+  alignment on projectable joints (CCA/concat) — the genuinely new integration research; §4.4 adapter contract.
 - §2.3 Landmark/subsampled pairing; §3.5 scalable Laplacian solver; §3.6 joint >2-sample reductions.
 
 ---
@@ -406,6 +478,13 @@ Everything ready and worth shipping goes here. The "1.6" conservative set is fol
 - **`ncomps=40` stays** — it's per-pair alignment rank, not whole-atlas representation.
 - **API realignment is additive in 2.0** — `runX` preferred, old names deprecated-but-working;
   removals deferred to the next major.
+- **Multimodal is single-facet-first (§3.3).** `buildGraph()` polls each sample's *default* modality
+  (pagoda2 `defaultFacet` / Seurat `DefaultAssay`) and aligns on the common one — the 90% case, unchanged
+  UX. `planIntegration()` is the explicit prep step (commonality verdicts; sets resolved defaults the user
+  can override); `buildGraph()` stays robust + self-reporting when it's skipped. Multi-facet is opt-in via
+  `facets=`. **Weighting is data-driven (WNN/CCA), never a user parameter.** Path A (align on a joint
+  reduction) is valid only for *projectable* joints (CCA/concat); **WNN is not projectable** → its value
+  enters via Path B (per-facet align + WNN-weighted fusion). Plumbing lands in the wave; Path-B fusion next.
 
 **Open:**
 1. **Common-case reduction reuse** — per-pair recomputation stays the default (it's correct for
@@ -414,8 +493,11 @@ Everything ready and worth shipping goes here. The "1.6" conservative set is fol
 2. **`pairs.storage` default** — for the economical mode, default to `"disk"` when available, or
    keep `"keep"` and let users opt into disk/drop? Same question for whether disk-backed samples
    should auto-select the economical path.
-3. **Multimodal scope** — for the *next* (post-wave) release: full collection-level WNN, or start
-   with "align on a chosen facet"?
+3. **Multimodal residual choices** (scope now decided — see §3.3): (a) conos-facing term — `facet`
+   (project vocabulary; Seurat assays map onto it) vs the neutral `modality`; (b) default
+   `facet.coverage` — `"common"` (safe, comparable edges) vs conos's traditional `"opportunistic"`;
+   (c) does `buildGraph()` auto-run `planIntegration()` always, or only emit the one-line summary and
+   run the full assessment on demand?
 4. **sccore** — keep, slim, or fold in? (See §11.)
 
 ---
