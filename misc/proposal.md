@@ -481,6 +481,43 @@ fork-safe when run inside a forked worker. **Audit conos's `src/`** — `cpca.cp
 (fork-safe `if(ncores>1)` guards, per-thread scratch, no shared buffers). The shared `sccore_par.hpp`
 threading header is the natural basis.
 
-**Action item:** a `src/`-level concurrency audit of conos (per file: threaded / OpenMP / fork-safe /
-shared-state hazards / streaming-disk-backed candidate) to produce the parity work list. This feeds the
-economical-RAM (§1/§5) and speed (§2) goals and is conos-2.0 Tier-A/B material.
+### Audit findings (done, 2026-06-15)
+
+OpenMP **is** enabled (`src/Makevars` passes `$(SHLIB_OPENMP_CXXFLAGS)`), but there is **no fork-safe
+`if(ncores>1)` guard anywhere** — the core pagoda2 idiom is absent. `sccore` is `Imports`-only, **not
+`LinkingTo`**, so `sccore_par.hpp` isn't available to conos C++ — **adding `sccore` to `LinkingTo` is a
+prerequisite** for the shared-primitive approach. **No *live* oversubscription bug today:** the
+OpenMP-threaded files (`graph_embedding.cpp::get_nearest_neighbors`, `largeVis.cpp::sgd`,
+`edgeweights.cpp::referenceWij`) all run **top-level, once per object**; the forked pair-loop
+(`updatePairs` `plapply` over pairs) calls only **serial** reducers (`spcov`, `cpcaF`, `RjnmfC`). So
+the hazards are latent/correctness + "must-guard-before-threading," not a current corruption.
+
+**P0 — fork-safety / correctness (cheap, mechanical, no behavior change):**
+- Add a fork-safe `if(ncores>1)` (or `omp_get_level()==0`) guard to **every** `omp_set_num_threads` /
+  `#pragma omp parallel for` site (`graph_embedding.cpp:185,232,198,245,274`; `largeVis.cpp:274,278`;
+  `edgeweights.cpp:110,116`; `checkfunctions.cpp::checkCRAN`). Makes `ncores==1` truly serial and is
+  the precondition for threading anything that can land under a fork.
+- Remove two stray `#pragma omp barrier` outside any parallel region (`graph_embedding.cpp:309`,
+  `largeVis.cpp:289`); drop the unnecessary `#pragma omp critical` in `graph_embedding.cpp:209`
+  (each write index is distinct); verify the per-id disjointness of `edge_weight[]` writes in
+  `edgeweights.cpp::similarityOne`.
+
+**P1 — reducers that should adopt pagoda2's view-aware / threaded / streamed pattern:**
+- **`spcov.cpp` is the headline `colSumByFacView` analog.** Dense gene×gene covariance, called per
+  sample **inside the forked pair-loop**, then `abind`-stacked into a dense k×p×p cube (`conos.R:185`)
+  for `cpcaF` — conos's covariance densification hotspot (ties to §1 memory). Rework into a
+  streamed/blocked, fork-safe covariance that feeds `cpcaF` without materializing the cube.
+  **Largest, highest-value item; gated on `sccore` in `LinkingTo`.**
+- `propagate_labels.cpp::smooth_count_matrix_c` — the per-edge accumulation loop is embarrassingly
+  parallel and runs top-level; thread it (per-thread partials + guard) and avoid the full per-iteration
+  dense copy.
+- `edge_rebalancing.cpp::getSumWeightMatrix` — already a weight-sum-by-factor reducer with inline
+  normalization (closest existing match); tiny output, low priority, mostly worth aligning to the
+  shared primitive.
+
+**P2 / notes:** `RjnmfC` (and any BLAS) runs inside the forked pair-loop → **BLAS thread
+oversubscription**; set BLAS threads=1 in workers (R/env fix, mirroring pagoda2's
+`.pagoda2_with_blas_threads`). `adjustedRand.cpp` is O(n²) serial under the stability fork (and uses raw
+`malloc`/`free` — make interrupt-safe). **Fine as-is:** `gradients.cpp` (reentrant by design),
+`deltacut.cpp`, `edgeFilter.cpp` (sequential greedy). The matching plan was anticipated here; the audit
+confirms it.
