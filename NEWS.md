@@ -36,6 +36,15 @@ Major release, coordinated with pagoda2 2.0 and lstar.
 
 ## Changes
 
+* `plotDEheatmap()` no longer depends on **ComplexHeatmap** (a heavy Bioconductor package): it now renders
+  through `sccore`'s native `grid`-based heatmap engine (`sccore::heatmapSpec()` / `drawHeatmap()`, shared
+  with pagoda2's `plotMarkerHeatmap()`). The output is equivalent (cluster + gene-cluster annotation bars,
+  optional split and selective gene labelling); `return.details = TRUE` now returns the heatmap `spec`
+  instead of a `ComplexHeatmap` object, and the `...` argument is no longer forwarded.
+* Pruned Bioconductor / unused dependencies: `Suggests` `ComplexHeatmap`, `AnnotationDbi`, `BiocParallel`
+  (the dead `BiocParallel` fallback in `papply()` was removed — `parallel` is a hard dependency), `GO.db`,
+  `ggrastr`, `p2data`; and the `grid` import (its only uses were the removed ComplexHeatmap calls — `grid`
+  rendering now lives in `sccore`).
 * Removed `p2app4conos()` (the pagoda2 web-app export — the app is dropped in pagoda2.1) and
   `saveConosForScanPy()` (the bespoke ScanPy export that wrote "corrected" pseudo-expression). For
   interchange, read/write samples and whole collections through the pagoda2 / lstar paths (see the

@@ -435,18 +435,11 @@ withBlasThreads <- function(n, expr) {
   force(expr)
 }
 
-# use mclapply if available, fall back on BiocParallel, but use regular
-# lapply() when only one core is specified
+# use mclapply (parallel is a hard Import) when >1 core, regular lapply() otherwise
 #' @keywords internal
 papply <- function(...,n.cores=parallel::detectCores(), mc.preschedule=FALSE) {
   if(n.cores>1) {
-    if(requireNamespace("parallel", quietly = TRUE)) {
-      res <- parallel::mclapply(...,mc.cores=n.cores,mc.preschedule=mc.preschedule)
-    }
-    else if(requireNamespace("BiocParallel", quietly = TRUE)) {
-      # It should never happen because parallel is specified in Imports
-      res <- BiocParallel::bplapply(... , BPPARAM = BiocParallel::MulticoreParam(workers = n.cores))
-    }
+    res <- parallel::mclapply(...,mc.cores=n.cores,mc.preschedule=mc.preschedule)
   } else {
     # fall back on lapply
     res <- lapply(...)

@@ -77,15 +77,15 @@ plotDEheatmap(
 
 \item{border}{boolean Whether to show borders around the heatmap and annotations (default=TRUE)}
 
-\item{return.details}{boolean If TRUE will return a list containing the heatmap (ha), but also raw matrix (x), expression list (expl) and other info to produce the heatmap on your own (default=FALSE).}
+\item{return.details}{boolean If TRUE will return a list containing the heatmap spec (spec), the raw matrix (x), expression list (expl) and other info to produce the heatmap on your own (default=FALSE).}
 
 \item{row.label.font.size}{numeric Font size for the row labels (default=10)}
 
 \item{order.clusters}{boolean Whether to re-order the clusters according to the similarity of the expression patterns (of the genes being shown) (default=FALSE)}
 
-\item{split}{boolean Whether to use arguments "row_split" and "column_split" in ComplexHeatmap::Heatmap() (default=FALSE). These arguments are categorical vectors used to split the rows/columns in the heatmap.}
+\item{split}{boolean Whether to split the heatmap by gene cluster (rows) and cell cluster (columns) (default=FALSE).}
 
-\item{split.gap}{numeric Value of millimeters "mm" to use for 'row_gap' and 'column_gap' (default=0). If split is FALSE, this argument is ignored.}
+\item{split.gap}{numeric Gap (in millimeters) between splits (default=0). If split is FALSE, this argument is ignored.}
 
 \item{cell.order}{explicitly supply cell order (default=NULL)}
 
@@ -93,10 +93,10 @@ plotDEheatmap(
 
 \item{max.cells}{numeric Maximum cells to include in any given group (default: Inf)}
 
-\item{...}{extra parameters are passed to ComplexHeatmap::Heatmap() call}
+\item{...}{currently ignored (kept for backward compatibility; was passed to the ComplexHeatmap call)}
 }
 \value{
-ComplexHeatmap::Heatmap object (see return.details param for other output)
+invisibly, the \code{sccore} native heatmap spec; the heatmap is drawn as a side effect (see \code{return.details})
 }
 \description{
 Plot a heatmap of differential genes

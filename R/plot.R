@@ -368,26 +368,22 @@ plotComponentVariance <- function(conos.obj, space='PCA', plot.theme=ggplot2::th
 #' @param show.cluster.legend boolean Whether to show the cluster legend (default=TRUE)
 #' @param show_heatmap_legend boolean Whether to show the expression heatmap legend (default=FALSE)
 #' @param border boolean Whether to show borders around the heatmap and annotations (default=TRUE)
-#' @param return.details boolean If TRUE will return a list containing the heatmap (ha), but also raw matrix (x), expression list (expl) and other info to produce the heatmap on your own (default=FALSE).
+#' @param return.details boolean If TRUE will return a list containing the heatmap spec (spec), the raw matrix (x), expression list (expl) and other info to produce the heatmap on your own (default=FALSE).
 #' @param row.label.font.size numeric Font size for the row labels (default=10)
 #' @param order.clusters boolean Whether to re-order the clusters according to the similarity of the expression patterns (of the genes being shown) (default=FALSE)
-#' @param split boolean Whether to use arguments "row_split" and "column_split" in ComplexHeatmap::Heatmap() (default=FALSE). These arguments are categorical vectors used to split the rows/columns in the heatmap.
-#' @param split.gap numeric Value of millimeters "mm" to use for 'row_gap' and 'column_gap' (default=0). If split is FALSE, this argument is ignored.
+#' @param split boolean Whether to split the heatmap by gene cluster (rows) and cell cluster (columns) (default=FALSE).
+#' @param split.gap numeric Gap (in millimeters) between splits (default=0). If split is FALSE, this argument is ignored.
 #' @param cell.order explicitly supply cell order (default=NULL)
 #' @param averaging.window numeric Optional window averaging between neighboring cells within each group (turned off by default) - useful when very large number of cells shown (requires zoo package) (default=0)
 #' @param max.cells numeric Maximum cells to include in any given group (default: Inf)
-#' @param ... extra parameters are passed to ComplexHeatmap::Heatmap() call
-#' @return ComplexHeatmap::Heatmap object (see return.details param for other output)
+#' @param ... currently ignored (kept for backward compatibility; was passed to the ComplexHeatmap call)
+#' @return invisibly, the \code{sccore} native heatmap spec; the heatmap is drawn as a side effect (see \code{return.details})
 #' @export
 plotDEheatmap <- function(con, groups, de=NULL, min.auc=NULL, min.specificity=NULL, min.precision=NULL, 
   n.genes.per.cluster=10, additional.genes=NULL, exclude.genes=NULL, labeled.gene.subset=NULL, expression.quantile=0.99, 
   pal=colorRampPalette(c('dodgerblue1','grey95','indianred1'))(1024), ordering='-AUC', column.metadata=NULL, show.gene.clusters=TRUE, 
   remove.duplicates=TRUE, column.metadata.colors=NULL, show.cluster.legend=TRUE, show_heatmap_legend=FALSE, border=TRUE, return.details=FALSE, 
   row.label.font.size=10, order.clusters=FALSE, split=FALSE, split.gap=0, cell.order=NULL, averaging.window=0, max.cells=Inf, ...) {
-
-  if (!requireNamespace("ComplexHeatmap", quietly = TRUE) || packageVersion("ComplexHeatmap") < "2.4") {
-    stop("ComplexHeatmap >= 2.4 package needs to be installed to use plotDEheatmap. Please run \"devtools::install_github('jokergoo/ComplexHeatmap')\".")
-  }
 
   groups <- as.factor(groups)
 
@@ -590,43 +586,49 @@ plotDEheatmap <- function(con, groups, de=NULL, min.auc=NULL, min.specificity=NU
     x <- x[!duplicated(rownames(x)),] 
   }
 
-  # draw heatmap
-  ha <- ComplexHeatmap::HeatmapAnnotation(df=annot,border=border,col=column.metadata.colors,show_legend=show.cluster.legend)
+  # build a native (grid) heatmap spec via sccore (no ComplexHeatmap dependency). The cell clusters are
+  # the column groups (split + a "group" annotation track); any extra column.metadata become annotation
+  # tracks; the gene-to-cluster map is the row groups.
+  extra.cols <- setdiff(colnames(annot), "clusters")
+  column.annotation <- if (length(extra.cols)) annot[, extra.cols, drop = FALSE] else NULL
 
-  if(show.gene.clusters) {
-    ra <- ComplexHeatmap::HeatmapAnnotation(df=rannot,which='row',show_annotation_name=FALSE, show_legend=FALSE, border=border,col=column.metadata.colors)
-  } else { 
-    ra <- NULL 
+  # conos colours are keyed by "clusters"; the native renderer keys the cluster track as "group"
+  annotation.colors <- column.metadata.colors
+  if (!is.null(annotation.colors[["clusters"]])) {
+    annotation.colors[["group"]] <- annotation.colors[["clusters"]]
+    annotation.colors[["clusters"]] <- NULL
   }
 
-  ## turns off ComplexHeatmap warning:
-  ## `use_raster` is automatically set to TRUE for a matrix with more than
-  ## 2000 columns. You can control `use_raster` argument by explicitly
-  ## setting TRUE/FALSE to it.
-  ## Set `ht_opt$message = FALSE` to turn off this message.
-  ##
-  ComplexHeatmap::ht_opt(message = FALSE)
-
-  #ComplexHeatmap::Heatmap(x, col=pal, cluster_rows=FALSE, cluster_columns=FALSE, show_column_names=FALSE, top_annotation=ha , left_annotation=ra, column_split=groups[colnames(x)], row_split=rannot[,1], row_gap = unit(0, "mm"), column_gap = unit(0, "mm"), border=TRUE,  ...);
-  if(split) {
-    ha <- ComplexHeatmap::Heatmap(x, name='expression', col=pal, cluster_rows=FALSE, cluster_columns=FALSE, show_row_names=is.null(labeled.gene.subset), show_column_names=FALSE, top_annotation=ha , left_annotation=ra, border=border,  show_heatmap_legend=show_heatmap_legend, row_names_gp = grid::gpar(fontsize = row.label.font.size), column_split=groups[colnames(x)], row_split=rannot[,1], row_gap = grid::unit(split.gap, "mm"), column_gap = grid::unit(split.gap, "mm"), ...);
-  } else {
-    ha <- ComplexHeatmap::Heatmap(x, name='expression', col=pal, cluster_rows=FALSE, cluster_columns=FALSE, show_row_names=is.null(labeled.gene.subset), show_column_names=FALSE, top_annotation=ha , left_annotation=ra, border=border,  show_heatmap_legend=show_heatmap_legend, row_names_gp = grid::gpar(fontsize = row.label.font.size), ...);
-  }
-  if(!is.null(labeled.gene.subset)) {
-    if(is.numeric(labeled.gene.subset)) {
-      # select top n genes to show
-      labeled.gene.subset <- unique(unlist(lapply(de,function(x) x$Gene[1:min(labeled.gene.subset,nrow(x))])))
+  label.indices <- NULL
+  if (!is.null(labeled.gene.subset)) {
+    if (is.numeric(labeled.gene.subset)) { # select top n genes (per cluster) to label
+      labeled.gene.subset <- unique(unlist(lapply(de, function(d) d$Gene[1:min(labeled.gene.subset, nrow(d))])))
     }
-    gene.subset <- which(rownames(x) %in% labeled.gene.subset)
-    labels <- rownames(x)[gene.subset]
-    ha <- ha + ComplexHeatmap::rowAnnotation(link = ComplexHeatmap::anno_mark(at = gene.subset, labels = labels, labels_gp = grid::gpar(fontsize = row.label.font.size)))
-
+    label.indices <- which(rownames(x) %in% labeled.gene.subset)
   }
+
+  spec <- sccore::heatmapSpec(
+    x,
+    column.groups = groups[colnames(x)],
+    row.groups = rannot[, 1],
+    column.annotation = column.annotation,
+    column.annotation.colors = annotation.colors,
+    expression.palette = pal,
+    labeled.row.subset = labeled.gene.subset,
+    label.indices = label.indices,
+    show.row.groups = show.gene.clusters,
+    show.group.legend = show.cluster.legend,
+    show_heatmap_legend = show_heatmap_legend,
+    border = border,
+    row.label.font.size = row.label.font.size,
+    split = split,
+    split.gap = split.gap
+  )
 
   if(return.details) {
-    return(list(ha=ha,x=x,annot=annot,rannot=rannot,expl=expl,pal=pal,labeled.gene.subset=labeled.gene.subset))
+    return(list(spec=spec,x=x,annot=annot,rannot=rannot,expl=expl,pal=pal,labeled.gene.subset=labeled.gene.subset))
   }
 
-  return(ha)
+  sccore::drawHeatmap(spec)
+  invisible(spec)
 }
