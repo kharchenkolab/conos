@@ -41,9 +41,12 @@ con <- Conos$new(list(s1, s2, s3, s4))
 # from here everything is identical to the walkthrough:
 con$runGraph(); con$runClustering(); con$runEmbedding()
 
-# an lstar store can also hold a WHOLE collection (panel + joint graph/clusters/embedding):
-lstar::write_conos(con) |> lstar::lstar_write("panel.lstar.zarr")  # save the whole Conos
+# the WHOLE collection (panel + joint graph/clusters/embedding) also round-trips and exports:
+lstar::write_conos(con) |> lstar::lstar_write("panel.lstar.zarr")  # save the whole Conos (lstar zarr)
 con <- lstar::read_conos("panel.lstar.zarr")                       # ... and reopen it
+
+so  <- lstar::write_seurat(lstar::write_conos(con))   # -> Seurat v5 (split assay + joint graph + embedding)
+con <- lstar::read_conos(lstar::read_seurat(so))      # ... and read a collection back from it
 ```
 
 ## Contents
@@ -51,7 +54,7 @@ con <- lstar::read_conos("panel.lstar.zarr")                       # ... and reo
 - [Example data](#example-data)
 - [Seurat objects in memory](#seurat-objects-in-memory)
 - [Reading samples from files](#reading-samples-from-files)
-- [An entire collection in one store](#an-entire-collection-in-one-store)
+- [Exporting a whole collection](#exporting-a-whole-collection)
 - [Mixing object types in one panel](#mixing-object-types-in-one-panel)
 
 ## Example data
@@ -97,6 +100,7 @@ seurat.samples <- lapply(raw[1:2], function(cm) {
 
 ```{r}
 #| message: false
+#| warning: false
 con.seurat <- Conos$new(seurat.samples, n.cores = 1)
 con.seurat$runGraph(k = 15, k.self = 5, space = "PCA", ncomps = 30, n.odgenes = 2000, verbose = FALSE)
 con.seurat$runClustering(verbose = FALSE)
@@ -170,6 +174,7 @@ These read-from-disk samples integrate exactly like any other:
 
 ```{r}
 #| message: false
+#| warning: false
 con.files <- Conos$new(samples, n.cores = 1)
 con.files$runGraph(k = 15, k.self = 5, space = "PCA", ncomps = 30, n.odgenes = 2000, verbose = FALSE)
 con.files$runClustering(verbose = FALSE)
@@ -182,25 +187,27 @@ con.files$runEmbedding(method = "UMAP", min.visited.verts = 100, verbose = FALSE
 con.files$plotGraph(color.by = "sample", mark.groups = FALSE, alpha = 0.1, show.legend = TRUE)
 ```
 
-## An entire collection in one store
+## Exporting a whole collection
 
-An lstar (zarr) store need not hold a single sample — it can hold a **whole collection**: every sample
-*plus* the joint graph, clustering and embedding. That is conos's level, so conos writes the entire object
-and reads it straight back. Save the panel we just built into one store:
+A `Conos` object is itself a **collection**: every sample's raw counts *plus* the joint analysis layer —
+the graph, the embedding and the clustering — over the union of cells. Conos integrates in *graph* space,
+so there is **no batch-corrected expression matrix** (computing one is expensive and lossy). lstar writes
+the whole collection to the native multi-sample formats *without fabricating* such a matrix: each sample's
+raw counts are preserved, and the joint graph / embedding / clusters travel alongside.
+
+### An lstar (zarr) store
+
+The native round-trip. `write_conos()` turns the `Conos` into an lstar collection, `lstar_write()` saves it,
+and `read_conos()` reopens it as a live `Conos` — the per-sample objects and the joint graph / clustering /
+embedding are all restored, so you can carry on plotting, finding markers and transferring labels without
+recomputing the integration:
 
 ```{r}
 #| message: false
 library(lstar)
 collection.path <- file.path(dir, "panel.lstar.zarr")
 lstar_write(write_conos(con.files), collection.path)
-```
 
-`read_conos()` reopens it as a live `Conos` — the per-sample objects and the joint graph / clustering /
-embedding are all restored, so you can carry on plotting, finding markers and transferring labels without
-recomputing the integration:
-
-```{r}
-#| message: false
 con.reopened <- read_conos(collection.path)
 c(samples  = length(con.reopened$samples),
   cells    = length(con.reopened$clusters$leiden$groups),
@@ -212,6 +219,82 @@ c(samples  = length(con.reopened$samples),
 #| fig-height: 5
 con.reopened$plotGraph(clustering = "leiden")
 ```
+
+### A Seurat v5 object
+
+The same collection converts to a **Seurat v5** object: a *split* assay with one raw-count layer per
+sample, the joint graph as a Seurat `Graph`, the embedding as a `DimReduc`, and the sample / cluster labels
+in `meta.data`. `write_seurat()` takes the lstar collection, so chain it after `write_conos()`:
+
+```{r}
+#| message: false
+#| warning: false
+so <- write_seurat(write_conos(con.files))
+c(class     = class(so)[1],
+  layers    = length(SeuratObject::Layers(so, assay = "RNA")),   # one raw-count layer per sample
+  graph     = paste(SeuratObject::Graphs(so), collapse = ","),    # joint graph, carried natively
+  reduction = paste(SeuratObject::Reductions(so), collapse = ","))
+saveRDS(so, file.path(dir, "panel_seurat_v5.rds"))
+```
+
+You can also read a collection **back from such a Seurat v5 `.rds`**: `read_seurat()` recovers the lstar
+collection and `read_conos()` rebuilds the live `Conos` — joint graph and all — so a Seurat-v5 integration
+object opens directly as a `Conos`:
+
+```{r}
+#| message: false
+con.from.seurat <- read_conos(read_seurat(readRDS(file.path(dir, "panel_seurat_v5.rds"))))
+c(samples = length(con.from.seurat$samples), has.graph = !is.null(con.from.seurat$graph))
+```
+
+### An AnnData file (for scanpy)
+
+For scanpy users the stored collection flattens to a single AnnData: `X` holds the **raw joint counts**
+(again, no corrected matrix), the joint graph lands in `obsp` (aliased to `connectivities`, with a matching
+`uns['neighbors']`) so scanpy's graph tools run on the conos graph directly, the embedding in `obsm`, and
+sample / cluster in `obs`. Convert the store from the shell with the lstar CLI:
+
+```bash
+lstar convert panel.lstar.zarr panel.h5ad
+```
+
+(The same `lstar convert` command also moves *individual* objects between formats — e.g.
+`lstar convert sample.rds sample.h5ad` — so lstar doubles as a general format converter between Seurat,
+SingleCellExperiment, anndata and zarr.)
+
+### Running conos from a Python (scanpy) workflow
+
+Conos itself is R-only, but the two directions above add up to a clean recommendation for **scanpy users**:
+keep your data as `.h5ad` and bridge through one short R step. Read each sample with `Pagoda2$fromAnnData()`,
+integrate with conos, write the collection, then `lstar convert` it back to `.h5ad`. Clustering, UMAP and
+marker tests then run *on the conos joint graph* in scanpy — it arrives in `obsp`/`connectivities`, so no
+re-integration is needed:
+
+```r
+# conos_step.R  — the only R in the loop (run non-interactively with: Rscript conos_step.R)
+library(conos); library(pagoda2); library(lstar)
+samples <- lapply(c("s1.h5ad", "s2.h5ad", "s3.h5ad"),
+                  function(f) Pagoda2$fromAnnData(f)$run(steps = c("variance", "pca")))
+con <- Conos$new(samples)
+con$runGraph(); con$runClustering(); con$runEmbedding()
+lstar_write(write_conos(con), "panel.lstar.zarr")
+```
+
+```bash
+Rscript conos_step.R                               # the conos integration (no interactive R)
+lstar convert panel.lstar.zarr integrated.h5ad     # -> back to a scanpy-ready .h5ad
+```
+
+```python
+import scanpy as sc
+adata = sc.read_h5ad("integrated.h5ad")
+sc.tl.leiden(adata)   # runs on the conos joint graph in obsp['connectivities']
+sc.tl.umap(adata)     # (conos's own embedding is already in adata.obsm)
+```
+
+There is no pure-Python conos build — the R step *is* the integration. If you must stay entirely in Python,
+a Python-native method (scVI, Harmony, BBKNN) is the alternative, but it won't reproduce conos's joint-graph
+alignment.
 
 ## Mixing object types in one panel
 
@@ -234,6 +317,7 @@ sapply(mixed, function(s) class(s)[1])
 
 ```{r}
 #| message: false
+#| warning: false
 con.mixed <- Conos$new(mixed, n.cores = 1)
 con.mixed$runGraph(k = 15, k.self = 5, space = "PCA", ncomps = 30, n.odgenes = 2000, verbose = FALSE)
 con.mixed$runClustering(verbose = FALSE)
