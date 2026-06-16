@@ -84,6 +84,12 @@ Choosing the alignment space (reciprocal PCA / CCA), `planIntegration()`, disk-b
 (`pairs.storage`), resolution scanning, label-transfer methods, and multimodal facets.
 * [Jupyter notebook](doc/conos-advanced.ipynb)
 
+### Data sources (Seurat, anndata, loom, lstar):
+Building a panel from Seurat objects in memory, from files written by other pipelines (anndata `.h5ad`,
+Seurat `.h5seurat`, loom, lstar zarr — read via pagoda2's `from*()` constructors), and from a mix of object
+types in one panel.
+* [Jupyter notebook](doc/conos-data-sources.ipynb)
+
 ### Conos walkthrough (legacy):
 * [HTML version](https://htmlpreview.github.io/?https://raw.githubusercontent.com/kharchenkolab/conos/main/doc/walkthrough.html)
 * [Markdown version](https://github.com/kharchenkolab/conos/blob/main/doc/walkthrough.md)
