@@ -1071,7 +1071,7 @@ scanKModularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.in
   return(k.sens)
 }
 
-## (mergeCountMatrices / extendMatrix live in R/integrations.R — the duplicate copies that were here,
+## (mergeCountMatrices / extendMatrix live in R/integrations.R -- the duplicate copies that were here,
 ## shadowed by alphabetical sourcing, have been removed.)
 
 ## Select per-cluster marker genes for the dot plot, mirroring pagoda2.1's "balanced" selection on the
@@ -1114,7 +1114,7 @@ scanKModularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.in
 ## Back end for Conos$plotMarkerDotPlot(): select specific per-cluster markers from the joint DE table
 ## (.conos_select_dotplot_markers, the conos twin of pagoda2.1's "balanced" marker selection) and hand them
 ## to sccore::dotPlot over the joint (cells x genes) count matrix, routed through the same engine for a
-## consistent view (§6).
+## consistent view (sec 6).
 .conos_plot_marker_dot_plot <- function(con, clustering=NULL, groups=NULL, n.genes.per.group=5,
                                         z.threshold=1, min.auc=0.6, cols=c("grey88","firebrick3"),
                                         dot.scale=6, text.angle=45, ...) {
@@ -1145,7 +1145,7 @@ scanKModularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.in
 ## SNN edge weights (Jaccard-style shared-neighbor overlap), evaluated ONLY at the mNN-masked nonzeros so
 ## the n1 x n2 neighbor product never densifies. Identical to the dense form
 ## `((m1 %*% m2) * mnn1) / pmax(outer(rowSums(m1), colSums(m2), pmin), 1)` -- at a zero of the masked
-## numerator the dense form is 0/denom = 0 too -- but bounded by nnz, not n1*n2 (§1.3, snn=TRUE path).
+## numerator the dense form is 0/denom = 0 too -- but bounded by nnz, not n1*n2 (sec 1.3, snn=TRUE path).
 .conos_snn_jaccard <- function(m1, m2, mnn1) {
   S <- methods::as((m1 %*% m2) * mnn1, "TsparseMatrix")
   if (length(S@x) == 0L) return(methods::as(S, "CsparseMatrix"))
@@ -1155,7 +1155,7 @@ scanKModularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.in
 }
 
 ## Back end for Conos$planIntegration(): poll modalities across samples, assess per-modality feature
-## commonality, record the resolved default modality on the object. Read-only diagnostic (§3.3).
+## commonality, record the resolved default modality on the object. Read-only diagnostic (sec 3.3).
 .conos_plan_integration <- function(con, min.common.features = 5, verbose = TRUE) {
   samples <- con$samples
   if (length(samples) < 1L) stop("no samples in the Conos object", call. = FALSE)
@@ -1179,7 +1179,7 @@ scanKModularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.in
     feats <- lapply(samples[have], .conos_modality_features, modality = mod)
     common <- if (length(feats) > 0L) Reduce(intersect, feats) else character(0)
     ov <- overlap_stats(feats)
-    ## Verdict keys on the OVERLAP FRACTION (the homology/reconciliation question — does the feature space
+    ## Verdict keys on the OVERLAP FRACTION (the homology/reconciliation question -- does the feature space
     ## line up across samples?), not absolute size; a small-but-fully-shared panel (e.g. 10 ADT proteins) is
     ## fine. Absolute count only matters below the reduction floor (min.common.features, ~5 for a PCA).
     verdict <- if (length(common) == 0L) "not-integrable: no shared features" else
@@ -1199,13 +1199,13 @@ scanKModularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.in
   con$misc[["integration.plan"]] <- list(default.modality = default.modality, table = plan,
                                          min.common.features = min.common.features)
   if (verbose) {
-    message("Integration plan — ", n, " samples")
+    message("Integration plan -- ", n, " samples")
     print(plan, row.names = FALSE)
     if (is.na(default.modality)) {
       message("default modality differs across samples (", paste(unique(defs), collapse = ", "),
               "); pass facet= to buildGraph() to choose one")
     } else {
-      message("common default modality: ", default.modality, " — buildGraph() integrates on it")
+      message("common default modality: ", default.modality, " -- buildGraph() integrates on it")
     }
   }
   invisible(structure(plan, class = c("conosIntegrationPlan", "data.frame")))
@@ -1214,7 +1214,7 @@ scanKModularity <- function(con, min=3, max=50, by=1, scan.k.self=FALSE, omit.in
 #' Scan clustering resolution
 #'
 #' Run a resolution-based community method (Leiden by default) over a sequence of resolutions on the joint
-#' graph and report the number of clusters and modularity at each — a helper for choosing `resolution`.
+#' graph and report the number of clusters and modularity at each -- a helper for choosing `resolution`.
 #'
 #' @param con a Conos object with a joint graph already built (runGraph()).
 #' @param resolutions numeric vector of resolutions to scan (default=seq(0.1, 2, by=0.1)).

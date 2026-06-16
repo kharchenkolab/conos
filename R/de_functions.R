@@ -497,8 +497,16 @@ aggregateDEMarkersAcrossDatasets <- function(marker.dfs, z.threshold, upregulate
   z.scores.per.dataset <- lapply(marker.dfs, function(df) setNames(df$Z, rownames(df)))
   m.vals.per.dataset <- lapply(marker.dfs, function(df) setNames(df$M, rownames(df)))
   gene.union <- lapply(z.scores.per.dataset, names) %>% Reduce(union, .)
-  z.scores <- sapply(z.scores.per.dataset, `[`, gene.union) %>% rowMeans(na.rm=TRUE)
-  m.vals <- sapply(m.vals.per.dataset, `[`, gene.union) %>% rowMeans(na.rm=TRUE)
+  gene.union <- gene.union[!is.na(gene.union)]            # drop unnamed/NA genes (degenerate per-sample DE)
+  if (length(gene.union) == 0) {
+    return(data.frame())
+  }
+  pick <- function(per.dataset) {                          # genes x datasets, robust to a single gene/dataset
+    m <- vapply(per.dataset, function(v) v[gene.union], numeric(length(gene.union)))
+    rowMeans(matrix(m, nrow = length(gene.union), dimnames = list(gene.union, NULL)), na.rm = TRUE)
+  }
+  z.scores <- pick(z.scores.per.dataset)
+  m.vals <- pick(m.vals.per.dataset)
   ro <- order(z.scores,decreasing=TRUE)
   pvals <- dnorm(z.scores)
   res <- data.frame(Gene=names(z.scores), M=m.vals, Z=z.scores, PValue=pvals, PAdj=p.adjust(pvals))[ro,]

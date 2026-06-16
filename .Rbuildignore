@@ -12,3 +12,8 @@ docker
 CONTRIBUTING.md
 data-raw
 ^\.circleci$
+^misc$
+^\.claude$
+^\.github$
+^.*\.lstar\.zarr$
+^Rplots\.pdf$

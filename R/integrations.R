@@ -6,7 +6,7 @@ NULL
 extendMatrix <- function(mtx, col.names) {
   new.names <- setdiff(col.names, colnames(mtx))
   ## sparse zero-block for the missing columns -- avoids a dense (cells x new-genes) transient when sample
-  ## gene sets differ (the merged result is sparse either way; this keeps the intermediate sparse too). §1.4
+  ## gene sets differ (the merged result is sparse either way; this keeps the intermediate sparse too). sec 1.4
   ext.mtx <- Matrix::Matrix(0, nrow=nrow(mtx), ncol=length(new.names), sparse=TRUE) %>%
     as(class(mtx)) %>% `colnames<-`(new.names)
   return(cbind(mtx, ext.mtx)[,col.names])

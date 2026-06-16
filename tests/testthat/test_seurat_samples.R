@@ -63,7 +63,10 @@ test_that("a mixed panel (pagoda2 + Seurat) integrates and finds markers", {
   ## a current pagoda2 object (its own disk-backed marker path) alongside a Seurat object (sccore::matrixDE)
   raw1 <- getRawCountMatrix(small_panel.preprocessed[[1]], transposed = FALSE)
   rownames(raw1) <- make.unique(rownames(raw1)); colnames(raw1) <- make.unique(colnames(raw1))
-  p2 <- pagoda2::Pagoda2$from(raw1, verbose = FALSE)$run(steps = c("variance", "pca"), verbose = FALSE)
+  ## variance + PCA directly (the tiny bundled panel is too shallow to survive pagoda2's default QC/gene
+  ## filter, which `run()` would apply; real-sized data passes it). Conos only needs the PCA reduction.
+  p2 <- pagoda2::Pagoda2$from(raw1, verbose = FALSE)
+  p2$runVariance(verbose = FALSE); p2$runReduction(method = "pca", verbose = FALSE)
   seu <- make_seurat_sample(small_panel.preprocessed[[2]])
 
   con <- Conos$new(list(bm = p2, cb = seu), n.cores = 1)

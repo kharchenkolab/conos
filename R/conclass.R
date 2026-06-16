@@ -114,7 +114,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
     #' @description Assess what cross-sample integration is realistic before building the graph (a preliminary,
     #'   read-only step). Polls each sample's molecular modalities (pagoda2.1 facets / Seurat assays), and per
     #'   modality reports feature commonality across the samples that have it (the shared feature count + the
-    #'   per-pair overlap fraction) with a usable / marginal / not-integrable verdict — surfacing cases like
+    #'   per-pair overlap fraction) with a usable / marginal / not-integrable verdict -- surfacing cases like
     #'   independently-called scATAC peaks that cannot reconcile without consistent pre-processing. Records the
     #'   resolved common default modality on the object (`$misc$integration.plan`), which buildGraph() reads.
     #' @param min.common.features integer Shared-feature floor below which a modality is too small for a stable reduction (default=5); the usable/marginal verdict is otherwise driven by the per-pair overlap fraction.
@@ -318,7 +318,7 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
           m1@x <- rep(1,length(m1@x))
           m2@x <- rep(1,length(m2@x))
 
-          x <- .conos_snn_jaccard(m1, m2, mnn1) # sparse; identical to numerator/outer(pmin) but no dense n1xn2 (§1.3)
+          x <- .conos_snn_jaccard(m1, m2, mnn1) # sparse; identical to numerator/outer(pmin) but no dense n1xn2 (sec 1.3)
 
           # scale by Jaccard coefficient
 
@@ -465,8 +465,8 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
 
     #' @description Marker dot plot: specific per-cluster markers shown as a sccore::dotPlot (dot size =
     #'   fraction of cells expressing; colour = scaled mean expression). Markers are selected with the same
-    #'   "balanced" rule as pagoda2.1 (up-regulated and discriminative — ranked by the precision x
-    #'   expression-fraction harmonic mean, not raw Z — so ubiquitous house-keeping / mitochondrial genes are
+    #'   "balanced" rule as pagoda2.1 (up-regulated and discriminative -- ranked by the precision x
+    #'   expression-fraction harmonic mean, not raw Z -- so ubiquitous house-keeping / mitochondrial genes are
     #'   excluded), then each gene is assigned to its best cluster and the genes are ordered by cluster.
     #' @param clustering character Name of the clustering in `$clusters` to use (default=NULL -> the first available).
     #' @param groups factor Optional explicit cell grouping (named by cell); overrides `clustering`.

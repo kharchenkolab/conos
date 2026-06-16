@@ -18,8 +18,8 @@ differential expression on that joint graph. This keeps each sample's own struct
 letting corresponding cell populations connect across samples.
 
 This vignette walks through the minimal workflow on a small bundled example. For larger, fully worked
-tutorials (including the choice of alignment space and multimodal data) see the notebooks in the
-package's `doc/` directory.
+tutorials (including the choice of alignment space, data sources, and multimodal data) see the rendered
+notebooks at <https://github.com/kharchenkolab/conos> (the `doc/` directory of the source repository).
 
 ## Input
 
@@ -97,5 +97,5 @@ summary(res$uncertainty)
   `runEmbedding()` and `runMarkers()` (the older `buildGraph()`/`findCommunities()`/`embedGraph()`/
   `getDifferentialGenes()` names still work but are deprecated).
 * `planIntegration()` — inspect, before building, which modalities/features the samples actually share.
-* The `doc/` notebooks — a fuller novice walkthrough and an advanced tutorial (alignment spaces,
-  multimodal facets, label transfer).
+* The rendered notebooks at <https://github.com/kharchenkolab/conos> — a fuller novice walkthrough and an
+  advanced tutorial (alignment spaces, data sources, multimodal facets, label transfer).

@@ -32,7 +32,6 @@ Imports:
     Rtsne,
     sccore (>= 1.0.0),
     stats,
-    tools,
     utils
 Suggests:
     AnnotationDbi,
@@ -42,11 +41,8 @@ Suggests:
     drat,
     DESeq2,
     entropy,
-    ggrastr,
-    GO.db,
     jsonlite,
     knitr,
-    p2data,
     PMA,
     plyr,
     RhpcBLASctl,
