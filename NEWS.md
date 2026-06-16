@@ -51,6 +51,10 @@ Major release, coordinated with pagoda2 2.0 and lstar.
 * `runEmbedding(method = "UMAP")` no longer emits uwot's "n_components > number of columns in input data"
   warning on every call (the commute-time neighbours are passed via `nn_method`, so `X = NULL` is used
   instead of a 1-column placeholder).
+* Seurat-backed samples work under **Seurat v5 / SeuratObject >= 5**: the count-matrix accessors used
+  `GetAssayData(slot=)`, which is now defunct in SeuratObject 5; they use `layer=` on v5 and `slot=` on
+  v3/v4 (via the new internal `getSeuratAssayData()`), so `runGraph()`/`runClustering()`/`runEmbedding()`/
+  `propagateLabels()` run on Seurat panels again.
 
 ## Performance and memory
 

@@ -78,7 +78,7 @@ scaledMatricesSeuratV3 <- function(so.objs, data.type, od.genes, var.scale, neig
   x.data <- lapply(
     X = so.objs,
     FUN = function(so) {
-      return(t(x = Seurat::GetAssayData(object = so, slot = slot))[, od.genes])
+      return(t(x = getSeuratAssayData(so, slot))[, od.genes])
     }
   )
   res <- mapply(FUN = function(so, x) { return(x) }, so.objs, x.data )

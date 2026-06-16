@@ -295,11 +295,11 @@ setMethod("getCountMatrix", signature("seurat"), function(sample, transposed=FAL
 #' @rdname getCountMatrix
 setMethod('getCountMatrix', signature('Seurat'), function(sample, transposed=FALSE) {
     checkSeuratV3()
-    dat <- Seurat::GetAssayData(object = sample, slot = 'scale.data')
+    dat <- getSeuratAssayData(sample, 'scale.data')
     dims <- dim(x = dat)
     dat.na <- all(dims == 1) && all(is.na(x = dat))
     if (all(dims == 0) || dat.na) {
-      dat <- Seurat::GetAssayData(object = sample, slot = 'data')
+      dat <- getSeuratAssayData(sample, 'data')
     }
 
     if (transposed)
@@ -405,13 +405,13 @@ setMethod(
   signature = signature('Seurat'),
   definition = function(sample, transposed=FALSE) {
     checkSeuratV3()
-    rd <- Seurat::GetAssayData(object = sample, slot = 'counts')
+    rd <- getSeuratAssayData(sample, 'counts')
     # Raw data can be empty in Seurat v3
     # If it is, use data instead
     dims <- dim(x = rd)
     rd.na <- all(dims == 1) && all(is.na(x = rd))
     if (all(dims == 0) || rd.na) {
-      rd <- Seurat::GetAssayData(object = sample, slot = 'data')
+      rd <- getSeuratAssayData(sample, 'data')
     }
     mi <- match(x = colnames(x = sample), table = colnames(x = rd))
     rd <- rd[, mi, drop = FALSE]

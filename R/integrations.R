@@ -34,6 +34,23 @@ checkSeuratV3 <- function() {
   }
 }
 
+## SeuratObject >= 5.0 made the `slot=` argument of GetAssayData() defunct in favour of `layer=`. Pick the
+## spelling the installed version understands so the accessors work across Seurat v3/v4 (slot) and v5 (layer).
+.conos_seurat_uses_layers <- function() {
+  v <- tryCatch(utils::packageVersion("SeuratObject"), error = function(e) NULL)
+  if (is.null(v)) v <- tryCatch(utils::packageVersion("Seurat"), error = function(e) NULL)
+  !is.null(v) && v >= package_version("5.0.0")
+}
+
+#' @keywords internal
+getSeuratAssayData <- function(object, which) {
+  if (.conos_seurat_uses_layers()) {
+    Seurat::GetAssayData(object = object, layer = which)
+  } else {
+    Seurat::GetAssayData(object = object, slot = which)
+  }
+}
+
 #' @keywords internal
 seuratProcV2 <- function(count.matrix, vars.to.regress=NULL, verbose=TRUE, do.par=TRUE, n.pcs=100, cluster=TRUE, tsne=TRUE, umap=FALSE) {
   if (!requireNamespace("Seurat", quietly = TRUE)) {
