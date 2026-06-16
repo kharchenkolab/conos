@@ -122,34 +122,38 @@ con.seurat$plotMarkerDotPlot(n.genes.per.group = 3)
 
 ## Reading samples from files
 
-More often, each sample lives in a file produced by another pipeline. To make this runnable we first
-**write** three samples to three different formats (in practice they already exist): an anndata `.h5ad`, an
-lstar (zarr) store, and a Seurat `.h5seurat`.
+More often, each sample lives in a file produced by another pipeline. pagoda2's `from*()` constructors read
+each format directly (HDF5 / zarr — no Python). To make this runnable we first **write** three samples (in
+practice they already exist); we use the anndata `.h5ad` and lstar (zarr) formats, both written by pagoda2,
+which preserve gene names exactly:
 
 ```{r}
 #| message: false
 #| warning: false
-library(SeuratDisk)
 dir <- file.path(tempdir(), "conos-sources"); dir.create(dir, showWarnings = FALSE)
 paths <- c(bm1 = file.path(dir, "bm1.h5ad"),
            bm2 = file.path(dir, "bm2.lstar.zarr"),
-           cb1 = file.path(dir, "cb1.h5seurat"))
-
-# anndata + lstar are written by pagoda2:
+           cb1 = file.path(dir, "cb1.h5ad"))
 Pagoda2$from(raw[[1]], verbose = FALSE)$export(paths[["bm1"]], format = "h5ad",  overwrite = TRUE)
 Pagoda2$from(raw[[2]], verbose = FALSE)$export(paths[["bm2"]], format = "lstar", overwrite = TRUE)
-
-# a Seurat .h5seurat, written by SeuratDisk. NB: writing .h5seurat under Seurat v5 needs a
-# SeuratObject>=5-compatible SeuratDisk, and a v3 `Assay` (Assay5 has no h5seurat writer yet):
-old.opt <- options(Seurat.object.assay.version = "v3")
-cb1.seurat <- NormalizeData(CreateSeuratObject(counts = raw[[3]]), verbose = FALSE)
-SaveH5Seurat(cb1.seurat, filename = paths[["cb1"]], overwrite = TRUE, verbose = FALSE)
-options(old.opt)
+Pagoda2$from(raw[[3]], verbose = FALSE)$export(paths[["cb1"]], format = "h5ad",  overwrite = TRUE)
 ```
 
-Read each file with the matching `Pagoda2$from*()` constructor and add the variance + PCA reduction Conos
-needs — the result is an ordinary Conos panel. (A `.loom` file reads the same way with
-`Pagoda2$fromLoom()`.)
+A Seurat `.h5seurat` and a `.loom` file are read exactly the same way — point the matching constructor at
+the file:
+
+```{r}
+#| eval: false
+s_h5seurat <- Pagoda2$fromH5Seurat("sample.h5seurat")$run(steps = c("variance", "pca"))
+s_loom     <- Pagoda2$fromLoom("sample.loom")$run(steps = c("variance", "pca"))
+```
+
+(`fromH5Seurat()` reads any valid `.h5seurat`; if a file lacks stored gene names — e.g. one written from a
+Seurat v5 object by a `SeuratObject < 5` build of SeuratDisk, which can't serialize `Assay5` feature names
+— pagoda2 **warns** and falls back to positional names rather than silently mislabelling genes.)
+
+Read each file with the matching constructor and add the variance + PCA reduction Conos needs — the result
+is an ordinary Conos panel:
 
 ```{r}
 #| message: false
@@ -157,7 +161,7 @@ needs — the result is an ordinary Conos panel. (A `.loom` file reads the same 
 samples <- list(
   bm1 = Pagoda2$fromAnnData(paths[["bm1"]])$run(steps = c("variance", "pca"), verbose = FALSE),
   bm2 = Pagoda2$fromLstar(paths[["bm2"]])$run(steps = c("variance", "pca"), verbose = FALSE),
-  cb1 = Pagoda2$fromH5Seurat(paths[["cb1"]])$run(steps = c("variance", "pca"), verbose = FALSE)
+  cb1 = Pagoda2$fromAnnData(paths[["cb1"]])$run(steps = c("variance", "pca"), verbose = FALSE)
 )
 sapply(samples, function(s) length(getCellNames(s)))
 ```
