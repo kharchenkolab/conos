@@ -10,11 +10,10 @@
 - [Introduction](#conos-clustering-on-network-of-samples)
 - [Basics of using conos](#basics-of-using-conos)
 - [Tutorials](#tutorials)
-  * [Conos walkthrough](#conos-walkthrough)
-  * [Adjustment of alignment strength with conos](#adjustment-of-alignment-strength-with-conos)
-  * [Integration with Scanpy](#integration-with-scanpy)
-  * [Integrating RNA-seq and ATAC-seq with conos](#integrating-rna-seq-and-atac-seq-with-conos)
-  * [Running RNA velocity on a Conos object](#running-rna-velocity-on-a-conos-object)
+  * [Conos walkthrough](#conos-walkthrough-start-here)
+  * [Advanced Conos workflows](#advanced-conos-workflows)
+  * [Data sources (Seurat, anndata, loom, lstar)](#data-sources-seurat-anndata-loom-lstar)
+  * [Adjusting alignment strength](#adjusting-alignment-strength)
 - [Installation](#installation)
   * [Running conos via Docker](#running-conos-via-docker)
 - [References](#references)
@@ -43,28 +42,36 @@ Conos is robust to heterogeneity of samples within a collection, as well as nois
 
 ## Basics of using conos
 
-Given a list of individual processed samples (`pl`), conos processing can be as simple as this:
+Each sample is first processed on its own with [pagoda2](https://github.com/kharchenkolab/pagoda2)
+(or Seurat). From a named list of count matrices (`cms`), one call per sample builds a `Pagoda2` object
+carrying the PCA reduction Conos aligns on:
+
 ```r
-# Construct Conos object, where pl is a list of pagoda2 objects 
-con <- Conos$new(pl)
+library(conos)
+library(pagoda2)
 
-# Build joint graph
-con$buildGraph()
-
-# Find communities
-con$findCommunities()
-
-# Generate embedding
-con$embedGraph()
-
-# Plot joint graph
-con$plotGraph()
-
-# Plot panel with joint clustering results
-con$plotPanel()
+samples <- lapply(cms, function(cm) Pagoda2$from(cm)$run(steps = c("variance", "pca")))
 ```
 
-To see more documentation on the class `Conos`, run `?Conos`.
+Then the whole joint analysis is a handful of calls on the Conos object:
+
+```r
+con <- Conos$new(samples)   # collect the samples
+
+con$runGraph()              # align every pair of samples into one joint graph
+con$runClustering()         # joint clusters (Leiden communities)
+con$runEmbedding()          # joint 2-D embedding (UMAP)
+
+con$plotGraph()             # the joint embedding (colour by cluster / sample / gene)
+con$plotPanel()             # the same, faceted per sample
+con$plotMarkerDotPlot()     # top marker genes per cluster
+con$propagateLabels(labels = cellannot)  # transfer annotations from one sample to the rest
+```
+
+`runGraph()`, `runClustering()`, `runEmbedding()` and `runMarkers()` are the recommended verbs (the older
+`buildGraph()` / `findCommunities()` / `embedGraph()` / `getDifferentialGenes()` names still work but are
+deprecated). Samples can be `Pagoda2` or `Seurat` objects, or read from files — see the
+[data-sources tutorial](doc/conos-data-sources.ipynb). For full documentation of the class, run `?Conos`.
 
 
 ## Tutorials
@@ -72,11 +79,11 @@ To see more documentation on the class `Conos`, run `?Conos`.
 
 Please see the following tutorials for detailed examples of how to use conos.
 
-The two main tutorials are rendered Jupyter notebooks — GitHub displays them directly (no download needed):
+The tutorials are rendered Jupyter notebooks — GitHub displays them directly (no download needed):
 
 ### Conos walkthrough (start here):
-The standard, minimal workflow on a panel of samples — building the joint graph, clustering, embedding,
-marker dot plots, and label transfer.
+The standard workflow on a panel of samples — pre-processing, building the joint graph, clustering,
+embedding, marker dot plots, and label transfer.
 * [Jupyter notebook](doc/conos-walkthrough.ipynb)
 
 ### Advanced Conos workflows:
@@ -90,72 +97,10 @@ Seurat `.h5seurat`, loom, lstar zarr — read via pagoda2's `from*()` constructo
 types in one panel.
 * [Jupyter notebook](doc/conos-data-sources.ipynb)
 
-### Conos walkthrough (legacy):
-* [HTML version](https://htmlpreview.github.io/?https://raw.githubusercontent.com/kharchenkolab/conos/main/doc/walkthrough.html)
-* [Markdown version](https://github.com/kharchenkolab/conos/blob/main/doc/walkthrough.md)
-
-### Adjustment of alignment strength with conos:
-* [HTML version](https://htmlpreview.github.io/?https://raw.githubusercontent.com/kharchenkolab/conos/main/doc/adjust_alignment_strength.html)
-* [Markdown version](https://github.com/kharchenkolab/conos/blob/main/doc/adjust_alignment_strength.md)
-
-### Integration with Scanpy:
-
-Note that for integration with [Scanpy](https://scanpy.readthedocs.io/en/stable/), users need to save conos files to disk from an R session, and then load these files into Python.
-
-**Save conos for Scanpy:**
-* [HTML version](https://htmlpreview.github.io/?https://raw.githubusercontent.com/kharchenkolab/conos/main/doc/scanpy_integration.html)
-* [Markdown version](https://github.com/kharchenkolab/conos/blob/main/doc/scanpy_integration.md)
-
-**Load conos files into Scanpy:**
-* [Jupyter Notebook](inst/scanpy_integration.ipynb)
-
-
-### Integrating RNA-seq and ATAC-seq with conos:
-* [HTML version](https://htmlpreview.github.io/?https://raw.githubusercontent.com/kharchenkolab/conos/main/doc/integrating_rnaseq_atacseq.html)
-* [Markdown version](https://github.com/kharchenkolab/conos/blob/main/doc/integrating_rnaseq_atacseq.md)
-
-### Running RNA velocity on a Conos object
-
-First of all, in order to obtain an RNA velocity plot from a `Conos` object you have to use the [dropEst](https://github.com/kharchenkolab/dropEst) pipeline to align and annotate your single-cell RNA-seq measurements. You can see [this tutorial](http://pklab.med.harvard.edu/velocyto/notebooks/R/SCG71.nb.html) and [this shell script](http://pklab.med.harvard.edu/velocyto/mouseBM/preprocess.sh) to see how it can be done. In this example we specifically assume that when running dropEst you have used the **-V** option to get estimates of unspliced/spliced counts from the dropEst directly. Secondly, you need the [velocyto.R](http://velocyto.org/) package for the actual velocity estimation and visualisation.
-
-After running dropEst you should have 2 files for each of the samples: 
-- `sample.rds` (matrix of counts)
-- `sample.matrices.rds` (3 matrices of exons, introns and spanning reads)
-
-The `.matrices.rds` files are the velocity files. Load them into R in a list (same order as you give to conos). Load, preprocess and integrate with conos the count matrices (`.rds`) as you normally would. Before running the velocity, you must at least create an embedding and run the leiden clustering. Finally, you can estimate the velocity as follows:  
-```r
-### Assuming con is your Conos object and cms.list is the list of your velocity files ###
-
-library(velocyto.R)
-
-# Preprocess the velocity files to match the Conos object
-vi <- velocityInfoConos(cms.list = cms.list, con = con, 
-                        n.odgenes = 2e3, verbose = TRUE)
-
-# Estimate RNA velocity
-vel.info <- vi %$%
-  gene.relative.velocity.estimates(emat, nmat, cell.dist = cell.dist, 
-                                   deltaT = 1, kCells = 25, fit.quantile = 0.05, n.cores = 4)
-
-# Visualise the velocity on your Conos embedding 
-# Takes a very long time! 
-# Assign to a variable to speed up subsequent recalculations
-cc.velo <- show.velocity.on.embedding.cor(vi$emb, vel.info, n = 200, scale = 'sqrt', 
-                                          cell.colors = ac(vi$cell.colors, alpha = 0.5), 
-                                          cex = 0.8, grid.n = 50, cell.border.alpha = 0,
-                                          arrow.scale = 3, arrow.lwd = 0.6, n.cores = 4, 
-                                          xlab = "UMAP1", ylab = "UMAP2")
-
-# Use cc=cc.velo$cc when running again (skips the most time consuming delta projections step)
-show.velocity.on.embedding.cor(vi$emb, vel.info, cc = cc.velo$cc, n = 200, scale = 'sqrt', 
-                               cell.colors = ac(vi$cell.colors, alpha = 0.5), 
-                               cex = 0.8, arrow.scale = 15, show.grid.flow = TRUE, 
-                               min.grid.cell.mass = 0.5, grid.n = 40, arrow.lwd = 2,
-                               do.par = F, cell.border.alpha = 0.1, n.cores = 4,
-                               xlab = "UMAP1", ylab = "UMAP2")
-
-```
-
+### Adjusting alignment strength:
+Controlling how forcefully samples are pulled together — `alignment.strength`, and "supervised" alignment
+that down-weights edges within a chosen factor.
+* [Jupyter notebook](doc/conos-alignment-strength.ipynb)
 
 ## Installation
 
@@ -172,6 +117,16 @@ install.packages('devtools')
 devtools::install_github('kharchenkolab/conos')
 ```
 
+Conos pre-processes each sample with [pagoda2](https://github.com/kharchenkolab/pagoda2) (or Seurat). The
+example data used in the tutorials is the `conosPanel` package:
+
+```r
+install.packages('conosPanel', repos = 'https://kharchenkolab.github.io/drat/', type = 'source')
+```
+
+Some optional features need extra packages: `Seurat` (Seurat samples), `SeuratDisk` (`.h5seurat` files),
+`hdf5r` (`.h5ad` / loom files), and `lstar` (zarr stores / collection round-trips). Each is required only
+when you use the corresponding data source.
 
 #### System dependencies
 
@@ -204,7 +159,8 @@ brew install openssl curl-openssl libxml2 glpk gmp
 ```
 (You may need to run `brew uninstall curl` in order for `brew install curl-openssl` to be successful.)
 
-As of version 1.3.1, `conos` should successfully install on Mac OS. However, if there are issues, please refer to the following wiki page for further instructions on installing `conos` with Mac OS: [Installing conos for Mac OS](https://github.com/kharchenkolab/conos/wiki/Installing-conos-for-Mac-OS)
+If you hit issues installing `conos` on Mac OS, see the wiki page for further instructions:
+[Installing conos for Mac OS](https://github.com/kharchenkolab/conos/wiki/Installing-conos-for-Mac-OS)
 
 
 ### Running conos via Docker
