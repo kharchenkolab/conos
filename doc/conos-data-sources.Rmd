@@ -265,13 +265,12 @@ SingleCellExperiment, anndata and zarr.)
 ### Running conos from a Python (scanpy) workflow
 
 Conos itself is R-only, but the two directions above add up to a clean recommendation for **scanpy users**:
-keep your data as `.h5ad` and bridge through one short R step. Read each sample with `Pagoda2$fromAnnData()`,
-integrate with conos, write the collection, then `lstar convert` it back to `.h5ad`. Clustering, UMAP and
-marker tests then run *on the conos joint graph* in scanpy — it arrives in `obsp`/`connectivities`, so no
-re-integration is needed:
+keep your data as `.h5ad` and bridge through one short R step. **First**, the conos integration — the only R
+in the loop, saved as `conos_step.R` and run non-interactively:
 
-```r
-# conos_step.R  — the only R in the loop (run non-interactively with: Rscript conos_step.R)
+```{r}
+#| eval: false
+# conos_step.R
 library(conos); library(pagoda2); library(lstar)
 samples <- lapply(c("s1.h5ad", "s2.h5ad", "s3.h5ad"),
                   function(f) Pagoda2$fromAnnData(f)$run(steps = c("variance", "pca")))
@@ -280,10 +279,15 @@ con$runGraph(); con$runClustering(); con$runEmbedding()
 lstar_write(write_conos(con), "panel.lstar.zarr")
 ```
 
+**Then**, run it and convert the collection to a scanpy-ready `.h5ad` — both from the shell:
+
 ```bash
 Rscript conos_step.R                               # the conos integration (no interactive R)
-lstar convert panel.lstar.zarr integrated.h5ad     # -> back to a scanpy-ready .h5ad
+lstar convert panel.lstar.zarr integrated.h5ad     # -> a scanpy-ready .h5ad
 ```
+
+**Finally**, pick up in scanpy. The conos joint graph is already in `adata.obsp['connectivities']`, so
+clustering and embedding run directly on it — no re-integration:
 
 ```python
 import scanpy as sc
