@@ -36,6 +36,10 @@ Major release, coordinated with pagoda2 2.0 and lstar.
 
 ## Changes
 
+* Removed `p2app4conos()` (the pagoda2 web-app export — the app is dropped in pagoda2.1) and
+  `saveConosForScanPy()` (the bespoke ScanPy export that wrote "corrected" pseudo-expression). For
+  interchange, read/write samples and whole collections through the pagoda2 / lstar paths (see the
+  data-sources tutorial); markers and the joint graph travel with the object.
 * The default Leiden `n.iterations` is now **5** (was leidenAlg's default of 2) for better convergence on
   large joint graphs.
 * The default alignment `space` remains `"PCA"` (reciprocal PCA); `"CPCA"` stays available but non-default,
