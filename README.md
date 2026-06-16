@@ -15,7 +15,6 @@
   * [Data sources (Seurat, anndata, loom, lstar)](#data-sources-seurat-anndata-loom-lstar)
   * [Adjusting alignment strength](#adjusting-alignment-strength)
 - [Installation](#installation)
-  * [Running conos via Docker](#running-conos-via-docker)
 - [References](#references)
   
 ## Conos: Clustering On Network Of Samples
@@ -161,40 +160,6 @@ brew install openssl curl-openssl libxml2 glpk gmp
 
 If you hit issues installing `conos` on Mac OS, see the wiki page for further instructions:
 [Installing conos for Mac OS](https://github.com/kharchenkolab/conos/wiki/Installing-conos-for-Mac-OS)
-
-
-### Running conos via Docker
-
-If your system configuration is making it difficult to install `conos` natively, an alternative way to get `conos` running is through a docker container.
-
-**Note:** On Mac OS X, Docker Machine has Memory and CPU limits. To control it, please check instructions either for [CLI](https://stackoverflow.com/questions/32834082/how-to-increase-docker-machine-memory-mac/32834453#32834453) or for [Docker Desktop](https://docs.docker.com/docker-for-mac/#advanced).
-
-#### Ready-to-run Docker image
-
-The docker distribution has the latest version and also includes the [pagoda2 package](https://github.com/kharchenkolab/pagoda2). To start a docker container, first [install docker](https://docs.docker.com/install/) on your platform and then start the `pagoda2` container with the following command in the shell:
-
-```
-docker run -p 8787:8787 -e PASSWORD=pass pkharchenkolab/conos:latest
-```
-
-The first time you run this command, it will download several large images so make sure that you have fast internet access setup. You can then point your browser to http://localhost:8787/ to get an Rstudio environment with `pagoda2` and `conos` installed (please log in using credentials username=`rstudio`, password=`pass`). Explore the [docker --mount option](https://docs.docker.com/storage/volumes/) to allow access of the docker image to your local files.
-
-**Note:** If you already downloaded the docker image and want to update it, please pull the latest image with: 
-```
-docker pull pkharchenkolab/conos:latest
-```
-
-#### Building Docker image from the Dockerfile
-
-If you want to build image by your own, download the [Dockerfile](https://github.com/kharchenkolab/conos/blob/main/docker/Dockerfile) (available in this repo under `/docker`) and run to following command to build it:
-```
-docker build -t conos .
-```
-This will create a "conos" docker image on your system (please be patient, as the build could take approximately 30-50 minutes to finish).
-You can then run it using the following command:
-```
-docker run -d -p 8787:8787 -e PASSWORD=pass --name conos -it conos
-```
 
 
 ## References
