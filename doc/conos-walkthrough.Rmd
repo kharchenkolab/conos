@@ -16,20 +16,33 @@ stitches their neighbourhoods into a single weighted graph. On that joint graph 
 embedding, and differential expression — so cells of the same type connect *across* samples while each
 sample keeps its own structure.
 
-In this walkthrough we take a panel of four bone-marrow (BM) and cord-blood (CB) samples through the whole
-standard workflow:
+We run the whole standard workflow on a panel of four bone-marrow (BM) and cord-blood (CB) samples. When
+you need to control *how* the samples are aligned (alignment spaces, strength, memory, multimodal data),
+see the [advanced tutorial](conos-advanced.ipynb).
 
-1. pre-process each sample on its own,
-2. build the **joint graph** and find clusters of corresponding cells across all samples,
-3. embed and visualise the joint structure,
-4. characterise clusters with **marker genes**, and
-5. **transfer cell-type annotations** from one labelled sample to the rest.
+## The workflow at a glance
 
-When you need to control *how* the samples are aligned (alignment spaces, strength, memory, multimodal
-data), see the [advanced tutorial](conos-advanced.ipynb).
+The entire standard analysis is just a handful of calls on the Conos object. The rest of this walkthrough
+runs through each line, explains the parameters, and shows what to look for in the output:
+
+```r
+# one Pagoda2 object per sample: normalisation + PCA (+ a within-sample clustering)
+samples <- lapply(panel, function(counts) Pagoda2$from(counts)$run())
+
+con <- Conos$new(samples)
+con$runGraph()           # align every pair of samples into one joint graph
+con$runClustering()      # joint clusters (Leiden communities)
+con$runEmbedding()       # joint 2-D embedding (UMAP)
+
+con$plotGraph()                          # joint embedding: colour by cluster / sample / gene
+con$plotPanel()                          # the same, faceted per sample
+con$plotMarkerDotPlot()                  # top marker genes per cluster
+con$propagateLabels(labels = cellannot)  # transfer annotations from one sample to the rest
+```
 
 ## Contents
 
+- [The workflow at a glance](#the-workflow-at-a-glance)
 - [Loading the data](#loading-the-data)
 - [Pre-processing each sample](#pre-processing-each-sample)
 - [Constructing the Conos object](#constructing-the-conos-object)
@@ -43,7 +56,6 @@ data), see the [advanced tutorial](conos-advanced.ipynb).
 - [Marker genes](#marker-genes)
 - [Transferring annotations between samples](#transferring-annotations-between-samples)
 - [Markers of the transferred cell types](#markers-of-the-transferred-cell-types)
-- [Recap](#recap)
 
 ## Loading the data
 
@@ -331,18 +343,6 @@ across all the transferred types reads as a clean marker map of the panel:
 con$plotMarkerDotPlot(groups = transfer$labels, n.genes.per.group = 3)
 ```
 
-## Recap
-
-The standard workflow is four calls on the Conos object:
-
-```r
-con <- Conos$new(samples)
-con$runGraph()        # align samples -> joint graph
-con$runClustering()   # Leiden communities
-con$runEmbedding()    # joint 2-D embedding
-```
-
-plus `plotGraph()` / `plotPanel()` / `plotClusterBarplots()` to visualise, `runMarkers()` +
-`plotMarkerDotPlot()` for markers, and `propagateLabels()` for annotation transfer. To control the
-alignment space, strength, memory, and multimodal data, continue to the
+That is the whole standard workflow previewed at the top, now seen end to end. To control *how* the
+samples are aligned — alignment space, strength, memory, and multimodal data — continue to the
 [advanced tutorial](conos-advanced.ipynb).

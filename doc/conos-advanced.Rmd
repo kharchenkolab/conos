@@ -15,8 +15,27 @@ knobs that matter when integration is harder: **which space** to align in, **how
 **memory** on large panels, **what the samples actually share** (modalities), and how to **transfer
 labels**. We reuse the same bone-marrow / cord-blood panel and take each topic one small step at a time.
 
+## The knobs at a glance
+
+These are the dials this tutorial covers, in the order they arise. Each section below explains one of them
+in detail; reach for them only when the walkthrough defaults are not enough:
+
+```r
+con$planIntegration()                  # what's integrable, per modality, before you build anything
+
+con$runGraph(space = ,                 # PCA (default) / CCA / CPCA: how each pair is matched
+             alignment.strength = ,    # how forcefully samples are pulled together
+             pairs.storage = )         # keep / drop / disk: memory for the per-pair rotations
+
+scanResolution(con)                    # scan clustering granularity ...
+con$runClustering(resolution = )       # ... then commit to a resolution
+
+con$propagateLabels(method = )         # transfer labels: "diffusion" (scales) vs "solver" (fast/accurate)
+```
+
 ## Contents
 
+- [The knobs at a glance](#the-knobs-at-a-glance)
 - [Setup](#setup)
 - [Plan the integration first](#plan-the-integration-first)
 - [Choosing the alignment space](#choosing-the-alignment-space)
@@ -25,7 +44,6 @@ labels**. We reuse the same bone-marrow / cord-blood panel and take each topic o
 - [Tuning the alignment strength](#tuning-the-alignment-strength)
 - [Memory on large panels](#memory-on-large-panels)
 - [Multimodal panels (facets)](#multimodal-panels-facets)
-- [Recap](#recap)
 
 ## Setup
 
@@ -259,10 +277,6 @@ single shared modality (the common default, usually RNA) — the recommended, ro
 modality-aware accessors (`getModalities()`, `getDefaultModality()`) expose the rest. Joint multimodal
 *fusion* (weighting modalities per cell, à la WNN) is the next step on the roadmap.
 
-## Recap
-
-`planIntegration()` to see what's realistic → `runGraph(space=, alignment.strength=, pairs.storage=)` to
-control the alignment and memory → `scanResolution()` + `runClustering(resolution=)` to tune granularity →
-`propagateLabels(method=)` to transfer annotations. Start from the
-[walkthrough](conos-walkthrough.ipynb) defaults and reach for these knobs only when a particular integration
-needs them.
+Those are the knobs previewed at the top, now seen in detail. Start from the
+[walkthrough](conos-walkthrough.ipynb) defaults and reach for them only when a particular integration needs
+them.

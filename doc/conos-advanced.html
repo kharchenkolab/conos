@@ -2207,7 +2207,8 @@ vertical-align: -.125em;
     <h2 id="toc-title">Table of contents</h2>
    
   <ul class="collapse">
-  <li><a href="#contents" id="toc-contents" class="nav-link active" data-scroll-target="#contents">Contents</a></li>
+  <li><a href="#the-knobs-at-a-glance" id="toc-the-knobs-at-a-glance" class="nav-link active" data-scroll-target="#the-knobs-at-a-glance">The knobs at a glance</a></li>
+  <li><a href="#contents" id="toc-contents" class="nav-link" data-scroll-target="#contents">Contents</a></li>
   <li><a href="#setup" id="toc-setup" class="nav-link" data-scroll-target="#setup">Setup</a></li>
   <li><a href="#plan-the-integration-first" id="toc-plan-the-integration-first" class="nav-link" data-scroll-target="#plan-the-integration-first">Plan the integration first</a></li>
   <li><a href="#choosing-the-alignment-space" id="toc-choosing-the-alignment-space" class="nav-link" data-scroll-target="#choosing-the-alignment-space">Choosing the alignment space</a></li>
@@ -2216,7 +2217,6 @@ vertical-align: -.125em;
   <li><a href="#tuning-the-alignment-strength" id="toc-tuning-the-alignment-strength" class="nav-link" data-scroll-target="#tuning-the-alignment-strength">Tuning the alignment strength</a></li>
   <li><a href="#memory-on-large-panels" id="toc-memory-on-large-panels" class="nav-link" data-scroll-target="#memory-on-large-panels">Memory on large panels</a></li>
   <li><a href="#multimodal-panels-facets" id="toc-multimodal-panels-facets" class="nav-link" data-scroll-target="#multimodal-panels-facets">Multimodal panels (facets)</a></li>
-  <li><a href="#recap" id="toc-recap" class="nav-link" data-scroll-target="#recap">Recap</a></li>
   </ul>
 <div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="conos-advanced.ipynb" download="conos-advanced.ipynb"><i class="bi bi-journal-code"></i>Jupyter</a></li></ul></div></nav>
 </div>
@@ -2244,9 +2244,24 @@ vertical-align: -.125em;
 
 
 <p>This tutorial assumes you have worked through the <a href="conos-walkthrough.ipynb">walkthrough</a>. It covers the knobs that matter when integration is harder: <strong>which space</strong> to align in, <strong>how strongly</strong> to align, <strong>memory</strong> on large panels, <strong>what the samples actually share</strong> (modalities), and how to <strong>transfer labels</strong>. We reuse the same bone-marrow / cord-blood panel and take each topic one small step at a time.</p>
+<section id="the-knobs-at-a-glance" class="level2">
+<h2 class="anchored" data-anchor-id="the-knobs-at-a-glance">The knobs at a glance</h2>
+<p>These are the dials this tutorial covers, in the order they arise. Each section below explains one of them in detail; reach for them only when the walkthrough defaults are not enough:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">planIntegration</span>()                  <span class="co"># what&#39;s integrable, per modality, before you build anything</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">runGraph</span>(<span class="at">space =</span> ,                 <span class="co"># PCA (default) / CCA / CPCA: how each pair is matched</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>             <span class="at">alignment.strength =</span> ,    <span class="co"># how forcefully samples are pulled together</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>             <span class="at">pairs.storage =</span> )         <span class="co"># keep / drop / disk: memory for the per-pair rotations</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">scanResolution</span>(con)                    <span class="co"># scan clustering granularity ...</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">runClustering</span>(<span class="at">resolution =</span> )       <span class="co"># ... then commit to a resolution</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">propagateLabels</span>(<span class="at">method =</span> )         <span class="co"># transfer labels: &quot;diffusion&quot; (scales) vs &quot;solver&quot; (fast/accurate)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
 <section id="contents" class="level2">
 <h2 class="anchored" data-anchor-id="contents">Contents</h2>
 <ul>
+<li><a href="#the-knobs-at-a-glance">The knobs at a glance</a></li>
 <li><a href="#setup">Setup</a></li>
 <li><a href="#plan-the-integration-first">Plan the integration first</a></li>
 <li><a href="#choosing-the-alignment-space">Choosing the alignment space</a></li>
@@ -2255,31 +2270,30 @@ vertical-align: -.125em;
 <li><a href="#tuning-the-alignment-strength">Tuning the alignment strength</a></li>
 <li><a href="#memory-on-large-panels">Memory on large panels</a></li>
 <li><a href="#multimodal-panels-facets">Multimodal panels (facets)</a></li>
-<li><a href="#recap">Recap</a></li>
 </ul>
 </section>
 <section id="setup" class="level2">
 <h2 class="anchored" data-anchor-id="setup">Setup</h2>
 <p>Same preparation as the walkthrough: load the panel, down-sample for speed, and turn each sample into a <code>Pagoda2</code> object carrying a PCA reduction.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(conos)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(pagoda2)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>panel <span class="ot">&lt;-</span> <span class="fu">lapply</span>(conosPanel<span class="sc">::</span>panel, <span class="cf">function</span>(m) m[, <span class="fu">sample</span>(<span class="fu">ncol</span>(m), <span class="dv">600</span>)])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(conos)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(pagoda2)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>panel <span class="ot">&lt;-</span> <span class="fu">lapply</span>(conosPanel<span class="sc">::</span>panel, <span class="cf">function</span>(m) m[, <span class="fu">sample</span>(<span class="fu">ncol</span>(m), <span class="dv">600</span>)])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>samples <span class="ot">&lt;-</span> <span class="fu">lapply</span>(panel, <span class="cf">function</span>(counts) {</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  Pagoda2<span class="sc">$</span><span class="fu">from</span>(counts, <span class="at">verbose =</span> <span class="cn">FALSE</span>)<span class="sc">$</span><span class="fu">run</span>(<span class="at">steps =</span> <span class="fu">c</span>(<span class="st">&quot;variance&quot;</span>, <span class="st">&quot;pca&quot;</span>), <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>})</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>con <span class="ot">&lt;-</span> Conos<span class="sc">$</span><span class="fu">new</span>(samples, <span class="at">n.cores =</span> <span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>samples <span class="ot">&lt;-</span> <span class="fu">lapply</span>(panel, <span class="cf">function</span>(counts) {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  Pagoda2<span class="sc">$</span><span class="fu">from</span>(counts, <span class="at">verbose =</span> <span class="cn">FALSE</span>)<span class="sc">$</span><span class="fu">run</span>(<span class="at">steps =</span> <span class="fu">c</span>(<span class="st">&quot;variance&quot;</span>, <span class="st">&quot;pca&quot;</span>), <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>con <span class="ot">&lt;-</span> Conos<span class="sc">$</span><span class="fu">new</span>(samples, <span class="at">n.cores =</span> <span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="plan-the-integration-first" class="level2">
 <h2 class="anchored" data-anchor-id="plan-the-integration-first">Plan the integration first</h2>
 <p><code>planIntegration()</code> is a read-only check you run <strong>before</strong> building the graph. It polls each sample’s molecular modalities (here just RNA; for multimodal samples it would also list ADT/ATAC) and, per modality, reports how many features are shared across samples and how well they overlap — with a <em>usable / marginal / not-integrable</em> verdict. This is where you catch problems like independently-called scATAC peaks that simply cannot be reconciled.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>plan <span class="ot">&lt;-</span> con<span class="sc">$</span><span class="fu">planIntegration</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>plan <span class="ot">&lt;-</span> con<span class="sc">$</span><span class="fu">planIntegration</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Integration plan — 4 samples</code></pre>
 </div>
@@ -2290,7 +2304,7 @@ vertical-align: -.125em;
 <div class="cell-output cell-output-stderr">
 <pre><code>common default modality: RNA — buildGraph() integrates on it</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>plan</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>plan</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>  modality samples common.features overlap.min overlap.med verdict
 1      RNA     4/4           33694           1           1  usable</code></pre>
@@ -2308,11 +2322,11 @@ vertical-align: -.125em;
 </ul>
 <p>Rather than take that on faith, let’s see it. We build the graph with each space and look at the joint embedding <strong>coloured by sample</strong> — the more the samples interleave, the more aggressively that space mixed them. First the default, reciprocal PCA:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">runGraph</span>(<span class="at">space =</span> <span class="st">&quot;PCA&quot;</span>, <span class="at">k =</span> <span class="dv">20</span>, <span class="at">k.self =</span> <span class="dv">5</span>, <span class="at">ncomps =</span> <span class="dv">30</span>, <span class="at">n.odgenes =</span> <span class="dv">2000</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">runEmbedding</span>(<span class="at">method =</span> <span class="st">&quot;UMAP&quot;</span>, <span class="at">embedding.name =</span> <span class="st">&quot;umap_pca&quot;</span>, <span class="at">min.visited.verts =</span> <span class="dv">100</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">runGraph</span>(<span class="at">space =</span> <span class="st">&quot;PCA&quot;</span>, <span class="at">k =</span> <span class="dv">20</span>, <span class="at">k.self =</span> <span class="dv">5</span>, <span class="at">ncomps =</span> <span class="dv">30</span>, <span class="at">n.odgenes =</span> <span class="dv">2000</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">runEmbedding</span>(<span class="at">method =</span> <span class="st">&quot;UMAP&quot;</span>, <span class="at">embedding.name =</span> <span class="st">&quot;umap_pca&quot;</span>, <span class="at">min.visited.verts =</span> <span class="dv">100</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">plotGraph</span>(<span class="at">embedding =</span> <span class="st">&quot;umap_pca&quot;</span>, <span class="at">color.by =</span> <span class="st">&quot;sample&quot;</span>, <span class="at">mark.groups =</span> <span class="cn">FALSE</span>, <span class="at">show.legend =</span> <span class="cn">TRUE</span>, <span class="at">alpha =</span> <span class="fl">0.1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">plotGraph</span>(<span class="at">embedding =</span> <span class="st">&quot;umap_pca&quot;</span>, <span class="at">color.by =</span> <span class="st">&quot;sample&quot;</span>, <span class="at">mark.groups =</span> <span class="cn">FALSE</span>, <span class="at">show.legend =</span> <span class="cn">TRUE</span>, <span class="at">alpha =</span> <span class="fl">0.1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -2323,11 +2337,11 @@ vertical-align: -.125em;
 </div>
 <p>Now CCA, on the same panel (a separately named embedding so we can compare the two):</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">runGraph</span>(<span class="at">space =</span> <span class="st">&quot;CCA&quot;</span>, <span class="at">k =</span> <span class="dv">20</span>, <span class="at">k.self =</span> <span class="dv">5</span>, <span class="at">ncomps =</span> <span class="dv">30</span>, <span class="at">n.odgenes =</span> <span class="dv">2000</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">runEmbedding</span>(<span class="at">method =</span> <span class="st">&quot;UMAP&quot;</span>, <span class="at">embedding.name =</span> <span class="st">&quot;umap_cca&quot;</span>, <span class="at">min.visited.verts =</span> <span class="dv">100</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">runGraph</span>(<span class="at">space =</span> <span class="st">&quot;CCA&quot;</span>, <span class="at">k =</span> <span class="dv">20</span>, <span class="at">k.self =</span> <span class="dv">5</span>, <span class="at">ncomps =</span> <span class="dv">30</span>, <span class="at">n.odgenes =</span> <span class="dv">2000</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">runEmbedding</span>(<span class="at">method =</span> <span class="st">&quot;UMAP&quot;</span>, <span class="at">embedding.name =</span> <span class="st">&quot;umap_cca&quot;</span>, <span class="at">min.visited.verts =</span> <span class="dv">100</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">plotGraph</span>(<span class="at">embedding =</span> <span class="st">&quot;umap_cca&quot;</span>, <span class="at">color.by =</span> <span class="st">&quot;sample&quot;</span>, <span class="at">mark.groups =</span> <span class="cn">FALSE</span>, <span class="at">show.legend =</span> <span class="cn">TRUE</span>, <span class="at">alpha =</span> <span class="fl">0.1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">plotGraph</span>(<span class="at">embedding =</span> <span class="st">&quot;umap_cca&quot;</span>, <span class="at">color.by =</span> <span class="st">&quot;sample&quot;</span>, <span class="at">mark.groups =</span> <span class="cn">FALSE</span>, <span class="at">show.legend =</span> <span class="cn">TRUE</span>, <span class="at">alpha =</span> <span class="fl">0.1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -2338,15 +2352,15 @@ vertical-align: -.125em;
 </div>
 <p>CCA pulls the samples together more tightly. On a well-behaved panel like this one that is unnecessary — reciprocal PCA already interleaves the samples — and over-mixing risks merging populations that should stay separate. So we <strong>keep reciprocal PCA</strong> for the rest of the tutorial; rebuild the graph and embedding we’ll use from here on:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">runGraph</span>(<span class="at">space =</span> <span class="st">&quot;PCA&quot;</span>, <span class="at">k =</span> <span class="dv">20</span>, <span class="at">k.self =</span> <span class="dv">5</span>, <span class="at">ncomps =</span> <span class="dv">30</span>, <span class="at">n.odgenes =</span> <span class="dv">2000</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">runEmbedding</span>(<span class="at">method =</span> <span class="st">&quot;UMAP&quot;</span>, <span class="at">min.visited.verts =</span> <span class="dv">100</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">runGraph</span>(<span class="at">space =</span> <span class="st">&quot;PCA&quot;</span>, <span class="at">k =</span> <span class="dv">20</span>, <span class="at">k.self =</span> <span class="dv">5</span>, <span class="at">ncomps =</span> <span class="dv">30</span>, <span class="at">n.odgenes =</span> <span class="dv">2000</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">runEmbedding</span>(<span class="at">method =</span> <span class="st">&quot;UMAP&quot;</span>, <span class="at">min.visited.verts =</span> <span class="dv">100</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="choosing-a-clustering-resolution" class="level2">
 <h2 class="anchored" data-anchor-id="choosing-a-clustering-resolution">Choosing a clustering resolution</h2>
 <p><code>scanResolution()</code> runs the community detection over a range of resolutions and reports the number of clusters (and modularity), so you can pick a value deliberately rather than guess:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">scanResolution</span>(con, <span class="at">resolutions =</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="dv">1</span>, <span class="fl">1.5</span>, <span class="dv">2</span>), <span class="at">plot =</span> <span class="cn">TRUE</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">scanResolution</span>(con, <span class="at">resolutions =</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="dv">1</span>, <span class="fl">1.5</span>, <span class="dv">2</span>), <span class="at">plot =</span> <span class="cn">TRUE</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -2354,7 +2368,7 @@ vertical-align: -.125em;
 </figure>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>res</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>res</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>  resolution n.clusters modularity
 1        0.5          5  0.7274926
@@ -2365,7 +2379,7 @@ vertical-align: -.125em;
 </div>
 <p>Higher resolution = more, finer clusters. Pick the coarsest resolution that still separates the populations you care about, then commit to it:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">runClustering</span>(<span class="at">resolution =</span> <span class="fl">1.5</span>, <span class="at">name =</span> <span class="st">&quot;leiden_r15&quot;</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">runClustering</span>(<span class="at">resolution =</span> <span class="fl">1.5</span>, <span class="at">name =</span> <span class="st">&quot;leiden_r15&quot;</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="label-transfer-diffusion-vs-solver" class="level2">
@@ -2373,14 +2387,14 @@ vertical-align: -.125em;
 <p><code>propagateLabels()</code> spreads a partial set of labels over the joint graph. It has two engines that give near-identical results — the difference is how they scale. Let’s walk through it.</p>
 <p>First set up the problem: take the clustering as ground truth, reveal a random <strong>30%</strong> of cells as the “reference”, and hide the rest.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>groups    <span class="ot">&lt;-</span> con<span class="sc">$</span>clusters<span class="sc">$</span>leiden_r15<span class="sc">$</span>groups</span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>reference <span class="ot">&lt;-</span> groups[<span class="fu">sample</span>(<span class="fu">length</span>(groups), <span class="fu">round</span>(<span class="fl">0.30</span> <span class="sc">*</span> <span class="fu">length</span>(groups)))]</span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>held.out  <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(<span class="fu">names</span>(groups), <span class="fu">names</span>(reference))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>groups    <span class="ot">&lt;-</span> con<span class="sc">$</span>clusters<span class="sc">$</span>leiden_r15<span class="sc">$</span>groups</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>reference <span class="ot">&lt;-</span> groups[<span class="fu">sample</span>(<span class="fu">length</span>(groups), <span class="fu">round</span>(<span class="fl">0.30</span> <span class="sc">*</span> <span class="fu">length</span>(groups)))]</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>held.out  <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(<span class="fu">names</span>(groups), <span class="fu">names</span>(reference))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>The reference is sparse — only a scattering of labelled seeds across the embedding:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">plotGraph</span>(<span class="at">groups =</span> reference, <span class="at">mark.groups =</span> <span class="cn">FALSE</span>, <span class="at">show.legend =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">plotGraph</span>(<span class="at">groups =</span> reference, <span class="at">mark.groups =</span> <span class="cn">FALSE</span>, <span class="at">show.legend =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -2391,10 +2405,10 @@ vertical-align: -.125em;
 </div>
 <p><strong><code>&quot;diffusion&quot;</code> (default)</strong> — iterative graph diffusion; scales to very large panels.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>td <span class="ot">&lt;-</span> con<span class="sc">$</span><span class="fu">propagateLabels</span>(<span class="at">labels =</span> reference, <span class="at">method =</span> <span class="st">&quot;diffusion&quot;</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>td <span class="ot">&lt;-</span> con<span class="sc">$</span><span class="fu">propagateLabels</span>(<span class="at">labels =</span> reference, <span class="at">method =</span> <span class="st">&quot;diffusion&quot;</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">plotGraph</span>(<span class="at">groups =</span> td<span class="sc">$</span>labels)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">plotGraph</span>(<span class="at">groups =</span> td<span class="sc">$</span>labels)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -2406,13 +2420,13 @@ vertical-align: -.125em;
 <p>The labels have filled in across the whole embedding from those few seeds.</p>
 <p><strong><code>&quot;solver&quot;</code></strong> — a Zhu–Ghahramani–Lafferty harmonic solve; fast and slightly more accurate at typical sizes, but its linear solve does not scale much past ~20k cells.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>ts <span class="ot">&lt;-</span> con<span class="sc">$</span><span class="fu">propagateLabels</span>(<span class="at">labels =</span> reference, <span class="at">method =</span> <span class="st">&quot;solver&quot;</span>, <span class="at">solver =</span> <span class="st">&quot;Matrix&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>ts <span class="ot">&lt;-</span> con<span class="sc">$</span><span class="fu">propagateLabels</span>(<span class="at">labels =</span> reference, <span class="at">method =</span> <span class="st">&quot;solver&quot;</span>, <span class="at">solver =</span> <span class="st">&quot;Matrix&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Both engines recover the held-out labels well above chance, and they largely agree with each other:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">diffusion_accuracy =</span> <span class="fu">round</span>(<span class="fu">mean</span>(td<span class="sc">$</span>labels[held.out] <span class="sc">==</span> <span class="fu">as.character</span>(groups[held.out])), <span class="dv">3</span>),</span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">solver_accuracy    =</span> <span class="fu">round</span>(<span class="fu">mean</span>(ts<span class="sc">$</span>labels[held.out] <span class="sc">==</span> <span class="fu">as.character</span>(groups[held.out])), <span class="dv">3</span>),</span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">engine_agreement   =</span> <span class="fu">round</span>(<span class="fu">mean</span>(td<span class="sc">$</span>labels[held.out] <span class="sc">==</span> ts<span class="sc">$</span>labels[held.out]), <span class="dv">3</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">diffusion_accuracy =</span> <span class="fu">round</span>(<span class="fu">mean</span>(td<span class="sc">$</span>labels[held.out] <span class="sc">==</span> <span class="fu">as.character</span>(groups[held.out])), <span class="dv">3</span>),</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">solver_accuracy    =</span> <span class="fu">round</span>(<span class="fu">mean</span>(ts<span class="sc">$</span>labels[held.out] <span class="sc">==</span> <span class="fu">as.character</span>(groups[held.out])), <span class="dv">3</span>),</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">engine_agreement   =</span> <span class="fu">round</span>(<span class="fu">mean</span>(td<span class="sc">$</span>labels[held.out] <span class="sc">==</span> ts<span class="sc">$</span>labels[held.out]), <span class="dv">3</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>diffusion_accuracy    solver_accuracy   engine_agreement 
              0.945              0.965              0.965 </code></pre>
@@ -2420,7 +2434,7 @@ vertical-align: -.125em;
 </div>
 <p>Either way, <code>*$uncertainty</code> flags the cells whose transferred label is least trustworthy — typically those at the boundaries between populations. Painting it onto the embedding tells you <em>where</em> to trust the transfer:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">plotGraph</span>(<span class="at">colors =</span> td<span class="sc">$</span>uncertainty)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">plotGraph</span>(<span class="at">colors =</span> td<span class="sc">$</span>uncertainty)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -2435,8 +2449,8 @@ vertical-align: -.125em;
 <h2 class="anchored" data-anchor-id="tuning-the-alignment-strength">Tuning the alignment strength</h2>
 <p>Within a space, <strong>how forcefully</strong> samples are pulled together is set by <code>alignment.strength</code> (0 = none, higher = stronger) together with the neighbourhood sizes <code>k</code> / <code>k.self</code>. Raise it for stronger batch correction across heterogeneous samples; lower it to preserve subtle within-sample structure. It is the first dial to reach for when the sample-mixing plot looks under- or over-corrected — leave it at the default otherwise.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">runGraph</span>(<span class="at">space =</span> <span class="st">&quot;PCA&quot;</span>, <span class="at">alignment.strength =</span> <span class="fl">0.3</span>, <span class="at">k =</span> <span class="dv">20</span>, <span class="at">k.self =</span> <span class="dv">5</span>,</span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>             <span class="at">ncomps =</span> <span class="dv">30</span>, <span class="at">n.odgenes =</span> <span class="dv">2000</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span><span class="fu">runGraph</span>(<span class="at">space =</span> <span class="st">&quot;PCA&quot;</span>, <span class="at">alignment.strength =</span> <span class="fl">0.3</span>, <span class="at">k =</span> <span class="dv">20</span>, <span class="at">k.self =</span> <span class="dv">5</span>,</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>             <span class="at">ncomps =</span> <span class="dv">30</span>, <span class="at">n.odgenes =</span> <span class="dv">2000</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>(After changing the graph you would re-run <code>runClustering()</code> / <code>runEmbedding()</code> to see the effect.)</p>
 </section>
@@ -2450,14 +2464,14 @@ vertical-align: -.125em;
 </ul>
 <p>The disk path costs almost nothing in time, because the rotations are written once after the graph is built. We can time it:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>t_keep <span class="ot">&lt;-</span> <span class="fu">system.time</span>(con<span class="sc">$</span><span class="fu">runGraph</span>(<span class="at">space =</span> <span class="st">&quot;PCA&quot;</span>, <span class="at">k =</span> <span class="dv">20</span>, <span class="at">k.self =</span> <span class="dv">5</span>, <span class="at">ncomps =</span> <span class="dv">30</span>, <span class="at">n.odgenes =</span> <span class="dv">2000</span>,</span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">pairs.storage =</span> <span class="st">&quot;keep&quot;</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>))[<span class="st">&quot;elapsed&quot;</span>]</span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>t_disk <span class="ot">&lt;-</span> <span class="fu">system.time</span>(con<span class="sc">$</span><span class="fu">runGraph</span>(<span class="at">space =</span> <span class="st">&quot;PCA&quot;</span>, <span class="at">k =</span> <span class="dv">20</span>, <span class="at">k.self =</span> <span class="dv">5</span>, <span class="at">ncomps =</span> <span class="dv">30</span>, <span class="at">n.odgenes =</span> <span class="dv">2000</span>,</span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">pairs.storage =</span> <span class="st">&quot;disk&quot;</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>))[<span class="st">&quot;elapsed&quot;</span>]</span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">keep_seconds =</span> <span class="fu">round</span>(t_keep, <span class="dv">2</span>), <span class="at">disk_seconds =</span> <span class="fu">round</span>(t_disk, <span class="dv">2</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>t_keep <span class="ot">&lt;-</span> <span class="fu">system.time</span>(con<span class="sc">$</span><span class="fu">runGraph</span>(<span class="at">space =</span> <span class="st">&quot;PCA&quot;</span>, <span class="at">k =</span> <span class="dv">20</span>, <span class="at">k.self =</span> <span class="dv">5</span>, <span class="at">ncomps =</span> <span class="dv">30</span>, <span class="at">n.odgenes =</span> <span class="dv">2000</span>,</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">pairs.storage =</span> <span class="st">&quot;keep&quot;</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>))[<span class="st">&quot;elapsed&quot;</span>]</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>t_disk <span class="ot">&lt;-</span> <span class="fu">system.time</span>(con<span class="sc">$</span><span class="fu">runGraph</span>(<span class="at">space =</span> <span class="st">&quot;PCA&quot;</span>, <span class="at">k =</span> <span class="dv">20</span>, <span class="at">k.self =</span> <span class="dv">5</span>, <span class="at">ncomps =</span> <span class="dv">30</span>, <span class="at">n.odgenes =</span> <span class="dv">2000</span>,</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">pairs.storage =</span> <span class="st">&quot;disk&quot;</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>))[<span class="st">&quot;elapsed&quot;</span>]</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">keep_seconds =</span> <span class="fu">round</span>(t_keep, <span class="dv">2</span>), <span class="at">disk_seconds =</span> <span class="fu">round</span>(t_disk, <span class="dv">2</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>keep_seconds.elapsed disk_seconds.elapsed 
-                3.09                 2.28 </code></pre>
+                3.65                 3.25 </code></pre>
 </div>
 </div>
 <p>On a four-sample panel the RAM saved is small, but it grows as the <em>square</em> of the number of samples — so <code>&quot;disk&quot;</code> is the right choice for large atlases, at essentially no time cost. (On lstar-backed pagoda2 samples the build path also streams expression in gene blocks, keeping the per-sample footprint flat.)</p>
@@ -2465,10 +2479,7 @@ vertical-align: -.125em;
 <section id="multimodal-panels-facets" class="level2">
 <h2 class="anchored" data-anchor-id="multimodal-panels-facets">Multimodal panels (facets)</h2>
 <p>When samples carry more than one molecular modality (RNA + ADT in CITE-seq, or RNA + ATAC in multiome, produced with pagoda2 <em>facets</em>), <code>planIntegration()</code> polls and assesses <strong>each</strong> modality separately, so you can see which ones are actually integrable across the panel before committing. Today Conos aligns on a single shared modality (the common default, usually RNA) — the recommended, robust path — and modality-aware accessors (<code>getModalities()</code>, <code>getDefaultModality()</code>) expose the rest. Joint multimodal <em>fusion</em> (weighting modalities per cell, à la WNN) is the next step on the roadmap.</p>
-</section>
-<section id="recap" class="level2">
-<h2 class="anchored" data-anchor-id="recap">Recap</h2>
-<p><code>planIntegration()</code> to see what’s realistic → <code>runGraph(space=, alignment.strength=, pairs.storage=)</code> to control the alignment and memory → <code>scanResolution()</code> + <code>runClustering(resolution=)</code> to tune granularity → <code>propagateLabels(method=)</code> to transfer annotations. Start from the <a href="conos-walkthrough.ipynb">walkthrough</a> defaults and reach for these knobs only when a particular integration needs them.</p>
+<p>Those are the knobs previewed at the top, now seen in detail. Start from the <a href="conos-walkthrough.ipynb">walkthrough</a> defaults and reach for them only when a particular integration needs them.</p>
 </section>
 
 </main>
