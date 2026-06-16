@@ -88,11 +88,19 @@ scaledMatricesSeuratV3 <- function(so.objs, data.type, od.genes, var.scale, neig
 
 #' @keywords internal
 scaledMatrices <- function(samples, data.type, od.genes, var.scale) {
-  if ("Pagoda2" %in% class(samples[[1]])) {
+  sample.class <- function(s) if (inherits(s, "Pagoda2")) "Pagoda2" else if (inherits(s, "seurat")) "seurat" else if (inherits(s, "Seurat")) "Seurat" else "other"
+  classes <- vapply(samples, sample.class, character(1))
+  ## Mixed panel (e.g. some pagoda2, some Seurat): the per-type builders below assume a homogeneous list
+  ## (e.g. pagoda2's common-variance scaling reads each object's $misc$varinfo), so route a heterogeneous
+  ## panel through a type-agnostic builder that scales each sample on its own normalized expression.
+  if (length(unique(classes)) > 1L) {
+    return(scaledMatricesMixed(samples, od.genes = od.genes, var.scale = var.scale))
+  }
+  if (classes[1] == "Pagoda2") {
     return(scaledMatricesP2(samples, data.type = data.type, od.genes, var.scale))
-  } else if ("seurat" %in% class(samples[[1]])) {
+  } else if (classes[1] == "seurat") {
     return(scaledMatricesSeurat(samples, data.type = data.type, od.genes, var.scale))
-  } else if (inherits(x = samples[[1]], what = 'Seurat')) {
+  } else if (classes[1] == "Seurat") {
     return(scaledMatricesSeuratV3(
       so.objs = samples,
       data.type = data.type,
@@ -101,6 +109,26 @@ scaledMatrices <- function(samples, data.type, od.genes, var.scale) {
     ))
   }
   stop("Unknown class of sample: ", class(samples[[1]]))
+}
+
+## Type-agnostic scaled matrices for a mixed panel: each sample's normalized expression on the shared
+## over-dispersed genes (via the getCountMatrix accessor), optionally scaled so each gene has unit variance
+## within that sample (the common, class-independent way to weight genes comparably across samples).
+#' @keywords internal
+scaledMatricesMixed <- function(samples, od.genes, var.scale) {
+  lapply(samples, function(s) {
+    x <- getCountMatrix(s, transposed = TRUE)                 # cells x genes (normalized expression)
+    missing.genes <- setdiff(od.genes, colnames(x))
+    if (length(missing.genes) > 0) stop("sample is missing over-dispersed genes: ", paste(utils::head(missing.genes), collapse = ", "))
+    x <- methods::as(methods::as(x[, od.genes, drop = FALSE], "CsparseMatrix"), "dgCMatrix")
+    if (var.scale) {
+      gsd <- sqrt(pmax(Matrix::colMeans(x * x) - Matrix::colMeans(x)^2, 0))
+      gsf <- 1 / gsd
+      gsf[is.na(gsf) | !is.finite(gsf)] <- 0
+      x@x <- x@x * rep(gsf, diff(x@p))
+    }
+    x
+  })
 }
 
 #' @keywords internal

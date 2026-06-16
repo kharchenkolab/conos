@@ -295,11 +295,14 @@ setMethod("getCountMatrix", signature("seurat"), function(sample, transposed=FAL
 #' @rdname getCountMatrix
 setMethod('getCountMatrix', signature('Seurat'), function(sample, transposed=FALSE) {
     checkSeuratV3()
-    dat <- getSeuratAssayData(sample, 'scale.data')
+    ## the log-normalized `data` layer (non-negative, sparse) is the right "normalized expression" for
+    ## conos' uses (joint count matrix, dot plots, markers). The z-scored `scale.data` is a PCA input, not
+    ## an expression matrix -- its negative values break log fold changes and the sparse joint merge.
+    dat <- getSeuratAssayData(sample, 'data')
     dims <- dim(x = dat)
     dat.na <- all(dims == 1) && all(is.na(x = dat))
     if (all(dims == 0) || dat.na) {
-      dat <- getSeuratAssayData(sample, 'data')
+      dat <- getSeuratAssayData(sample, 'counts')
     }
 
     if (transposed)

@@ -507,23 +507,38 @@ aggregateDEMarkersAcrossDatasets <- function(marker.dfs, z.threshold, upregulate
   return(res[z.filter > z.threshold,])
 }
 
+## Non-negative, per-sample normalized expression (cells x genes) for the marker Wilcoxon. We use each
+## sample's own normalized layer (the log-normalized counts), NOT a z-scored/scaled layer -- the latter has
+## negative values that make the log2 fold change undefined. pagoda2 samples don't go through here; they use
+## their own disk-backed marker path (so no whole-matrix grab).
+#' @keywords internal
+conosSampleExpressionForDE <- function(sample) {
+  m <- tryCatch(getCountMatrix(sample, transposed = TRUE), error = function(e) NULL)  # normalized expression
+  if (is.null(m)) m <- getRawCountMatrix(sample, transposed = TRUE)                   # generic fallback
+  m
+}
+
 #' @keywords internal
 getDifferentialGenesP2 <- function(p2.samples, groups, z.threshold=3.0, upregulated.only=FALSE, verbose=TRUE, n.cores=1) {
 
   groups %<>% as.character() %>% setNames(names(groups))
 
   if (verbose) message("Estimating marker genes per sample\n")
-  markers.per.sample <- sccore::plapply(p2.samples, function(p2) {
-    if (length(intersect(getCellNames(p2), names(groups))) < 3) {
+  markers.per.sample <- sccore::plapply(p2.samples, function(sample) {
+    if (length(intersect(getCellNames(sample), names(groups))) < 3) {
       list()
-    } else if (is.function(p2$runMarkers)) {
-      ## pagoda2 >= 2.0: runMarkers is the supported verb (returns the same per-cluster table list as the
-      ## deprecated getDifferentialGenes, but without the deprecation warning). z.threshold=0 here keeps every
-      ## gene; filtering happens later in aggregateDEMarkersAcrossDatasets.
-      p2$runMarkers(groups=groups, z.threshold=0, upregulated.only=FALSE,
-                    append.specificity.metrics=FALSE, append.auc=FALSE, verbose=FALSE)
+    } else if (inherits(sample, "Pagoda2") && is.function(sample$runMarkers)) {
+      ## pagoda2 >= 2.0: runMarkers is the supported verb (same per-cluster table list as the deprecated
+      ## getDifferentialGenes, no warning) and keeps pagoda2's disk-backed / fork-safe block streaming.
+      ## z.threshold=0 keeps every gene; filtering happens later in aggregateDEMarkersAcrossDatasets.
+      sample$runMarkers(groups=groups, z.threshold=0, upregulated.only=FALSE,
+                        append.specificity.metrics=FALSE, append.auc=FALSE, verbose=FALSE)
+    } else if (inherits(sample, "Pagoda2")) {
+      sample$getDifferentialGenes(groups=groups, z.threshold=0)   # very old pagoda2
     } else {
-      p2$getDifferentialGenes(groups=groups, z.threshold=0)
+      ## Seurat / other: the identical Wilcoxon core (sccore::matrixDE) on the sample's normalized
+      ## expression, so markers are computed consistently across a mixed panel.
+      sccore::matrixDE(conosSampleExpressionForDE(sample), groups, z.threshold=0, upregulated.only=FALSE)
     }
   }, progress=verbose, n.cores=n.cores)
 

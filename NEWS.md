@@ -22,6 +22,13 @@ Major release, coordinated with pagoda2 2.0 and lstar.
   (up-regulated *and* discriminative — ranked by the precision x expression-fraction harmonic mean rather
   than raw `Z`, with an `min.auc` discrimination floor), then assigned to a single best cluster and ordered
   by cluster, so ubiquitous house-keeping / mitochondrial genes no longer dominate the plot.
+* `runMarkers()` / `plotMarkerDotPlot()` now work on **Seurat and mixed (pagoda2 + Seurat) panels**, not
+  only pagoda2. pagoda2 samples keep their own disk-backed marker path; other samples are scored with the
+  shared `sccore::matrixDE()` (the same Wilcoxon Z / log fold-change core, verified to reproduce pagoda2's
+  numbers exactly), so a panel is scored consistently regardless of how its samples were pre-processed.
+* `runGraph()` builds the joint graph for **mixed panels** (e.g. some pagoda2, some Seurat objects): a
+  heterogeneous panel is aligned through a type-agnostic scaled-matrix builder rather than assuming all
+  samples share the first sample's class.
 * `scanResolution()` — scan a community method's `resolution` over a range, reporting cluster count and
   modularity.
 * `buildGraph(pairs.storage = c("keep", "drop", "disk"))` — optionally drop or offload the O(n^2) per-pair

@@ -442,12 +442,9 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       groups <- parseCellGroups(self, clustering, groups)
 
       groups %<>% as.factor() %>% droplevels()
-      # TODO: add Seurat
-      '%ni%' <- Negate('%in%')
-      if ('Pagoda2' %ni% class(self$samples[[1]])) {
-        stop("Only Pagoda2 objects are supported for marker genes")
-      }
-
+      ## Markers run on any sample type: pagoda2 samples use their own (disk-backed) per-sample DE, Seurat /
+      ## other samples use the shared sccore::matrixDE on their normalized expression (see
+      ## getDifferentialGenesP2). The joint specificity metrics below are class-agnostic (getJointCountMatrix).
       de.genes <- getDifferentialGenesP2(self$samples, groups=groups, z.threshold=z.threshold, upregulated.only=upregulated.only, verbose=verbose, n.cores=self$n.cores)
       de.genes <- de.genes[levels(groups)]
       if (append.specificity.metrics) {
