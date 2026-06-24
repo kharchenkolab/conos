@@ -23,7 +23,7 @@ Imports:
     magrittr,
     methods,
     N2R,
-    pagoda2,
+    pagoda2 (>= 2.0.0),
     parallel,
     R6,
     reshape2,
@@ -47,8 +47,11 @@ Suggests:
     Seurat,
     SummarizedExperiment, 
     testthat, 
-    uwot, 
+    uwot,
     zoo
+Remotes:
+    kharchenkolab/pagoda2@devel,
+    kharchenkolab/sccore@dev
 Additional_repositories: https://kharchenkolab.github.io/drat/
 URL: https://github.com/kharchenkolab/conos
 BugReports: https://github.com/kharchenkolab/conos/issues
