@@ -474,6 +474,10 @@ sn <- function(x) { names(x) <- x; x }
 #' @return list of cophenetic and bakers_gama similarities of the dendrograms from each sample
 #' @keywords internal
 getClusterRelationshipConsistency <- function(p2list, pjc) {
+    if (!requireNamespace("dendextend", quietly = TRUE)) {
+        stop("Package 'dendextend' is required for getClusterRelationshipConsistency(); ",
+             "install it with install.packages(\"dendextend\").", call. = FALSE)
+    }
     hcs <- lapply(sn(names(p2list)), function(n) {
         x <- p2list[[n]]
         raw.counts <- getRawCountMatrix(x, transposed = TRUE)

@@ -13,7 +13,6 @@ biocViews:
 Imports:
     abind,
     cowplot,
-    dendextend,
     dplyr,
     ggplot2,
     ggrepel,
@@ -34,6 +33,7 @@ Imports:
     utils
 Suggests:
     conosPanel,
+    dendextend,
     drat,
     DESeq2,
     entropy,

@@ -849,6 +849,10 @@ Conos <- R6::R6Class("Conos", lock_objects=FALSE,
       }
 
       if (what=='dend') {
+        if (!requireNamespace("dendextend", quietly = TRUE)) {
+          stop("Package 'dendextend' is required for plotClusterStability(what='dend'); ",
+               "install it with install.packages(\"dendextend\").", call. = FALSE)
+        }
         m <- st$upper.tree
         nleafs <- nrow(m)+1
         m[m<=nleafs] <- -1*m[m<=nleafs]
