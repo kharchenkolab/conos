@@ -7,7 +7,7 @@ invocation: interactive+batch
 requires_tools: [run_r]
 capabilities_needed: [R, conos, pagoda2, sccore, leidenAlg, igraph]
 keywords: [conos, integration, joint graph, multi-sample, panel, alignment, batch correction, runGraph, runClustering, runEmbedding, runMarkers, Leiden, UMAP, label transfer, propagateLabels, plotMarkerDotPlot, alignment.strength, reciprocal PCA, CPCA, CCA, mNN, pagoda2, Seurat, scanpy, lstar, collection, atlas]
-produces: [joint_umap_clusters.png, joint_umap_samples.png, panel_clusters.png, marker_dotplot.png, label_transfer_umap.png, cluster_markers.csv, conos_integrated.rds]
+produces: [joint_umap_clusters.png, joint_umap_samples.png, panel_clusters.png, marker_dotplot.png, label_transfer_umap.png, cluster_markers_*.csv, conos_integrated.rds]
 domain: genomics
 source: "conos 2.0 (GitHub dev) — source-verified R6 Conos methods (R/conclass.R, R/conos.R) + doc/ tutorials."
 ---
@@ -229,8 +229,10 @@ ggplot2::ggsave("joint_umap_clusters.png", p_clusters, width = 7, height = 6, dp
 p_samples <- con$plotGraph(color.by = "sample", mark.groups = FALSE, alpha = 0.1, show.legend = TRUE)
 ggplot2::ggsave("joint_umap_samples.png", p_samples, width = 7.5, height = 6, dpi = 120, bg = "white")
 
-# the same joint clustering laid over each sample separately:
-p_panel <- con$plotPanel(clustering = "leiden", use.common.embedding = FALSE)
+# the same joint clustering laid over each sample separately, on the JOINT embedding:
+# use.common.embedding = TRUE is required here — conos pre-processing builds only variance + PCA
+# (Step 1), so the samples have NO per-sample embedding; FALSE would error ("No 'tSNE' embedding").
+p_panel <- con$plotPanel(clustering = "leiden", use.common.embedding = TRUE)
 ggplot2::ggsave("panel_clusters.png", p_panel, width = 9, height = 8, dpi = 120, bg = "white")
 ```
 
@@ -258,7 +260,9 @@ de <- con$runMarkers(z.threshold = 3.0, upregulated.only = FALSE, verbose = FALS
 p_dot <- con$plotMarkerDotPlot(n.genes.per.group = 3, min.auc = 0.6)
 ggplot2::ggsave("marker_dotplot.png", p_dot, width = 12, height = 9, dpi = 120, bg = "white")
 
-saveDEasCSV(de, file = "cluster_markers.csv")   # write the marker tables
+# saveDEasCSV(de.results, saveprefix) writes ONE csv per cluster: paste0(saveprefix, cluster, ".csv").
+# There is no `file=` argument; the 2nd arg is a path PREFIX, not a single filename.
+saveDEasCSV(de, "cluster_markers_")   # -> cluster_markers_<cluster>.csv, one per joint cluster
 ```
 
 **Report:** per-cluster top markers; whether they are cluster-specific or dominated by

@@ -56,10 +56,13 @@ If a dot plot looks dominated by broad genes, raise `min.auc` and/or `z.threshol
 ## Saving
 
 ```r
-saveDEasCSV(con$getDifferentialGenes(...), file = "markers.csv")   # write the marker tables to CSV
+de <- con$runMarkers(z.threshold = 3.0, upregulated.only = FALSE)   # runMarkers, not the deprecated getDifferentialGenes
+saveDEasCSV(de, "markers_")   # writes ONE csv per cluster: paste0(prefix, cluster, ".csv") -> markers_<cluster>.csv
 ```
 
-(Use `runMarkers()` to compute; `getDifferentialGenes()` is the deprecated alias.)
+`saveDEasCSV(de.results, saveprefix, gene.metadata = NULL)` — the 2nd arg is a path PREFIX (it appends
+`<cluster>.csv`), **not** a `file=` filename, and there is no `file=` argument. Compute with
+`runMarkers()`; `getDifferentialGenes()` is the deprecated alias.
 
 ## Pseudobulk per cluster
 
