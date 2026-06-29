@@ -6,13 +6,16 @@ files written by other pipelines, and **mixed** panels.
 
 ## pagoda2 objects (the default)
 
+Use the flavor-routed `preprocess_p2()` helper from **SKILL.md Step 1** (handles pagoda2 1.x CRAN
+*and* 2.0 devel — never call `Pagoda2$from`/`$run` unguarded, they don't exist on CRAN 1.x):
+
 ```r
-samples <- lapply(cms, function(cm) Pagoda2$from(cm)$run(steps = c("variance", "pca")))
+samples <- lapply(cms, preprocess_p2)   # preprocess_p2 defined in Step 1
 con <- Conos$new(samples)
 ```
 
-`run(steps = c("variance", "pca"))` is the minimum conos needs (variance normalization + the PCA it aligns
-on). A full `p2$run()` also embeds/clusters each sample, which is unnecessary for conos but harmless.
+It produces the minimum conos needs (variance normalization + the PCA it aligns on). On devel a full
+`p2$run()` would also embed/cluster each sample — unnecessary for conos but harmless.
 
 ## Seurat objects in memory (v3/v4/v5)
 
@@ -37,23 +40,49 @@ handled. `getCountMatrix.Seurat` returns the **log-normalized `data` layer** (no
 
 ## Reading samples from files (no Python required)
 
-pagoda2's `from*()` constructors read each format directly via HDF5/zarr. Each returns a `Pagoda2` object;
-add the variance + PCA reduction conos needs:
+**This is flavor-dependent.** pagoda2 **devel (2.0)** has direct `from*()` constructors for every format
+(HDF5/zarr); pagoda2 **CRAN (1.x)** reads only **10x** natively (`read10xMatrix()`/`read.10x.matrices()`).
+Route through this helper (it reuses `preprocess_p2()` from Step 1):
 
 ```r
-s1 <- Pagoda2$fromAnnData("sample1.h5ad")$run(steps = c("variance", "pca"))     # anndata / scanpy
-s2 <- Pagoda2$fromH5Seurat("sample2.h5seurat")$run(steps = c("variance", "pca")) # Seurat (SeuratDisk)
-s3 <- Pagoda2$fromLoom("sample3.loom")$run(steps = c("variance", "pca"))         # loom
-s4 <- Pagoda2$fromLstar("sample4.zarr")$run(steps = c("variance", "pca"))        # lstar (zarr) store
-con <- Conos$new(list(s1, s2, s3, s4))
+# Read ONE sample file into a pre-processed Pagoda2 object, across pagoda2 flavors.
+read_sample_p2 <- function(path, format = c("10x", "h5ad", "h5seurat", "loom", "lstar"), n.cores = 1) {
+  format <- match.arg(format)
+  if (pagoda2_is_devel()) {                       # devel: native readers for every format
+    reader <- switch(format,
+      "10x"      = pagoda2::Pagoda2$from10x,
+      "h5ad"     = pagoda2::Pagoda2$fromAnnData,
+      "h5seurat" = pagoda2::Pagoda2$fromH5Seurat,
+      "loom"     = pagoda2::Pagoda2$fromLoom,
+      "lstar"    = pagoda2::Pagoda2$fromLstar)
+    reader(path, n.cores = n.cores)$run(steps = c("variance", "pca"), verbose = FALSE)
+  } else {                                          # CRAN 1.x: only 10x is native
+    if (format != "10x")
+      stop("pagoda2 ", utils::packageVersion("pagoda2"), " (CRAN) reads only 10x directly. For '",
+           format, "', install pagoda2 devel (>= 2.0), or load the matrix with another package ",
+           "(anndata/SeuratDisk/etc.) and pass it to preprocess_p2().")
+    cm <- pagoda2::read10xMatrix(path, verbose = FALSE)
+    preprocess_p2(cm, n.cores = n.cores)
+  }
+}
+
+# devel: any of these; CRAN 1.x: the 10x line works, the others stop() with the upgrade hint.
+s1 <- read_sample_p2("sample1.h5ad",     "h5ad")       # anndata / scanpy   (devel only)
+s2 <- read_sample_p2("sample2.h5seurat", "h5seurat")   # Seurat (SeuratDisk) (devel only)
+s3 <- read_sample_p2("sample3.loom",     "loom")       # loom               (devel only)
+s4 <- read_sample_p2("sample4.zarr",     "lstar")      # lstar (zarr) store  (devel only)
+s5 <- read_sample_p2("sample5_10x_dir",  "10x")        # 10x                 (both flavors)
+con <- Conos$new(list(s1, s2, s3, s4, s5))
 ```
 
 Notes:
-- `fromAnnData` / `fromLstar` preserve gene names exactly (best for round-trips).
-- `fromH5Seurat` reads any valid `.h5seurat`; if a file lacks stored gene names (e.g. a Seurat v5 object
-  written by a `SeuratObject < 5` build of SeuratDisk, which can't serialize `Assay5` feature names),
-  pagoda2 **warns** and falls back to positional names rather than silently mislabelling genes.
-- Constructor reader options go in `reader.args = list(layer = "counts", sample.name = ...)`.
+- `fromAnnData` / `fromLstar` (devel) preserve gene names exactly (best for round-trips).
+- `fromH5Seurat` (devel) reads any valid `.h5seurat`; if a file lacks stored gene names (e.g. a Seurat v5
+  object written by a `SeuratObject < 5` build of SeuratDisk, which can't serialize `Assay5` feature
+  names), pagoda2 **warns** and falls back to positional names rather than silently mislabelling genes.
+- Constructor reader options (devel) go in `reader.args = list(layer = "counts", sample.name = ...)`.
+- **CRAN 1.x + non-10x:** convert upstream — e.g. read the `.h5ad` with the `anndata`/`zellkonverter`
+  package to a matrix, then `preprocess_p2(cm)` — or just install pagoda2 devel.
 
 ## Mixed panels
 
@@ -61,7 +90,7 @@ A panel may combine sources — e.g. one `Pagoda2` and one `Seurat` object:
 
 ```r
 mixed <- list(
-  bm_pagoda2 = Pagoda2$from(cm1)$run(steps = c("variance", "pca")),
+  bm_pagoda2 = preprocess_p2(cm1),    # flavor-routed (Step 1); NOT a bare Pagoda2$from
   cb_seurat  = RunPCA(ScaleData(FindVariableFeatures(NormalizeData(CreateSeuratObject(counts = cm2)))))
 )
 con <- Conos$new(mixed)

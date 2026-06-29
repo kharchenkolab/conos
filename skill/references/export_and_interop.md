@@ -57,11 +57,16 @@ lstar convert panel.lstar.zarr panel.h5ad
 conos itself is R-only, but the two directions add up to a clean recommendation for scanpy users: keep
 data as `.h5ad` and bridge through one short R step.
 
+Reading `.h5ad` directly needs **pagoda2 devel (>= 2.0)** (CRAN 1.x has no AnnData reader — see
+`data_sources.md`). Use `read_sample_p2()` (defined there) so the requirement is explicit:
+
 ```r
-# conos_step.R  (run: Rscript conos_step.R)
+# conos_step.R  (run: Rscript conos_step.R) — requires pagoda2 devel for .h5ad input
 library(conos); library(pagoda2); library(lstar)
+pagoda2_is_devel <- function() is.function(tryCatch(pagoda2::Pagoda2$from, error = function(e) NULL))
+stopifnot("reading .h5ad needs pagoda2 devel (>= 2.0)" = pagoda2_is_devel())
 samples <- lapply(c("s1.h5ad", "s2.h5ad", "s3.h5ad"),
-                  function(f) Pagoda2$fromAnnData(f)$run(steps = c("variance", "pca")))
+                  function(f) Pagoda2$fromAnnData(f)$run(steps = c("variance", "pca"), verbose = FALSE))
 con <- Conos$new(samples)
 con$runGraph(); con$runClustering(); con$runEmbedding()
 lstar_write(write_conos(con), "panel.lstar.zarr")

@@ -34,9 +34,10 @@ variant, a parameter detail, or troubleshooting:
   `k`/`k.self`, `ncomps`, `n.odgenes`, SNN, `pairs.storage`), `runClustering()` (string
   vs function methods, `scanResolution`, `scanKModularity`), `runEmbedding()`
   (largeVis vs UMAP), `plotGraph`/`plotPanel`, and the deprecated-alias map.
-- `references/data_sources.md` — building a panel from pagoda2 / Seurat (v3/v4/v5) objects,
-  from files (`Pagoda2$fromAnnData/fromH5Seurat/fromLoom/fromLstar`), **mixed** panels,
-  `planIntegration()`, modality accessors.
+- `references/data_sources.md` — building a panel from pagoda2 (CRAN 1.x *and* devel 2.0) /
+  Seurat (v3/v4/v5) objects, from files (the flavor-aware `read_sample_p2()`; devel reads
+  h5ad/h5seurat/loom/lstar, CRAN 1.x reads 10x), **mixed** panels, `planIntegration()`,
+  modality accessors.
 - `references/alignment_strength.md` — `alignment.strength` and supervised alignment
   (`balancing.factor.per.cell`, `same.factor.downweight`); how to dial mixing without
   over-merging.
@@ -49,10 +50,18 @@ variant, a parameter detail, or troubleshooting:
 
 ## Install
 
-conos pulls **pagoda2** (sample pre-processing) and **sccore (>= 1.1.0)** as hard
-dependencies; the workflow also needs `leidenAlg` (clustering) and `uwot` (UMAP). conos
-2.0 and sccore 1.1.0 are on GitHub until the next CRAN release, so install both from
-source. `conosPanel` (a `drat` repo) supplies the example panel used in tutorials.
+This recipe requires **conos >= 2.0** (the `run*` verbs + the pagoda2-flavor-agnostic
+accessor shim) and **sccore >= 1.1.0** (the native marker-heatmap engine); both are on
+GitHub until the next CRAN release. **pagoda2 either flavor works** — CRAN 1.x (`main`) or
+devel 2.0 — because conos 2.0 reads counts from both; the recipe keeps whatever pagoda2 you
+have installed and only branches its own per-sample calls (see Step 1). The workflow also
+needs `leidenAlg` (clustering) and `uwot` (UMAP). `conosPanel` (a `drat` repo) supplies the
+example panel used in tutorials.
+
+The version guards below matter: a **stale CRAN conos 1.5.4** must be upgraded (it has no
+`runGraph`/`runClustering`), and a plain `requireNamespace` check would silently skip it —
+that mismatch (devel-API recipe code on a CRAN-stack install) is the classic "it fails on
+both" trap.
 
 ```r
 options(repos = c(CRAN = "https://cloud.r-project.org"))
@@ -61,16 +70,21 @@ for (pkg in c("remotes", "ggplot2", "uwot", "leidenAlg")) {
   if (!requireNamespace(pkg, quietly = TRUE)) install.packages(pkg)
 }
 
-# sccore >= 1.1.0 (carries the native marker-heatmap engine pagoda2/conos call) from dev
+# sccore >= 1.1.0 (native marker-heatmap engine pagoda2/conos call) — upgrade if older
 if (!requireNamespace("sccore", quietly = TRUE) ||
     utils::packageVersion("sccore") < "1.1.0") {
   remotes::install_github("kharchenkolab/sccore", ref = "dev", upgrade = "never")
 }
+# conos >= 2.0 REQUIRED (run* verbs + flavor-agnostic shim) — upgrade a stale CRAN 1.5.4 too
+if (!requireNamespace("conos", quietly = TRUE) ||
+    utils::packageVersion("conos") < "2.0.0") {
+  remotes::install_github("kharchenkolab/conos", ref = "dev", upgrade = "never")
+}
+# pagoda2: EITHER flavor is fine. Install devel only if pagoda2 is entirely absent; an existing
+# CRAN (1.x) install is kept and handled by Step 1's branch. (Need devel for non-10x file readers
+# — h5ad/h5seurat/loom/lstar; see references/data_sources.md.)
 if (!requireNamespace("pagoda2", quietly = TRUE)) {
   remotes::install_github("kharchenkolab/pagoda2", ref = "devel", upgrade = "never")
-}
-if (!requireNamespace("conos", quietly = TRUE)) {
-  remotes::install_github("kharchenkolab/conos", ref = "dev", upgrade = "never")
 }
 # example panel (optional; tutorials use it):
 if (!requireNamespace("conosPanel", quietly = TRUE)) {
@@ -79,6 +93,9 @@ if (!requireNamespace("conosPanel", quietly = TRUE)) {
 
 library(conos)
 library(pagoda2)
+cat("conos", as.character(packageVersion("conos")),
+    "| pagoda2", as.character(packageVersion("pagoda2")),
+    if (is.function(tryCatch(Pagoda2$from, error = function(e) NULL))) "(devel API)" else "(CRAN 1.x API)", "\n")
 ```
 
 ## Decisions to surface up front
@@ -117,20 +134,49 @@ Show the user these figures as the analysis proceeds:
 A panel is a **named list** of per-sample objects, each already normalized with a PCA
 reduction. The most common case is one `Pagoda2` object per count matrix.
 
+> **pagoda2 has two API generations — the recipe supports BOTH.** pagoda2 **1.x (CRAN,
+> the `main` branch)** and **2.0+ (the `devel` branch)** build a sample differently, and a
+> snippet written for one ERRORS on the other (e.g. `Pagoda2$from` doesn't exist on 1.x →
+> `"attempt to apply non-function"`). Detect the flavor once and route. conos 2.0 reads
+> counts from *either* flavor internally (its accessor shim falls back from
+> `getExpressionBlock()` to `$counts`), so **only the per-sample construction/IO needs
+> branching — not the conos steps.** Define this helper and reuse it everywhere a sample is
+> built from a matrix:
+
 ```r
+# TRUE on pagoda2 >= 2.0 (devel): the unified Pagoda2$from(...)$run(steps=) API exists.
+# FALSE on pagoda2 1.x (CRAN/main): only the classic Pagoda2$new(...) + explicit methods.
+pagoda2_is_devel <- function() is.function(tryCatch(pagoda2::Pagoda2$from, error = function(e) NULL))
+
+# Build ONE pre-processed Pagoda2 sample from a raw counts matrix (genes x cells).
+# Produces exactly what conos needs: variance normalization + a PCA reduction. Flavor-routed.
+preprocess_p2 <- function(cm, n.cores = 1) {
+  if (pagoda2_is_devel()) {
+    # pagoda2 >= 2.0 (devel): unified constructor + step pipeline.
+    pagoda2::Pagoda2$from(cm, n.cores = n.cores, verbose = FALSE)$run(
+      steps = c("variance", "pca"), verbose = FALSE)
+  } else {
+    # pagoda2 1.x (CRAN/main): classic constructor + the two explicit steps conos needs.
+    # (On devel these legacy methods still work but warn — that's why we branch, not unify.)
+    p <- pagoda2::Pagoda2$new(cm, n.cores = n.cores, log.scale = TRUE, verbose = FALSE)
+    p$adjustVariance(plot = FALSE, verbose = FALSE)
+    p$calculatePcaReduction(nPcs = 30, n.odgenes = 2000, verbose = FALSE)
+    p
+  }
+}
+
 # `cms` is a named list of raw count matrices (genes x cells), one per sample.
-# run(steps = c("variance","pca")) is the minimum conos needs: variance normalization
-# + the PCA it aligns on. Names of the list become the sample IDs.
-samples <- lapply(cms, function(cm) {
-  Pagoda2$from(cm, verbose = FALSE)$run(steps = c("variance", "pca"), verbose = FALSE)
-})
+# Names of the list become the sample IDs.
+samples <- lapply(cms, preprocess_p2)
 ```
 
 Seurat objects (v3/v4/v5) work too — build each the usual way
 (`NormalizeData`→`FindVariableFeatures`→`ScaleData`→`RunPCA`) and put them in the list;
-conos aligns on the PCA. Samples can also be read from files (`.h5ad`/`.h5seurat`/loom/
-lstar) via pagoda2's `from*()` constructors, and a panel may MIX object types. See
-`references/data_sources.md`.
+conos aligns on the PCA (the Seurat path is pagoda2-flavor-independent). Samples can also be
+read from files; on **devel** pagoda2 the `from*()` constructors read `.h5ad`/`.h5seurat`/
+loom/lstar directly, while **CRAN (1.x)** reads only 10x natively (`read10xMatrix()`) — the
+branched `read_sample_p2()` helper in `references/data_sources.md` handles both. A panel may
+MIX object types.
 
 **Report:** number of samples, and per-sample cells × genes. To try the recipe without
 your own data, the bundled `conos::small_panel.preprocessed` is a ready 2-sample panel
