@@ -13,6 +13,7 @@ CONTRIBUTING.md
 data-raw
 ^\.circleci$
 ^misc$
+^skill$
 ^\.claude$
 ^\.github$
 ^.*\.lstar\.zarr$
